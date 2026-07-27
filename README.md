@@ -12,6 +12,8 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: gateway tags requests, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
+<img src="assets/story-arc.svg" width="100%" alt="The story in five beats: sweep the envelope, consolidate below the knee, tiers past the knee, fairness in a tier, batch fills the gaps">
+
 ## The capacity envelope
 
 Before the scenarios, we swept the pool to learn its shape. Five request shapes, from short interactive to long generation, each stepped from 16 to 160 concurrent requests.
@@ -93,6 +95,8 @@ Before the scenarios, we swept the pool to learn its shape. Five request shapes,
 <img src="assets/s4_traffic.svg" width="49%" alt="Batch arrival rate ramps to roughly triple the interactive classes at 150 seconds">
 <img src="assets/s4_ttft.svg" width="49%" alt="Batch p95 TTFT runs roughly 300 ms above premium and standard throughout the surge">
 </p>
+
+<img src="assets/s4_queue.svg" width="100%" alt="Mean EPP queue time bars: premium 64 ms, standard 66 ms, batch 202 ms">
 
 **Why it matters.** Overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, without risking interactive SLOs. That is what lets a consolidated pool run hot.
 
