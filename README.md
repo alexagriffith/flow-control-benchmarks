@@ -44,9 +44,9 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 
 ## Scenario 3 · Fairness inside one priority band
 
-**What it proves.** Within one priority band, fairness bounds the damage a spiking tenant can do to its peers.
+**What it proves.** Within one priority band, fairness means equal treatment at equal load. The spiking tenant gets its share, not more, and pays the most queue time.
 
-**What we saw.** All three tenants were premium and tenant A spiked repeatedly. The spiker carried a p50 TTFT of 382 ms while its peers stayed at 206 and 221 ms. The gap is moderate by design.
+**What we saw.** All three tenants were premium and tenant A spiked to about double its peers' load. Peers B and C tracked each other within 9 ms for the whole run. In the spike window the p50 TTFT was 501 ms for the spiker against about 427 ms for its peers, and when the spike ended every tenant recovered to 54 ms within seconds.
 
 <p>
 <img src="assets/s3_traffic.svg" width="49%" alt="Tenant A repeatedly spikes to about double the in-flight load of tenants B and C">
@@ -59,7 +59,9 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 | premium-tenant-b | Same-priority peer | 206 ms | 671 ms | 80 ms |
 | premium-tenant-c | Same-priority peer | 221 ms | 675 ms | 81 ms |
 
-**Why it matters.** Teams at the same priority share a pool without a noisy neighbor starving them, and without anyone tuning per-tenant rate limits by hand.
+*Full-run averages. The spiker's p50 average is higher partly because more of its requests land inside the spike window. In-window, most of every tenant's latency is time inside the shared vLLM batch after dispatch, not EPP queueing.*
+
+**Why it matters.** Teams at the same tier share a pool without anyone tuning per-tenant rate limits. Fairness shares capacity, it does not add it. A workload that needs insulation from same-tier surges belongs in its own priority band, which is Scenario 2.
 
 *Saturated fairness run, 2026-07-24. Three counted repeats, 65,003 requests, all HTTP 200. Data in [`data/scenario-3-fairness/`](data/scenario-3-fairness/).*
 
