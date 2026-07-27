@@ -53,7 +53,8 @@
 
 <section>
   <h2>Why LLM traffic breaks rate limiting</h2>
-  <p>Traditional gateways limit requests per second and assume every request costs about the same. LLM requests break that assumption. Cost is driven by input length and by the autoregressive decode loop, so one request can consume orders of magnitude more compute and memory than another at the same request rate.</p>
+  <p>Traditional gateways limit requests per second and assume every request costs about the same. LLM requests break that assumption.</p>
+  <p>Cost is driven by input length and by the autoregressive decode loop. One request can consume orders of magnitude more compute and memory than another at the same request rate.</p>
   <div class="figure">
   <svg viewBox="0 0 920 190" role="img" aria-label="Two requests at the same request rate: a 64-token reply and a 512-token reply occupy the GPU for very different times">
     <text x="18" y="24" font-size="14" font-weight="700" fill="#151515">Same request rate, very different cost</text>
@@ -81,11 +82,11 @@
   <div class="grid2">
     <div class="card" style="border-left:4px solid var(--green)">
       <h3>It is</h3>
-      <p>A centralized, policy-aware queue in the Endpoint Picker, in front of the model servers. It enforces priority across traffic classes, fairness across tenants, and ordering within a tenant. It is work-conserving. If the pool has capacity, it dispatches, and it never throttles traffic the GPUs could serve. It delays routing to the last moment, so a dispatched request can land on the endpoint that just freed up or holds its prefix cache.</p>
+      <p>A centralized, policy-aware queue in the Endpoint Picker, in front of the model servers. It enforces priority across traffic classes, fairness across tenants, and ordering within a tenant.</p><p style="margin-top:8px">It is work-conserving. If the pool has capacity, it dispatches.</p><p style="margin-top:8px">It routes late. A dispatched request lands on the endpoint that just freed up or holds its prefix cache.</p>
     </div>
     <div class="card" style="border-left:4px solid var(--red)">
       <h3>It is not</h3>
-      <p>More capacity. Flow control decides when and in what order requests dispatch. It cannot make the pool faster. When demand exceeds capacity, the wait still exists. Flow control moves the wait into the EPP queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p>
+      <p>More capacity. Flow control decides when and in what order requests dispatch, and it cannot make the pool faster.</p><p style="margin-top:8px">When demand exceeds capacity, the wait still exists. Flow control moves it into the EPP queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p>
     </div>
   </div>
   <div class="note">That second sentence is the honest core of the system. Enabling flow control is an explicit choice to protect time per output token, the reading pace of every stream already in flight, at the price of queue time for new arrivals when the pool is full.</div>
@@ -167,7 +168,7 @@
       <tr><td><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or SLO-deadline</td></tr>
     </tbody>
   </table>
-  <div class="note">Priority is absolute by design. When the pool is saturated, every premium request dispatches before any standard request, and fairness only referees between equals. If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
+  <div class="note">Priority is absolute by design. When the pool is saturated, every premium request dispatches before any standard request, and fairness only referees between equals.<br><br>If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
 </section>
 
 <section>
@@ -201,7 +202,7 @@
     <div class="tile"><div class="k">Cost assignment</div><div class="num">107 vs 80 ms</div><div class="unit">mean queue time, spiker vs peers</div><div class="why">The tenant that created the pressure carried the most queue time, every repeat.</div></div>
     <div class="tile"><div class="k">Sheddable isolation</div><div class="num">202 vs 64 ms</div><div class="unit">mean queue time, batch vs premium</div><div class="why">Batch at triple the interactive arrival rate absorbed the waiting instead of causing it.</div></div>
   </div>
-  <div class="note">The absolute numbers track that specific GPU and tuning. The pattern is the guarantee. Targets hold while capacity lasts, and past capacity the policy, not arrival order, decides who waits.</div>
+  <div class="note">The absolute numbers track that specific GPU and tuning. The pattern is the guarantee.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
 </section>
 
 <section>
@@ -224,14 +225,15 @@
   <div class="grid2">
     <div class="card">
       <h3>The knobs that matter</h3>
-      <p><strong>Band priorities</strong> in <code>InferenceObjective</code> map business tiers to dispatch order. <strong>Per-band limits</strong> bound how much low-priority work can queue. <strong>Request TTL</strong> caps how stale queued work can get. <strong>The saturation detector's threshold</strong> sets the healthy buffer, deep enough that batching never starves, shallow enough that the queue stays where policy lives. It is a trigger, not a queue cap.</p>
+      <p><strong>Band priorities</strong> in <code>InferenceObjective</code> map business tiers to dispatch order. <strong>Per-band limits</strong> bound how much low-priority work can queue.</p><p style="margin-top:8px"><strong>Request TTL</strong> caps how stale queued work can get.</p><p style="margin-top:8px"><strong>The saturation detector's threshold</strong> sets the healthy buffer, deep enough that batching never starves, shallow enough that the queue stays where policy lives. It is a trigger, not a queue cap.</p>
     </div>
     <div class="card">
       <h3>What to watch</h3>
-      <p><code>pool_saturation</code> tells you when the gate is active. <code>queue_size</code> and <code>queue_duration</code> per tenant and band tell you who is waiting and for how long, which is also a true-demand signal an autoscaler can act on. On the server side, <code>num_requests_running</code> against <code>num_requests_waiting</code> tells you where the pressure actually sits.</p>
+      <p><code>pool_saturation</code> tells you when the gate is active.</p><p style="margin-top:8px"><code>queue_size</code> and <code>queue_duration</code> per tenant and band tell you who is waiting and for how long. The same depth is a true-demand signal an autoscaler can act on.</p><p style="margin-top:8px">On the server side, <code>num_requests_running</code> against <code>num_requests_waiting</code> tells you where the pressure actually sits.</p>
     </div>
   </div>
-  <p style="margin-top:12px">One sweep per hardware and model pair finds the knee, the point where queueing begins. Size latency-sensitive pools below it, and let flow control govern everything that arrives past it. That is the whole operating model: know your envelope, place your operating point, and let the policy own the overflow.</p>
+  <p style="margin-top:12px">One sweep per hardware and model pair finds the knee, the point where queueing begins. Size latency-sensitive pools below it, and let flow control govern everything that arrives past it.</p>
+  <p>That is the whole operating model. Know your envelope, place your operating point, and let the policy own the overflow.</p>
 </section>
 
 </main>
