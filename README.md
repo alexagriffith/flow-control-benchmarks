@@ -12,6 +12,24 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: gateway tags requests, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
+## The capacity envelope
+
+Before the scenarios, we swept the pool to learn its shape. Five request shapes, from short interactive to long generation, each stepped from 16 to 160 concurrent requests.
+
+**What it proves.** Concurrency alone does not describe load. Every shape first showed vLLM waiting requests at concurrency 160, but the cost of operating there ranged from 569 ms p95 TTFT at 165 requests per second to 6.0 s at 27 requests per second.
+
+<img src="assets/capacity-envelope.svg" width="100%" alt="p95 TTFT by concurrency for five request shapes. All shapes queue first at 160, with an order of magnitude spread in cost.">
+
+| Shape | Requests/s at 160 | p95 TTFT at 160 | Mean EPP queue at 160 |
+|---|---:|---:|---:|
+| 256 in / 64 out | 165.1 | 569 ms | 47 ms |
+| 512 in / 128 out | 88.4 | 689 ms | 102 ms |
+| 1024 in / 128 out | 84.9 | 761 ms | 91 ms |
+| 512 in / 512 out | 27.2 | 6.0 s | 56 ms |
+| 2048 in / 256 out | 40.0 | 2.4 s | 119 ms |
+
+**Why it matters.** This is how the scenario operating points were chosen. Consolidation runs below the knee, and the saturation scenarios run above it on purpose. A platform team runs this same sweep once per hardware and model pair to place its own operating points. Data in [`data/capacity-sweeps/`](data/capacity-sweeps/).
+
 ## Scenario 1 · Consolidation without giving up latency
 
 **What it proves.** Two interactive workloads can share one GPU and uphold an interactive latency target, here 300 ms p95 TTFT as a general working target.
