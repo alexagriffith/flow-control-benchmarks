@@ -8,7 +8,7 @@ How to read the numbers: this campaign measures behavior past the knee, not a la
 
 ## Learn flow control
 
-[`learn/flow-control.pdf`](learn/flow-control.pdf) explains the mechanism end to end, what breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it. Written against the upstream llm-d Endpoint Picker documentation, with measured data as evidence. The same page as HTML is [`learn/flow-control.html`](learn/flow-control.html).
+[`learn/flow-control.html`](learn/flow-control.html) explains the mechanism end to end, what breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it. Written against the upstream llm-d Endpoint Picker documentation. Enable GitHub Pages on this repo and the page is served live, or download the file and open it locally.
 
 ## The report
 
