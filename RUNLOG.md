@@ -10,5 +10,6 @@ All campaigns ran GPT-OSS 20B on one GPU behind the llm-d inference gateway, wit
 | 2 · Service tiers | Noisy priority run | 2026-07-24 | Noisy sinusoidal surge that genuinely saturates the pool. Premium p50 41 ms vs standard 379 ms, 53,399 requests |
 | 3 · Fairness | Saturated fairness run | 2026-07-24 | The only fairness run that both saturates (vLLM waiting p95 31 to 33) and finishes clean, 65,003 requests, zero errors |
 | 4 · Batch isolation | Clean pressure pass, Test 4 | 2026-07-21 | Batch at triple the interactive arrival rate, queue means 202 ms batch vs 64 and 66 ms interactive, three consistent repeats |
+| Capacity envelope | Input/output variation sweep | 2026-07-21 | Five request shapes swept 16 to 160 concurrent. Same first-queue point, order-of-magnitude cost spread |
 
 The scenarios come from separate campaigns rather than one unified pass, and each README section cites its run and data directory. Along the way we also ran configuration comparisons and concurrency sweeps to find the right operating points. Runs that did not exercise the claimed behavior, for example fairness runs that never queued, were excluded from the evidence.
