@@ -1,0 +1,4 @@
+scenario,scenario_label,repeat,run_id,source_dir,total,http_200,non_200_or_artifact,vllm_success_length,vllm_success_error,vllm_waiting_max,vllm_waiting_p95,vllm_running_max
+pressure_test4_priority_inversion_batch_surge,Test 4. Priority inversion prevention,1,10-pressure_test4_priority_inversion_batch_surge-r01,clean-pass-20260721T1710Z/10-pressure_test4_priority_inversion_batch_surge-r01,17959,17959,0,17959.0,0.0,64.0,41.0,128.0
+pressure_test4_priority_inversion_batch_surge,Test 4. Priority inversion prevention,2,11-pressure_test4_priority_inversion_batch_surge-r02,clean-pass-20260721T1710Z/11-pressure_test4_priority_inversion_batch_surge-r02,17967,17965,2,17965.0,0.0,60.0,37.0,128.0
+pressure_test4_priority_inversion_batch_surge,Test 4. Priority inversion prevention,3,01-pressure_test4_priority_inversion_batch_surge,clean-pass-20260721T-test4-r03-retry/01-pressure_test4_priority_inversion_batch_surge,18028,18028,0,18028.0,0.0,57.0,43.0,128.0
