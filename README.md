@@ -6,6 +6,10 @@ Four scenarios ran under pressure, three repeats each. One endpoint under double
 
 How to read the numbers: this campaign measures behavior past the knee, not a latency SLA. The pool is one GPU, so absolute latencies track that hardware. The pattern is the finding. The policy, not arrival order, decided who waited.
 
+## Learn flow control
+
+[`learn/flow-control.pdf`](learn/flow-control.pdf) explains the mechanism end to end, what breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it. Written against the upstream llm-d Endpoint Picker documentation, with measured data as evidence. The same page as HTML is [`learn/flow-control.html`](learn/flow-control.html).
+
 ## The report
 
 [`report/flow-control-under-pressure.pdf`](report/flow-control-under-pressure.pdf) renders in the browser. [`report/flow-control-under-pressure.html`](report/flow-control-under-pressure.html) is the same report as a single HTML file, download and open locally.
