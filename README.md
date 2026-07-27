@@ -38,7 +38,7 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 <img src="assets/s2_ttft.svg" width="49%" alt="During saturation the standard p95 TTFT rises toward 900 ms while premium settles lower">
 </p>
 
-**Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. The tier boundary holds under real pressure, not just on paper.
+**Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. The tier boundary holds under real pressure, not just on paper. That is what makes internal chargeback and SLA commitments enforceable on shared capacity.
 
 *Noisy priority run, 2026-07-24. Three counted repeats, 53,399 requests, 2 non-200. Data in [`data/scenario-2-priority/`](data/scenario-2-priority/).*
 
@@ -59,7 +59,7 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 | premium-tenant-b | Same-priority peer | 206 ms | 671 ms | 80 ms |
 | premium-tenant-c | Same-priority peer | 221 ms | 675 ms | 81 ms |
 
-**Why it matters.** Teams at the same priority can share a pool without a noisy neighbor starving them, and without anyone tuning per-tenant limits by hand.
+**Why it matters.** Teams at the same priority can share a pool without a noisy neighbor starving them, and without anyone tuning per-tenant rate limits by hand. The platform absorbs the operational work that per-team quotas would create.
 
 *Saturated fairness run, 2026-07-24. One stabilization pass plus three counted repeats, 65,003 requests, all HTTP 200. Data in [`data/scenario-3-fairness/`](data/scenario-3-fairness/).*
 
@@ -74,7 +74,7 @@ The pool is one GPU running GPT-OSS 20B, and the absolute latencies track that h
 <img src="assets/s4_ttft.svg" width="49%" alt="Batch p95 TTFT runs roughly 300 ms above premium and standard throughout the surge">
 </p>
 
-**Why it matters.** Spare capacity can carry batch work during low-traffic periods without risking interactive SLOs. That is what lets a consolidated pool run at high utilization.
+**Why it matters.** Spare capacity can carry batch work during low-traffic periods without risking interactive SLOs. Overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day. That is what lets a consolidated pool run at high utilization.
 
 *Clean pressure pass, 2026-07-21. Three counted repeats, 53,954 requests, 2 non-200. Data in [`data/scenario-4-batch-isolation/`](data/scenario-4-batch-isolation/).*
 
@@ -91,7 +91,7 @@ You can verify the policy is real from four records in four layers, from the req
 
 ## Methodology
 
-We measured TTFT client side, from request start to first streamed token, through the gateway. Each scenario ran 300 s of active traffic with repeats, and warmup and stabilization passes are excluded from every summary. Every request is logged individually, and every chart in this repo is drawn from that per-request data. Synthetic prompts targeted 512 input tokens with fixed response lengths per scenario. Fixed response lengths are a benchmark control, so end-to-end latency from these runs is not a production prediction. TTFT is the comparable metric.
+Traffic for the saturation scenarios is noisy and sinusoidal on purpose, closer to production arrival patterns than a flat synthetic load, and each scenario's traffic chart shows the pattern that actually ran. We measured TTFT client side, from request start to first streamed token, through the gateway. Each scenario ran 300 s of active traffic with repeats, and warmup and stabilization passes are excluded from every summary. Every request is logged individually, and every chart in this repo is drawn from that per-request data. Synthetic prompts targeted 512 input tokens with fixed response lengths per scenario. Fixed response lengths are a benchmark control, so end-to-end latency from these runs is not a production prediction. TTFT is the comparable metric.
 
 The four scenarios come from separate benchmark campaigns, each with its own accepted run. [`RUNLOG.md`](RUNLOG.md) lists every campaign, including the sweeps and the runs that did not meet the acceptance bar, and why.
 
