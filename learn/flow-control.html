@@ -79,17 +79,37 @@
 
 <section>
   <h2>What flow control is, and what it is not</h2>
-  <div class="grid2">
-    <div class="card" style="border-left:4px solid var(--green)">
-      <h3>It is</h3>
-      <p>A centralized, policy-aware queue in the Endpoint Picker, in front of the model servers. It enforces priority across traffic classes, fairness across tenants, and ordering within a tenant.</p><p style="margin-top:8px">It is work-conserving. If the pool has capacity, it dispatches.</p><p style="margin-top:8px">It routes late. A dispatched request lands on the endpoint that just freed up or holds its prefix cache.</p>
-    </div>
-    <div class="card" style="border-left:4px solid var(--red)">
-      <h3>It is not</h3>
-      <p>More capacity. Flow control decides when and in what order requests dispatch, and it cannot make the pool faster.</p><p style="margin-top:8px">When demand exceeds capacity, the wait still exists. Flow control moves it into the EPP queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p>
-    </div>
+  <table>
+    <thead><tr><th style="width:50%">What it is</th><th>What it is not</th></tr></thead>
+    <tbody><tr>
+      <td><p>A centralized, policy-aware queue in the Endpoint Picker, in front of the model servers. It enforces priority across traffic classes, fairness across tenants, and ordering within a tenant.</p><p style="margin-top:8px">It is work-conserving. If the pool has capacity, it dispatches.</p><p style="margin-top:8px;margin-bottom:0">It routes late. A dispatched request lands on the endpoint that just freed up or holds its prefix cache.</p></td>
+      <td><p>More capacity. Flow control decides when and in what order requests dispatch, and it cannot make the pool faster.</p><p style="margin-top:8px;margin-bottom:0">When demand exceeds capacity, the wait still exists. Flow control moves it into the EPP queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p></td>
+    </tr></tbody>
+  </table>
+  <div class="figure">
+  <svg viewBox="0 0 920 210" role="img" aria-label="Two states: gate open, requests pass straight through; gate closed, priority bands decide who waits">
+    <text x="18" y="24" font-size="14" font-weight="700" fill="#151515">The two states of the system</text>
+    <rect x="18" y="42" width="430" height="140" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="34" y="66" font-size="12" font-weight="800" fill="#1f8a5f">POOL HAS CAPACITY · gate open</text>
+    <circle cx="60" cy="106" r="7" fill="#1f8a5f"/><circle cx="86" cy="106" r="7" fill="#d59a00"/><circle cx="112" cy="106" r="7" fill="#1c78d8"/>
+    <line x1="130" y1="106" x2="330" y2="106" stroke="#9a9a9a" stroke-width="2"/>
+    <path d="M330 100 l10 6 l-10 6z" fill="#9a9a9a"/>
+    <rect x="222" y="88" width="8" height="36" rx="3" fill="#cfe7db"/>
+    <rect x="352" y="86" width="78" height="40" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/>
+    <text x="391" y="110" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">vLLM</text>
+    <text x="34" y="164" font-size="11.5" fill="#5f6368">Requests move straight through. Flow control is invisible.</text>
+    <rect x="472" y="42" width="430" height="140" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="488" y="66" font-size="12" font-weight="800" fill="#b23b3b">POOL SATURATED · gate closed</text>
+    <rect x="488" y="80" width="120" height="14" rx="7" fill="#1f8a5f"/><text x="614" y="91" font-size="10" fill="#5f6368">premium dispatches first</text>
+    <rect x="488" y="100" width="86" height="14" rx="7" fill="#d59a00"/><text x="580" y="111" font-size="10" fill="#5f6368">standard waits behind</text>
+    <rect x="488" y="120" width="150" height="14" rx="7" fill="#1c78d8"/><text x="644" y="131" font-size="10" fill="#5f6368">batch absorbs the queue</text>
+    <rect x="748" y="76" width="8" height="64" rx="3" fill="#e4837f"/>
+    <rect x="796" y="88" width="78" height="40" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/>
+    <text x="835" y="112" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">vLLM</text>
+    <text x="488" y="164" font-size="11.5" fill="#5f6368">New work queues by band. The policy decides who goes next.</text>
+  </svg>
   </div>
-  <div class="note">That second sentence is the honest core of the system. Enabling flow control is an explicit choice to protect time per output token, the reading pace of every stream already in flight, at the price of queue time for new arrivals when the pool is full.</div>
+  <div class="note">That trade is the honest core of the system. Enabling flow control is an explicit choice to protect time per output token, the reading pace of every stream already in flight, at the price of queue time for new arrivals when the pool is full.</div>
 </section>
 
 <section>
@@ -158,6 +178,47 @@
 </section>
 
 <section>
+  <h2>The architecture, one level up</h2>
+  <p>The journey above happens inside one Endpoint Picker serving a pool of model servers. Late binding is why the queue lives centrally. The endpoint is chosen at dispatch, when the picker knows which server just freed capacity or already holds the request's prefix cache.</p>
+  <div class="figure">
+  <svg viewBox="0 0 920 300" role="img" aria-label="Architecture: clients through the gateway to the Endpoint Picker, whose scheduler routes each dispatched request to the best of several model servers">
+    <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9a9a9a"/></marker></defs>
+    <rect x="14" y="110" width="130" height="70" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="79" y="140" font-size="12.5" font-weight="700" fill="#151515" text-anchor="middle">Clients</text>
+    <text x="79" y="158" font-size="10.5" fill="#5f6368" text-anchor="middle">many tenants</text>
+    <line x1="144" y1="145" x2="186" y2="145" stroke="#9a9a9a" stroke-width="1.6" marker-end="url(#m2)"/>
+    <rect x="188" y="110" width="150" height="70" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="263" y="140" font-size="12.5" font-weight="700" fill="#151515" text-anchor="middle">Gateway</text>
+    <text x="263" y="158" font-size="10.5" fill="#5f6368" text-anchor="middle">injects the two headers</text>
+    <line x1="338" y1="145" x2="380" y2="145" stroke="#9a9a9a" stroke-width="1.6" marker-end="url(#m2)"/>
+    <rect x="382" y="52" width="250" height="192" rx="12" fill="#ffffff" stroke="#b9b9b9"/>
+    <text x="507" y="78" font-size="13" font-weight="800" fill="#151515" text-anchor="middle">Endpoint Picker</text>
+    <rect x="398" y="92" width="218" height="54" rx="9" fill="#f6f6f6"/>
+    <text x="507" y="113" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">flow control queues</text>
+    <text x="507" y="130" font-size="10" fill="#5f6368" text-anchor="middle">bands · fairness · ordering · gate</text>
+    <line x1="507" y1="146" x2="507" y2="162" stroke="#9a9a9a" stroke-width="1.4" marker-end="url(#m2)"/>
+    <rect x="398" y="166" width="218" height="54" rx="9" fill="#f6f6f6"/>
+    <text x="507" y="187" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">scheduler, late binding</text>
+    <text x="507" y="204" font-size="10" fill="#5f6368" text-anchor="middle">picks the best endpoint at dispatch time</text>
+    <line x1="632" y1="193" x2="700" y2="88" stroke="#d7d7d7" stroke-width="1.4"/>
+    <line x1="632" y1="193" x2="700" y2="193" stroke="#1f8a5f" stroke-width="2.4" marker-end="url(#m2)"/>
+    <line x1="632" y1="193" x2="700" y2="266" stroke="#d7d7d7" stroke-width="1.4"/>
+    <rect x="702" y="58" width="204" height="58" rx="10" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="718" y="82" font-size="11.5" font-weight="700" fill="#151515">Server 1 · saturated</text>
+    <text x="718" y="100" font-size="10.5" fill="#5f6368">batch full, local queue full</text>
+    <rect x="702" y="164" width="204" height="58" rx="10" fill="#f2faf6" stroke="#9fceb8"/>
+    <text x="718" y="188" font-size="11.5" font-weight="700" fill="#151515">Server 2 · has room ✓</text>
+    <text x="718" y="206" font-size="10.5" fill="#5f6368">holds this prompt's prefix cache</text>
+    <rect x="702" y="238" width="204" height="52" rx="10" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="718" y="260" font-size="11.5" font-weight="700" fill="#151515">Server 3 · nearly full</text>
+    <text x="718" y="278" font-size="10.5" fill="#5f6368">batch full, queue draining</text>
+    <text x="382" y="272" font-size="11.5" fill="#4a4a4a">Held requests are never locked to a server.</text>
+    <text x="382" y="289" font-size="11.5" fill="#4a4a4a">The pick happens when the answer is knowable.</text>
+  </svg>
+  </div>
+</section>
+
+<section>
   <h2>The three-tier decision</h2>
   <p>Each dispatch cycle answers three questions in strict order. One is fixed, two are pluggable.</p>
   <table>
@@ -194,15 +255,15 @@
   </div></section>
 
 <section>
-  <h2>What the policy looks like in data</h2>
-  <p>You can see each tier working from four measurements on one GPU running GPT-OSS 20B behind the llm-d gateway.</p>
+  <h2>What the policy guarantees</h2>
+  <p>Each tier leaves a fingerprint you can measure on your own pool.</p>
   <div class="tiles">
-    <div class="tile"><div class="k">Priority</div><div class="num">41 vs 379 ms</div><div class="unit">p50 TTFT, premium vs standard</div><div class="why">Standard surged past saturation. Premium stayed ahead of the queue it did not cause.</div></div>
-    <div class="tile"><div class="k">Fairness</div><div class="num">within 9 ms</div><div class="unit">equal peers, whole run</div><div class="why">Two tenants at equal load were indistinguishable for 300 s while a third spiked.</div></div>
-    <div class="tile"><div class="k">Cost assignment</div><div class="num">107 vs 80 ms</div><div class="unit">mean queue time, spiker vs peers</div><div class="why">The tenant that created the pressure carried the most queue time, every repeat.</div></div>
-    <div class="tile"><div class="k">Sheddable isolation</div><div class="num">202 vs 64 ms</div><div class="unit">mean queue time, batch vs premium</div><div class="why">Batch at triple the interactive arrival rate absorbed the waiting instead of causing it.</div></div>
+    <div class="tile"><div class="k">Priority</div><div class="why" style="margin-top:2px;font-size:12.5px">A latency-sensitive class stays fast through a surge it did not cause. The lower class absorbs the queue.</div></div>
+    <div class="tile"><div class="k">Fairness</div><div class="why" style="margin-top:2px;font-size:12.5px">Tenants at equal load within a band are treated identically, without anyone tuning per-tenant rate limits.</div></div>
+    <div class="tile"><div class="k">Cost assignment</div><div class="why" style="margin-top:2px;font-size:12.5px">The tenant that creates the pressure carries the most queue time. The wait is assigned, not ambient.</div></div>
+    <div class="tile"><div class="k">Sheddable isolation</div><div class="why" style="margin-top:2px;font-size:12.5px">Batch traffic can dominate arrivals and still absorb the waiting instead of causing it, inside a bounded queue.</div></div>
   </div>
-  <div class="note">The absolute numbers track that specific GPU and tuning. The pattern is the guarantee.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
+  <div class="note">Absolute latencies always track your hardware, model, and tuning. The pattern is the guarantee.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
 </section>
 
 <section>
