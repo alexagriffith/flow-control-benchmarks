@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flow control benchmarks for llm-d</title>
+<style>
+:root{--bg:#08090B;--card:#0e1014;--b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.16);
+--txt:#e8eaf0;--txt2:#9aa0ad;--txt3:#5f6673;--brand:#5B6CF0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:64px 24px 80px}
+h1{font-size:30px;font-weight:650;letter-spacing:-.02em;margin:0 0 12px}
+p.lede{color:var(--txt2);margin:0 0 40px}
+a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;padding:20px 22px;margin-bottom:14px;transition:border-color .18s,transform .18s}
+a.card:hover{border-color:var(--brand);transform:translateY(-1px)}
+a.card .t{font-size:16px;font-weight:600;margin-bottom:5px}
+a.card .d{font-size:13.5px;color:var(--txt2)}
+.eyebrow{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
+footer{margin-top:36px;font-size:13px;color:var(--txt3)}
+footer a{color:var(--txt2)}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">llm-d · Endpoint Picker</div>
+  <h1>Flow control benchmarks</h1>
+  <p class="lede">Measured evidence that flow control keeps a shared GPU pool predictable under pressure, plus an explainer for how the mechanism actually works. One GPU serving GPT-OSS 20B behind the llm-d inference gateway.</p>
+
+  <a class="card" href="learn/flow-control-journey.html">
+    <div class="t">The interactive explainer</div>
+    <div class="d">Six stops from the cost problem to the dispatch path, the saturation gate, and behavior under pressure, ending in a playground you drive yourself. Autoplays, light or dark.</div>
+  </a>
+  <a class="card" href="learn/flow-control.html">
+    <div class="t">The written explainer</div>
+    <div class="d">The same material as a page to read rather than click through.</div>
+  </a>
+  <a class="card" href="report/flow-control-under-pressure.html">
+    <div class="t">The first pressure campaign report</div>
+    <div class="d">The written report from the first campaign, kept so the progression is visible.</div>
+  </a>
+  <a class="card" href="https://github.com/alexagriffith/flow-control-benchmarks">
+    <div class="t">The repository</div>
+    <div class="d">Charts, per-request data, the runner, and what each run proves.</div>
+  </a>
+
+  <footer>Built against the upstream <a href="https://github.com/llm-d/llm-d">llm-d</a> Endpoint Picker documentation.</footer>
+</main>
+</body>
+</html>
