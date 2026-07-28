@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llm-d flow control explainer</title>
+<style>
+/* ============ INFERRA TOKENS ============ */
+:root{
+  --canvas:#08090B;--base:#0e1014;--raised:#14171d;--inset:#05060a;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.10);--b3:rgba(255,255,255,.16);
+  --txt:#e8eaf0;--txt2:#9aa0ad;--txt3:#5f6673;
+  --brand:#5B6CF0;--brand-soft:rgba(91,108,240,.12);
+  --teal:#159a9a;--amber:#c98500;--danger:#e5534b;--ok:#3fa66a;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+html[data-mode="light"]{
+  --canvas:#f7f8fa;--base:#ffffff;--raised:#f1f2f6;--inset:#e9eaef;
+  --b1:rgba(10,12,20,.08);--b2:rgba(10,12,20,.13);--b3:rgba(10,12,20,.22);
+  --txt:#14161c;--txt2:#4c5260;--txt3:#8a8f9c;
+  --brand:#4353d8;--brand-soft:rgba(67,83,216,.10);
+  --teal:#0e7f7f;--amber:#9a6a00;--danger:#c43d36;--ok:#2b8653;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--txt);font-size:14px;
+  font-family:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;transition:background .3s,color .3s}
+.mono{font-family:"Geist Mono",ui-monospace,Menlo,monospace}
+#app{max-width:1120px;margin:0 auto;padding:18px 20px 30px;display:flex;flex-direction:column;min-height:100vh}
+/* header */
+header{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 14px;border-bottom:1px solid var(--b1)}
+header .t{font-size:15px;font-weight:600}
+header .t span{font-weight:400;color:var(--txt3);font-size:12.5px;margin-left:10px}
+.ctl{display:flex;gap:8px}
+.pill{border:1px solid var(--b2);border-radius:999px;background:var(--base);color:var(--txt2);
+  font-size:11.5px;padding:5px 12px;cursor:pointer;transition:all .18s var(--ease)}
+.pill:hover{border-color:var(--b3);color:var(--txt)}
+.pill.on{border-color:var(--brand);color:var(--txt);background:var(--brand-soft)}
+/* timeline */
+#timeline{display:flex;align-items:center;padding:13px 2px;border-bottom:1px solid var(--b1)}
+.stop{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--txt3);cursor:pointer;white-space:nowrap}
+.stop .n{width:20px;height:20px;border-radius:99px;border:1px solid var(--b2);display:grid;place-items:center;font-size:10px;position:relative}
+.stop.done .n{background:var(--brand);border-color:var(--brand);color:#fff}
+.stop.act{color:var(--txt)}
+.stop.act .n{border-color:var(--brand);color:var(--brand)}
+.stop.act .n svg{position:absolute;inset:-3px}
+.tl-line{flex:1;height:1px;background:var(--b1);margin:0 9px}
+/* stage */
+#stage{flex:1;position:relative;min-height:430px}
+.page{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);display:flex;flex-direction:column;padding-top:22px}
+.page.act{opacity:1;pointer-events:auto}
+.eyebrow{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+h2{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:0 0 6px;line-height:1.1}
+.point{font-size:13.5px;color:var(--txt2);margin:0 0 18px;max-width:640px}
+.viz{flex:0 1 auto;background:var(--base);border:1px solid var(--b1);border-radius:12px;padding:22px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;min-height:340px;max-height:520px}
+.footnote{font-size:11px;color:var(--txt3);margin-top:10px}
+.provenance{position:absolute;top:14px;right:16px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3);border:1px solid var(--b1);border-radius:999px;padding:3px 9px}
+/* nav */
+#nav{display:flex;justify-content:space-between;align-items:center;padding-top:14px}
+.navbtn{border:1px solid var(--b2);border-radius:8px;background:var(--base);color:var(--txt);font-size:12.5px;padding:7px 16px;cursor:pointer;transition:all .18s var(--ease)}
+.navbtn:hover{border-color:var(--brand)}
+.navbtn[disabled]{opacity:.35;cursor:default}
+#pgno{font-size:11px;color:var(--txt3)}
+/* shared viz pieces */
+.node{background:var(--raised);border:1px solid var(--b2);border-radius:8px;padding:9px 13px;font-size:12px;text-align:center;transition:all .3s var(--ease)}
+.node.hot{border-color:var(--brand);box-shadow:0 0 16px var(--brand-soft)}
+.dot{width:8px;height:8px;border-radius:99px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.lab{font-size:10.5px;color:var(--txt3)}
+.legend{display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--txt2)}
+svg text{font-family:Inter,-apple-system,"Segoe UI",sans-serif}
+svg .mono-t{font-family:"Geist Mono",ui-monospace,monospace}
+/* playground */
+.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.chip{border:1px solid var(--b2);border-radius:8px;background:var(--raised);font-size:11px;color:var(--txt2);padding:6px 6px;text-align:center;cursor:pointer;transition:all .18s var(--ease)}
+.chip:hover{border-color:var(--b3);color:var(--txt)}
+.chip.on{border-color:var(--brand);color:var(--txt);background:var(--brand-soft)}
+.pg-grid{display:flex;gap:12px;flex:1;min-height:0}
+.knobs{flex:0 0 200px;display:flex;flex-direction:column;gap:8px}
+.knob{background:var(--raised);border:1px solid var(--b1);border-radius:8px;padding:9px 11px}
+.kk{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);margin-bottom:6px}
+.krow{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:6px}
+.krow input[type=range]{flex:1;accent-color:var(--brand);height:3px}
+.krow .val{width:24px;text-align:right}
+.seg{display:flex;border:1px solid var(--b2);border-radius:8px;overflow:hidden;font-size:11px}
+.seg div{flex:1;text-align:center;padding:5px 4px;cursor:pointer;color:var(--txt2)}
+.seg div.on{background:var(--brand-soft);color:var(--txt)}
+.counters{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.counter{font-family:"Geist Mono",ui-monospace,monospace;font-size:11px;background:var(--inset);border:1px solid var(--b1);border-radius:8px;padding:6px 9px;color:var(--txt2)}
+.narr{font-size:12px;color:var(--txt2);margin-top:10px;min-height:32px}
+@media (max-width:840px){.chips{grid-template-columns:repeat(2,1fr)}.pg-grid{flex-direction:column}.knobs{flex:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="t">llm-d flow control explainer<span id="subtitle"></span></div>
+  <div class="ctl">
+    <button class="pill on" id="autoBtn">▶ auto · 20s</button>
+    <button class="pill" id="modeBtn">☾ dark</button>
+    <button class="pill" id="skipBtn">Skip to playground</button>
+  </div>
+</header>
+<div id="timeline"></div>
+<div id="stage"></div>
+<div id="nav">
+  <button class="navbtn" id="prevBtn">← Back</button>
+  <span id="pgno" class="mono"></span>
+  <button class="navbtn" id="nextBtn">Next →</button>
+</div>
+</div>
+
+<script>
+/* =====================================================================
+   llm-d flow control explainer · single file
+   Edit any page's text in PAGES below. Charts and animations draw from
+   the same definitions. No build step.
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const COLORS={premium:'var(--brand)',standard:'var(--amber)',batch:'var(--teal)'};
+
+/* ---------- page definitions: title, point line, viz builder ---------- */
+const ACTS=[
+  {name:'Why',pages:[1,2]},
+  {name:'Where',pages:[3]},
+  {name:'How',pages:[4,5,6]},
+  {name:'Behavior',pages:[7,8,9]},
+  {name:'The trade',pages:[10]},
+  {name:'Play',pages:[11]},
+];
+
+const PAGES=[
+/* ---- PAGE 0 · TITLE ---- */
+{sub:'',build:p=>{p.innerHTML=`
+  <div style="flex:1;display:grid;place-items:center;text-align:center">
+    <div>
+      <div class="eyebrow">llm-d · Endpoint Picker</div>
+      <div style="font-size:clamp(30px,5vw,44px);font-weight:650;letter-spacing:-.03em;line-height:1.1">
+        Flow control makes shared<br>inference predictable.</div>
+      <p class="point" style="margin:16px auto 22px">Six stops, then play with it yourself.</p>
+      <button class="navbtn" style="border-color:var(--brand);background:var(--brand-soft)" onclick="go(1)">Start the journey</button>
+    </div>
+  </div>`;}},
+
+/* ---- PAGE 1 · THE COST PROBLEM ---- */
+{sub:'Why',title:'The cost problem',point:'Every tenant gets a dedicated GPU. Most of that silicon sits idle.',
+ provenance:'illustrative',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;gap:26px;justify-content:center;align-items:flex-end;height:100%;padding:20px 0" id="p1viz"></div>`);
+  const rows=[['Tenant A','premium',30],['Tenant B','standard',15],['Tenant C','batch',45]];
+  const el=p.querySelector('#p1viz');
+  el.innerHTML=rows.map(([n,c,u],i)=>`
+    <div style="text-align:center">
+      <div class="lab" style="margin-bottom:8px">${n}</div>
+      <div style="width:110px;height:190px;border:1px solid var(--b2);border-radius:10px;background:var(--raised);position:relative;overflow:hidden">
+        <div class="fillbar" data-h="${u}" style="position:absolute;bottom:0;left:0;right:0;height:0;background:${COLORS[c]};opacity:.85;transition:height 1.6s var(--ease) ${0.3+i*0.35}s"></div>
+        <div style="position:absolute;top:8px;left:0;right:0;text-align:center" class="lab">GPU</div>
+      </div>
+      <div class="mono" style="font-size:13px;margin-top:8px"><span class="cnt" data-to="${u}">0</span>%</div>
+    </div>`).join('')+`
+    <div style="align-self:center;max-width:190px">
+      <div style="font-size:30px;font-weight:650;letter-spacing:-.02em"><span class="cnt" data-to="30">0</span>%</div>
+      <div class="lab">average utilization, paid for one hundred</div>
+    </div>`;},
+ enter:p=>{p.querySelectorAll('.fillbar').forEach(b=>b.style.height=b.dataset.h+'%');
+  p.querySelectorAll('.cnt').forEach(c=>animCount(c,+c.dataset.to,1600));}},
+
+/* ---- PAGE 2 · THE BURST PROBLEM ---- */
+{sub:'Why',title:'The burst problem',point:'LLM traffic arrives in bursts, so capping at the average clips your peaks and wastes throughput, while letting bursts through breaks your SLAs. Flow control does not remove that trade. It decides who absorbs it, and moves the waiting to where policy can see it.',
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <line x1="60" y1="250" x2="860" y2="250" stroke="var(--b2)"/>
+    <line x1="60" y1="130" x2="860" y2="130" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 5" opacity=".8"/>
+    <text x="855" y="122" font-size="11" fill="var(--danger)" text-anchor="end">capacity</text>
+    <path id="burstwave" fill="none" stroke="var(--brand)" stroke-width="2.5"/>
+    <path id="burstfill" fill="var(--danger)" opacity=".18" stroke="none"/>
+    <text x="60" y="285" font-size="11" fill="var(--txt3)">time</text>
+    <text id="p2msg" x="460" y="60" font-size="13" fill="var(--txt2)" text-anchor="middle"></text>
+  </svg>`);},
+ enter:p=>{const w=p.querySelector('#burstwave'),f=p.querySelector('#burstfill'),m=p.querySelector('#p2msg');
+  let t0=performance.now();
+  animLoop(p,now=>{const t=(now-t0)/1000;
+    let d='',dOver='M';
+    let over=false;
+    for(let x=0;x<=800;x+=8){
+      const tt=t*1.1+x/80;
+      const y=250-60-42*Math.max(0,Math.sin(tt))**3*2 - 12*Math.sin(tt*2.7);
+      d+=(x?'L':'M')+(60+x)+' '+y+' ';
+      const yc=Math.min(y,130);
+      dOver+=(60+x)+' '+Math.min(y,130)+' L';
+    }
+    w.setAttribute('d',d);
+    // overflow area between wave and cap where wave above cap
+    let fa='';
+    for(let x=0;x<=800;x+=8){const tt=t*1.1+x/80;
+      const y=250-60-42*Math.max(0,Math.sin(tt))**3*2 - 12*Math.sin(tt*2.7);
+      fa+=(x?'L':'M')+(60+x)+' '+Math.min(y,130)+' ';}
+    for(let x=800;x>=0;x-=8){fa+='L'+(60+x)+' 130 ';}
+    f.setAttribute('d',fa+'Z');
+    m.textContent = (Math.floor(t/3)%2==0)?'the peaks above the line are broken latency':'cap at the average and those peaks are lost throughput';
+  });}},
+
+/* ---- PAGE 3 · WHERE YOU ARE ---- */
+{sub:'Where',title:'Where you are',point:'llm-d serves large language models on Kubernetes. Zoom in twice and flow control is a layer inside the Endpoint Picker.',
+ build:p=>{vizHTML(p,`
+  <div id="zoomwrap" style="height:100%;display:grid;place-items:center">
+   <div style="position:relative;width:min(860px,100%);height:100%">
+    <div class="zf" id="z1" style="position:absolute;inset:0;border:1px solid var(--b2);border-radius:12px;padding:12px 16px;transition:all .8s var(--ease)">
+      <div class="lab">Kubernetes cluster</div>
+      <div style="display:flex;gap:10px;margin-top:8px;height:calc(100% - 34px)">
+        <div class="node" style="align-self:center">clients</div>
+        <div style="align-self:center;color:var(--txt3)">→</div>
+        <div class="zf" id="z2" style="flex:1;border:1px solid var(--b2);border-radius:10px;padding:10px 14px;transition:all .8s var(--ease)">
+          <div class="lab">llm-d, the serving stack</div>
+          <div style="display:flex;gap:10px;margin-top:8px;align-items:center;height:calc(100% - 34px)">
+            <div class="node">inference<br>gateway</div>
+            <div style="color:var(--txt3)">→</div>
+            <div class="zf" id="z3" style="flex:1;border:1px solid var(--b2);border-radius:10px;padding:10px 12px;transition:all .8s var(--ease)">
+              <div class="lab">Endpoint Picker</div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+                <div class="node" id="fcnode">flow control · queues, priority, fairness, the gate</div>
+                <div class="node">scheduler · scores and picks the server</div>
+              </div>
+            </div>
+            <div style="color:var(--txt3)">→</div>
+            <div class="node">vLLM<br>pods</div>
+          </div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>`);},
+ enter:p=>{const seq=[['#z1',0],['#z2',900],['#z3',1800]];
+  seq.forEach(([sel,dt])=>setTimeout(()=>{const e=p.querySelector(sel);if(e)e.style.borderColor='var(--brand)';
+    if(sel==='#z3')setTimeout(()=>{const f=p.querySelector('#fcnode');if(f)f.classList.add('hot');},700);},dt));},
+ exit:p=>{p.querySelectorAll('.zf').forEach(e=>e.style.borderColor='var(--b2)');const f=p.querySelector('#fcnode');if(f)f.classList.remove('hot');}},
+
+/* ---- PAGE 4 · MOVE THE QUEUE UPSTREAM ---- */
+{sub:'How',title:'Move the queue upstream',point:'Three layers absorb a burst. The engine limit protects token speed, a small buffer keeps it fed, and the excess waits where policy can act.',
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 900 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <rect x="560" y="70" width="150" height="160" rx="10" fill="none" stroke="var(--b2)"/>
+    <text x="635" y="60" font-size="11" fill="var(--txt3)" text-anchor="middle">engine active batch, protects token speed</text>
+    <rect x="470" y="100" width="60" height="100" rx="8" fill="none" stroke="var(--b2)"/>
+    <text x="500" y="90" font-size="11" fill="var(--txt3)" text-anchor="middle">buffer</text>
+    <rect x="120" y="100" width="300" height="100" rx="8" fill="none" stroke="var(--brand)"/>
+    <text x="270" y="90" font-size="11" fill="var(--brand)" text-anchor="middle">burst queue, where policy lives</text>
+    <g id="p4dots"></g>
+    <text x="760" y="155" font-size="12" fill="var(--txt2)">tokens</text>
+  </svg>`);},
+ enter:p=>{const g=p.querySelector('#p4dots');const dots=[];
+  for(let i=0;i<26;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('r',5);c.setAttribute('fill',i%5==0?'var(--amber)':(i%7==0?'var(--teal)':'var(--brand)'));
+    g.appendChild(c);dots.push({el:c,t:-i*0.55});}
+  animLoop(p,(now,dt)=>{dots.forEach(d=>{d.t+=dt/1000*.55;
+    let x,y;const t=d.t%4;
+    if(t<0){x=-20;y=150}
+    else if(t<1.6){x=130+ (t/1.6)*280; y=118+((d.el.getAttribute('r')*7)%64)}      /* crossing burst queue slowly */
+    else if(t<2.1){x=470+((t-1.6)/0.5)*60; y=150}
+    else if(t<3.4){x=575+((t-2.1)/1.3)*120; y=100+((d.el.getAttribute('r')*11)%100)}
+    else {x=720+((t-3.4)/0.6)*160; y=150}
+    d.el.setAttribute('cx',x);d.el.setAttribute('cy',y);
+    d.el.setAttribute('opacity', t>3.9?0:(t<0?0:1));});});}},
+
+/* ---- PAGE 5 · ONE REQUEST'S JOURNEY ---- */
+{sub:'How',title:'One request’s journey',point:'Tagged at the gateway, keyed into its own queue, chosen in three picks, released by the gate, landed where there is room.',
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <g font-size="11" fill="var(--txt2)">
+      <rect x="40" y="120" width="110" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="95" y="145" text-anchor="middle" fill="var(--txt)">gateway</text><text x="95" y="163" text-anchor="middle">stamps two headers</text>
+      <rect x="210" y="60" width="240" height="180" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="330" y="80" text-anchor="middle" fill="var(--txt)">bands and flows</text>
+      <rect x="228" y="95" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="95" width="4" height="34" fill="var(--brand)"/><text x="242" y="116">premium · tenant queues</text>
+      <rect x="228" y="139" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="139" width="4" height="34" fill="var(--amber)"/><text x="242" y="160">standard</text>
+      <rect x="228" y="183" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="183" width="4" height="34" fill="var(--teal)"/><text x="242" y="204">batch, bounded</text>
+      <rect x="510" y="120" width="90" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="555" y="145" text-anchor="middle" fill="var(--txt)">gate</text><text x="555" y="163" text-anchor="middle">saturation</text>
+      <rect x="660" y="120" width="90" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="705" y="145" text-anchor="middle" fill="var(--txt)">scheduler</text><text x="705" y="163" text-anchor="middle">picks late</text>
+      <rect x="800" y="120" width="70" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="835" y="153" text-anchor="middle" fill="var(--txt)">vLLM</text>
+    </g>
+    <circle id="p5dot" r="6" fill="var(--brand)" stroke="var(--base)" stroke-width="2"/>
+    <text id="p5cap" x="450" y="280" font-size="12" fill="var(--txt2)" text-anchor="middle"></text>
+  </svg>`);},
+ enter:p=>{const dot=p.querySelector('#p5dot'),cap=p.querySelector('#p5cap');
+  const path=[[10,150,'a request arrives'],[95,150,'stamped, objective and tenant'],[330,112,'waits in its own flow queue'],[330,112,'priority, then fairness, then order pick it'],[555,150,'the gate has room'],[705,150,'the endpoint is chosen now, not earlier'],[835,150,'first token'],[930,150,'']];
+  let seg=0,t0=performance.now();
+  animLoop(p,now=>{const t=(now-t0)/1400;
+    if(t>=1){seg=(seg+1)%(path.length-1);t0=now;}
+    const a=path[seg],b=path[seg+1],k=Math.min(1,(now-t0)/1400);
+    const e=k<.5?2*k*k:1-((-2*k+2)**2)/2;
+    dot.setAttribute('cx',a[0]+(b[0]-a[0])*e);dot.setAttribute('cy',a[1]+(b[1]-a[1])*e);
+    cap.textContent=a[2];});}},
+
+/* ---- PAGE 6 · THE GATE ---- */
+{sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. This is the utilization detector, the one that reads server telemetry.',
+ provenance:'utilization detector',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;height:100%;gap:22px;align-items:center">
+    <div style="flex:1.3">
+      <svg viewBox="0 0 460 240" width="100%">
+        <text x="10" y="24" font-size="12" fill="var(--txt2)">saturation = average over pods of</text>
+        <text x="10" y="48" font-size="13" class="mono-t" fill="var(--txt)">max( waiting / threshold , kv used / kv limit )</text>
+        <rect x="10" y="80" width="440" height="26" rx="13" fill="var(--inset)"/>
+        <rect id="p6bar" x="10" y="80" width="0" height="26" rx="13" fill="var(--brand)"/>
+        <line x1="330" y1="70" x2="330" y2="116" stroke="var(--danger)" stroke-dasharray="4 4"/>
+        <text x="330" y="132" font-size="11" fill="var(--danger)" text-anchor="middle">1.0 · gate closes</text>
+        <text id="p6val" x="450" y="70" font-size="13" class="mono-t" fill="var(--txt)" text-anchor="end">0.00</text>
+        <text x="10" y="176" font-size="12" fill="var(--txt2)">a pod with stale metrics counts as fully saturated</text>
+        <text x="10" y="198" font-size="12" fill="var(--txt2)">the threshold normalizes the score and caps which pods the scheduler may pick</text>
+        <text x="10" y="220" font-size="12" fill="var(--txt2)">the ceiling is per band, and a blocked top band stops the whole cycle</text>
+      </svg>
+    </div>
+    <div style="flex:1;text-align:center">
+      <div id="p6state" class="node" style="font-size:15px;padding:18px 22px">gate open</div>
+      <div id="p6flow" style="margin-top:16px;height:120px;position:relative;overflow:hidden"></div>
+    </div>
+  </div>`);},
+ enter:p=>{const bar=p.querySelector('#p6bar'),val=p.querySelector('#p6val'),st=p.querySelector('#p6state'),fl=p.querySelector('#p6flow');
+  fl.innerHTML='';const drops=[];
+  for(let i=0;i<8;i++){const d=document.createElement('div');
+    d.style.cssText='position:absolute;width:10px;height:10px;border-radius:99px;background:var(--brand);left:'+(10+i*12)+'%';
+    fl.appendChild(d);drops.push({el:d,ph:i*0.4});}
+  let t0=performance.now();
+  animLoop(p,now=>{const t=(now-t0)/1000;
+    const sat=0.55+0.65*Math.sin(t*0.7)**2;
+    bar.setAttribute('width',Math.min(440,sat/1.375*440));
+    val.textContent=sat.toFixed(2);
+    const closed=sat>=1.0;
+    st.textContent=closed?'gate closed · requests hold':'gate open · requests flow';
+    st.style.borderColor=closed?'var(--danger)':'var(--ok)';
+    drops.forEach(d=>{d.ph+= (closed?0.0015:0.011);
+      d.el.style.top=((d.ph%1)*110)+'px';d.el.style.opacity=closed?.35:1;});});}},
+
+/* ---- PAGE 7 · PRIORITY HOLDS ---- */
+{sub:'Behavior',title:'Priority holds',point:'Standard surges past capacity. Premium keeps its dispatch turn, so the queue duration lands on the tier that can afford it. Premium still shares the engine, so its own latency moves a little.',
+ provenance:'measured run · curve redrawn',
+ build:p=>{vizHTML(p,scenarioSVG('p7'));},
+ enter:p=>{scenarioAnim(p,'p7',{
+   lines:[{c:'var(--brand)',base:420,peak:436,label:'premium p95'},{c:'var(--amber)',base:430,peak:580,label:'standard p95'}],
+   ymax:700,window:[0.3,0.75],
+   bars:[['premium',37,'var(--brand)'],['standard',96,'var(--amber)']],barMax:110,barTitle:'mean queue duration, ms',
+   note:'standard accrued 2.6x the queue duration of premium'});}},
+
+/* ---- PAGE 8 · FAIRNESS HOLDS ---- */
+{sub:'Behavior',title:'Equal treatment, not insulation',point:'One premium tenant spikes to triple its peers. Round-robin splits the dispatch turns evenly, so the band degrades together rather than the spiker taking the pool. Nobody stays at baseline, because the pool is full.',
+ provenance:'measured run · curve redrawn',
+ build:p=>{vizHTML(p,scenarioSVG('p8'));},
+ enter:p=>{scenarioAnim(p,'p8',{
+   lines:[{c:'var(--brand)',base:212,peak:559,label:'tenant a p95, spiking'},{c:'var(--teal)',base:208,peak:555,label:'tenant b p95'},{c:'var(--amber)',base:214,peak:563,label:'tenant c p95'}],
+   ymax:700,window:[0.3,0.75],jitter:4,
+   bars:[['tenant a, spiking',88,'var(--brand)'],['tenant b',64,'var(--teal)'],['tenant c',64,'var(--amber)']],barMax:100,barTitle:'mean queue duration, ms',
+   note:'the three lines overlap because the tenants tracked each other. The p95 spread across the band stayed inside 8 ms, and the spiker accrued the most queue duration'});}},
+
+/* ---- PAGE 9 · OVERFLOW IS GOVERNED ---- */
+{sub:'Behavior',title:'Overflow is governed',point:'A batch flood absorbs its own waiting. Past the band cap, refusals carry a named reason on the wire.',
+ provenance:'measured · one GPU, GPT-OSS 20B',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;gap:22px;height:100%;align-items:center">
+    <div style="flex:1.2">
+      <div class="lab" style="margin-bottom:10px">mean queue duration during the batch surge</div>
+      <div id="p9bars"></div>
+      <div class="lab" style="margin-top:16px">push harder and the guardrails answer</div>
+      <div class="mono" style="font-size:11.5px;color:var(--txt2);margin-top:6px;line-height:1.9">
+        queue cap reached, gateway memory not GPU &nbsp;→&nbsp; <span style="color:var(--danger)">429 rejected-saturated</span><br>
+        queued past its time to live &nbsp;→&nbsp; <span style="color:var(--danger)">503 rejected-ttl-expired</span>
+      </div>
+    </div>
+    <div style="flex:1"><svg id="p9svg" viewBox="0 0 380 240" width="100%"></svg></div>
+  </div>`);
+  p.querySelector('#p9bars').innerHTML=[['premium',62,'var(--brand)'],['standard',64,'var(--amber)'],['batch, surging',198,'var(--teal)']].map(([n,v,c])=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="lab" style="width:104px">${n}</span>
+      <div style="flex:1;height:14px;border-radius:7px;background:var(--inset);overflow:hidden">
+        <div class="p9f" data-w="${v/210*100}" style="height:100%;width:0;border-radius:7px;background:${c};transition:width 1.4s var(--ease)"></div></div>
+      <span class="mono" style="font-size:11px;width:52px">${v} ms</span></div>`).join('');
+  const svg=p.querySelector('#p9svg');
+  const pts=[[160,503,0,0],[256,640,0,76],[384,640,1010,910],[512,715,16639,1456]];
+  let s='<text x="10" y="18" font-size="11" fill="var(--txt3)">the overload probe, tighter limits, rising load</text>';
+  const W=340,x0=30;
+  pts.forEach(([c,ok,r429,r503],i)=>{const total=ok+r429+r503;const y=40+i*48;
+    const w=v=>Math.max(v>0?3:0, v/total*W*0.85);
+    let x=x0;
+    s+=`<text x="${x0}" y="${y-6}" font-size="10" class="mono-t" fill="var(--txt3)">${c} concurrent</text>`;
+    s+=`<rect x="${x}" y="${y}" width="${w(ok)}" height="14" rx="3" fill="var(--ok)" opacity=".8"/>`;x+=w(ok)+2;
+    s+=`<rect x="${x}" y="${y}" width="${w(r429)}" height="14" rx="3" fill="var(--danger)"/>`;x+=w(r429)+2;
+    s+=`<rect x="${x}" y="${y}" width="${w(r503)}" height="14" rx="3" fill="var(--amber)"/>`;});
+  s+=`<g font-size="10" fill="var(--txt2)"><circle cx="36" cy="232" r="4" fill="var(--ok)" opacity=".8"/><text x="46" y="235">served</text>
+      <circle cx="106" cy="232" r="4" fill="var(--danger)"/><text x="116" y="235">429</text>
+      <circle cx="156" cy="232" r="4" fill="var(--amber)"/><text x="166" y="235">503</text></g>`;
+  svg.innerHTML=s;},
+ enter:p=>{p.querySelectorAll('.p9f').forEach(b=>b.style.width=b.dataset.w+'%');}},
+
+/* ---- PAGE 10 · THE TRADE ---- */
+{sub:'The trade',title:'The trade, stated honestly',point:'Flow control added no capacity. It moved the wait to where policy decides who pays it, and gave you a dial per pool.',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
+    <div style="display:flex;justify-content:center;gap:40px;align-items:center">
+      <div style="text-align:center"><div class="lab" style="margin-bottom:6px">before</div>
+        <div style="display:flex;gap:8px">${[30,15,45].map(u=>`<div style="width:44px;height:80px;border:1px solid var(--b2);border-radius:8px;position:relative;overflow:hidden;background:var(--raised)"><div style="position:absolute;bottom:0;left:0;right:0;height:${u}%;background:var(--txt3);opacity:.5"></div></div>`).join('')}</div>
+        <div class="lab" style="margin-top:6px">three GPUs, 30% average</div></div>
+      <div style="font-size:22px;color:var(--txt3)">→</div>
+      <div style="text-align:center"><div class="lab" style="margin-bottom:6px">after</div>
+        <div style="width:64px;height:80px;border:1px solid var(--brand);border-radius:8px;position:relative;overflow:hidden;background:var(--raised);margin:0 auto"><div style="position:absolute;bottom:0;left:0;right:0;height:85%;background:var(--brand);opacity:.75"></div></div>
+        <div class="lab" style="margin-top:6px">one pool, run hot, generation speed protected</div></div>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:14px">
+      <span class="lab">isolation</span>
+      <input id="p10dial" type="range" min="0" max="100" value="70" style="width:280px;accent-color:var(--brand)">
+      <span class="lab">utilization</span>
+    </div>
+    <div id="p10read" style="text-align:center;font-size:12.5px;color:var(--txt2)"></div>
+    <div style="display:flex;justify-content:center;gap:34px;color:var(--txt3);font-size:11px">
+      <span>◳ sweep the envelope</span><span>◱ place the operating point</span><span>◰ let the policy own the overflow</span>
+    </div>
+  </div>`);
+  const dial=p.querySelector('#p10dial'),read=p.querySelector('#p10read');
+  const upd=()=>{const v=+dial.value;
+    read.textContent = v>60?'utilization mode. The batch fills, throughput is maximal, and a same-tier surge is shared.':
+      v<40?'isolation mode. Excess waits in the surging tenant’s own queue instead of the server, so peers stay closer to baseline. Closer, not equal. Throughput pays.':
+      'in between. Every pool picks its own point on this line.';};
+  dial.addEventListener('input',upd);upd();}},
+
+/* ---- PAGE 11 · PLAYGROUND ---- */
+{sub:'Play',title:'',point:'',build:buildPlayground,enter:p=>{PG.running=true;},exit:p=>{PG.running=false;}},
+];
+
+/* ---------- shared builders ---------- */
+function vizHTML(p,inner){
+  const d=PAGES[cur];
+  p.innerHTML=`<div class="eyebrow">${d.sub||''}</div>
+    ${d.title?`<h2>${d.title}</h2>`:''}
+    ${d.point?`<p class="point">${d.point}</p>`:''}
+    <div class="viz">${d.provenance?`<span class="provenance">${d.provenance}</span>`:''}${inner}</div>`;
+}
+function scenarioSVG(id){return `
+  <div style="display:flex;gap:22px;height:100%;align-items:center">
+    <div style="flex:1.4"><svg id="${id}svg" viewBox="0 0 520 260" width="100%">
+      <line x1="46" y1="220" x2="500" y2="220" stroke="var(--b2)"/>
+      <text x="46" y="240" font-size="10" fill="var(--txt3)">0 s</text>
+      <text x="500" y="240" font-size="10" fill="var(--txt3)" text-anchor="end">300 s</text>
+      <text x="10" y="20" font-size="11" fill="var(--txt3)">p95 time to first token</text>
+      <rect id="${id}win" y="30" height="190" fill="var(--amber)" opacity=".07"/>
+      <g id="${id}lines"></g></svg>
+      <div class="legend" id="${id}leg"></div></div>
+    <div style="flex:1">
+      <div class="lab" id="${id}btitle" style="margin-bottom:10px"></div>
+      <div id="${id}bars"></div>
+      <div style="font-size:12px;color:var(--txt2);margin-top:14px" id="${id}note"></div>
+    </div>
+  </div>`;}
+function scenarioAnim(p,id,cfg){
+  const g=p.querySelector('#'+id+'lines');g.innerHTML='';
+  const win=p.querySelector('#'+id+'win');
+  win.setAttribute('x',46+cfg.window[0]*454);win.setAttribute('width',(cfg.window[1]-cfg.window[0])*454);
+  const els=cfg.lines.map(l=>{const pl=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    pl.setAttribute('fill','none');pl.setAttribute('stroke',l.c);pl.setAttribute('stroke-width',2.4);
+    pl.setAttribute('stroke-linejoin','round');g.appendChild(pl);return pl;});
+  p.querySelector('#'+id+'leg').innerHTML=cfg.lines.map(l=>`<span><span class="dot" style="background:${l.c}"></span>${l.label}</span>`).join('');
+  p.querySelector('#'+id+'btitle').textContent=cfg.barTitle;
+  p.querySelector('#'+id+'bars').innerHTML=cfg.bars.map(([n,v,c])=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="lab" style="width:104px">${n}</span>
+      <div style="flex:1;height:14px;border-radius:7px;background:var(--inset);overflow:hidden">
+        <div class="scf" data-w="${v/cfg.barMax*100}" style="height:100%;width:0;border-radius:7px;background:${c};transition:width 1.4s var(--ease) .6s"></div></div>
+      <span class="mono" style="font-size:11px;width:44px">${v}</span></div>`).join('');
+  p.querySelector('#'+id+'note').textContent=cfg.note;
+  requestAnimationFrame(()=>p.querySelectorAll('.scf').forEach(b=>b.style.width=b.dataset.w+'%'));
+  let t0=performance.now();
+  animLoop(p,now=>{const prog=Math.min(1,(now-t0)/3500);
+    els.forEach((pl,i)=>{const l=cfg.lines[i];let d='';
+      const n=Math.floor(90*prog);
+      for(let k=0;k<=n;k++){const f=k/90;
+        const inWin=f>cfg.window[0]&&f<cfg.window[1];
+        const ramp=inWin?Math.min(1,(f-cfg.window[0])/0.08)*Math.min(1,(cfg.window[1]-f)/0.08):0;
+        const v=l.base+(l.peak-l.base)*ramp+(cfg.jitter||8)*Math.sin(k*1.7+i*9)*(0.4+0.6*ramp);
+        const y=220-(v/cfg.ymax)*185;
+        d+=(46+f*454)+','+y+' ';}
+      pl.setAttribute('points',d);});});}
+/* counter + loop helpers */
+function animCount(el,to,ms){let t0=performance.now();
+  const step=now=>{const k=Math.min(1,(now-t0)/ms);el.textContent=Math.round(to*(1-(1-k)**3));
+    if(k<1&&el.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);}
+const loops=new Map();
+function animLoop(page,fn){let last=performance.now();
+  const tick=now=>{if(!page.classList.contains('act')){loops.delete(page);return;}
+    fn(now,now-last);last=now;loops.set(page,requestAnimationFrame(tick));};
+  loops.set(page,requestAnimationFrame(tick));}
+
+/* ---------- playground ---------- */
+const PG={running:false,load:{premium:12,standard:24,batch:8},mode:4,shape:0,fc:true,spike:0,
+  presets:[
+   ['Quiet pool',{premium:8,standard:8,batch:4,mode:4,fc:true},'Everything light. The gate never closes and flow control is invisible.'],
+   ['Consolidate',{premium:14,standard:14,batch:0,mode:4,fc:true},'Two workloads share the pool below the knee. Both stay fast.'],
+   ['Standard floods',{premium:12,standard:64,batch:0,mode:4,fc:true},'Standard floods past capacity. Premium keeps its turn so its queue time barely moves, while its latency still rises with the shared engine. Priority decides who waits upstream, not who owns the GPU.'],
+   ['Same-band spike',{premium:60,standard:0,batch:0,mode:4,fc:true},'One band carries the whole surge. This model keeps one queue per band, not per tenant, so read the band line as what every tenant in it experiences. Stop five has the per-tenant picture.'],
+   ['Isolation mode',{premium:60,standard:0,batch:0,mode:1,fc:true},'Same surge, buffer tightened to 1. More of the excess holds upstream instead of on the server, latency comes down, throughput pays for it.'],
+   ['Batch flood',{premium:12,standard:12,batch:56,mode:4,fc:true},'Batch triples the load and absorbs the waiting.'],
+   ['Band cap 429',{premium:12,standard:12,batch:90,mode:4,fc:true},'The batch band cap fills. Overflow is shed with 429 rejected-saturated.'],
+   ['Long generation',{premium:12,standard:24,batch:8,mode:4,fc:true,shape:1},'Same request counts, far heavier requests. The pool saturates much earlier.'],
+   ['TTL expiry',{premium:12,standard:96,batch:0,mode:4,fc:true},'Sustained overload. The oldest queued work expires with 503 before it goes stale.'],
+   ['No flow control',{premium:12,standard:64,batch:24,mode:4,fc:false},'Flow control off. Requests pass straight to the servers with no ordering, and once the pool saturates the sheddable band is rejected outright rather than waiting for a turn.'],
+  ]};
+function buildPlayground(p){
+  p.innerHTML=`
+  <div class="eyebrow">Play</div><h2>Your turn</h2>
+  <p class="point">Pick a case or drive the knobs. Numbers here are illustrative, generated by a small model of the mechanism.</p>
+  <div class="chips" id="pgchips"></div>
+  <div class="pg-grid">
+    <div class="knobs">
+      <div class="knob"><div class="kk">Load, in flight</div>
+        ${['premium','standard','batch'].map(k=>`<div class="krow"><span class="dot" style="background:${COLORS[k]}"></span>
+          <input type="range" min="0" max="100" value="${PG.load[k]}" data-k="${k}">
+          <span class="val mono" id="pgv_${k}">${PG.load[k]}</span></div>`).join('')}
+      </div>
+      <div class="knob"><div class="kk">Healthy buffer, queue depth</div>
+        <div class="seg" id="pgmode"><div data-m="4" class="on">wide · 4</div><div data-m="1">tight · 1</div></div>
+        <div class="lab" style="margin-top:6px;font-size:10px">tighter closes the gate sooner</div></div>
+      <div class="knob"><div class="kk">Request shape</div>
+        <div class="seg" id="pgshape"><div data-s="0" class="on">short</div><div data-s="1">long generation</div></div></div>
+      <div class="knob"><div class="kk">Flow control</div>
+        <div class="seg" id="pgfc"><div data-f="1" class="on">on</div><div data-f="0">off</div></div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+      <div class="viz" style="flex:1;padding:14px 16px">
+        <svg id="pgsvg" viewBox="0 0 640 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="counters" id="pgcnt"></div>
+      <div class="narr" id="pgnarr"></div>
+    </div>
+  </div>`;
+  const chips=p.querySelector('#pgchips');
+  chips.innerHTML=PG.presets.map((pr,i)=>`<div class="chip" data-i="${i}">${pr[0]}</div>`).join('');
+  chips.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+    chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+    const [name,cfg,narr]=PG.presets[+c.dataset.i];
+    PG.load={premium:cfg.premium,standard:cfg.standard,batch:cfg.batch};
+    PG.mode=cfg.mode;PG.fc=cfg.fc;PG.shape=cfg.shape||0;PG.twin=!!cfg.twin;
+    p.querySelectorAll('input[type=range]').forEach(r=>{r.value=PG.load[r.dataset.k];
+      p.querySelector('#pgv_'+r.dataset.k).textContent=r.value;});
+    p.querySelectorAll('#pgmode div').forEach(d=>d.classList.toggle('on',+d.dataset.m===PG.mode));
+    p.querySelectorAll('#pgshape div').forEach(d=>d.classList.toggle('on',+d.dataset.s===PG.shape));
+    p.querySelectorAll('#pgfc div').forEach(d=>d.classList.toggle('on',(+d.dataset.f===1)===PG.fc));
+    p.querySelector('#pgnarr').textContent=narr;});
+  p.addEventListener('input',e=>{if(e.target.dataset.k){PG.load[e.target.dataset.k]=+e.target.value;
+    p.querySelector('#pgv_'+e.target.dataset.k).textContent=e.target.value;PG.twin=false;}});
+  p.querySelector('#pgmode').addEventListener('click',e=>{if(e.target.dataset.m){PG.mode=+e.target.dataset.m;
+    e.currentTarget.querySelectorAll('div').forEach(d=>d.classList.toggle('on',d===e.target));}});
+  p.querySelector('#pgshape').addEventListener('click',e=>{if(e.target.dataset.s){PG.shape=+e.target.dataset.s;
+    e.currentTarget.querySelectorAll('div').forEach(d=>d.classList.toggle('on',d===e.target));}});
+  p.querySelector('#pgfc').addEventListener('click',e=>{if(e.target.dataset.f!==undefined){PG.fc=e.target.dataset.f==='1';
+    e.currentTarget.querySelectorAll('div').forEach(d=>d.classList.toggle('on',d===e.target));}});
+  /* sim loop */
+  const svg=p.querySelector('#pgsvg'),cnt=p.querySelector('#pgcnt');
+  const hist={premium:[],standard:[],batch:[]};
+  animLoop(p,(now)=>{
+    /* tiny analytic model, illustrative only */
+    const cap=PG.shape?40:128;
+    const L=PG.load, total=L.premium+L.standard+L.batch;
+    const running=Math.min(total,cap);
+    const excess=Math.max(0,total-cap*(PG.mode===1?0.85:1.0));
+    const base=PG.shape?120:45;
+    const batchPenalty= (running/cap)*(PG.shape?900:320);
+    let t={},q={premium:0,standard:0,batch:0},shed=0,ttl=0;
+    if(!PG.fc){
+      const share=excess>0? excess/Math.max(1,total):0;
+      ['premium','standard','batch'].forEach(k=>{t[k]=base+batchPenalty+share*1400*(L[k]?1:0);q[k]=0;});
+      if(excess>0&&L.batch){shed=Math.round(L.batch*0.8);}
+    } else {
+      /* excess assigned bottom band up */
+      let rem=excess;
+      ['batch','standard','premium'].forEach(k=>{const take=Math.min(rem, L[k]); q[k]= L[k]? (take/Math.max(1,L[k]))*(PG.mode===1?520:260):0; rem-=take;});
+      ['premium','standard','batch'].forEach(k=>{t[k]= L[k]? base+ (PG.mode===1&&excess>0? (k==='premium'?0.25:1)*batchPenalty*0.5 : batchPenalty) + q[k] :0;});
+      if(L.batch>70){shed=Math.round((L.batch-70)*1.8);}
+      if(excess>40){ttl=Math.round((excess-40)*0.7);}
+    }
+    ['premium','standard','batch'].forEach(k=>{const h=hist[k];h.push(L[k]?t[k]:null);if(h.length>120)h.shift();});
+    /* draw */
+    let s='<line x1="40" y1="210" x2="620" y2="210" stroke="var(--b2)"/>';
+    [[0,'0'],[400,'400'],[800,'800 ms']].forEach(([v,lb])=>{const y=210-v/900*180;
+      s+=`<line x1="40" y1="${y}" x2="620" y2="${y}" stroke="var(--b1)"/><text x="36" y="${y+3}" font-size="9" fill="var(--txt3)" text-anchor="end">${lb}</text>`;});
+    ['premium','standard','batch'].forEach(k=>{const h=hist[k];let d='';
+      h.forEach((v,i)=>{if(v==null)return;d+=(d?'L':'M')+(40+i/119*580)+' '+(210-Math.min(880,v)/900*180)+' ';});
+      if(d)s+=`<path d="${d}" fill="none" stroke="${COLORS[k]}" stroke-width="2.2" stroke-linejoin="round"/>`;});
+    s+='<text x="40" y="18" font-size="10" fill="var(--txt3)">time to first token, rolling</text>';
+    svg.innerHTML=s;
+    const thr=Math.round(Math.min(total,cap)*(PG.shape?0.9:2.4)*(PG.fc&&PG.mode===1?0.82:1));
+    cnt.innerHTML=['premium','standard','batch'].map(k=>L[k]?`<div class="counter"><span class="dot" style="background:${COLORS[k]}"></span>${k} ${Math.round(t[k])} ms · q ${Math.round(q[k])}</div>`:'').join('')
+      +`<div class="counter">${thr} req/s</div><div class="counter" style="${shed||ttl?'color:var(--danger)':''}">429 ${shed} · 503 ${ttl}</div>`;
+  });
+  chips.querySelector('.chip').click();
+}
+
+/* ---------- shell: nav, autoplay, timeline, mode ---------- */
+let cur=0,auto=true,autoT0=performance.now();
+const stage=$('#stage');
+PAGES.forEach((d,i)=>{const el=document.createElement('div');el.className='page';el.id='pg'+i;stage.appendChild(el);});
+function buildTimeline(){
+  const tl=$('#timeline');tl.innerHTML='';
+  ACTS.forEach((a,i)=>{
+    const done=a.pages[a.pages.length-1]<cur, act=a.pages.includes(cur)|| (cur===0&&i===0);
+    const s=document.createElement('div');s.className='stop'+(done?' done':'')+(act&&cur>0?' act':'');
+    s.innerHTML=`<span class="n">${done?'✓':i+1}${act&&cur>0&&auto?`<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="11.5" fill="none" stroke="var(--brand)" stroke-width="2" stroke-dasharray="72.2" stroke-dashoffset="${72.2*(1-autoProg())}" transform="rotate(-90 13 13)"/></svg>`:''}</span>${a.name}`;
+    s.onclick=()=>go(a.pages[0]);
+    tl.appendChild(s);
+    if(i<ACTS.length-1){const l=document.createElement('div');l.className='tl-line';tl.appendChild(l);}
+  });
+}
+function autoProg(){return Math.min(1,(performance.now()-autoT0)/20000);}
+function go(n){
+  n=Math.max(0,Math.min(PAGES.length-1,n));
+  const old=$('#pg'+cur);
+  if(PAGES[cur].exit)PAGES[cur].exit(old);
+  old.classList.remove('act');
+  cur=n;autoT0=performance.now();
+  location.hash='page-'+n;
+  const el=$('#pg'+n);
+  PAGES[n].build(el);
+  el.classList.add('act');
+  if(PAGES[n].enter)PAGES[n].enter(el);
+  $('#subtitle').textContent=PAGES[n].title||'';
+  $('#pgno').textContent=(n)+' / '+(PAGES.length-1);
+  $('#prevBtn').disabled=n===0;
+  $('#nextBtn').disabled=n===PAGES.length-1;
+  buildTimeline();
+}
+$('#prevBtn').onclick=()=>go(cur-1);
+$('#nextBtn').onclick=()=>go(cur+1);
+$('#skipBtn').onclick=()=>go(PAGES.length-1);
+$('#autoBtn').onclick=()=>{auto=!auto;autoT0=performance.now();
+  $('#autoBtn').classList.toggle('on',auto);$('#autoBtn').textContent=auto?'▶ auto · 20s':'⏸ auto off';};
+$('#modeBtn').onclick=()=>{const l=document.documentElement.dataset.mode==='light';
+  document.documentElement.dataset.mode=l?'':'light';
+  $('#modeBtn').textContent=l?'☾ dark':'☀ light';};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(cur+1);if(e.key==='ArrowLeft')go(cur-1);});
+setInterval(()=>{if(auto&&cur<PAGES.length-1&&autoProg()>=1)go(cur+1);else if(auto)buildTimeline();},500);
+window.addEventListener('hashchange',()=>{const m=location.hash.match(/page-(\d+)/);const n=m?+m[1]:0;if(n!==cur)go(n);});
+const h=location.hash.match(/page-(\d+)/);
+go(h?+h[1]:0);
+</script>
+</body>
+</html>

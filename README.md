@@ -26,13 +26,15 @@ Before any scenario, we swept the pool to learn its shape. Five request shapes, 
 | 512 in / 512 out | 27.2 | 6.0 s | 56 ms |
 | 2048 in / 256 out | 40.0 | 2.4 s | 119 ms |
 
+The sweep ran 20 s per concurrency point in a single pass, so read it as a shape finder rather than a precision measurement. The requests per second and p95 TTFT columns come from the sweep summaries in `data/capacity-sweeps/`, and the queue column comes from the endpoint-picker metrics recorded during that pass, written up in [`SWEEP-NOTES.md`](data/capacity-sweeps/SWEEP-NOTES.md).
+
 **Why it matters.** This is how every operating point below was chosen. Consolidation runs below the knee, and the saturation scenarios run above it on purpose. A platform team runs this same sweep once per hardware and model pair to place its own operating points. Data in [`data/capacity-sweeps/`](data/capacity-sweeps/).
 
 ## Consolidation without giving up latency
 
 **What it proves.** Two interactive workloads can share one GPU and uphold an interactive latency target, here 300 ms p95 TTFT as a general working target.
 
-**What we saw.** Tenant A ran alone, then tenant B joined mid-run. The p95 TTFT moved from about 75 ms to about 120 ms, inside the target, in both counted repeats, with every request HTTP 200.
+**What we saw.** Tenant A ran alone, then tenant B joined mid-run. Across both tenants and both counted repeats the p95 TTFT held at 114 to 125 ms, inside the target, with all 1,298 counted requests returning HTTP 200.
 
 <p>
 <img src="assets/consolidation-ttft.svg" width="49%" alt="Rolling p95 TTFT stays near 120 ms for both tenants while they consolidate onto one GPU">
@@ -41,13 +43,13 @@ Before any scenario, we swept the pool to learn its shape. Five request shapes, 
 
 **Why it matters.** Consolidation is a cost decision. The shared GPU upholds the target with measured evidence, and flow control is the insurance if a spike pushes the pool past capacity.
 
-*SLA rerun, 2026-07-23. One stabilization pass plus two counted repeats, 1,298 counted requests. Data in [`data/consolidation/`](data/consolidation/).*
+*SLA rerun, 2026-07-23. 300 s of traffic per repeat, one stabilization pass plus two counted repeats. The stabilization pass is excluded from every number here. Data in [`data/consolidation/`](data/consolidation/).*
 
 ## Service tiers under mixed load
 
 **What it proves.** When the pool saturates, priority decides who waits. Premium stays ahead while standard absorbs the queue.
 
-**What we saw.** Standard traffic surged past what the GPU could absorb and requests queued. The p50 TTFT averaged 41 ms for premium tenants and 379 ms for standard. Priority, not arrival order, decided who waited.
+**What we saw.** Standard traffic surged past what the GPU could absorb. vLLM ran a full batch of 128 with up to 54 requests waiting, so the pool was genuinely past capacity. The p50 TTFT averaged 41 ms across the premium tenants and 379 ms across the standard tenants. Both non-200 responses in the run landed on a standard tenant.
 
 <p>
 <img src="assets/priority-traffic.svg" width="49%" alt="Standard class surges to about 160 in-flight requests while premium holds near 40">
@@ -56,13 +58,13 @@ Before any scenario, we swept the pool to learn its shape. Five request shapes, 
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
 
-*Noisy priority run, 2026-07-24. Three counted repeats, 53,399 requests, 2 non-200. Data in [`data/priority/`](data/priority/).*
+*Noisy priority run, 2026-07-24. Three counted repeats, 300 s each, 53,399 requests, 2 non-200. Data in [`data/priority/`](data/priority/).*
 
 ## Batch isolation under surge
 
 **What it proves.** Batch traffic cannot displace interactive traffic, even when it dominates the arrival rate.
 
-**What we saw.** Batch ramped to about three times the interactive arrival rate. Mean queue time averaged 202 ms for batch against 64 and 66 ms for the interactive lanes.
+**What we saw.** Batch ramped to about three times the interactive arrival rate. Mean queue time averaged 202 ms for batch against 64 ms for premium and 66 ms for standard, consistent across all three repeats. Both non-200 responses in the run landed on the batch tenant.
 
 <p>
 <img src="assets/batch-traffic.svg" width="49%" alt="Batch arrival rate ramps to roughly triple the interactive classes at 150 seconds">
@@ -81,15 +83,27 @@ The first campaign, on 2026-07-21, pushed one endpoint to doubled load and serve
 
 [`report/flow-control-under-pressure.html`](report/flow-control-under-pressure.html) is the written report, and the PDF beside it renders in the browser. Run-level and per-tenant rollups are in [`data/first-pressure-campaign/`](data/first-pressure-campaign/).
 
-<img src="assets/results-v1.svg" width="100%" alt="First campaign at a glance: doubled load served at 513 to 606 ms p95 TTFT with every request served">
+## What fairness controls, and what priority controls
+
+Fairness divides a band's capacity among the tenants inside it, so one tenant's burst cannot starve its neighbors. Priority decides which band is served first, which is what holds one workload steady while another surges. [`docs/fairness-vs-isolation.md`](docs/fairness-vs-isolation.md) puts both side by side with the configuration for each, and covers the levers in between.
+
+## What we ran
+
+<img src="assets/evidence-board.svg" width="100%" alt="Every run in the campaign, what it proves, its headline number, and whether it is published">
 
 ## In progress
 
-Same-band fairness, where three tenants share one priority band and one of them spikes, is being rerun at a hotter operating point. Numbers land here when the run meets its acceptance bar.
+The same-band fairness scenario is being rerun as a matched pair, once with all tenants in one band and once with the burster moved down, so the two mechanisms can be read against each other on identical traffic.
 
 ## Learn flow control
 
-[`learn/flow-control.html`](learn/flow-control.html) explains the mechanism end to end: what breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it. Written against the upstream llm-d Endpoint Picker documentation. Enable GitHub Pages on this repo and the page is served live, or download the file and open it locally.
+**[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)**
+
+Six stops take you from the cost problem to the dispatch path, the saturation gate, and what the policy does under pressure, ending in a playground where you drive the load yourself. It autoplays, and it runs in light or dark. Source is at [`learn/flow-control-journey.html`](learn/flow-control-journey.html).
+
+[The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html) is the same material as a page to read rather than click through.
+
+Both are single self-contained files written against the upstream llm-d Endpoint Picker documentation. The links above are served by GitHub Pages from this repo, and either file also runs if you download it and open it locally. Charts inside the explainer that carry measured numbers say so, and the curves around them are redrawn for teaching rather than plotted from the samples.
 
 ## Policy auditability
 
