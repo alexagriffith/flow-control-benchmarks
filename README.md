@@ -26,6 +26,10 @@ Same traffic, same GPU, the only change is whether flow control is on. Premium i
 
 <img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation, premium p95 TTFT holds near 251 ms with flow control while standard rises to about 691 ms; without flow control both climb past 1700 ms">
 
+<img src="assets/traffic-tiers.svg" width="100%" alt="Offered concurrency over the run: standard surges to about 96 in-flight requests mid-run while premium holds steady and low. The arrivals are noisy, not a flat synthetic load.">
+
+The arrivals are noisy sinusoidal, so the load looks like production rather than a flat synthetic ramp. Standard surges past the GPU batch limit mid-run; premium holds a low steady rate throughout.
+
 The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it (data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off)).
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
@@ -40,6 +44,8 @@ The gap widens with output length, because longer generations hold a slot longer
 
 <img src="assets/batch-429-elimination.svg" width="100%" alt="Without flow control 48,224 batch requests are rejected with HTTP 429; with flow control on, zero rejections, and batch is queued behind the interactive tiers instead">
 
+<img src="assets/traffic-batch.svg" width="100%" alt="Offered concurrency over the run: batch ramps in after the interactive tiers and floods the pool well past the GPU batch limit.">
+
 **Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
 *Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`data-v4/batch-gate-on`](data-v4/batch-gate-on) and [`data-v4/batch-gate-off`](data-v4/batch-gate-off).*
@@ -51,6 +57,8 @@ The gap widens with output length, because longer generations hold a slot longer
 **What we saw.** Two premium tenants ran together while a standard tenant ramped in and pushed the pool to a full batch of 128 with requests waiting. With flow control on, the premium p95 TTFT held at 795 ms against standard at 1062 ms. The separation is the point: the shared pool ran hot, and the interactive tenants kept their place in line.
 
 <img src="assets/consolidation-p95-gate.svg" width="100%" alt="Two premium tenants share a GPU; when a standard tenant floods the pool, premium p95 TTFT stays below standard with flow control on">
+
+<img src="assets/traffic-consolidation.svg" width="100%" alt="Offered concurrency over the run: two premium tenants hold a steady packed load while a standard tenant floods the pool past the GPU batch limit.">
 
 **Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
@@ -67,7 +75,7 @@ Reporting these keeps the strong claims credible. What flow control changes is w
 
 ## The concurrency detector, and the limit of a latency SLO
 
-The shipped stack gates on queue depth: it reacts once vLLM's queue builds. An alternative detector, from upstream llm-d, caps in-flight concurrency directly. We swept its `maxConcurrency` from 32 to 128 to find whether any setting holds premium under 300 ms at a saturating load.
+Every result above uses the shipped **utilization detector**, which gates on vLLM queue depth. An alternative **concurrency detector**, from upstream llm-d, caps in-flight concurrency directly. The two answer the saturation question differently, so we swept the concurrency detector to see whether it does better on an absolute latency target. We swept its `maxConcurrency` from 32 to 128 to find whether any setting holds premium under 300 ms at a saturating load.
 
 <img src="assets/upstream-sweep.svg" width="100%" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens">
 
