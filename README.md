@@ -48,6 +48,8 @@ The sweep was run at 180 s per point over two passes in randomized order, and th
 
 The arrivals are noisy sinusoidal, so the load looks like production rather than a flat synthetic ramp. Standard surges past the GPU batch limit mid-run; premium holds a low steady rate throughout.
 
+<img src="assets/pct-tiers.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on. Premium's tall gate-off bars collapse to short gate-on bars at every percentile; standard stays elevated.">
+
 The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it (data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off)).
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
@@ -64,6 +66,8 @@ The gap widens with output length, because longer generations hold a slot longer
 
 <img src="assets/traffic-batch.svg" width="100%" alt="Offered concurrency over the run: batch ramps in after the interactive tiers and floods the pool well past the GPU batch limit.">
 
+<img src="assets/pct-batch.svg" width="100%" alt="p50, p90, and p95 TTFT for premium, standard, and batch, gate off versus on. Interactive tiers hold while batch is deferred.">
+
 **Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
 *Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`data-v4/batch-gate-on`](data-v4/batch-gate-on) and [`data-v4/batch-gate-off`](data-v4/batch-gate-off).*
@@ -78,6 +82,8 @@ The gap widens with output length, because longer generations hold a slot longer
 
 <img src="assets/traffic-consolidation.svg" width="100%" alt="Offered concurrency over the run: two premium tenants hold a steady packed load while a standard tenant floods the pool past the GPU batch limit.">
 
+<img src="assets/pct-consolidation.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on, on the consolidated pool.">
+
 **Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
 *Saturated consolidation run, three counted repeats. Data in [`data-v4/consolidation-gate-on`](data-v4/consolidation-gate-on) and [`data-v4/consolidation-gate-off`](data-v4/consolidation-gate-off).*
@@ -88,6 +94,8 @@ Flow control arbitrates across priority bands. Where there is no priority gap to
 
 - **Same-band fairness.** Three tenants at one priority, one bursting: fairness bounds the burster's share of the pool so it cannot starve its peers, but it does not insulate a peer's latency from its neighbor, because all three compete for the same batch. The gate bounds throughput, not tail latency, inside a band.
 - **A calm pool.** Below saturation there is no queue to order, so gate-on and gate-off match. Low latency there comes from headroom, not policy.
+
+<img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for premium in the same-band fairness scenario, gate off versus on. The effect is small.">
 
 Reporting these keeps the strong claims credible. What flow control changes is who waits when the pool is contested across tiers.
 
