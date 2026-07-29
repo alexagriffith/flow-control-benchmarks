@@ -1,0 +1,303 @@
+{
+  "run_id": "01-test2_priority_noisy-r01",
+  "scenario": "test2_priority_noisy",
+  "duration_s": 120,
+  "drain_timeout_s": 120,
+  "tenants": [
+    {
+      "fairness_id": "premium-tenant-a",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 6,
+          "amplitude": 2,
+          "period_s": 47,
+          "phase_offset": 0.0
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "premium-tenant-b",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 5,
+          "amplitude": 2,
+          "period_s": 53,
+          "phase_offset": 0.3
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "premium-tenant-c",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 5,
+          "amplitude": 2,
+          "period_s": 41,
+          "phase_offset": 0.6
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "standard-tenant-a",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 30,
+          "pattern": "noisy_sinusoidal",
+          "center": 8,
+          "amplitude": 3,
+          "period_s": 30,
+          "phase_offset": 0.1
+        },
+        {
+          "start_s": 30,
+          "duration_s": 60,
+          "pattern": "noisy_sinusoidal",
+          "center": 72,
+          "amplitude": 15,
+          "period_s": 30,
+          "phase_offset": 0.1
+        },
+        {
+          "start_s": 90,
+          "duration_s": 30,
+          "pattern": "noisy_sinusoidal",
+          "center": 8,
+          "amplitude": 3,
+          "period_s": 30,
+          "phase_offset": 0.1
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "standard-tenant-b",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 30,
+          "pattern": "noisy_sinusoidal",
+          "center": 8,
+          "amplitude": 3,
+          "period_s": 35,
+          "phase_offset": 0.5
+        },
+        {
+          "start_s": 30,
+          "duration_s": 60,
+          "pattern": "noisy_sinusoidal",
+          "center": 72,
+          "amplitude": 15,
+          "period_s": 35,
+          "phase_offset": 0.5
+        },
+        {
+          "start_s": 90,
+          "duration_s": 30,
+          "pattern": "noisy_sinusoidal",
+          "center": 8,
+          "amplitude": 3,
+          "period_s": 35,
+          "phase_offset": 0.5
+        }
+      ],
+      "objective": null
+    }
+  ],
+  "client_summary": [
+    {
+      "run_id": "01-test2_priority_noisy-r01",
+      "scenario": "test2_priority_noisy",
+      "tenant": "premium-tenant-a",
+      "priority": 100,
+      "objective": "gpt-oss-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 146,
+      "n_steady_ttft": 106,
+      "low_n_use_p90": true,
+      "http_200": 146,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 1.2166666666666666,
+      "ttft_p50_s": 0.16864188807085156,
+      "ttft_p90_s": 5.166378639871255,
+      "ttft_p95_s": 5.329499488929287,
+      "ttft_p99_s": 5.755169531097636,
+      "latency_p50_s": 4.578885693103075,
+      "latency_p90_s": 11.705358447041363,
+      "latency_p95_s": 11.885922037996352,
+      "latency_p99_s": 12.3019564000424
+    },
+    {
+      "run_id": "01-test2_priority_noisy-r01",
+      "scenario": "test2_priority_noisy",
+      "tenant": "premium-tenant-b",
+      "priority": 100,
+      "objective": "gpt-oss-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 121,
+      "n_steady_ttft": 91,
+      "low_n_use_p90": true,
+      "http_200": 121,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 1.0083333333333333,
+      "ttft_p50_s": 0.2006656809244305,
+      "ttft_p90_s": 5.192960880929604,
+      "ttft_p95_s": 5.402177606942132,
+      "ttft_p99_s": 5.82146369991824,
+      "latency_p50_s": 5.308314989088103,
+      "latency_p90_s": 11.736507750116289,
+      "latency_p95_s": 11.937292429851368,
+      "latency_p99_s": 12.372977374820039
+    },
+    {
+      "run_id": "01-test2_priority_noisy-r01",
+      "scenario": "test2_priority_noisy",
+      "tenant": "premium-tenant-c",
+      "priority": 100,
+      "objective": "gpt-oss-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 119,
+      "n_steady_ttft": 93,
+      "low_n_use_p90": true,
+      "http_200": 119,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 0.9916666666666667,
+      "ttft_p50_s": 0.18574096797965467,
+      "ttft_p90_s": 4.642138669034466,
+      "ttft_p95_s": 5.242767055053264,
+      "ttft_p99_s": 5.760531671112403,
+      "latency_p50_s": 4.4963447148911655,
+      "latency_p90_s": 11.156216175993904,
+      "latency_p95_s": 11.790810476988554,
+      "latency_p99_s": 12.2923131310381
+    },
+    {
+      "run_id": "01-test2_priority_noisy-r01",
+      "scenario": "test2_priority_noisy",
+      "tenant": "standard-tenant-a",
+      "priority": 0,
+      "objective": "gpt-oss-standard",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 685,
+      "n_steady_ttft": 638,
+      "low_n_use_p90": false,
+      "http_200": 685,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 5.708333333333333,
+      "ttft_p50_s": 1.443052273010835,
+      "ttft_p90_s": 5.298192518996075,
+      "ttft_p95_s": 6.27589184907265,
+      "ttft_p99_s": 6.441785263828933,
+      "latency_p50_s": 8.04333319584839,
+      "latency_p90_s": 11.815211249981076,
+      "latency_p95_s": 12.827816110104322,
+      "latency_p99_s": 13.017150409985334
+    },
+    {
+      "run_id": "01-test2_priority_noisy-r01",
+      "scenario": "test2_priority_noisy",
+      "tenant": "standard-tenant-b",
+      "priority": 0,
+      "objective": "gpt-oss-standard",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 664,
+      "n_steady_ttft": 625,
+      "low_n_use_p90": false,
+      "http_200": 664,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 5.533333333333333,
+      "ttft_p50_s": 1.7268059512134641,
+      "ttft_p90_s": 5.5196171819698066,
+      "ttft_p95_s": 6.339191047009081,
+      "ttft_p99_s": 6.8625830200035125,
+      "latency_p50_s": 8.093511283164844,
+      "latency_p90_s": 11.958904932020232,
+      "latency_p95_s": 12.920393782900646,
+      "latency_p99_s": 13.430384143954143
+    }
+  ],
+  "metric_delta": {
+    "vllm": {
+      "vllm:prompt_tokens_total": 888316.0,
+      "vllm:generation_tokens_total": 888320.0,
+      "prefix_cache": {
+        "vllm:prefix_cache_queries_total": 0.0,
+        "vllm:prefix_cache_hits_total": 0.0,
+        "hit_rate": null
+      },
+      "request_success_delta": {
+        "stop": 0.0,
+        "length": 1735.0,
+        "abort": 0.0,
+        "error": 0.0,
+        "repetition": 0.0
+      },
+      "vllm:time_to_first_token_seconds": {
+        "count": 1735.0,
+        "sum": 3305.9498298168182,
+        "mean_s": 1.9054465877906734,
+        "p50_s": 2.5,
+        "p95_s": 7.5,
+        "p99_s": 7.5
+      },
+      "vllm:e2e_request_latency_seconds": {
+        "count": 1735.0,
+        "sum": 13472.00624370575,
+        "mean_s": 7.764845097236743,
+        "p50_s": 10.0,
+        "p95_s": 15.0,
+        "p99_s": 15.0
+      }
+    },
+    "endpoint_picker_queue": []
+  },
+  "metric_sample_summary": {
+    "vllm:num_requests_running": {
+      "max": 128.0,
+      "mean": 82.45378151260505,
+      "p95": 128.0
+    },
+    "vllm:num_requests_waiting": {
+      "max": 83.0,
+      "mean": 24.521008403361346,
+      "p95": 72.0
+    }
+  }
+}

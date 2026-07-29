@@ -26,7 +26,7 @@ Same traffic, same GPU, the only change is whether flow control is on. Premium i
 
 <img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation, premium p95 TTFT holds near 251 ms with flow control while standard rises to about 691 ms; without flow control both climb past 1700 ms">
 
-The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it.
+The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it (data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off)).
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
 
@@ -77,7 +77,7 @@ The premium p95 TTFT traces a U: it bottoms at 461 ms at `maxConcurrency` 48, th
 
 ## Scope
 
-Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms. The multi-replica behavior of the endpoint picker is a separate study.
+Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms (data in [`data-v4/multi-replica-tiers`](data-v4/multi-replica-tiers)). The multi-replica behavior of the endpoint picker is a separate study.
 
 A verification gap earlier in this campaign sent tenants to pools without priority objectives, so the gate saw every request at priority 0 and the tier results collapsed to no effect. Every counted run here was re-run with the priority resolution verified in the flow-control queue metric before the data was kept. The invalidated runs are archived, not deleted, and the correction is recorded in the run log.
 
