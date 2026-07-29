@@ -1,17 +1,24 @@
 # Run log
 
-The accepted run behind each result. A run is accepted when it exercises the behavior it claims to show, completes its counted repeats with consistent results, and has clean error accounting. Warmup and stabilization passes are always excluded from summaries.
+Every accepted run in this repo comes from the v4 campaign on one H100 serving GPT-OSS 20B behind the llm-d inference gateway. Automatic prefix caching off, 512 input tokens, priority resolution and gate state verified before each counted run.
 
-Every campaign ran GPT-OSS 20B on one GPU behind the llm-d inference gateway, with priority bands premium 100, standard 0, and batch -10, and round-robin fairness inside a band.
+## Accepted runs (data-v4/)
 
-| Result | Campaign | Date | What made it the accepted run |
+| Scenario | Gate | Premium p95 TTFT | Note |
 |---|---|---|---|
-| Capacity envelope | Input/output variation sweep | 2026-07-21 | Five request shapes swept 16 to 160 concurrent. Same first-queue point, order of magnitude cost spread |
-| Consolidation | SLA rerun at the consolidation operating point | 2026-07-23 | Sized to the consolidation question. The p95 TTFT held at 114 to 125 ms across both tenants and both counted repeats, all HTTP 200 |
-| Service tiers | Noisy priority run | 2026-07-24 | Noisy sinusoidal surge that genuinely saturates the pool. Premium p50 41 ms against standard 379 ms, 53,399 requests |
-| Batch isolation | Clean pressure pass, Test 4 | 2026-07-21 | Batch at triple the interactive arrival rate. Queue means 202 ms batch against 64 and 66 ms interactive, three consistent repeats |
-| First pressure campaign | Doubled load on one endpoint | 2026-07-21 | The first end to end pass. Every request served at 513 to 606 ms p95 TTFT, which later tuning improved on |
+| Service tiers | off | 1778 ms | premium and standard degrade together |
+| Service tiers | on | 251 ms | premium held inside the 300 ms objective |
+| Batch isolation | off | — | 48,224 requests rejected (HTTP 429) |
+| Batch isolation | on | — | zero rejections, batch queued behind interactive |
+| Consolidation (saturated) | on | 795 ms | premium ahead of standard at 1062 ms |
+| Fairness (saturated) | on | — | within-band share bounded, tail not insulated |
 
-Same-band fairness is still open. The runs so far either stayed under the knee or did not separate the spiking tenant from its peers cleanly enough to publish, so that result is being rerun at a hotter operating point.
+Service tiers at 512 output tokens: premium p95 TTFT 5259 ms without flow control, 145 ms with it. Two-replica pass reproduced the tier result at 177 ms.
 
-Along the way we also ran configuration comparisons and concurrency sweeps to find the right operating points. Runs that did not exercise the claimed behavior were left out of the evidence.
+## Correction recorded
+
+An earlier pass in this campaign sent tenants to inference pools that had no priority objectives bound, so the Endpoint Picker resolved every request to priority 0 and the service-tier results collapsed to no measurable effect. The gate was running; it simply had no priority gap to enforce. Every counted run above was re-run after binding the objectives and verifying, in the flow-control queue metric, that premium resolved to priority 100 before the data was kept. The invalidated runs are archived, not deleted.
+
+## Archived
+
+The first campaign (pre-v4) is in `archive/pre-v4-campaign/`. Its latencies were measured with automatic prefix caching on, so they reflect a warm cache rather than scheduling, and are kept only to show the progression. The numbers in the README supersede them.

@@ -1,0 +1,95 @@
+{
+  "run_id": "00-warmup_standard",
+  "scenario": "warmup_standard",
+  "duration_s": 30,
+  "drain_timeout_s": 120,
+  "tenants": [
+    {
+      "fairness_id": "warmup-standard",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 30,
+          "concurrency": 16
+        }
+      ],
+      "objective": null
+    }
+  ],
+  "client_summary": [
+    {
+      "run_id": "00-warmup_standard",
+      "scenario": "warmup_standard",
+      "tenant": "warmup-standard",
+      "priority": 0,
+      "objective": "gpt-oss-standard",
+      "duration_s": 30,
+      "trim_s": 0.0,
+      "total": 513,
+      "n_steady_ttft": 513,
+      "low_n_use_p90": false,
+      "http_200": 513,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 17.1,
+      "ttft_p50_s": 0.15191148594021797,
+      "ttft_p90_s": 0.1793567519634962,
+      "ttft_p95_s": 0.18130086199380457,
+      "ttft_p99_s": 0.23629652499221265,
+      "latency_p50_s": 0.933484593173489,
+      "latency_p90_s": 0.9630212797783315,
+      "latency_p95_s": 0.9665573751553893,
+      "latency_p99_s": 1.0094898319803178
+    }
+  ],
+  "metric_delta": {
+    "vllm": {
+      "vllm:prompt_tokens_total": 262655.0,
+      "vllm:generation_tokens_total": 65664.0,
+      "prefix_cache": {
+        "vllm:prefix_cache_queries_total": 0.0,
+        "vllm:prefix_cache_hits_total": 0.0,
+        "hit_rate": null
+      },
+      "request_success_delta": {
+        "stop": 0.0,
+        "length": 513.0,
+        "abort": 0.0,
+        "error": 0.0,
+        "repetition": 0.0
+      },
+      "vllm:time_to_first_token_seconds": {
+        "count": 513.0,
+        "sum": 70.15421938896179,
+        "mean_s": 0.13675286430596842,
+        "p50_s": 0.25,
+        "p95_s": 0.25,
+        "p99_s": 0.25
+      },
+      "vllm:e2e_request_latency_seconds": {
+        "count": 513.0,
+        "sum": 474.2019045352936,
+        "mean_s": 0.9243701842793247,
+        "p50_s": 1.0,
+        "p95_s": 1.0,
+        "p99_s": 1.0
+      }
+    },
+    "endpoint_picker_queue": []
+  },
+  "metric_sample_summary": {
+    "vllm:num_requests_running": {
+      "max": 16.0,
+      "mean": 14.258064516129032,
+      "p95": 16.0
+    },
+    "vllm:num_requests_waiting": {
+      "max": 0.0,
+      "mean": 0.0,
+      "p95": 0.0
+    }
+  }
+}
