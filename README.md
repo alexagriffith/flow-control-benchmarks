@@ -49,6 +49,11 @@ The sweep was run at 180 s per point over two passes in randomized order, and th
 The arrivals are noisy sinusoidal, so the load looks like production rather than a flat synthetic ramp. Standard surges past the GPU batch limit mid-run; premium holds a low steady rate throughout.
 
 <img src="assets/pct-tiers.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on. Premium's tall gate-off bars collapse to short gate-on bars at every percentile; standard stays elevated.">
+| tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
+|---|---|---|---|---|---|---|
+| premium | 176 ms | 1493 ms | 1778 ms | 82 ms | 173 ms | 251 ms |
+| standard | 589 ms | 1903 ms | 2054 ms | 155 ms | 555 ms | 691 ms |
+
 
 The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it (data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off)).
 
@@ -67,6 +72,14 @@ The gap widens with output length, because longer generations hold a slot longer
 <img src="assets/traffic-batch.svg" width="100%" alt="Offered concurrency over the run: batch ramps in after the interactive tiers and floods the pool well past the GPU batch limit.">
 
 <img src="assets/pct-batch.svg" width="100%" alt="p50, p90, and p95 TTFT for premium, standard, and batch, gate off versus on. Interactive tiers hold while batch is deferred.">
+| tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
+|---|---|---|---|---|---|---|
+| premium | 145 ms | 1030 ms | 1394 ms | 154 ms | 968 ms | 1196 ms |
+| standard | 155 ms | 1082 ms | 1347 ms | 164 ms | 1069 ms | 1328 ms |
+| batch | 559 ms | 1354 ms | 1605 ms | 1148 ms | 1975 ms | 2173 ms |
+
+Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batch's TTFT rises because it is queued behind the interactive tiers instead of being shed.
+
 
 **Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
@@ -83,6 +96,11 @@ The gap widens with output length, because longer generations hold a slot longer
 <img src="assets/traffic-consolidation.svg" width="100%" alt="Offered concurrency over the run: two premium tenants hold a steady packed load while a standard tenant floods the pool past the GPU batch limit.">
 
 <img src="assets/pct-consolidation.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on, on the consolidated pool.">
+| tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
+|---|---|---|---|---|---|---|
+| premium | 256 ms | 750 ms | 886 ms | 256 ms | 664 ms | 795 ms |
+| standard | 455 ms | 849 ms | 948 ms | 499 ms | 935 ms | 1062 ms |
+
 
 **Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
@@ -96,6 +114,10 @@ Flow control arbitrates across priority bands. Where there is no priority gap to
 - **A calm pool.** Below saturation there is no queue to order, so gate-on and gate-off match. Low latency there comes from headroom, not policy.
 
 <img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for premium in the same-band fairness scenario, gate off versus on. The effect is small.">
+| tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
+|---|---|---|---|---|---|---|
+| premium (all three at priority 100) | 258 ms | 740 ms | 894 ms | 290 ms | 752 ms | 882 ms |
+
 
 Reporting these keeps the strong claims credible. What flow control changes is who waits when the pool is contested across tiers.
 
