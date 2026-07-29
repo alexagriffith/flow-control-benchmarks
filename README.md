@@ -145,6 +145,10 @@ Every run above is a single replica, so cross-pod scoring was not the subject; w
 
 A verification gap earlier in this campaign sent tenants to pools without priority objectives, so the gate saw every request at priority 0 and the tier results collapsed to no effect. Every counted run here was re-run with the priority resolution verified in the flow-control queue metric before the data was kept. The invalidated runs are archived, not deleted, and the correction is recorded in the run log.
 
+## The walkthrough
+
+**[How we got the numbers, one pass at a time](walkthrough.html)** is the longer story behind the results above: what was tested in what order, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.
+
 ## Learn flow control
 
 **[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)**

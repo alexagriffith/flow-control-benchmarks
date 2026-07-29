@@ -120,10 +120,10 @@ const COLORS={premium:'var(--brand)',standard:'var(--amber)',batch:'var(--teal)'
 const ACTS=[
   {name:'Why',pages:[1,2]},
   {name:'Where',pages:[3]},
-  {name:'How',pages:[4,5,6,7]},
-  {name:'Behavior',pages:[8,9,10]},
-  {name:'The trade',pages:[11]},
-  {name:'Play',pages:[12]},
+  {name:'How',pages:[4,5,6,7,8]},
+  {name:'Proof',pages:[9,10,11,12]},
+  {name:'The trade',pages:[13]},
+  {name:'Play',pages:[14]},
 ];
 
 const PAGES=[
@@ -189,7 +189,7 @@ const PAGES=[
     avg.textContent=Math.round(vals.reduce((a,b)=>a+b,0)/3)+'%';});}},
 
 /* ---- PAGE 2 · THE BURST PROBLEM ---- */
-{sub:'Why',title:'The burst problem',point:'LLM traffic arrives in bursts, so capping at the average clips your peaks and wastes throughput, while letting bursts through breaks your SLAs. Flow control does not remove that trade. It decides who absorbs it, and moves the waiting to where policy can see it.',
+{sub:'Why',title:'The burst problem',point:'LLM traffic arrives in bursts, so capping at the average clips your peaks and wastes throughput, while letting bursts through breaks your SLAs. Flow control keeps the trade but moves the waiting to where policy can see it, so you decide who absorbs the burst instead of arrival order deciding for you.',
  build:p=>{vizHTML(p,`
   <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
     <line x1="60" y1="250" x2="860" y2="250" stroke="var(--b2)"/>
@@ -423,35 +423,112 @@ const PAGES=[
     drops.forEach(d=>{d.ph+= (closed?0.0015:0.011);
       d.el.style.top=((d.ph%1)*110)+'px';d.el.style.opacity=closed?.35:1;});});}},
 
-/* ---- PAGE 8 (was 7) · PRIORITY HOLDS ---- */
-{sub:'Behavior',title:'Priority holds',point:'Standard surges past capacity. Premium keeps its dispatch turn, so the queue duration lands on the tier that can afford it. Premium still shares the engine, so its own latency rises with the batch. Queue time is assigned; engine time is not.',
- provenance:'measured · curve redrawn',
+/* ---- PAGE 8 · HOW PRIORITY RESOLVES ---- */
+{sub:'How',title:'The gate can only act on priority it can see',point:'A request carries an objective name in a header. The Endpoint Picker resolves that name to an InferenceObjective bound to the pool, which supplies the integer priority the gate sorts by. Resolve it and premium jumps the queue. Miss the binding and every request defaults to 0, the gate runs but has nothing to order.',
+ provenance:'InferenceObjective resolution',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;height:100%;gap:20px;align-items:stretch">
+    <div style="flex:1.15">
+      <svg viewBox="0 0 460 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <rect x="20" y="18" width="420" height="46" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
+        <text x="34" y="38" font-size="10.5" fill="var(--txt3)">request header</text>
+        <text x="34" y="55" font-size="12" class="mono-t" fill="var(--txt)">x-gateway-inference-objective: premium</text>
+        <line x1="230" y1="64" x2="230" y2="92" stroke="var(--b3)" marker-end="url(#p8arr)"/>
+        <rect x="20" y="94" width="420" height="70" rx="8" fill="var(--raised)" stroke="var(--brand)"/>
+        <text x="34" y="114" font-size="10.5" fill="var(--brand)">InferenceObjective bound to the pool</text>
+        <text x="34" y="134" font-size="12" class="mono-t" fill="var(--txt)">name: premium</text>
+        <text x="34" y="152" font-size="12" class="mono-t" fill="var(--txt)">priority: 100</text>
+        <line x1="230" y1="164" x2="230" y2="192" stroke="var(--b3)" marker-end="url(#p8arr)"/>
+        <rect x="20" y="194" width="420" height="86" rx="8" fill="var(--inset)" stroke="var(--b2)"/>
+        <text x="34" y="214" font-size="10.5" fill="var(--txt3)">the gate sorts the queue by integer priority</text>
+        <rect x="34" y="224" width="130" height="22" rx="5" fill="var(--inset)"/><rect x="34" y="224" width="4" height="22" fill="var(--brand)"/><text x="46" y="239" font-size="11" class="mono-t" fill="var(--txt)">premium · 100</text>
+        <rect x="172" y="224" width="130" height="22" rx="5" fill="var(--inset)"/><rect x="172" y="224" width="4" height="22" fill="var(--amber)"/><text x="184" y="239" font-size="11" class="mono-t" fill="var(--txt)">standard · 0</text>
+        <rect x="310" y="224" width="120" height="22" rx="5" fill="var(--inset)"/><rect x="310" y="224" width="4" height="22" fill="var(--teal)"/><text x="322" y="239" font-size="11" class="mono-t" fill="var(--txt)">batch · -10</text>
+        <text x="34" y="268" font-size="10.5" fill="var(--txt3)">higher integer dispatches first when the gate is closed</text>
+        <defs><marker id="p8arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--b3)"/></marker></defs>
+      </svg>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">
+      <div class="node" style="text-align:left;border-color:var(--ok);padding:12px 14px">
+        <div style="font-size:12px;color:var(--ok);margin-bottom:4px">objective bound</div>
+        <div style="font-size:11.5px;color:var(--txt2);line-height:1.6">premium resolves to 100. When the pool saturates the gate holds standard and batch and lets premium through first.</div>
+      </div>
+      <div class="node" style="text-align:left;border-color:var(--danger);padding:12px 14px">
+        <div style="font-size:12px;color:var(--danger);margin-bottom:4px">objective not bound to the pool</div>
+        <div style="font-size:11.5px;color:var(--txt2);line-height:1.6">every request falls back to priority 0. The gate still opens and closes, but with one flat band there is nothing to prioritize. Gate-on looks identical to gate-off.</div>
+      </div>
+      <div class="lab" style="line-height:1.6">We hit this exact bug. It stayed invisible until the flow_control queue metric showed premium and standard sharing one band, then the fix split them.</div>
+    </div>
+  </div>`);}},
+
+/* ---- PAGE 9 · PRIORITY HOLDS (real numbers) ---- */
+{sub:'Proof',title:'Premium keeps its turn under load',point:'Standard surges past capacity. Premium keeps its dispatch turn, so p95 time to first token stays inside a 300 ms interactive objective while standard absorbs the wait. Premium still shares the engine, so its own generation speed moves with the batch. Queue time is assigned by priority; engine time is shared.',
+ provenance:'measured · one H100, GPT-OSS 20B',
  build:p=>{vizHTML(p,scenarioSVG('p7'));},
  enter:p=>{scenarioAnim(p,'p7',{
-   lines:[{c:'var(--brand)',base:150,peak:1160,label:'premium p95'},{c:'var(--amber)',base:160,peak:1840,label:'standard p95'}],
+   lines:[{c:'var(--brand)',base:150,peak:251,label:'premium p95 TTFT, gate on'},{c:'var(--amber)',base:160,peak:1840,label:'standard p95 TTFT'}],
    ymax:2200,window:[0.3,0.75],
-   bars:[['premium',110,'var(--brand)'],['standard',275,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
-   note:'standard accrued 2.5x the queue duration of premium. The tails converge because dispatched requests share the same batch.'});}},
+   bars:[['premium p95 TTFT',251,'var(--brand)'],['standard p50 TTFT',155,'var(--amber)']],barMax:300,barTitle:'with flow control, ms',
+   note:'Premium p95 TTFT held at 251 ms, inside the 300 ms objective, while standard took the wait. Without the gate premium p95 was 1778 ms. The next slide draws that tail collapse.'});}},
 
-/* ---- PAGE 9 (was 8) · FAIRNESS HOLDS ---- */
-{sub:'Behavior',title:'Equal treatment, not insulation',point:'One premium tenant spikes to double its peers. Round-robin splits the dispatch turns evenly, so the band degrades together rather than the spiker taking the pool. Nobody stays at baseline, because the pool is full.',
- provenance:'measured · curve redrawn',
+/* ---- PAGE 10 · GATE OFF VS ON (headline proof) ---- */
+{sub:'Proof',title:'Turning the gate on collapses premium’s tail',point:'The same saturated pool, benchmarked with the gate off and on. Premium p95 time to first token drops from 1778 ms to 251 ms, about 7x. At 512-token output it drops from 5259 ms to 145 ms, about 36x, because a long generation holds a GPU slot longer, so getting to the front of the queue matters more.',
+ provenance:'measured · one H100, GPT-OSS 20B',
+ build:p=>{vizHTML(p,`
+  <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
+    <div id="p10a"></div>
+    <div id="p10b"></div>
+    <div class="lab" style="text-align:center">Same hardware, same model, same load. The gate did not add capacity, it reordered who waits, and premium stopped waiting.</div>
+  </div>`);
+  const rows=(title,off,on,mult)=>{
+    const max=Math.max(off,on);
+    const bar=(v,c,lab)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+      <span class="lab" style="width:118px">${lab}</span>
+      <div style="flex:1;height:20px;border-radius:6px;background:var(--inset);overflow:hidden">
+        <div class="p10f" data-w="${v/max*100}" style="height:100%;width:0;border-radius:6px;background:${c};transition:width 1.3s var(--ease)"></div></div>
+      <span class="mono" style="font-size:12px;width:74px;text-align:right">${v.toLocaleString()} ms</span></div>`;
+    return `<div>
+      <div class="lab" style="margin-bottom:9px;color:var(--txt2)">${title} &nbsp;·&nbsp; <span style="color:var(--ok)">${mult} faster with the gate</span></div>
+      ${bar(off,'var(--danger)','gate off, p95')}
+      ${bar(on,'var(--brand)','gate on, p95')}
+    </div>`;};
+  p.querySelector('#p10a').innerHTML=rows('Premium p95 TTFT, 128-token output',1778,251,'~7x');
+  p.querySelector('#p10b').innerHTML=rows('Premium p95 TTFT, 512-token output',5259,145,'~36x');},
+ enter:p=>{requestAnimationFrame(()=>p.querySelectorAll('.p10f').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.w+'%',80);}));}},
+
+/* ---- PAGE 11 · FAIRNESS HOLDS ---- */
+{sub:'Proof',title:'Fairness bounds a tenant’s share, not a peer’s latency',point:'One tenant in the premium band spikes to double its peers. Round-robin splits the dispatch turns evenly, so the spiker takes its own share of the queue instead of taking the pool. Same-priority peers are not insulated, they still share the full engine, but no single tenant can starve the others.',
+ provenance:'measured · one H100, GPT-OSS 20B',
  build:p=>{vizHTML(p,scenarioSVG('p8'));},
  enter:p=>{scenarioAnim(p,'p8',{
    lines:[{c:'var(--brand)',base:340,peak:1960,label:'tenant a p95, spiking'},{c:'var(--teal)',base:330,peak:1540,label:'tenant b p95'},{c:'var(--amber)',base:330,peak:1530,label:'tenant c p95'}],
    ymax:2400,window:[0.3,0.75],jitter:12,
    bars:[['tenant a, spiking',275,'var(--brand)'],['tenant b',170,'var(--teal)'],['tenant c',169,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
-   note:'the spiker accrued 1.6x the queue duration of its peers. All three lines rise together because they share the engine, but the spiker sits visibly above.'});}},
+   note:'The spiker accrued 1.6x the queue duration of its peers, so its own share of the wait grew. All three lines rise together because they share the engine, which is why same-tier fairness bounds share, not latency.'});}},
 
-/* ---- PAGE 10 (was 9) · OVERFLOW IS GOVERNED ---- */
-{sub:'Behavior',title:'Overflow is governed',point:'A batch flood absorbs its own waiting. Past the band cap, refusals carry a named reason on the wire.',
- provenance:'measured · one GPU, GPT-OSS 20B',
+/* ---- PAGE 12 · BATCH ISOLATION (real numbers) ---- */
+{sub:'Proof',title:'Batch gets queued, not shed',point:'A batch flood absorbs its own waiting instead of taking down the pool. In the same overload, the gate turned 48,224 rejected requests into zero, because batch work was held in its own queue and released by priority rather than dropped on the floor. Past the band cap, refusals still carry a named reason on the wire.',
+ provenance:'measured · one H100, GPT-OSS 20B',
  build:p=>{vizHTML(p,`
   <div style="display:flex;gap:22px;height:100%;align-items:center">
     <div style="flex:1.2">
-      <div class="lab" style="margin-bottom:10px">mean queue duration during the batch surge</div>
+      <div class="lab" style="margin-bottom:10px">HTTP 429 rejections under a sustained batch flood</div>
+      <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:16px">
+        <div style="flex:1;background:var(--inset);border:1px solid var(--danger);border-radius:10px;padding:12px 14px">
+          <div class="lab" style="color:var(--danger)">gate off</div>
+          <div class="mono" style="font-size:26px;font-weight:650;color:var(--danger);letter-spacing:-.02em">48,224</div>
+          <div class="lab">requests rejected</div>
+        </div>
+        <div style="align-self:center;color:var(--txt3);font-size:20px">→</div>
+        <div style="flex:1;background:var(--inset);border:1px solid var(--ok);border-radius:10px;padding:12px 14px">
+          <div class="lab" style="color:var(--ok)">gate on</div>
+          <div class="mono" style="font-size:26px;font-weight:650;color:var(--ok);letter-spacing:-.02em">0</div>
+          <div class="lab">requests rejected, batch queued</div>
+        </div>
+      </div>
+      <div class="lab" style="margin-bottom:6px">mean queue duration during the batch surge, gate on</div>
       <div id="p9bars"></div>
-      <div class="lab" style="margin-top:16px">push harder and the guardrails answer</div>
+      <div class="lab" style="margin-top:14px">push past the queue itself and the guardrails still answer with a reason</div>
       <div class="mono" style="font-size:11.5px;color:var(--txt2);margin-top:6px;line-height:1.9">
         queue cap reached, gateway memory not GPU &nbsp;→&nbsp; <span style="color:var(--danger)">429 rejected-saturated</span><br>
         queued past its time to live &nbsp;→&nbsp; <span style="color:var(--danger)">503 rejected-ttl-expired</span>
@@ -482,8 +559,8 @@ const PAGES=[
   svg.innerHTML=s;},
  enter:p=>{p.querySelectorAll('.p9f').forEach(b=>b.style.width=b.dataset.w+'%');}},
 
-/* ---- PAGE 11 (was 10) · THE TRADE ---- */
-{sub:'The trade',title:'The trade, stated honestly',point:'Flow control added no capacity. It moved the wait to where policy decides who pays it, and gave you a dial per pool.',
+/* ---- PAGE 13 · THE TRADE ---- */
+{sub:'The trade',title:'What it buys, and where it stops',point:'Flow control lets you run the pool hot and still protect the tier that needs it, by moving the wait to where policy decides who pays it and giving you a dial per pool. Its reach ends at the engine. Once requests are dispatched they share the same batch, so a calm pool or a set of equal-priority tenants sees little effect. The gate reorders who waits, it does not add capacity.',
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
     <div style="display:flex;justify-content:center;gap:40px;align-items:center">
@@ -507,8 +584,8 @@ const PAGES=[
   </div>`);
   const dial=p.querySelector('#p10dial'),read=p.querySelector('#p10read');
   const upd=()=>{const v=+dial.value;
-    read.textContent = v>60?'utilization mode. The batch fills, throughput is maximal, and a same-tier surge is shared.':
-      v<40?'isolation mode. Excess waits in the surging tenant’s own queue instead of the server, so peers stay closer to baseline. Closer, not equal. Throughput pays.':
+    read.textContent = v>60?'lean toward utilization. The batch fills, throughput is maximal, and a same-tier surge is shared across that tier.':
+      v<40?'lean toward isolation. More of the excess waits in the surging tenant’s own queue instead of the server, so peers stay closer to baseline. Closer, not equal, and throughput pays for it.':
       'in between. Every pool picks its own point on this line.';};
   dial.addEventListener('input',upd);upd();}},
 
@@ -595,7 +672,7 @@ const PG={running:false,load:{premium:12,standard:24,batch:8},mode:4,shape:0,fc:
 function buildPlayground(p){
   p.innerHTML=`
   <div class="eyebrow">Play</div><h2>Your turn</h2>
-  <p class="point">Pick a case or drive the knobs. Numbers here are illustrative, generated by a small model of the mechanism.</p>
+  <p class="point">Drive the load, then flip flow control off and on. With it on, premium stays low and flat while standard and batch climb. Turn it off and premium’s line jumps up to join the crowd. Numbers here are illustrative, generated by a small model of the mechanism, but the shape matches the measured runs.</p>
   <div class="chips" id="pgchips"></div>
   <div class="pg-grid">
     <div class="knobs">
@@ -654,14 +731,22 @@ function buildPlayground(p){
     const batchPenalty= (running/cap)*(PG.shape?900:320);
     let t={},q={premium:0,standard:0,batch:0},shed=0,ttl=0;
     if(!PG.fc){
+      /* no gate: every band takes the full overflow wait, and once saturated the
+         sheddable band is rejected outright rather than queued */
       const share=excess>0? excess/Math.max(1,total):0;
-      ['premium','standard','batch'].forEach(k=>{t[k]=base+batchPenalty+share*1400*(L[k]?1:0);q[k]=0;});
-      if(excess>0&&L.batch){shed=Math.round(L.batch*0.8);}
+      ['premium','standard','batch'].forEach(k=>{t[k]=base+batchPenalty+share*1600*(L[k]?1:0);q[k]=0;});
+      if(excess>0&&L.batch){shed=Math.round(L.batch*0.9+excess*4);}
     } else {
-      /* excess assigned bottom band up */
+      /* gate on: overflow is queued bottom band up, so premium is served first
+         and stays flat near baseline while standard then batch absorb the wait */
       let rem=excess;
-      ['batch','standard','premium'].forEach(k=>{const take=Math.min(rem, L[k]); q[k]= L[k]? (take/Math.max(1,L[k]))*(PG.mode===1?520:260):0; rem-=take;});
-      ['premium','standard','batch'].forEach(k=>{t[k]= L[k]? base+ (PG.mode===1&&excess>0? (k==='premium'?0.25:1)*batchPenalty*0.5 : batchPenalty) + q[k] :0;});
+      ['batch','standard','premium'].forEach(k=>{const take=Math.min(rem, L[k]); q[k]= L[k]? (take/Math.max(1,L[k]))*(PG.mode===1?520:300):0; rem-=take;});
+      /* premium barely feels queue time; it only carries its shared engine time */
+      t.premium = L.premium? base + batchPenalty*0.9 + q.premium*0.12 : 0;
+      t.standard= L.standard? base + batchPenalty + q.standard : 0;
+      t.batch   = L.batch? base + batchPenalty + q.batch : 0;
+      if(PG.mode===1&&excess>0){/* isolation: more excess held upstream, engine time eases */
+        t.premium*=0.7;t.standard*=0.85;t.batch*=0.85;}
       if(L.batch>70){shed=Math.round((L.batch-70)*1.8);}
       if(excess>40){ttl=Math.round((excess-40)*0.7);}
     }
