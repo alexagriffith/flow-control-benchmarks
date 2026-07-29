@@ -93,7 +93,7 @@ svg .mono-t{font-family:"Geist Mono",ui-monospace,monospace}
 <header>
   <div class="t">llm-d flow control explainer<span id="subtitle"></span></div>
   <div class="ctl">
-    <button class="pill on" id="autoBtn">▶ auto · 20s</button>
+    <button class="pill on" id="autoBtn">❚❚ pause</button>
     <button class="pill" id="modeBtn">☾ dark</button>
     <button class="pill" id="skipBtn">Skip to playground</button>
   </div>
@@ -128,158 +128,224 @@ const ACTS=[
 
 const PAGES=[
 /* ---- PAGE 0 · TITLE ---- */
-{sub:'',build:p=>{p.innerHTML=`
+{sub:'',dwell:5000,build:p=>{p.innerHTML=`
   <div style="flex:1;display:grid;place-items:center;text-align:center">
     <div>
       <div class="eyebrow">llm-d · Endpoint Picker</div>
       <div style="font-size:clamp(30px,5vw,44px);font-weight:650;letter-spacing:-.03em;line-height:1.1">
         Flow control makes shared<br>inference predictable.</div>
-      <p class="point" style="margin:16px auto 22px">Six stops, then play with it yourself.</p>
-      <button class="navbtn" style="border-color:var(--brand);background:var(--brand-soft)" onclick="go(1)">Start the journey</button>
+      <p class="point" style="margin:16px auto 22px">Six stops, playing now. Pause or jump any time.</p>
+      <button class="navbtn" style="border-color:var(--brand);background:var(--brand-soft)" onclick="go(1)">Skip the intro</button>
     </div>
   </div>`;}},
 
 /* ---- PAGE 1 · THE COST PROBLEM ---- */
-{sub:'Why',title:'The cost problem',point:'Every tenant gets a dedicated GPU. Traffic arrives in bursts, so most of that silicon sits idle between them.',
- provenance:'illustrative',
+{sub:'Why',title:'The cost problem',point:'Give every tenant its own GPU and each one hits a hard 128-slot ceiling on its own. Traffic arrives in bursts, so the silicon you paid for sits mostly idle between them.',
+ provenance:'illustrative',dwell:9000,
  build:p=>{vizHTML(p,`
-  <div style="display:flex;gap:18px;justify-content:center;align-items:center;height:100%;padding:10px 0">
-    <div style="display:flex;gap:22px" id="p1gpus"></div>
-    <div style="max-width:160px;text-align:center;margin-left:18px">
-      <div class="mono" style="font-size:28px;font-weight:650;letter-spacing:-.02em" id="p1avg">0%</div>
-      <div class="lab" style="margin-top:4px">average utilization across three dedicated GPUs</div>
-      <div class="lab" style="margin-top:8px;color:var(--danger);font-size:10px">paid for 100%, using ~30%</div>
-    </div>
-  </div>`);
-  const gpus=p.querySelector('#p1gpus');
-  const tenants=[['Tenant A','premium',1.0,0],['Tenant B','standard',0.6,1.2],['Tenant C','batch',1.8,0.7]];
-  gpus.innerHTML=tenants.map(([n,c])=>`
-    <div style="text-align:center;width:120px">
-      <div class="lab" style="margin-bottom:6px">${n}</div>
-      <div style="position:relative;height:200px">
-        <div style="position:absolute;inset:0;overflow:hidden" class="p1lane"></div>
-        <div style="position:absolute;bottom:0;left:8px;right:8px;height:190px;border:1px solid var(--b2);border-radius:10px;background:var(--raised);overflow:hidden">
-          <div class="p1fill" style="position:absolute;bottom:0;left:0;right:0;height:0;background:${COLORS[c]};opacity:.7;transition:height .3s var(--ease)"></div>
-          <div style="position:absolute;top:8px;left:0;right:0;text-align:center" class="lab">GPU</div>
-        </div>
-      </div>
-      <div class="mono" style="font-size:12px;margin-top:6px"><span class="p1pct">0</span>%</div>
-    </div>`).join('');},
- enter:p=>{const lanes=p.querySelectorAll('.p1lane');const fills=p.querySelectorAll('.p1fill');
-  const pcts=p.querySelectorAll('.p1pct');const avg=p.querySelector('#p1avg');
-  const tenants=[['premium',1.0,0],['standard',0.6,1.2],['batch',1.8,0.7]];
-  const dots=[[],[],[]];
-  tenants.forEach((_,i)=>{const lane=lanes[i];
-    for(let d=0;d<6;d++){const el=document.createElement('div');
-      el.style.cssText='position:absolute;width:8px;height:8px;border-radius:99px;opacity:0;background:'+
-        (i===0?'var(--brand)':i===1?'var(--amber)':'var(--teal)');
-      lane.appendChild(el);dots[i].push({el,y:-20-d*18,active:false});}});
+  <svg viewBox="0 0 900 340" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <!-- tenants / traffic on the left -->
+    <text x="120" y="34" font-size="11" fill="var(--txt3)" text-anchor="middle">tenants, each with its own traffic</text>
+    <g id="p1srcs"></g>
+    <!-- three dedicated GPU racks on the right -->
+    <text x="640" y="34" font-size="11" fill="var(--txt3)" text-anchor="middle">one dedicated GPU per tenant · 128-slot ceiling each</text>
+    <g id="p1racks"></g>
+    <text x="450" y="332" font-size="12" class="mono-t" fill="var(--danger)" text-anchor="middle" id="p1foot">paid for 3 × 128 slots · ~30% average fill</text>
+  </svg>`);
+  const svg=p.querySelector('svg');
+  const rows=[['Tenant A','premium','var(--brand)',66],['Tenant B','standard','var(--amber)',80],['Tenant C','batch','var(--teal)',188]];
+  const srcs=p.querySelector('#p1srcs');
+  srcs.innerHTML=rows.map(([n,,c],i)=>{const y=66+i*82;
+    return `<rect x="40" y="${y}" width="160" height="52" rx="9" fill="var(--raised)" stroke="${c}"/>
+      <text x="120" y="${y+22}" font-size="12" fill="var(--txt)" text-anchor="middle">${n}</text>
+      <text x="120" y="${y+40}" font-size="10" fill="var(--txt3)" text-anchor="middle" class="mono-t">bursty arrivals</text>
+      <line x1="200" y1="${y+26}" x2="470" y2="${y+26}" stroke="${c}" stroke-width="1.5" opacity=".5" marker-end="url(#p1arr)"/>`;}).join('')
+    +`<defs><marker id="p1arr" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--b3)"/></marker></defs>`;
+  const racks=p.querySelector('#p1racks');
+  racks.innerHTML=rows.map(([n,,c],i)=>{const y=66+i*82,x=490;
+    return `<rect x="${x}" y="${y}" width="360" height="52" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
+      <text x="${x+14}" y="${y+20}" font-size="10.5" class="mono-t" fill="var(--txt3)">GPU · 128 slots</text>
+      <g id="p1slots${i}"></g>
+      <text x="${x+346}" y="${y+20}" font-size="11" class="mono-t" fill="${c}" text-anchor="end" id="p1pct${i}">0%</text>`;}).join('');},
+ enter:p=>{
+  const cfg=[['var(--brand)',1.0,0],['var(--amber)',0.6,1.2],['var(--teal)',1.8,0.7]];
+  const cols=18,x=490;
+  cfg.forEach((_,i)=>{const g=p.querySelector('#p1slots'+i);const y=66+i*82;let s='';
+    for(let k=0;k<cols;k++){s+=`<rect x="${x+16+k*18.6}" y="${y+28}" width="14" height="16" rx="2" fill="var(--base)" stroke="var(--b1)" class="p1slot"/>`;}
+    g.innerHTML=s;});
+  const slotSets=cfg.map((_,i)=>p.querySelector('#p1slots'+i).querySelectorAll('.p1slot'));
+  const pcts=cfg.map((_,i)=>p.querySelector('#p1pct'+i));
+  const foot=p.querySelector('#p1foot');
   let t0=performance.now();
   animLoop(p,now=>{const t=(now-t0)/1000;
-    const vals=tenants.map(([c,freq,phase],i)=>{
+    const vals=cfg.map(([c,freq,phase],i)=>{
       const burst=Math.max(0,Math.sin(t*freq+phase))**3;
-      const util=5+burst*60;
-      fills[i].style.height=util+'%';
-      pcts[i].textContent=Math.round(util);
-      dots[i].forEach((d,j)=>{
-        if(burst>0.3&&!d.active&&Math.random()<0.08){d.active=true;d.y=-10;d.el.style.left=(20+Math.random()*60)+'%';}
-        if(d.active){d.y+=2.2;d.el.style.top=d.y+'px';d.el.style.opacity=d.y<160?1:0;
-          if(d.y>190){d.active=false;d.y=-20;d.el.style.opacity=0;}}});
+      const util=6+burst*88;
+      const lit=Math.round(util/100*cols);
+      slotSets[i].forEach((r,k)=>{r.setAttribute('fill',k<lit?c:'var(--base)');r.setAttribute('opacity',k<lit?'.85':'1');});
+      pcts[i].textContent=Math.round(util)+'%';
       return util;});
-    avg.textContent=Math.round(vals.reduce((a,b)=>a+b,0)/3)+'%';});}},
+    foot.textContent='paid for 3 × 128 slots · ~'+Math.round(vals.reduce((a,b)=>a+b,0)/3)+'% average fill';});}},
 
 /* ---- PAGE 2 · THE BURST PROBLEM ---- */
 {sub:'Why',title:'The burst problem',point:'LLM traffic arrives in bursts, so capping at the average clips your peaks and wastes throughput, while letting bursts through breaks your SLAs. Flow control keeps the trade but moves the waiting to where policy can see it, so you decide who absorbs the burst instead of arrival order deciding for you.',
  build:p=>{vizHTML(p,`
-  <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-    <line x1="60" y1="250" x2="860" y2="250" stroke="var(--b2)"/>
-    <line x1="60" y1="130" x2="860" y2="130" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 5" opacity=".8"/>
-    <text x="855" y="122" font-size="11" fill="var(--danger)" text-anchor="end">capacity</text>
-    <path id="burstwave" fill="none" stroke="var(--brand)" stroke-width="2.5"/>
-    <path id="burstfill" fill="var(--danger)" opacity=".18" stroke="none"/>
-    <text x="60" y="285" font-size="11" fill="var(--txt3)">time</text>
-    <text id="p2msg" x="460" y="60" font-size="13" fill="var(--txt2)" text-anchor="middle"></text>
-  </svg>`);},
+  <div style="display:flex;height:100%;gap:14px;align-items:stretch">
+    <div style="flex:1.5;min-width:0">
+      <svg viewBox="0 0 640 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <text x="20" y="20" font-size="11" fill="var(--txt3)">arrival rate over time</text>
+        <line x1="40" y1="250" x2="620" y2="250" stroke="var(--b2)"/>
+        <line x1="40" y1="130" x2="620" y2="130" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 5" opacity=".8"/>
+        <text x="615" y="122" font-size="11" fill="var(--danger)" text-anchor="end">capacity</text>
+        <path id="burstfill" fill="var(--danger)" opacity=".18" stroke="none"/>
+        <path id="burstwave" fill="none" stroke="var(--brand)" stroke-width="2.5"/>
+        <circle id="p2spike" r="0" fill="var(--danger)" opacity="0"/>
+        <text id="p2spiketxt" font-size="10" fill="var(--danger)" text-anchor="middle" opacity="0">burst</text>
+        <text x="40" y="285" font-size="11" fill="var(--txt3)">time</text>
+        <text id="p2msg" x="330" y="52" font-size="12.5" fill="var(--txt2)" text-anchor="middle"></text>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:12px">
+      <div class="lab">the pool during a burst</div>
+      <svg viewBox="0 0 300 210" width="100%" preserveAspectRatio="xMidYMid meet">
+        <rect x="20" y="20" width="260" height="120" rx="10" fill="var(--inset)" stroke="var(--b2)"/>
+        <text x="30" y="16" font-size="10" fill="var(--txt3)">128 slots</text>
+        <g id="p2slots"></g>
+        <text x="150" y="168" font-size="11" fill="var(--danger)" text-anchor="middle" id="p2stuck" opacity="0">arrivals past capacity get stuck</text>
+        <g id="p2queue"></g>
+      </svg>
+    </div>
+  </div>`);},
  enter:p=>{const w=p.querySelector('#burstwave'),f=p.querySelector('#burstfill'),m=p.querySelector('#p2msg');
+  const spike=p.querySelector('#p2spike'),spiketxt=p.querySelector('#p2spiketxt');
+  const stuck=p.querySelector('#p2stuck');
+  // slot grid, 8 x 4 = 32 representing the 128-slot pool
+  const cols=16,rows=4,sg=p.querySelector('#p2slots');let ss='';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    ss+=`<rect x="${28+c*15.5}" y="${30+r*26}" width="11" height="20" rx="2" fill="var(--base)" stroke="var(--b1)" class="p2slot"/>`;}
+  sg.innerHTML=ss;
+  const slots=sg.querySelectorAll('.p2slot');
+  // stuck queue dots below the pool
+  const qg=p.querySelector('#p2queue');let qs='';
+  for(let i=0;i<10;i++)qs+=`<circle cx="${44+i*24}" cy="192" r="5" fill="var(--danger)" opacity="0" class="p2q"/>`;
+  qg.innerHTML=qs;
+  const qdots=qg.querySelectorAll('.p2q');
+  const wave=x=>{const tt=x;return 250-60-42*Math.max(0,Math.sin(tt))**3*2 - 12*Math.sin(tt*2.7);};
   let t0=performance.now();
   animLoop(p,now=>{const t=(now-t0)/1000;
-    let d='',dOver='M';
-    let over=false;
-    for(let x=0;x<=800;x+=8){
-      const tt=t*1.1+x/80;
-      const y=250-60-42*Math.max(0,Math.sin(tt))**3*2 - 12*Math.sin(tt*2.7);
-      d+=(x?'L':'M')+(60+x)+' '+y+' ';
-      const yc=Math.min(y,130);
-      dOver+=(60+x)+' '+Math.min(y,130)+' L';
-    }
+    let d='';
+    for(let x=0;x<=580;x+=8){const y=wave(t*1.1+x/60);d+=(x?'L':'M')+(40+x)+' '+y+' ';}
     w.setAttribute('d',d);
-    // overflow area between wave and cap where wave above cap
     let fa='';
-    for(let x=0;x<=800;x+=8){const tt=t*1.1+x/80;
-      const y=250-60-42*Math.max(0,Math.sin(tt))**3*2 - 12*Math.sin(tt*2.7);
-      fa+=(x?'L':'M')+(60+x)+' '+Math.min(y,130)+' ';}
-    for(let x=800;x>=0;x-=8){fa+='L'+(60+x)+' 130 ';}
+    for(let x=0;x<=580;x+=8){const y=wave(t*1.1+x/60);fa+=(x?'L':'M')+(40+x)+' '+Math.min(y,130)+' ';}
+    for(let x=580;x>=0;x-=8){fa+='L'+(40+x)+' 130 ';}
     f.setAttribute('d',fa+'Z');
-    m.textContent = (Math.floor(t/3)%2==0)?'the peaks above the line are broken latency':'cap at the average and those peaks are lost throughput';
+    // arrival spike marker riding the crest of the current wave near the right edge
+    const yNow=wave(t*1.1+560/60);const above=yNow<130;
+    spike.setAttribute('cx',600);spike.setAttribute('cy',yNow);
+    spike.setAttribute('r',above?6:0);spike.setAttribute('opacity',above?1:0);
+    spiketxt.setAttribute('x',600);spiketxt.setAttribute('y',yNow-12);spiketxt.setAttribute('opacity',above?1:0);
+    // pool fill tracks how far the current arrival level sits above capacity
+    const level=Math.max(0,(130-yNow)/70);           // 0 at cap, ~1 well above
+    const demand=Math.round((cols*rows)*(0.35+level*1.2));
+    slots.forEach((s,i)=>{const on=i<Math.min(cols*rows,demand);
+      s.setAttribute('fill',on?'var(--brand)':'var(--base)');s.setAttribute('opacity',on?'.85':'1');});
+    const overflow=Math.max(0,demand-cols*rows);
+    stuck.setAttribute('opacity',overflow>0?1:0);
+    qdots.forEach((c,i)=>c.setAttribute('opacity',i<Math.min(qdots.length,overflow)?1:0));
+    m.textContent = above?'this burst is above capacity, and arrival order decides who is stuck':'below the line the pool clears, the peaks are what break';
   });}},
 
 /* ---- PAGE 3 · WHERE YOU ARE ---- */
-{sub:'Where',title:'Where you are',point:'llm-d serves large language models on Kubernetes. Zoom in twice and flow control is a layer inside the Endpoint Picker.',
+{sub:'Where',title:'Where you are',point:'A request hits the inference gateway, an Envoy proxy. Envoy calls out to the Endpoint Picker over the ext_proc gRPC protocol and waits for a decision. Flow control is that decision, and only that decision. It ends where the picked vLLM replica begins.',
+ provenance:'ext_proc · gRPC',dwell:18000,
  build:p=>{vizHTML(p,`
-  <div id="zoomwrap" style="height:100%;display:grid;place-items:center">
-   <div style="position:relative;width:min(860px,100%);height:100%">
-    <div class="zf" id="z1" style="position:absolute;inset:0;border:1px solid var(--b2);border-radius:12px;padding:12px 16px;transition:all .8s var(--ease)">
-      <div class="lab">Kubernetes cluster</div>
-      <div style="display:flex;gap:10px;margin-top:8px;height:calc(100% - 34px)">
-        <div class="node" style="align-self:center">clients</div>
-        <div style="align-self:center;color:var(--txt3)">→</div>
-        <div class="zf" id="z2" style="flex:1;border:1px solid var(--b2);border-radius:10px;padding:10px 14px;transition:all .8s var(--ease)">
-          <div class="lab">llm-d, the serving stack</div>
-          <div style="display:flex;gap:10px;margin-top:8px;align-items:center;height:calc(100% - 34px)">
-            <div class="node">inference<br>gateway</div>
-            <div style="color:var(--txt3)">→</div>
-            <div class="zf" id="z3" style="flex:1;border:1px solid var(--b2);border-radius:10px;padding:10px 12px;transition:all .8s var(--ease)">
-              <div class="lab">Endpoint Picker</div>
-              <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-                <div class="node" id="fcnode">flow control · queues, priority, fairness, the gate</div>
-                <div class="node">scheduler · scores and picks the server</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="color:var(--txt3);align-self:center">→</div>
-        <div class="node" style="align-self:center">vLLM<br>pods</div>
-      </div>
-    </div>
-   </div>
-  </div>`);},
- enter:p=>{const seq=[['#z1',0],['#z2',900],['#z3',1800]];
-  seq.forEach(([sel,dt])=>setTimeout(()=>{const e=p.querySelector(sel);if(e)e.style.borderColor='var(--brand)';
-    if(sel==='#z3')setTimeout(()=>{const f=p.querySelector('#fcnode');if(f)f.classList.add('hot');},700);},dt));},
- exit:p=>{p.querySelectorAll('.zf').forEach(e=>e.style.borderColor='var(--b2)');const f=p.querySelector('#fcnode');if(f)f.classList.remove('hot');}},
+  <svg viewBox="0 0 900 340" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <defs><marker id="p3arr" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="var(--b3)"/></marker></defs>
+    <!-- client -->
+    <g id="z1"><rect x="24" y="140" width="96" height="56" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
+    <text x="72" y="172" font-size="12" fill="var(--txt)" text-anchor="middle">client</text></g>
+    <line x1="120" y1="168" x2="164" y2="168" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#p3arr)"/>
+    <!-- gateway (Envoy) -->
+    <g id="z2"><rect x="164" y="130" width="150" height="76" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+    <text x="239" y="160" font-size="13" fill="var(--txt)" text-anchor="middle">inference gateway</text>
+    <text x="239" y="180" font-size="11" fill="var(--txt3)" text-anchor="middle">Envoy proxy</text>
+    <text x="239" y="196" font-size="10" class="mono-t" fill="var(--txt3)" text-anchor="middle">ext_proc client</text></g>
+    <!-- ext_proc gRPC call out and decision back -->
+    <line x1="314" y1="156" x2="404" y2="156" stroke="var(--brand)" stroke-width="2" marker-end="url(#p3arr)"/>
+    <text x="359" y="146" font-size="10" class="mono-t" fill="var(--brand)" text-anchor="middle">ext_proc gRPC</text>
+    <line x1="404" y1="182" x2="314" y2="182" stroke="var(--txt3)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#p3arr)"/>
+    <text x="359" y="200" font-size="10" fill="var(--txt3)" text-anchor="middle">decision</text>
+    <!-- Endpoint Picker with the flow-control box inside -->
+    <rect x="404" y="42" width="330" height="256" rx="12" fill="var(--base)" stroke="var(--b2)"/>
+    <text x="418" y="62" font-size="11" fill="var(--txt3)">Endpoint Picker (EPP)</text>
+    <rect id="fcnode" x="420" y="74" width="298" height="208" rx="10" fill="var(--brand-soft)" stroke="var(--brand)"/>
+    <text x="434" y="94" font-size="11" fill="var(--brand)">flow control · the decision logic</text>
+    <g font-size="11" class="mono-t" fill="var(--txt)">
+      <rect class="p3step" x="436" y="106" width="266" height="34" rx="7" fill="var(--inset)" stroke="var(--b1)"/><text x="448" y="127">1 · classify: objective header → priority</text>
+      <rect class="p3step" x="436" y="146" width="266" height="34" rx="7" fill="var(--inset)" stroke="var(--b1)"/><text x="448" y="167">2 · queue by band, premium first</text>
+      <rect class="p3step" x="436" y="186" width="266" height="34" rx="7" fill="var(--inset)" stroke="var(--b1)"/><text x="448" y="207">3 · saturation gate: hold or release</text>
+      <rect class="p3step" x="436" y="226" width="266" height="34" rx="7" fill="var(--inset)" stroke="var(--b1)"/><text x="448" y="247">4 · pick the endpoint</text>
+    </g>
+    <!-- forward to vLLM replica -->
+    <line x1="734" y1="168" x2="792" y2="168" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#p3arr)"/>
+    <text x="763" y="158" font-size="9" fill="var(--txt3)" text-anchor="middle">gateway forwards</text>
+    <rect x="792" y="130" width="84" height="76" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+    <text x="834" y="162" font-size="12" fill="var(--txt)" text-anchor="middle">vLLM</text>
+    <text x="834" y="180" font-size="11" fill="var(--txt3)" text-anchor="middle">replica</text>
+    <text x="834" y="286" font-size="10" fill="var(--txt3)" text-anchor="middle">outside flow control</text>
+  </svg>`);},
+ enter:p=>{const seq=[['#z1',0],['#z2',700]];
+  seq.forEach(([sel,dt])=>setTimeout(()=>{const e=p.querySelector(sel);if(e){const r=e.querySelector('rect');if(r)r.setAttribute('stroke','var(--brand)');}},dt));
+  const steps=p.querySelectorAll('.p3step');
+  steps.forEach((s,i)=>setTimeout(()=>s.setAttribute('stroke','var(--brand)'),1900+i*900));},
+ exit:p=>{}},
 
 /* ---- PAGE 4 · FIND THE KNEE ---- */
-{sub:'How',title:'Find the knee',point:'Sweep concurrency until the pool starts queueing. Below the knee, every request clears fast and flow control is invisible. Past it, the queue grows and the policy decides who waits.',
- provenance:'measured · 512 in / 128 out',
+{sub:'How',title:'Find the knee',point:'Sweep concurrency until the pool starts queueing. Below the knee, every request clears fast and flow control is invisible. Past it, latency climbs but goodput does not, so the knee is the point you want to run at, and the point flow control defends.',
+ provenance:'measured · 512 in / 128 out',dwell:20000,
  build:p=>{vizHTML(p,`
-  <svg viewBox="0 0 560 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-    <line x1="60" y1="240" x2="530" y2="240" stroke="var(--b2)"/>
-    <text x="295" y="272" font-size="11" fill="var(--txt3)" text-anchor="middle">concurrency</text>
-    <text x="14" y="20" font-size="11" fill="var(--txt3)" transform="rotate(-90 14 130)">p95 TTFT ms</text>
-    ${[0,500,1000,1500,2000].map(v=>{const y=240-(v/2100)*200;
+  <div style="display:flex;gap:16px;height:100%;align-items:stretch">
+   <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <div class="lab" style="margin-bottom:4px">1 · sweep concurrency, watch p95 TTFT bend</div>
+    <svg viewBox="0 0 560 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <line x1="60" y1="220" x2="530" y2="220" stroke="var(--b2)"/>
+    <text x="295" y="248" font-size="11" fill="var(--txt3)" text-anchor="middle">concurrency</text>
+    <text x="14" y="20" font-size="11" fill="var(--txt3)" transform="rotate(-90 14 120)">p95 TTFT ms</text>
+    ${[0,500,1000,1500,2000].map(v=>{const y=220-(v/2100)*185;
       return `<line x1="56" y1="${y}" x2="530" y2="${y}" stroke="var(--b1)"/>
       <text x="52" y="${y+4}" font-size="9" fill="var(--txt3)" text-anchor="end">${v}</text>`;}).join('')}
-    <line id="p4knee" x1="0" y1="30" x2="0" y2="240" stroke="var(--danger)" stroke-dasharray="5 4" opacity="0"/>
+    <line id="p4knee" x1="0" y1="30" x2="0" y2="220" stroke="var(--danger)" stroke-dasharray="5 4" opacity="0"/>
     <text id="p4kneetxt" x="0" y="25" font-size="11" fill="var(--danger)" text-anchor="middle" opacity="0">the knee</text>
     <polyline id="p4line" fill="none" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" points=""/>
     <g id="p4dots"></g>
-    <text id="p4left" x="130" y="70" font-size="10.5" fill="var(--ok)" opacity="0">flow control is invisible here</text>
-    <text id="p4right" x="400" y="70" font-size="10.5" fill="var(--danger)" text-anchor="middle" opacity="0">policy decides who waits</text>
-  </svg>`);},
+    <text id="p4left" x="130" y="64" font-size="10.5" fill="var(--ok)" opacity="0">flow control is invisible here</text>
+    <text id="p4right" x="400" y="64" font-size="10.5" fill="var(--danger)" text-anchor="middle" opacity="0">policy decides who waits</text>
+    </svg>
+   </div>
+   <div style="flex:1;min-width:0;display:flex;flex-direction:column;opacity:0;transform:translateX(14px);transition:opacity .6s ease,transform .6s ease" id="p4bwrap">
+    <div class="lab" style="margin-bottom:4px;padding-right:130px">2 · why the knee is the line: past it, latency buys no goodput</div>
+    <svg viewBox="0 0 560 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <line x1="60" y1="220" x2="530" y2="220" stroke="var(--b2)"/>
+    <text x="295" y="248" font-size="11" fill="var(--txt3)" text-anchor="middle">concurrency</text>
+    <text id="p4bknee" x="0" y="25" font-size="11" fill="var(--brand)" text-anchor="middle" opacity="0">the knee</text>
+    <line id="p4bkneel" x1="0" y1="30" x2="0" y2="220" stroke="var(--brand)" stroke-dasharray="5 4" opacity="0"/>
+    <path id="p4good" fill="none" stroke="var(--ok)" stroke-width="2.8" stroke-linejoin="round"/>
+    <path id="p4lat" fill="none" stroke="var(--danger)" stroke-width="2.8" stroke-linejoin="round"/>
+    <path id="p4queue" fill="var(--danger)" opacity=".14" stroke="none"/>
+    <text x="150" y="60" font-size="10.5" fill="var(--ok)" id="p4gl" opacity="0">goodput flattens</text>
+    <text x="430" y="120" font-size="10.5" fill="var(--danger)" text-anchor="middle" id="p4ll" opacity="0">latency + queue keep climbing</text>
+    <g class="legend-svg" font-size="10" fill="var(--txt2)">
+      <circle cx="70" cy="238" r="4" fill="var(--ok)"/><text x="80" y="241">goodput, req/s</text>
+      <circle cx="230" cy="238" r="4" fill="var(--danger)"/><text x="240" y="241">latency + queue depth</text>
+    </g>
+    </svg>
+   </div>
+  </div>`);},
  enter:p=>{
   const data=[[32,261],[64,744],[96,948],[128,967],[160,1455],[200,1814]];
   const xScale=v=>60+(v-32)/(200-32)*470;
-  const yScale=v=>240-(v/2100)*200;
+  const yScale=v=>220-(v/2100)*185;
   const kneeIdx=3;
   const line=p.querySelector('#p4line');
   const dotsG=p.querySelector('#p4dots');
@@ -289,7 +355,7 @@ const PAGES=[
   const rightTxt=p.querySelector('#p4right');
   dotsG.innerHTML=data.map(([c,v],i)=>`<circle cx="${xScale(c)}" cy="${yScale(v)}" r="4.5" fill="${i<kneeIdx?'var(--ok)':i===kneeIdx?'var(--amber)':'var(--danger)'}" opacity="0"/>
     <text x="${xScale(c)}" y="${yScale(v)-10}" font-size="9" fill="var(--txt2)" text-anchor="middle" opacity="0">${v} ms</text>
-    <text x="${xScale(c)}" y="254" font-size="9" fill="var(--txt3)" text-anchor="middle">${c}</text>`).join('');
+    <text x="${xScale(c)}" y="234" font-size="9" fill="var(--txt3)" text-anchor="middle">${c}</text>`).join('');
   const circles=dotsG.querySelectorAll('circle');
   const labels=dotsG.querySelectorAll('text:not(:last-child)');
   const valLabels=Array.from(dotsG.querySelectorAll('text')).filter((_,i)=>i%2===0);
@@ -321,38 +387,113 @@ const PAGES=[
       rightTxt.setAttribute('opacity','1');
     }
     if(prog>=1)drawn=true;
+  });
+  /* second chart: goodput flattens while latency + queue climb past the knee */
+  const good=p.querySelector('#p4good'),lat=p.querySelector('#p4lat'),queue=p.querySelector('#p4queue');
+  const bkx=xScale(128);
+  const bkneeT=p.querySelector('#p4bknee'),bkneeL=p.querySelector('#p4bkneel');
+  const glab=p.querySelector('#p4gl'),llab=p.querySelector('#p4ll');
+  // goodput rises to the knee then plateaus; latency+queue rises then accelerates
+  const gAt=c=>{const k=128;return c<=k? (c/k) : 1+ (c-k)/400*0.04;};   // ~flat past knee
+  const lAt=c=>{const k=128;return c<=k? 0.12+ (c/k)*0.22 : 0.34 + ((c-k)/72)**1.35*0.55;};
+  const yb=f=>220-Math.min(1,f)*185;
+  const bwrap=p.querySelector('#p4bwrap');
+  // chart 2 waits for chart 1 to land, then fades in before it animates
+  let t1=performance.now(),drawn2=false,revealed=false;
+  const revealDelay=2900;
+  animLoop(p,now=>{if(drawn2)return;
+    if(!revealed&&now-t1>=revealDelay){revealed=true;bwrap.style.opacity='1';bwrap.style.transform='none';}
+    const prog=Math.min(1,(now-t1-revealDelay-500)/2600);if(prog<=0)return;
+    const cmax=32+prog*168;let dg='',dl='',dq='';
+    for(let c=32;c<=cmax;c+=6){const x=xScale(c);
+      dg+=(dg?'L':'M')+x+' '+yb(gAt(c))+' ';
+      dl+=(dl?'L':'M')+x+' '+yb(lAt(c))+' ';}
+    // queue area = gap between latency and goodput past the knee
+    if(cmax>128){for(let c=128;c<=cmax;c+=6){const x=xScale(c);dq+=(dq?'L':'M')+x+' '+yb(lAt(c))+' ';}
+      for(let c=cmax;c>=128;c-=6){const x=xScale(c);dq+='L'+x+' '+yb(gAt(c))+' ';}dq+='Z';}
+    good.setAttribute('d',dg);lat.setAttribute('d',dl);queue.setAttribute('d',dq);
+    if(prog>0.45){bkneeL.setAttribute('x1',bkx);bkneeL.setAttribute('x2',bkx);bkneeL.setAttribute('opacity','1');
+      bkneeT.setAttribute('x',bkx);bkneeT.setAttribute('opacity','1');
+      glab.setAttribute('opacity','1');llab.setAttribute('opacity','1');}
+    if(prog>=1)drawn2=true;
   });},
  exit:p=>{}},
 
 /* ---- PAGE 5 (was 4) · MOVE THE QUEUE UPSTREAM ---- */
-{sub:'How',title:'Move the queue upstream',point:'Three layers absorb a burst. The engine limit protects token speed, a small buffer keeps it fed, and the excess waits where policy can act.',
+{sub:'How',title:'Move the queue upstream',point:'Three layers absorb a burst. The engine limit protects token speed, a small buffer keeps it fed, and the excess waits in the Burst Queue where policy can act. Open that queue and it is not one line, it is one lane per priority band, one flow per tenant.',
+ provenance:'Burst Queue',dwell:22000,
  build:p=>{vizHTML(p,`
-  <svg viewBox="0 0 900 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-    <rect x="560" y="70" width="150" height="160" rx="10" fill="none" stroke="var(--b2)"/>
-    <text x="635" y="60" font-size="11" fill="var(--txt3)" text-anchor="middle">engine active batch, protects token speed</text>
-    <rect x="470" y="100" width="60" height="100" rx="8" fill="none" stroke="var(--b2)"/>
-    <text x="500" y="90" font-size="11" fill="var(--txt3)" text-anchor="middle">buffer</text>
-    <rect x="120" y="100" width="300" height="100" rx="8" fill="none" stroke="var(--brand)"/>
-    <text x="270" y="90" font-size="11" fill="var(--brand)" text-anchor="middle">burst queue, where policy lives</text>
-    <g id="p5qdots"></g>
-    <text x="760" y="155" font-size="12" fill="var(--txt2)">tokens</text>
-  </svg>`);},
+  <div style="display:flex;flex-direction:column;height:100%;gap:10px">
+   <div style="flex:0 0 auto">
+    <div class="lab" style="margin-bottom:2px">first, the simple picture: excess holds in the Burst Queue, then a buffer, then the engine</div>
+    <svg viewBox="0 0 900 150" width="100%" height="120" preserveAspectRatio="xMidYMid meet">
+      <rect x="560" y="24" width="150" height="104" rx="10" fill="none" stroke="var(--b2)"/>
+      <text x="635" y="16" font-size="10.5" fill="var(--txt3)" text-anchor="middle">engine active batch, protects token speed</text>
+      <rect x="470" y="44" width="60" height="64" rx="8" fill="none" stroke="var(--b2)"/>
+      <text x="500" y="36" font-size="10.5" fill="var(--txt3)" text-anchor="middle">buffer</text>
+      <rect x="120" y="44" width="300" height="64" rx="8" fill="none" stroke="var(--brand)"/>
+      <text x="270" y="36" font-size="10.5" fill="var(--brand)" text-anchor="middle">Burst Queue, where policy lives</text>
+      <g id="p5qdots"></g>
+      <text x="760" y="80" font-size="11" fill="var(--txt2)">tokens</text>
+    </svg>
+   </div>
+   <div id="p5detail" style="flex:1;min-height:0;opacity:0;transition:opacity .8s var(--ease)">
+    <div class="lab" style="margin-bottom:2px">then open the Burst Queue: one lane per band, one flow per tenant</div>
+    <svg viewBox="0 0 900 210" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+      <!-- three priority bands, each with per-tenant flows queued -->
+      ${[['premium','var(--brand)',0],['standard','var(--amber)',1],['batch','var(--teal)',2]].map(([n,c,i])=>{const y=14+i*62;
+        return `<rect x="150" y="${y}" width="470" height="52" rx="8" fill="var(--inset)" stroke="${c}" opacity=".9"/>
+          <rect x="150" y="${y}" width="5" height="52" fill="${c}"/>
+          <text x="20" y="${y+30}" font-size="11" fill="${c}">${n}</text>
+          <text x="20" y="${y+44}" font-size="9" fill="var(--txt3)">band</text>
+          <g id="p5band${i}"></g>`;}).join('')}
+      <!-- server on the right -->
+      <rect x="700" y="60" width="120" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="760" y="100" font-size="12" fill="var(--txt)" text-anchor="middle">engine</text>
+      <text x="760" y="118" font-size="10" fill="var(--txt3)" text-anchor="middle">one slot free</text>
+      <text id="p5serve" x="660" y="24" font-size="11" fill="var(--txt2)" text-anchor="end"></text>
+      <!-- rules -->
+      <text x="150" y="205" font-size="10.5" fill="var(--txt2)">across bands: strict priority, premium drains before standard before batch</text>
+      <text x="620" y="205" font-size="10.5" fill="var(--txt3)">within a band: round-robin across tenants, so no one flow starves its peers</text>
+    </svg>
+   </div>
+  </div>`);},
  enter:p=>{const g=p.querySelector('#p5qdots');const dots=[];
   for(let i=0;i<26;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
     c.setAttribute('r',5);c.setAttribute('fill',i%5==0?'var(--amber)':(i%7==0?'var(--teal)':'var(--brand)'));
     g.appendChild(c);dots.push({el:c,t:-i*0.55});}
   animLoop(p,(now,dt)=>{dots.forEach(d=>{d.t+=dt/1000*.55;
     let x,y;const t=d.t%4;
-    if(t<0){x=-20;y=150}
-    else if(t<1.6){x=130+ (t/1.6)*280; y=118+((d.el.getAttribute('r')*7)%64)}      /* crossing burst queue slowly */
-    else if(t<2.1){x=470+((t-1.6)/0.5)*60; y=150}
-    else if(t<3.4){x=575+((t-2.1)/1.3)*120; y=100+((d.el.getAttribute('r')*11)%100)}
-    else {x=720+((t-3.4)/0.6)*160; y=150}
+    if(t<0){x=-20;y=76}
+    else if(t<1.6){x=130+ (t/1.6)*280; y=52+((d.el.getAttribute('r')*7)%48)}      /* crossing burst queue slowly */
+    else if(t<2.1){x=470+((t-1.6)/0.5)*60; y=76}
+    else if(t<3.4){x=575+((t-2.1)/1.3)*120; y=40+((d.el.getAttribute('r')*11)%64)}
+    else {x=720+((t-3.4)/0.6)*160; y=76}
     d.el.setAttribute('cx',x);d.el.setAttribute('cy',y);
-    d.el.setAttribute('opacity', t>3.9?0:(t<0?0:1));});});}},
+    d.el.setAttribute('opacity', t>3.9?0:(t<0?0:1));});});
+  /* progressive depth: reveal the multi-band detail a beat later */
+  const detail=p.querySelector('#p5detail');
+  setTimeout(()=>{if(detail)detail.style.opacity='1';},2600);
+  // populate each band with per-tenant queued requests (small circles grouped by tenant)
+  const bands=[['var(--brand)',['a','b']],['var(--amber)',['a','b','c']],['var(--teal)',['a']]];
+  const tenantShade={a:'',b:.62,c:.4};
+  bands.forEach(([c,tenants],i)=>{const bg=p.querySelector('#p5band'+i);if(!bg)return;
+    const y=14+i*62;let s='',x=170;
+    tenants.forEach((tn,ti)=>{s+=`<text x="${x}" y="${y+14}" font-size="8" fill="var(--txt3)">tenant ${tn}</text>`;
+      for(let k=0;k<4;k++){s+=`<circle cx="${x+8+k*15}" cy="${y+34}" r="5" fill="${c}" opacity="${ti===0?.9:(ti===1?.62:.4)}"/>`;}
+      x+=4*15+26;});
+    bg.innerHTML=s;});
+  // serve pointer: strict priority across bands, round-robin within
+  const serve=p.querySelector('#p5serve');
+  const order=['premium a','premium b','standard a','standard b','standard c','batch a'];
+  let si=0;let st0=performance.now();
+  animLoop(p,now=>{if((now-st0)>900){si=(si+1)%order.length;st0=now;}
+    if(serve)serve.textContent='next to dispatch → '+order[si];});},
+ exit:p=>{}},
 
 /* ---- PAGE 6 (was 5) · ONE REQUEST'S JOURNEY ---- */
 {sub:'How',title:'One request’s journey',point:'Tagged at the gateway, keyed into its own queue, chosen in three picks, released by the gate, landed where there is room.',
+ dwell:16000,
  build:p=>{vizHTML(p,`
   <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
     <g font-size="11" fill="var(--txt2)">
@@ -385,7 +526,7 @@ const PAGES=[
 
 /* ---- PAGE 7 (was 6) · THE GATE ---- */
 {sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. The detector reads queue depth and KV cache utilization back from the model servers.',
- provenance:'utilization detector',
+ provenance:'utilization detector',dwell:16000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;height:100%;gap:22px;align-items:center">
     <div style="flex:1.3">
@@ -425,7 +566,7 @@ const PAGES=[
 
 /* ---- PAGE 8 · HOW PRIORITY RESOLVES ---- */
 {sub:'How',title:'The gate can only act on priority it can see',point:'A request carries an objective name in a header. The Endpoint Picker resolves that name to an InferenceObjective bound to the pool, which supplies the integer priority the gate sorts by. Resolve it and premium jumps the queue. Miss the binding and every request defaults to 0, the gate runs but has nothing to order.',
- provenance:'InferenceObjective resolution',
+ provenance:'InferenceObjective resolution',dwell:20000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;height:100%;gap:20px;align-items:stretch">
     <div style="flex:1.15">
@@ -463,7 +604,7 @@ const PAGES=[
 
 /* ---- PAGE 9 · PRIORITY HOLDS (real numbers) ---- */
 {sub:'Proof',title:'Premium keeps its turn under load',point:'Standard surges past capacity. Premium keeps its dispatch turn, so p95 time to first token stays inside a 300 ms interactive objective while standard absorbs the wait. Premium still shares the engine, so its own generation speed moves with the batch. Queue time is assigned by priority; engine time is shared.',
- provenance:'measured · one H100, GPT-OSS 20B',
+ provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
  build:p=>{vizHTML(p,scenarioSVG('p7'));},
  enter:p=>{scenarioAnim(p,'p7',{
    lines:[{c:'var(--brand)',base:150,peak:251,label:'premium p95 TTFT, gate on'},{c:'var(--amber)',base:160,peak:1840,label:'standard p95 TTFT'}],
@@ -473,7 +614,7 @@ const PAGES=[
 
 /* ---- PAGE 10 · GATE OFF VS ON (headline proof) ---- */
 {sub:'Proof',title:'Turning the gate on collapses premium’s tail',point:'The same saturated pool, benchmarked with the gate off and on. Premium p95 time to first token drops from 1778 ms to 251 ms, about 7x. At 512-token output it drops from 5259 ms to 145 ms, about 36x, because a long generation holds a GPU slot longer, so getting to the front of the queue matters more.',
- provenance:'measured · one H100, GPT-OSS 20B',
+ provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
     <div id="p10a"></div>
@@ -498,7 +639,7 @@ const PAGES=[
 
 /* ---- PAGE 11 · FAIRNESS HOLDS ---- */
 {sub:'Proof',title:'Fairness bounds a tenant’s share, not a peer’s latency',point:'One tenant in the premium band spikes to double its peers. Round-robin splits the dispatch turns evenly, so the spiker takes its own share of the queue instead of taking the pool. Same-priority peers are not insulated, they still share the full engine, but no single tenant can starve the others.',
- provenance:'measured · one H100, GPT-OSS 20B',
+ provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
  build:p=>{vizHTML(p,scenarioSVG('p8'));},
  enter:p=>{scenarioAnim(p,'p8',{
    lines:[{c:'var(--brand)',base:340,peak:1960,label:'tenant a p95, spiking'},{c:'var(--teal)',base:330,peak:1540,label:'tenant b p95'},{c:'var(--amber)',base:330,peak:1530,label:'tenant c p95'}],
@@ -508,7 +649,7 @@ const PAGES=[
 
 /* ---- PAGE 12 · BATCH ISOLATION (real numbers) ---- */
 {sub:'Proof',title:'Batch gets queued, not shed',point:'A batch flood absorbs its own waiting instead of taking down the pool. In the same overload, the gate turned 48,224 rejected requests into zero, because batch work was held in its own queue and released by priority rather than dropped on the floor. Past the band cap, refusals still carry a named reason on the wire.',
- provenance:'measured · one H100, GPT-OSS 20B',
+ provenance:'measured · one H100, GPT-OSS 20B',dwell:18000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;gap:22px;height:100%;align-items:center">
     <div style="flex:1.2">
@@ -561,6 +702,7 @@ const PAGES=[
 
 /* ---- PAGE 13 · THE TRADE ---- */
 {sub:'The trade',title:'What it buys, and where it stops',point:'Flow control lets you run the pool hot and still protect the tier that needs it, by moving the wait to where policy decides who pays it and giving you a dial per pool. Its reach ends at the engine. Once requests are dispatched they share the same batch, so a calm pool or a set of equal-priority tenants sees little effect. The gate reorders who waits, it does not add capacity.',
+ dwell:20000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
     <div style="display:flex;justify-content:center;gap:40px;align-items:center">
@@ -782,7 +924,8 @@ function buildTimeline(){
     if(i<ACTS.length-1){const l=document.createElement('div');l.className='tl-line';tl.appendChild(l);}
   });
 }
-function autoProg(){return Math.min(1,(performance.now()-autoT0)/20000);}
+function autoDwell(){return (PAGES[cur]&&PAGES[cur].dwell)||14000;}
+function autoProg(){return Math.min(1,(performance.now()-autoT0)/autoDwell());}
 function go(n){
   n=Math.max(0,Math.min(PAGES.length-1,n));
   const old=$('#pg'+cur);
@@ -804,7 +947,7 @@ $('#prevBtn').onclick=()=>go(cur-1);
 $('#nextBtn').onclick=()=>go(cur+1);
 $('#skipBtn').onclick=()=>go(PAGES.length-1);
 $('#autoBtn').onclick=()=>{auto=!auto;autoT0=performance.now();
-  $('#autoBtn').classList.toggle('on',auto);$('#autoBtn').textContent=auto?'▶ auto · 20s':'⏸ auto off';};
+  $('#autoBtn').classList.toggle('on',auto);$('#autoBtn').textContent=auto?'❚❚ pause':'▶ play';};
 $('#modeBtn').onclick=()=>{const l=document.documentElement.dataset.mode==='light';
   document.documentElement.dataset.mode=l?'':'light';
   $('#modeBtn').textContent=l?'☾ dark':'☀ light';};
