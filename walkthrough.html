@@ -176,10 +176,10 @@ footer a{color:var(--txt2)}
   <div class="step-no"><span class="badge" style="background:var(--green)">1</span>Ground truth first</div>
   <h2>Check the cluster before trusting any prior number</h2>
   <p>The first move was to read the deployed state instead of the plan's assumptions. Automatic prefix caching was on, at a <b>96.9% hit rate</b>. That single fact invalidated the earlier headline latencies. A premium median near 41 ms was a cache result, not a scheduling result. The benchmark was measuring a warm cache and calling it flow control.</p>
-  <p>So the pool got rebuilt for an honest measurement. Prefix caching off everywhere, and a fresh prompt pool where every prompt carries a unique head and body behind a short shared preamble. From then on every run records a near-zero hit rate as proof the cache is not doing the work.</p>
+  <p>So the measurement got rebuilt to isolate scheduling. Prefix caching was turned off at the engine, and confirmed off on every run by a near-zero hit rate in the vLLM metric. As a second layer, the prompt pool was regenerated so each prompt has a randomized head and a unique body, with only a short shared system preamble. The cache is off; the unique prompts make sure it stays irrelevant even if it were on.</p>
   <div class="bignums">
     <div class="bignum"><div class="k">Prefix cache hit rate, before</div><div class="v red">96.9%</div><div class="sub">latencies reflected a warm cache, not scheduling</div></div>
-    <div class="bignum"><div class="k">Shared prefix, after rebuild</div><div class="v green">~3%</div><div class="sub">each prompt unique; cache neutralized and re-verified per run</div></div>
+    <div class="bignum"><div class="k">Prefix cache hit rate, every counted run</div><div class="v green">~0%</div><div class="sub">cache off at the engine; prompts randomized so it stays irrelevant</div></div>
   </div>
   <div class="note green">
     <span class="lbl">The discipline</span>

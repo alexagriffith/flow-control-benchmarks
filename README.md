@@ -135,7 +135,14 @@ Every result above uses the shipped **utilization detector**, which gates on vLL
 
 <img src="assets/upstream-sweep.svg" width="100%" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens">
 
-The premium p95 TTFT traces a U: it bottoms at 461 ms at `maxConcurrency` 48, then rises as the cap loosens and premium competes with more admitted standard traffic. Standard improves as the cap loosens, from 12.7 s down to 2.7 s. No setting reaches a premium p95 under 300 ms at this offered load; the floor is set by GPU capacity, not by the policy. Reaching a 300 ms premium SLO under a saturating load takes headroom or more capacity, not a tighter cap. The concurrency detector is a separation control, not a latency-SLO control.
+The premium p95 TTFT traces a U: it bottoms at 461 ms at `maxConcurrency` 48, then rises as the cap loosens and premium competes with more admitted standard traffic. Standard improves as the cap loosens, from 12.7 s down to 2.7 s.
+
+What the sweep tells a platform team:
+
+- **The cap is a tuning dial, not a switch.** `maxConcurrency` sets where the pain lands between premium and standard, and the two move in opposite directions across it.
+- **The premium-optimal point is not the tightest one.** Premium is best at `maxConcurrency` 48, not 32. Below the optimum, even premium starts to queue; above it, premium's tail climbs as more standard traffic is admitted alongside it.
+- **Tightening the cap trades standard's latency for premium's.** At 32, premium is protected and standard waits 12.7 s; at 128 they converge. You pick the point your SLAs demand.
+- **A concurrency cap is a separation control, not a latency-SLO control.** No setting reached premium p95 under 300 ms at this offered load, because a 300 ms objective needs a lower load, not only a tighter cap. Holding an absolute SLO is a load decision, shown next.
 
 *Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`data-v4/upstream-sweep`](data-v4/upstream-sweep).*
 
@@ -155,9 +162,6 @@ A verification gap earlier in this campaign sent tenants to pools without priori
 
 Six stops take you from the cost problem to the dispatch path, the saturation gate, and what the policy does under pressure, ending in a playground where you drive the load yourself. It autoplays and runs in light or dark. Source is at [`learn/flow-control-journey.html`](learn/flow-control-journey.html). [The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html) is the same material as a page to read.
 
-## Ordering is not occupancy
-
-Fairness divides a band's capacity among the tenants inside it. Priority decides which band is served first. Neither one limits how much of the running batch a tenant holds, which is what sets latency once the pool is saturated. [`docs/fairness-vs-isolation.md`](docs/fairness-vs-isolation.md) walks a request through the mechanism and covers how to size the batch and the queue limits. [`docs/tuning-map.md`](docs/tuning-map.md) maps the question you are asking onto the one mechanism that answers it.
 
 ## Pipeline
 
