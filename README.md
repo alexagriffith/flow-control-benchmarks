@@ -56,7 +56,11 @@ The arrivals are noisy sinusoidal, so the load looks like production rather than
 | standard | 589 ms | 1903 ms | 2054 ms | 155 ms | 555 ms | 691 ms |
 
 
-The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it (data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off)).
+The protection grows with output length, because a longer generation holds its GPU slot longer, so a request that misses the batch waits longer for the next opening. At 64 output tokens the premium p95 TTFT improved from 1136 ms to 442 ms; at 128, from 1778 ms to 251 ms; at 512, from 5259 ms to 145 ms. The gate does the most for the longest work.
+
+<img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT gate off versus on at 64, 128, and 512 output tokens: the gap widens with output length, from 1136 to 442 ms at 64 up to 5259 to 145 ms at 512">
+
+Data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off).
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
 
