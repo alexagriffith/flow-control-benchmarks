@@ -16,6 +16,24 @@ Same traffic, same GPU, the only change is whether flow control is on. Premium i
 
 **How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware and tuning. The pattern is the finding: premium held its objective through a surge it did not cause, and deferrable work waited instead of failing. On different hardware the numbers move and the behavior stays.
 
+## How we chose the operating point and configuration
+
+Before any scenario, we swept a single tenant from 32 to 200 concurrent requests to find where this pool saturates. Throughput peaked at 128 concurrent requests, then fell: past that point the closed loop piled on latency without more goodput, and vLLM's running batch stayed pinned at its 128 limit with a real queue behind it. That knee is the operating point every scenario runs at, because a queueing policy only has something to do once the pool is full.
+
+<img src="assets/operating-point-sweep.svg" width="100%" alt="Single-tenant sweep from 32 to 200 concurrent: throughput peaks at 128 requests per second and falls past it, while p95 TTFT climbs steadily; the knee at 128 is the chosen operating point">
+
+The rest of the configuration follows from making the measurement honest rather than flattering:
+
+| Choice | Value | Why |
+|---|---|---|
+| Request shape | 512 in / 128 out | A single fixed shape so every number is comparable; the output ladder (64, 128, 512) is varied separately |
+| `max-num-seqs` | 128 | The GPU's running-batch limit; saturation means offered load beyond this, not that the H100 was exhausted |
+| Prefix caching | off | So the latencies reflect scheduling, not a warm cache. Each prompt has a unique head and body |
+| Repeats | 3 counted, 120 s each | Repeats capture run-to-run variance; the sweep showed 120 s already gives stable percentiles |
+| Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |
+
+The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`data-v4/operating-point-sweep`](data-v4/operating-point-sweep).
+
 <img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags each request, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
 ## Service tiers under mixed load
