@@ -49,6 +49,7 @@ The sweep was run at 180 s per point over two passes in randomized order, and th
 The arrivals are noisy sinusoidal, so the load looks like production rather than a flat synthetic ramp. Standard surges past the GPU batch limit mid-run; premium holds a low steady rate throughout.
 
 <img src="assets/pct-tiers.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on. Premium's tall gate-off bars collapse to short gate-on bars at every percentile; standard stays elevated.">
+
 | tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
 |---|---|---|---|---|---|---|
 | premium | 176 ms | 1493 ms | 1778 ms | 82 ms | 173 ms | 251 ms |
@@ -72,6 +73,7 @@ The gap widens with output length, because longer generations hold a slot longer
 <img src="assets/traffic-batch.svg" width="100%" alt="Offered concurrency over the run: batch ramps in after the interactive tiers and floods the pool well past the GPU batch limit.">
 
 <img src="assets/pct-batch.svg" width="100%" alt="p50, p90, and p95 TTFT for premium, standard, and batch, gate off versus on. Interactive tiers hold while batch is deferred.">
+
 | tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
 |---|---|---|---|---|---|---|
 | premium | 145 ms | 1030 ms | 1394 ms | 154 ms | 968 ms | 1196 ms |
@@ -96,6 +98,7 @@ Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batc
 <img src="assets/traffic-consolidation.svg" width="100%" alt="Offered concurrency over the run: two premium tenants hold a steady packed load while a standard tenant floods the pool past the GPU batch limit.">
 
 <img src="assets/pct-consolidation.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on, on the consolidated pool.">
+
 | tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
 |---|---|---|---|---|---|---|
 | premium | 256 ms | 750 ms | 886 ms | 256 ms | 664 ms | 795 ms |
@@ -114,6 +117,7 @@ Flow control arbitrates across priority bands. Where there is no priority gap to
 - **A calm pool.** Below saturation there is no queue to order, so gate-on and gate-off match. Low latency there comes from headroom, not policy.
 
 <img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for premium in the same-band fairness scenario, gate off versus on. The effect is small.">
+
 | tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
 |---|---|---|---|---|---|---|
 | premium (all three at priority 100) | 258 ms | 740 ms | 894 ms | 290 ms | 752 ms | 882 ms |
