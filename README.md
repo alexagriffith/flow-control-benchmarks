@@ -109,21 +109,21 @@ Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batc
 
 *Saturated consolidation run, three counted repeats. Data in [`data-v4/consolidation-gate-on`](data-v4/consolidation-gate-on) and [`data-v4/consolidation-gate-off`](data-v4/consolidation-gate-off).*
 
-## Where flow control does little, stated plainly
+## The boundary: priority acts across tiers, not among equals
 
-Flow control arbitrates across priority bands. Where there is no priority gap to enforce, it has little to do, and the honest result is a small one.
+Flow control decides which priority band is served first. That is where its leverage is, and it is also where the leverage ends. Two runs mark the edge.
 
-- **Same-band fairness.** Three tenants at one priority, one bursting: fairness bounds the burster's share of the pool so it cannot starve its peers, but it does not insulate a peer's latency from its neighbor, because all three compete for the same batch. The gate bounds throughput, not tail latency, inside a band.
-- **A calm pool.** Below saturation there is no queue to order, so gate-on and gate-off match. Low latency there comes from headroom, not policy.
+**Same-band fairness.** We ran three tenants at the same priority and had one of them burst to several times the load of the other two, to see whether the greedy tenant could starve its well-behaved peers. Fairness bounds the burster's share of the pool, so it takes its turn rather than monopolizing dispatch. It does not lower a peer's tail latency, because all three sit in one band and compete for the same running batch. Fairness bounds throughput inside a band; it does not create a latency tier inside one.
 
-<img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for premium in the same-band fairness scenario, gate off versus on. The effect is small.">
+<img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for the three same-priority tenants, gate off versus on. The effect is small because there is no priority gap to enforce.">
 
 | tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
 |---|---|---|---|---|---|---|
-| premium (all three at priority 100) | 258 ms | 740 ms | 894 ms | 290 ms | 752 ms | 882 ms |
+| premium, all three at priority 100 | 258 ms | 740 ms | 894 ms | 290 ms | 752 ms | 882 ms |
 
+**A calm pool.** Below saturation, gate-on and gate-off match. There is no queue to order, so the low latency comes from headroom, not from the policy.
 
-Reporting these keeps the strong claims credible. What flow control changes is who waits when the pool is contested across tiers.
+Both results scope the strong ones. Flow control changes who waits when tiers contend for a full pool. Give it equal tenants, or a pool with room to spare, and it has nothing to arbitrate.
 
 ## The concurrency detector, and the limit of a latency SLO
 

@@ -120,10 +120,10 @@ const COLORS={premium:'var(--brand)',standard:'var(--amber)',batch:'var(--teal)'
 const ACTS=[
   {name:'Why',pages:[1,2]},
   {name:'Where',pages:[3]},
-  {name:'How',pages:[4,5,6]},
-  {name:'Behavior',pages:[7,8,9]},
-  {name:'The trade',pages:[10]},
-  {name:'Play',pages:[11]},
+  {name:'How',pages:[4,5,6,7]},
+  {name:'Behavior',pages:[8,9,10]},
+  {name:'The trade',pages:[11]},
+  {name:'Play',pages:[12]},
 ];
 
 const PAGES=[
@@ -140,27 +140,53 @@ const PAGES=[
   </div>`;}},
 
 /* ---- PAGE 1 · THE COST PROBLEM ---- */
-{sub:'Why',title:'The cost problem',point:'Every tenant gets a dedicated GPU. Most of that silicon sits idle.',
+{sub:'Why',title:'The cost problem',point:'Every tenant gets a dedicated GPU. Traffic arrives in bursts, so most of that silicon sits idle between them.',
  provenance:'illustrative',
  build:p=>{vizHTML(p,`
-  <div style="display:flex;gap:26px;justify-content:center;align-items:flex-end;height:100%;padding:20px 0" id="p1viz"></div>`);
-  const rows=[['Tenant A','premium',30],['Tenant B','standard',15],['Tenant C','batch',45]];
-  const el=p.querySelector('#p1viz');
-  el.innerHTML=rows.map(([n,c,u],i)=>`
-    <div style="text-align:center">
-      <div class="lab" style="margin-bottom:8px">${n}</div>
-      <div style="width:110px;height:190px;border:1px solid var(--b2);border-radius:10px;background:var(--raised);position:relative;overflow:hidden">
-        <div class="fillbar" data-h="${u}" style="position:absolute;bottom:0;left:0;right:0;height:0;background:${COLORS[c]};opacity:.85;transition:height 1.6s var(--ease) ${0.3+i*0.35}s"></div>
-        <div style="position:absolute;top:8px;left:0;right:0;text-align:center" class="lab">GPU</div>
+  <div style="display:flex;gap:18px;justify-content:center;align-items:center;height:100%;padding:10px 0">
+    <div style="display:flex;gap:22px" id="p1gpus"></div>
+    <div style="max-width:160px;text-align:center;margin-left:18px">
+      <div class="mono" style="font-size:28px;font-weight:650;letter-spacing:-.02em" id="p1avg">0%</div>
+      <div class="lab" style="margin-top:4px">average utilization across three dedicated GPUs</div>
+      <div class="lab" style="margin-top:8px;color:var(--danger);font-size:10px">paid for 100%, using ~30%</div>
+    </div>
+  </div>`);
+  const gpus=p.querySelector('#p1gpus');
+  const tenants=[['Tenant A','premium',1.0,0],['Tenant B','standard',0.6,1.2],['Tenant C','batch',1.8,0.7]];
+  gpus.innerHTML=tenants.map(([n,c])=>`
+    <div style="text-align:center;width:120px">
+      <div class="lab" style="margin-bottom:6px">${n}</div>
+      <div style="position:relative;height:200px">
+        <div style="position:absolute;inset:0;overflow:hidden" class="p1lane"></div>
+        <div style="position:absolute;bottom:0;left:8px;right:8px;height:190px;border:1px solid var(--b2);border-radius:10px;background:var(--raised);overflow:hidden">
+          <div class="p1fill" style="position:absolute;bottom:0;left:0;right:0;height:0;background:${COLORS[c]};opacity:.7;transition:height .3s var(--ease)"></div>
+          <div style="position:absolute;top:8px;left:0;right:0;text-align:center" class="lab">GPU</div>
+        </div>
       </div>
-      <div class="mono" style="font-size:13px;margin-top:8px"><span class="cnt" data-to="${u}">0</span>%</div>
-    </div>`).join('')+`
-    <div style="align-self:center;max-width:190px">
-      <div style="font-size:30px;font-weight:650;letter-spacing:-.02em"><span class="cnt" data-to="30">0</span>%</div>
-      <div class="lab">average utilization, paid for one hundred</div>
-    </div>`;},
- enter:p=>{p.querySelectorAll('.fillbar').forEach(b=>b.style.height=b.dataset.h+'%');
-  p.querySelectorAll('.cnt').forEach(c=>animCount(c,+c.dataset.to,1600));}},
+      <div class="mono" style="font-size:12px;margin-top:6px"><span class="p1pct">0</span>%</div>
+    </div>`).join('');},
+ enter:p=>{const lanes=p.querySelectorAll('.p1lane');const fills=p.querySelectorAll('.p1fill');
+  const pcts=p.querySelectorAll('.p1pct');const avg=p.querySelector('#p1avg');
+  const tenants=[['premium',1.0,0],['standard',0.6,1.2],['batch',1.8,0.7]];
+  const dots=[[],[],[]];
+  tenants.forEach((_,i)=>{const lane=lanes[i];
+    for(let d=0;d<6;d++){const el=document.createElement('div');
+      el.style.cssText='position:absolute;width:8px;height:8px;border-radius:99px;opacity:0;background:'+
+        (i===0?'var(--brand)':i===1?'var(--amber)':'var(--teal)');
+      lane.appendChild(el);dots[i].push({el,y:-20-d*18,active:false});}});
+  let t0=performance.now();
+  animLoop(p,now=>{const t=(now-t0)/1000;
+    const vals=tenants.map(([c,freq,phase],i)=>{
+      const burst=Math.max(0,Math.sin(t*freq+phase))**3;
+      const util=5+burst*60;
+      fills[i].style.height=util+'%';
+      pcts[i].textContent=Math.round(util);
+      dots[i].forEach((d,j)=>{
+        if(burst>0.3&&!d.active&&Math.random()<0.08){d.active=true;d.y=-10;d.el.style.left=(20+Math.random()*60)+'%';}
+        if(d.active){d.y+=2.2;d.el.style.top=d.y+'px';d.el.style.opacity=d.y<160?1:0;
+          if(d.y>190){d.active=false;d.y=-20;d.el.style.opacity=0;}}});
+      return util;});
+    avg.textContent=Math.round(vals.reduce((a,b)=>a+b,0)/3)+'%';});}},
 
 /* ---- PAGE 2 · THE BURST PROBLEM ---- */
 {sub:'Why',title:'The burst problem',point:'LLM traffic arrives in bursts, so capping at the average clips your peaks and wastes throughput, while letting bursts through breaks your SLAs. Flow control does not remove that trade. It decides who absorbs it, and moves the waiting to where policy can see it.',
@@ -219,10 +245,10 @@ const PAGES=[
                 <div class="node">scheduler · scores and picks the server</div>
               </div>
             </div>
-            <div style="color:var(--txt3)">→</div>
-            <div class="node">vLLM<br>pods</div>
           </div>
         </div>
+        <div style="color:var(--txt3);align-self:center">→</div>
+        <div class="node" style="align-self:center">vLLM<br>pods</div>
       </div>
     </div>
    </div>
@@ -232,7 +258,73 @@ const PAGES=[
     if(sel==='#z3')setTimeout(()=>{const f=p.querySelector('#fcnode');if(f)f.classList.add('hot');},700);},dt));},
  exit:p=>{p.querySelectorAll('.zf').forEach(e=>e.style.borderColor='var(--b2)');const f=p.querySelector('#fcnode');if(f)f.classList.remove('hot');}},
 
-/* ---- PAGE 4 · MOVE THE QUEUE UPSTREAM ---- */
+/* ---- PAGE 4 · FIND THE KNEE ---- */
+{sub:'How',title:'Find the knee',point:'Sweep concurrency until the pool starts queueing. Below the knee, every request clears fast and flow control is invisible. Past it, the queue grows and the policy decides who waits.',
+ provenance:'measured · 512 in / 128 out',
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 560 280" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <line x1="60" y1="240" x2="530" y2="240" stroke="var(--b2)"/>
+    <text x="295" y="272" font-size="11" fill="var(--txt3)" text-anchor="middle">concurrency</text>
+    <text x="14" y="20" font-size="11" fill="var(--txt3)" transform="rotate(-90 14 130)">p95 TTFT ms</text>
+    ${[0,500,1000,1500,2000].map(v=>{const y=240-(v/2100)*200;
+      return `<line x1="56" y1="${y}" x2="530" y2="${y}" stroke="var(--b1)"/>
+      <text x="52" y="${y+4}" font-size="9" fill="var(--txt3)" text-anchor="end">${v}</text>`;}).join('')}
+    <line id="p4knee" x1="0" y1="30" x2="0" y2="240" stroke="var(--danger)" stroke-dasharray="5 4" opacity="0"/>
+    <text id="p4kneetxt" x="0" y="25" font-size="11" fill="var(--danger)" text-anchor="middle" opacity="0">the knee</text>
+    <polyline id="p4line" fill="none" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" points=""/>
+    <g id="p4dots"></g>
+    <text id="p4left" x="130" y="70" font-size="10.5" fill="var(--ok)" opacity="0">flow control is invisible here</text>
+    <text id="p4right" x="400" y="70" font-size="10.5" fill="var(--danger)" text-anchor="middle" opacity="0">policy decides who waits</text>
+  </svg>`);},
+ enter:p=>{
+  const data=[[32,261],[64,744],[96,948],[128,967],[160,1455],[200,1814]];
+  const xScale=v=>60+(v-32)/(200-32)*470;
+  const yScale=v=>240-(v/2100)*200;
+  const kneeIdx=3;
+  const line=p.querySelector('#p4line');
+  const dotsG=p.querySelector('#p4dots');
+  const kneeLine=p.querySelector('#p4knee');
+  const kneeTxt=p.querySelector('#p4kneetxt');
+  const leftTxt=p.querySelector('#p4left');
+  const rightTxt=p.querySelector('#p4right');
+  dotsG.innerHTML=data.map(([c,v],i)=>`<circle cx="${xScale(c)}" cy="${yScale(v)}" r="4.5" fill="${i<kneeIdx?'var(--ok)':i===kneeIdx?'var(--amber)':'var(--danger)'}" opacity="0"/>
+    <text x="${xScale(c)}" y="${yScale(v)-10}" font-size="9" fill="var(--txt2)" text-anchor="middle" opacity="0">${v} ms</text>
+    <text x="${xScale(c)}" y="254" font-size="9" fill="var(--txt3)" text-anchor="middle">${c}</text>`).join('');
+  const circles=dotsG.querySelectorAll('circle');
+  const labels=dotsG.querySelectorAll('text:not(:last-child)');
+  const valLabels=Array.from(dotsG.querySelectorAll('text')).filter((_,i)=>i%2===0);
+  let t0=performance.now(),drawn=false;
+  animLoop(p,now=>{
+    if(drawn)return;
+    const elapsed=(now-t0)/1000;
+    const totalDur=2.5;
+    const prog=Math.min(1,elapsed/totalDur);
+    let pts='';
+    const revealCount=Math.min(data.length,Math.floor(prog*data.length*1.5)+1);
+    for(let i=0;i<Math.min(revealCount,data.length);i++){
+      const [c,v]=data[i];
+      const x=xScale(c),y=yScale(v);
+      pts+=(i===0?'':' ')+x+','+y;
+      circles[i].setAttribute('opacity','1');
+      valLabels[i].setAttribute('opacity','1');
+      if(i<kneeIdx)line.setAttribute('stroke','var(--ok)');
+      else if(i===kneeIdx)line.setAttribute('stroke','var(--amber)');
+      else line.setAttribute('stroke','var(--danger)');
+    }
+    line.setAttribute('points',pts);
+    if(prog>0.6){
+      const kx=xScale(data[kneeIdx][0]);
+      kneeLine.setAttribute('x1',kx);kneeLine.setAttribute('x2',kx);
+      kneeLine.setAttribute('opacity','1');
+      kneeTxt.setAttribute('x',kx);kneeTxt.setAttribute('opacity','1');
+      leftTxt.setAttribute('opacity','1');
+      rightTxt.setAttribute('opacity','1');
+    }
+    if(prog>=1)drawn=true;
+  });},
+ exit:p=>{}},
+
+/* ---- PAGE 5 (was 4) · MOVE THE QUEUE UPSTREAM ---- */
 {sub:'How',title:'Move the queue upstream',point:'Three layers absorb a burst. The engine limit protects token speed, a small buffer keeps it fed, and the excess waits where policy can act.',
  build:p=>{vizHTML(p,`
   <svg viewBox="0 0 900 250" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
@@ -242,10 +334,10 @@ const PAGES=[
     <text x="500" y="90" font-size="11" fill="var(--txt3)" text-anchor="middle">buffer</text>
     <rect x="120" y="100" width="300" height="100" rx="8" fill="none" stroke="var(--brand)"/>
     <text x="270" y="90" font-size="11" fill="var(--brand)" text-anchor="middle">burst queue, where policy lives</text>
-    <g id="p4dots"></g>
+    <g id="p5qdots"></g>
     <text x="760" y="155" font-size="12" fill="var(--txt2)">tokens</text>
   </svg>`);},
- enter:p=>{const g=p.querySelector('#p4dots');const dots=[];
+ enter:p=>{const g=p.querySelector('#p5qdots');const dots=[];
   for(let i=0;i<26;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
     c.setAttribute('r',5);c.setAttribute('fill',i%5==0?'var(--amber)':(i%7==0?'var(--teal)':'var(--brand)'));
     g.appendChild(c);dots.push({el:c,t:-i*0.55});}
@@ -259,7 +351,7 @@ const PAGES=[
     d.el.setAttribute('cx',x);d.el.setAttribute('cy',y);
     d.el.setAttribute('opacity', t>3.9?0:(t<0?0:1));});});}},
 
-/* ---- PAGE 5 · ONE REQUEST'S JOURNEY ---- */
+/* ---- PAGE 6 (was 5) · ONE REQUEST'S JOURNEY ---- */
 {sub:'How',title:'One request’s journey',point:'Tagged at the gateway, keyed into its own queue, chosen in three picks, released by the gate, landed where there is room.',
  build:p=>{vizHTML(p,`
   <svg viewBox="0 0 900 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
@@ -268,9 +360,9 @@ const PAGES=[
       <text x="95" y="145" text-anchor="middle" fill="var(--txt)">gateway</text><text x="95" y="163" text-anchor="middle">stamps two headers</text>
       <rect x="210" y="60" width="240" height="180" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
       <text x="330" y="80" text-anchor="middle" fill="var(--txt)">bands and flows</text>
-      <rect x="228" y="95" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="95" width="4" height="34" fill="var(--brand)"/><text x="242" y="116">premium · tenant queues</text>
+      <rect x="228" y="95" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="95" width="4" height="34" fill="var(--brand)"/><text x="242" y="116">premium</text>
       <rect x="228" y="139" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="139" width="4" height="34" fill="var(--amber)"/><text x="242" y="160">standard</text>
-      <rect x="228" y="183" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="183" width="4" height="34" fill="var(--teal)"/><text x="242" y="204">batch, bounded</text>
+      <rect x="228" y="183" width="200" height="34" rx="6" fill="var(--inset)"/><rect x="228" y="183" width="4" height="34" fill="var(--teal)"/><text x="242" y="204">batch</text>
       <rect x="510" y="120" width="90" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
       <text x="555" y="145" text-anchor="middle" fill="var(--txt)">gate</text><text x="555" y="163" text-anchor="middle">saturation</text>
       <rect x="660" y="120" width="90" height="60" rx="8" fill="var(--raised)" stroke="var(--b2)"/>
@@ -291,7 +383,7 @@ const PAGES=[
     dot.setAttribute('cx',a[0]+(b[0]-a[0])*e);dot.setAttribute('cy',a[1]+(b[1]-a[1])*e);
     cap.textContent=a[2];});}},
 
-/* ---- PAGE 6 · THE GATE ---- */
+/* ---- PAGE 7 (was 6) · THE GATE ---- */
 {sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. The detector reads queue depth and KV cache utilization back from the model servers.',
  provenance:'utilization detector',
  build:p=>{vizHTML(p,`
@@ -331,7 +423,7 @@ const PAGES=[
     drops.forEach(d=>{d.ph+= (closed?0.0015:0.011);
       d.el.style.top=((d.ph%1)*110)+'px';d.el.style.opacity=closed?.35:1;});});}},
 
-/* ---- PAGE 7 · PRIORITY HOLDS ---- */
+/* ---- PAGE 8 (was 7) · PRIORITY HOLDS ---- */
 {sub:'Behavior',title:'Priority holds',point:'Standard surges past capacity. Premium keeps its dispatch turn, so the queue duration lands on the tier that can afford it. Premium still shares the engine, so its own latency rises with the batch. Queue time is assigned; engine time is not.',
  provenance:'measured · curve redrawn',
  build:p=>{vizHTML(p,scenarioSVG('p7'));},
@@ -341,7 +433,7 @@ const PAGES=[
    bars:[['premium',110,'var(--brand)'],['standard',275,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
    note:'standard accrued 2.5x the queue duration of premium. The tails converge because dispatched requests share the same batch.'});}},
 
-/* ---- PAGE 8 · FAIRNESS HOLDS ---- */
+/* ---- PAGE 9 (was 8) · FAIRNESS HOLDS ---- */
 {sub:'Behavior',title:'Equal treatment, not insulation',point:'One premium tenant spikes to double its peers. Round-robin splits the dispatch turns evenly, so the band degrades together rather than the spiker taking the pool. Nobody stays at baseline, because the pool is full.',
  provenance:'measured · curve redrawn',
  build:p=>{vizHTML(p,scenarioSVG('p8'));},
@@ -351,7 +443,7 @@ const PAGES=[
    bars:[['tenant a, spiking',275,'var(--brand)'],['tenant b',170,'var(--teal)'],['tenant c',169,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
    note:'the spiker accrued 1.6x the queue duration of its peers. All three lines rise together because they share the engine, but the spiker sits visibly above.'});}},
 
-/* ---- PAGE 9 · OVERFLOW IS GOVERNED ---- */
+/* ---- PAGE 10 (was 9) · OVERFLOW IS GOVERNED ---- */
 {sub:'Behavior',title:'Overflow is governed',point:'A batch flood absorbs its own waiting. Past the band cap, refusals carry a named reason on the wire.',
  provenance:'measured · one GPU, GPT-OSS 20B',
  build:p=>{vizHTML(p,`
@@ -390,7 +482,7 @@ const PAGES=[
   svg.innerHTML=s;},
  enter:p=>{p.querySelectorAll('.p9f').forEach(b=>b.style.width=b.dataset.w+'%');}},
 
-/* ---- PAGE 10 · THE TRADE ---- */
+/* ---- PAGE 11 (was 10) · THE TRADE ---- */
 {sub:'The trade',title:'The trade, stated honestly',point:'Flow control added no capacity. It moved the wait to where policy decides who pays it, and gave you a dial per pool.',
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
@@ -420,7 +512,7 @@ const PAGES=[
       'in between. Every pool picks its own point on this line.';};
   dial.addEventListener('input',upd);upd();}},
 
-/* ---- PAGE 11 · PLAYGROUND ---- */
+/* ---- PAGE 12 (was 11) · PLAYGROUND ---- */
 {sub:'Play',title:'',point:'',build:buildPlayground,enter:p=>{PG.running=true;},exit:p=>{PG.running=false;}},
 ];
 
@@ -492,7 +584,7 @@ const PG={running:false,load:{premium:12,standard:24,batch:8},mode:4,shape:0,fc:
    ['Quiet pool',{premium:8,standard:8,batch:4,mode:4,fc:true},'Everything light. The gate never closes and flow control is invisible.'],
    ['Consolidate',{premium:14,standard:14,batch:0,mode:4,fc:true},'Two workloads share the pool below the knee. Both stay fast.'],
    ['Standard floods',{premium:12,standard:64,batch:0,mode:4,fc:true},'Standard floods past capacity. Premium keeps its turn so its queue time barely moves, while its latency still rises with the shared engine. Priority decides who waits upstream, not who owns the GPU.'],
-   ['Same-band spike',{premium:60,standard:0,batch:0,mode:4,fc:true},'One band carries the whole surge. This model keeps one queue per band, not per tenant, so read the band line as what every tenant in it experiences. Stop five has the per-tenant picture.'],
+   ['Same-band spike',{premium:60,standard:0,batch:0,mode:4,fc:true},'One band carries the whole surge. This model keeps one queue per band, not per tenant, so read the band line as what every tenant in it experiences. Stop six has the per-tenant picture.'],
    ['Isolation mode',{premium:60,standard:0,batch:0,mode:1,fc:true},'Same surge, buffer tightened to 1. More of the excess holds upstream instead of on the server, latency comes down, throughput pays for it.'],
    ['Batch flood',{premium:12,standard:12,batch:56,mode:4,fc:true},'Batch triples the load and absorbs the waiting.'],
    ['Band cap 429',{premium:12,standard:12,batch:90,mode:4,fc:true},'The batch band cap fills. Overflow is shed with 429 rejected-saturated.'],
@@ -618,7 +710,7 @@ function go(n){
   el.classList.add('act');
   if(PAGES[n].enter)PAGES[n].enter(el);
   $('#subtitle').textContent=PAGES[n].title||'';
-  $('#pgno').textContent=(n)+' / '+(PAGES.length-1);
+  $('#pgno').textContent=(n+1)+' / '+PAGES.length;
   $('#prevBtn').disabled=n===0;
   $('#nextBtn').disabled=n===PAGES.length-1;
   buildTimeline();
