@@ -1,0 +1,103 @@
+{
+  "run_id": "01-saturation_concurrency_32",
+  "scenario": "saturation_concurrency_32",
+  "duration_s": 180,
+  "drain_timeout_s": 120,
+  "tenants": [
+    {
+      "fairness_id": "sweep-standard",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 180,
+          "concurrency": 32
+        }
+      ],
+      "objective": null
+    }
+  ],
+  "client_summary": [
+    {
+      "run_id": "01-saturation_concurrency_32",
+      "scenario": "saturation_concurrency_32",
+      "tenant": "sweep-standard",
+      "priority": 0,
+      "objective": "gpt-oss-standard",
+      "duration_s": 180,
+      "trim_s": 30.0,
+      "total": 4336,
+      "n_steady_ttft": 3792,
+      "low_n_use_p90": false,
+      "http_200": 4336,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 24.08888888888889,
+      "ttft_p50_s": 0.17058188002556562,
+      "ttft_p90_s": 0.23446249100379646,
+      "ttft_p95_s": 0.26132197794504464,
+      "ttft_p99_s": 0.638943332945928,
+      "latency_p50_s": 1.2245120289735496,
+      "latency_p90_s": 1.3005047268234193,
+      "latency_p95_s": 1.3165176750626415,
+      "latency_p99_s": 1.6381546400953084
+    }
+  ],
+  "metric_delta": {
+    "vllm": {
+      "vllm:prompt_tokens_total": 2220021.0,
+      "vllm:generation_tokens_total": 555008.0,
+      "prefix_cache": {
+        "vllm:prefix_cache_queries_total": 0.0,
+        "vllm:prefix_cache_hits_total": 0.0,
+        "hit_rate": null
+      },
+      "request_success_delta": {
+        "stop": 0.0,
+        "length": 4336.0,
+        "abort": 0.0,
+        "error": 0.0,
+        "repetition": 0.0
+      },
+      "vllm:time_to_first_token_seconds": {
+        "count": 4336.0,
+        "sum": 947.9481613636017,
+        "mean_s": 0.21862273094179005,
+        "p50_s": 0.25,
+        "p95_s": 0.75,
+        "p99_s": 2.5
+      },
+      "vllm:e2e_request_latency_seconds": {
+        "count": 4336.0,
+        "sum": 5613.940036773682,
+        "mean_s": 1.2947278682596128,
+        "p50_s": 1.5,
+        "p95_s": 2.0,
+        "p99_s": 5.0
+      }
+    },
+    "endpoint_picker_queue": [
+      {
+        "fairness_id": "sweep-standard",
+        "priority": "0",
+        "queue_count_delta": 4336.0,
+        "queue_sum_s_delta": 0.11362595900000015,
+        "queue_mean_ms": 0.026205248846863503
+      }
+    ]
+  },
+  "metric_sample_summary": {
+    "vllm:num_requests_running": {
+      "max": 32.0,
+      "mean": 27.767045454545453,
+      "p95": 32.0
+    },
+    "vllm:num_requests_waiting": {
+      "max": 13.0,
+      "mean": 0.4943181818181818,
+      "p95": 4.0
+    }
+  }
+}
