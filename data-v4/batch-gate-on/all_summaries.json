@@ -1,0 +1,629 @@
+[
+  {
+    "run_id": "01-test4_batch_noisy-r01",
+    "scenario": "test4_batch_noisy",
+    "duration_s": 120,
+    "drain_timeout_s": 120,
+    "tenants": [
+      {
+        "fairness_id": "premium-tenant-a",
+        "priority": 100,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.0
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "standard-tenant-a",
+        "priority": 0,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.35
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "batch-tenant-a",
+        "priority": -10,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 60,
+            "concurrency": 0
+          },
+          {
+            "start_s": 60,
+            "duration_s": 60,
+            "pattern": "noisy_sinusoidal",
+            "center": 140,
+            "amplitude": 20,
+            "phase_offset": 0.15,
+            "ramp_s": 10
+          }
+        ],
+        "objective": null
+      }
+    ],
+    "client_summary": [
+      {
+        "run_id": "01-test4_batch_noisy-r01",
+        "scenario": "test4_batch_noisy",
+        "tenant": "batch-tenant-a",
+        "priority": -10,
+        "objective": "gpt-oss-fcc-batch",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 2287,
+        "n_steady_ttft": 2287,
+        "low_n_use_p90": false,
+        "http_200": 2287,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 19.058333333333334,
+        "ttft_p50_s": 1.0828716070391238,
+        "ttft_p90_s": 1.9798706530127674,
+        "ttft_p95_s": 2.09395844489336,
+        "ttft_p99_s": 2.3515149059239775,
+        "latency_p50_s": 3.6035905650351197,
+        "latency_p90_s": 4.481368430890143,
+        "latency_p95_s": 4.638329000212252,
+        "latency_p99_s": 4.861495244083926
+      },
+      {
+        "run_id": "01-test4_batch_noisy-r01",
+        "scenario": "test4_batch_noisy",
+        "tenant": "premium-tenant-a",
+        "priority": 100,
+        "objective": "gpt-oss-fcc-premium",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1083,
+        "n_steady_ttft": 811,
+        "low_n_use_p90": false,
+        "http_200": 1083,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.025,
+        "ttft_p50_s": 0.14622983103618026,
+        "ttft_p90_s": 0.9775813489686698,
+        "ttft_p95_s": 1.1729813641868532,
+        "ttft_p99_s": 1.5188097930513322,
+        "latency_p50_s": 1.4347958979196846,
+        "latency_p90_s": 3.5514605829957873,
+        "latency_p95_s": 3.7108776750974357,
+        "latency_p99_s": 4.0497015649452806
+      },
+      {
+        "run_id": "01-test4_batch_noisy-r01",
+        "scenario": "test4_batch_noisy",
+        "tenant": "standard-tenant-a",
+        "priority": 0,
+        "objective": "gpt-oss-fcc-standard",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1083,
+        "n_steady_ttft": 803,
+        "low_n_use_p90": false,
+        "http_200": 1083,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.025,
+        "ttft_p50_s": 0.15596343111246824,
+        "ttft_p90_s": 1.0708125608507544,
+        "ttft_p95_s": 1.3571190449874848,
+        "ttft_p99_s": 2.0556560698896646,
+        "latency_p50_s": 1.44498743978329,
+        "latency_p90_s": 3.6118348038289696,
+        "latency_p95_s": 3.822296541882679,
+        "latency_p99_s": 4.611858380958438
+      }
+    ],
+    "metric_delta": {
+      "vllm": {
+        "vllm:prompt_tokens_total": 2279924.0,
+        "vllm:generation_tokens_total": 569984.0,
+        "prefix_cache": {
+          "vllm:prefix_cache_queries_total": 0.0,
+          "vllm:prefix_cache_hits_total": 0.0,
+          "hit_rate": null
+        },
+        "request_success_delta": {
+          "stop": 0.0,
+          "length": 4453.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+        },
+        "vllm:time_to_first_token_seconds": {
+          "count": 4453.0,
+          "sum": 2015.9637010097504,
+          "mean_s": 0.45272034606102635,
+          "p50_s": 0.5,
+          "p95_s": 2.5,
+          "p99_s": 2.5
+        },
+        "vllm:e2e_request_latency_seconds": {
+          "count": 4453.0,
+          "sum": 11155.124606847763,
+          "mean_s": 2.5050807560852824,
+          "p50_s": 5.0,
+          "p95_s": 5.0,
+          "p99_s": 5.0
+        }
+      },
+      "endpoint_picker_queue": [
+        {
+          "fairness_id": "batch-tenant-a",
+          "priority": "-10",
+          "queue_count_delta": 2287.0,
+          "queue_sum_s_delta": 950.9658198149991,
+          "queue_mean_ms": 415.81365099038004
+        },
+        {
+          "fairness_id": "premium-tenant-a",
+          "priority": "100",
+          "queue_count_delta": 1083.0,
+          "queue_sum_s_delta": 122.60940304599171,
+          "queue_mean_ms": 113.21274519482152
+        },
+        {
+          "fairness_id": "standard-tenant-a",
+          "priority": "0",
+          "queue_count_delta": 1083.0,
+          "queue_sum_s_delta": 134.26824012699808,
+          "queue_mean_ms": 123.97806105909333
+        }
+      ]
+    },
+    "metric_sample_summary": {
+      "vllm:num_requests_running": {
+        "max": 128.0,
+        "mean": 74.92372881355932,
+        "p95": 128.0
+      },
+      "vllm:num_requests_waiting": {
+        "max": 65.0,
+        "mean": 10.76271186440678,
+        "p95": 51.0
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "run_id": "02-test4_batch_noisy-r02",
+    "scenario": "test4_batch_noisy",
+    "duration_s": 120,
+    "drain_timeout_s": 120,
+    "tenants": [
+      {
+        "fairness_id": "premium-tenant-a",
+        "priority": 100,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.0
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "standard-tenant-a",
+        "priority": 0,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.35
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "batch-tenant-a",
+        "priority": -10,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 60,
+            "concurrency": 0
+          },
+          {
+            "start_s": 60,
+            "duration_s": 60,
+            "pattern": "noisy_sinusoidal",
+            "center": 140,
+            "amplitude": 20,
+            "phase_offset": 0.15,
+            "ramp_s": 10
+          }
+        ],
+        "objective": null
+      }
+    ],
+    "client_summary": [
+      {
+        "run_id": "02-test4_batch_noisy-r02",
+        "scenario": "test4_batch_noisy",
+        "tenant": "batch-tenant-a",
+        "priority": -10,
+        "objective": "gpt-oss-fcc-batch",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 2244,
+        "n_steady_ttft": 2244,
+        "low_n_use_p90": false,
+        "http_200": 2244,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 18.7,
+        "ttft_p50_s": 1.1551842640619725,
+        "ttft_p90_s": 2.0008456888608634,
+        "ttft_p95_s": 2.2530190309043974,
+        "ttft_p99_s": 2.4751262159552425,
+        "latency_p50_s": 3.6873973349574953,
+        "latency_p90_s": 4.615166927920654,
+        "latency_p95_s": 4.860354597913101,
+        "latency_p99_s": 5.062393860891461
+      },
+      {
+        "run_id": "02-test4_batch_noisy-r02",
+        "scenario": "test4_batch_noisy",
+        "tenant": "premium-tenant-a",
+        "priority": 100,
+        "objective": "gpt-oss-fcc-premium",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1089,
+        "n_steady_ttft": 827,
+        "low_n_use_p90": false,
+        "http_200": 1089,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.075,
+        "ttft_p50_s": 0.16248084791004658,
+        "ttft_p90_s": 0.9505852549336851,
+        "ttft_p95_s": 1.094360914081335,
+        "ttft_p99_s": 1.4839950429741293,
+        "latency_p50_s": 1.404157067881897,
+        "latency_p90_s": 3.536503150127828,
+        "latency_p95_s": 3.695164042059332,
+        "latency_p99_s": 4.124488866189495
+      },
+      {
+        "run_id": "02-test4_batch_noisy-r02",
+        "scenario": "test4_batch_noisy",
+        "tenant": "standard-tenant-a",
+        "priority": 0,
+        "objective": "gpt-oss-fcc-standard",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1085,
+        "n_steady_ttft": 823,
+        "low_n_use_p90": false,
+        "http_200": 1085,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.041666666666666,
+        "ttft_p50_s": 0.1555688891094178,
+        "ttft_p90_s": 0.9013103279285133,
+        "ttft_p95_s": 1.2213080190122128,
+        "ttft_p99_s": 1.6239438869524747,
+        "latency_p50_s": 1.4172063830774277,
+        "latency_p90_s": 3.5017382551450282,
+        "latency_p95_s": 3.7344384521711618,
+        "latency_p99_s": 4.1685363398864865
+      }
+    ],
+    "metric_delta": {
+      "vllm": {
+        "vllm:prompt_tokens_total": 2262004.0,
+        "vllm:generation_tokens_total": 565504.0,
+        "prefix_cache": {
+          "vllm:prefix_cache_queries_total": 0.0,
+          "vllm:prefix_cache_hits_total": 0.0,
+          "hit_rate": null
+        },
+        "request_success_delta": {
+          "stop": 0.0,
+          "length": 4418.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+        },
+        "vllm:time_to_first_token_seconds": {
+          "count": 4418.0,
+          "sum": 1960.1416165828705,
+          "mean_s": 0.4436717104080739,
+          "p50_s": 0.25,
+          "p95_s": 2.5,
+          "p99_s": 2.5
+        },
+        "vllm:e2e_request_latency_seconds": {
+          "count": 4418.0,
+          "sum": 11159.045180797577,
+          "mean_s": 2.525813757536799,
+          "p50_s": 5.0,
+          "p95_s": 5.0,
+          "p99_s": 5.0
+        }
+      },
+      "endpoint_picker_queue": [
+        {
+          "fairness_id": "batch-tenant-a",
+          "priority": "-10",
+          "queue_count_delta": 2244.0,
+          "queue_sum_s_delta": 1031.0763854319976,
+          "queue_mean_ms": 459.4814551835996
+        },
+        {
+          "fairness_id": "premium-tenant-a",
+          "priority": "100",
+          "queue_count_delta": 1089.0,
+          "queue_sum_s_delta": 116.27999269200154,
+          "queue_mean_ms": 106.77685279338985
+        },
+        {
+          "fairness_id": "standard-tenant-a",
+          "priority": "0",
+          "queue_count_delta": 1085.0,
+          "queue_sum_s_delta": 107.8338382289985,
+          "queue_mean_ms": 99.38602601751013
+        }
+      ]
+    },
+    "metric_sample_summary": {
+      "vllm:num_requests_running": {
+        "max": 128.0,
+        "mean": 74.89915966386555,
+        "p95": 128.0
+      },
+      "vllm:num_requests_waiting": {
+        "max": 79.0,
+        "mean": 10.882352941176471,
+        "p95": 55.0
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "run_id": "03-test4_batch_noisy-r03",
+    "scenario": "test4_batch_noisy",
+    "duration_s": 120,
+    "drain_timeout_s": 120,
+    "tenants": [
+      {
+        "fairness_id": "premium-tenant-a",
+        "priority": 100,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.0
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "standard-tenant-a",
+        "priority": 0,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 120,
+            "pattern": "noisy_sinusoidal",
+            "center": 16,
+            "amplitude": 4,
+            "phase_offset": 0.35
+          }
+        ],
+        "objective": null
+      },
+      {
+        "fairness_id": "batch-tenant-a",
+        "priority": -10,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 60,
+            "concurrency": 0
+          },
+          {
+            "start_s": 60,
+            "duration_s": 60,
+            "pattern": "noisy_sinusoidal",
+            "center": 140,
+            "amplitude": 20,
+            "phase_offset": 0.15,
+            "ramp_s": 10
+          }
+        ],
+        "objective": null
+      }
+    ],
+    "client_summary": [
+      {
+        "run_id": "03-test4_batch_noisy-r03",
+        "scenario": "test4_batch_noisy",
+        "tenant": "batch-tenant-a",
+        "priority": -10,
+        "objective": "gpt-oss-fcc-batch",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 2196,
+        "n_steady_ttft": 2196,
+        "low_n_use_p90": false,
+        "http_200": 2196,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 18.3,
+        "ttft_p50_s": 1.2061006440781057,
+        "ttft_p90_s": 1.9618181090336293,
+        "ttft_p95_s": 2.150705374078825,
+        "ttft_p99_s": 2.4255099068395793,
+        "latency_p50_s": 3.884142919909209,
+        "latency_p90_s": 4.600153867853805,
+        "latency_p95_s": 4.804442496970296,
+        "latency_p99_s": 5.005724858958274
+      },
+      {
+        "run_id": "03-test4_batch_noisy-r03",
+        "scenario": "test4_batch_noisy",
+        "tenant": "premium-tenant-a",
+        "priority": 100,
+        "objective": "gpt-oss-fcc-premium",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1091,
+        "n_steady_ttft": 826,
+        "low_n_use_p90": false,
+        "http_200": 1091,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.091666666666667,
+        "ttft_p50_s": 0.1537080779671669,
+        "ttft_p90_s": 0.9640905330888927,
+        "ttft_p95_s": 1.3046366940252483,
+        "ttft_p99_s": 1.5456529210787266,
+        "latency_p50_s": 1.3867191181052476,
+        "latency_p90_s": 3.630011210916564,
+        "latency_p95_s": 3.980637392029166,
+        "latency_p99_s": 4.174228879855946
+      },
+      {
+        "run_id": "03-test4_batch_noisy-r03",
+        "scenario": "test4_batch_noisy",
+        "tenant": "standard-tenant-a",
+        "priority": 0,
+        "objective": "gpt-oss-fcc-standard",
+        "duration_s": 120,
+        "trim_s": 20.0,
+        "total": 1098,
+        "n_steady_ttft": 833,
+        "low_n_use_p90": false,
+        "http_200": 1098,
+        "http_429": 0,
+        "http_503": 0,
+        "timeouts": 0,
+        "errors": 0,
+        "throughput_rps": 9.15,
+        "ttft_p50_s": 0.184673469979316,
+        "ttft_p90_s": 1.126020573778078,
+        "ttft_p95_s": 1.392583159962669,
+        "ttft_p99_s": 1.66545886779204,
+        "latency_p50_s": 1.3953547100536525,
+        "latency_p90_s": 3.7496893079951406,
+        "latency_p95_s": 4.041970509104431,
+        "latency_p99_s": 4.360077646095306
+      }
+    ],
+    "metric_delta": {
+      "vllm": {
+        "vllm:prompt_tokens_total": 2245108.0,
+        "vllm:generation_tokens_total": 561280.0,
+        "prefix_cache": {
+          "vllm:prefix_cache_queries_total": 0.0,
+          "vllm:prefix_cache_hits_total": 0.0,
+          "hit_rate": null
+        },
+        "request_success_delta": {
+          "stop": 0.0,
+          "length": 4385.0,
+          "abort": 0.0,
+          "error": 0.0,
+          "repetition": 0.0
+        },
+        "vllm:time_to_first_token_seconds": {
+          "count": 4385.0,
+          "sum": 2046.9659039974213,
+          "mean_s": 0.4668109245148053,
+          "p50_s": 0.5,
+          "p95_s": 2.5,
+          "p99_s": 2.5
+        },
+        "vllm:e2e_request_latency_seconds": {
+          "count": 4385.0,
+          "sum": 11264.258783102036,
+          "mean_s": 2.568816142098526,
+          "p50_s": 5.0,
+          "p95_s": 5.0,
+          "p99_s": 5.0
+        }
+      },
+      "endpoint_picker_queue": [
+        {
+          "fairness_id": "batch-tenant-a",
+          "priority": "-10",
+          "queue_count_delta": 2196.0,
+          "queue_sum_s_delta": 936.452415282929,
+          "queue_mean_ms": 426.4355260851225
+        },
+        {
+          "fairness_id": "premium-tenant-a",
+          "priority": "100",
+          "queue_count_delta": 1091.0,
+          "queue_sum_s_delta": 150.178636421997,
+          "queue_mean_ms": 137.65227903024473
+        },
+        {
+          "fairness_id": "standard-tenant-a",
+          "priority": "0",
+          "queue_count_delta": 1098.0,
+          "queue_sum_s_delta": 149.15708991699512,
+          "queue_mean_ms": 135.84434418669866
+        }
+      ]
+    },
+    "metric_sample_summary": {
+      "vllm:num_requests_running": {
+        "max": 128.0,
+        "mean": 76.11764705882354,
+        "p95": 128.0
+      },
+      "vllm:num_requests_waiting": {
+        "max": 74.0,
+        "mean": 12.058823529411764,
+        "p95": 58.0
+      }
+    },
+    "repeat": 3
+  }
+]

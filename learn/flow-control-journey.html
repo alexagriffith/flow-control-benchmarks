@@ -292,7 +292,7 @@ const PAGES=[
     cap.textContent=a[2];});}},
 
 /* ---- PAGE 6 · THE GATE ---- */
-{sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. This is the utilization detector, the one that reads server telemetry.',
+{sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. The detector reads queue depth and KV cache utilization back from the model servers.',
  provenance:'utilization detector',
  build:p=>{vizHTML(p,`
   <div style="display:flex;height:100%;gap:22px;align-items:center">
@@ -307,7 +307,7 @@ const PAGES=[
         <text id="p6val" x="450" y="70" font-size="13" class="mono-t" fill="var(--txt)" text-anchor="end">0.00</text>
         <text x="10" y="176" font-size="12" fill="var(--txt2)">a pod with stale metrics counts as fully saturated</text>
         <text x="10" y="198" font-size="12" fill="var(--txt2)">the threshold normalizes the score and caps which pods the scheduler may pick</text>
-        <text x="10" y="220" font-size="12" fill="var(--txt2)">the ceiling is per band, and a blocked top band stops the whole cycle</text>
+        <text x="10" y="220" font-size="12" fill="var(--txt2)">the score is pool-wide. When it hits 1.0, all bands hold; priority decides who dispatches first</text>
       </svg>
     </div>
     <div style="flex:1;text-align:center">
@@ -332,24 +332,24 @@ const PAGES=[
       d.el.style.top=((d.ph%1)*110)+'px';d.el.style.opacity=closed?.35:1;});});}},
 
 /* ---- PAGE 7 · PRIORITY HOLDS ---- */
-{sub:'Behavior',title:'Priority holds',point:'Standard surges past capacity. Premium keeps its dispatch turn, so the queue duration lands on the tier that can afford it. Premium still shares the engine, so its own latency moves a little.',
- provenance:'measured run · curve redrawn',
+{sub:'Behavior',title:'Priority holds',point:'Standard surges past capacity. Premium keeps its dispatch turn, so the queue duration lands on the tier that can afford it. Premium still shares the engine, so its own latency rises with the batch. Queue time is assigned; engine time is not.',
+ provenance:'measured · curve redrawn',
  build:p=>{vizHTML(p,scenarioSVG('p7'));},
  enter:p=>{scenarioAnim(p,'p7',{
-   lines:[{c:'var(--brand)',base:420,peak:436,label:'premium p95'},{c:'var(--amber)',base:430,peak:580,label:'standard p95'}],
-   ymax:700,window:[0.3,0.75],
-   bars:[['premium',37,'var(--brand)'],['standard',96,'var(--amber)']],barMax:110,barTitle:'mean queue duration, ms',
-   note:'standard accrued 2.6x the queue duration of premium'});}},
+   lines:[{c:'var(--brand)',base:150,peak:1160,label:'premium p95'},{c:'var(--amber)',base:160,peak:1840,label:'standard p95'}],
+   ymax:2200,window:[0.3,0.75],
+   bars:[['premium',110,'var(--brand)'],['standard',275,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
+   note:'standard accrued 2.5x the queue duration of premium. The tails converge because dispatched requests share the same batch.'});}},
 
 /* ---- PAGE 8 · FAIRNESS HOLDS ---- */
-{sub:'Behavior',title:'Equal treatment, not insulation',point:'One premium tenant spikes to triple its peers. Round-robin splits the dispatch turns evenly, so the band degrades together rather than the spiker taking the pool. Nobody stays at baseline, because the pool is full.',
- provenance:'measured run · curve redrawn',
+{sub:'Behavior',title:'Equal treatment, not insulation',point:'One premium tenant spikes to double its peers. Round-robin splits the dispatch turns evenly, so the band degrades together rather than the spiker taking the pool. Nobody stays at baseline, because the pool is full.',
+ provenance:'measured · curve redrawn',
  build:p=>{vizHTML(p,scenarioSVG('p8'));},
  enter:p=>{scenarioAnim(p,'p8',{
-   lines:[{c:'var(--brand)',base:212,peak:559,label:'tenant a p95, spiking'},{c:'var(--teal)',base:208,peak:555,label:'tenant b p95'},{c:'var(--amber)',base:214,peak:563,label:'tenant c p95'}],
-   ymax:700,window:[0.3,0.75],jitter:4,
-   bars:[['tenant a, spiking',88,'var(--brand)'],['tenant b',64,'var(--teal)'],['tenant c',64,'var(--amber)']],barMax:100,barTitle:'mean queue duration, ms',
-   note:'the three lines overlap because the tenants tracked each other. The p95 spread across the band stayed inside 8 ms, and the spiker accrued the most queue duration'});}},
+   lines:[{c:'var(--brand)',base:340,peak:1960,label:'tenant a p95, spiking'},{c:'var(--teal)',base:330,peak:1540,label:'tenant b p95'},{c:'var(--amber)',base:330,peak:1530,label:'tenant c p95'}],
+   ymax:2400,window:[0.3,0.75],jitter:12,
+   bars:[['tenant a, spiking',275,'var(--brand)'],['tenant b',170,'var(--teal)'],['tenant c',169,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
+   note:'the spiker accrued 1.6x the queue duration of its peers. All three lines rise together because they share the engine, but the spiker sits visibly above.'});}},
 
 /* ---- PAGE 9 · OVERFLOW IS GOVERNED ---- */
 {sub:'Behavior',title:'Overflow is governed',point:'A batch flood absorbs its own waiting. Past the band cap, refusals carry a named reason on the wire.',
@@ -367,11 +367,11 @@ const PAGES=[
     </div>
     <div style="flex:1"><svg id="p9svg" viewBox="0 0 380 240" width="100%"></svg></div>
   </div>`);
-  p.querySelector('#p9bars').innerHTML=[['premium',62,'var(--brand)'],['standard',64,'var(--amber)'],['batch, surging',198,'var(--teal)']].map(([n,v,c])=>`
+  p.querySelector('#p9bars').innerHTML=[['premium',119,'var(--brand)'],['standard',127,'var(--amber)'],['batch, surging',496,'var(--teal)']].map(([n,v,c])=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span class="lab" style="width:104px">${n}</span>
       <div style="flex:1;height:14px;border-radius:7px;background:var(--inset);overflow:hidden">
-        <div class="p9f" data-w="${v/210*100}" style="height:100%;width:0;border-radius:7px;background:${c};transition:width 1.4s var(--ease)"></div></div>
+        <div class="p9f" data-w="${v/540*100}" style="height:100%;width:0;border-radius:7px;background:${c};transition:width 1.4s var(--ease)"></div></div>
       <span class="mono" style="font-size:11px;width:52px">${v} ms</span></div>`).join('');
   const svg=p.querySelector('#p9svg');
   const pts=[[160,503,0,0],[256,640,0,76],[384,640,1010,910],[512,715,16639,1456]];

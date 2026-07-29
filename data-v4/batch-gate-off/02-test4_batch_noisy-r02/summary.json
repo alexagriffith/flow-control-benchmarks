@@ -1,0 +1,186 @@
+{
+  "run_id": "02-test4_batch_noisy-r02",
+  "scenario": "test4_batch_noisy",
+  "duration_s": 120,
+  "drain_timeout_s": 120,
+  "tenants": [
+    {
+      "fairness_id": "premium-tenant-a",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 16,
+          "amplitude": 4,
+          "phase_offset": 0.0
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "standard-tenant-a",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 16,
+          "amplitude": 4,
+          "phase_offset": 0.35
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "batch-tenant-a",
+      "priority": -10,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 60,
+          "concurrency": 0
+        },
+        {
+          "start_s": 60,
+          "duration_s": 60,
+          "pattern": "noisy_sinusoidal",
+          "center": 140,
+          "amplitude": 20,
+          "phase_offset": 0.15,
+          "ramp_s": 10
+        }
+      ],
+      "objective": null
+    }
+  ],
+  "client_summary": [
+    {
+      "run_id": "02-test4_batch_noisy-r02",
+      "scenario": "test4_batch_noisy",
+      "tenant": "batch-tenant-a",
+      "priority": -10,
+      "objective": "gpt-oss-batch",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 18738,
+      "n_steady_ttft": 2287,
+      "low_n_use_p90": false,
+      "http_200": 2287,
+      "http_429": 16451,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 156.15,
+      "ttft_p50_s": 0.5551610349211842,
+      "ttft_p90_s": 1.3658351509366184,
+      "ttft_p95_s": 1.5929392820689827,
+      "ttft_p99_s": 1.8163101212121546,
+      "latency_p50_s": 3.113071681931615,
+      "latency_p90_s": 3.8497515409253538,
+      "latency_p95_s": 3.9894581958651543,
+      "latency_p99_s": 4.280972398119047
+    },
+    {
+      "run_id": "02-test4_batch_noisy-r02",
+      "scenario": "test4_batch_noisy",
+      "tenant": "premium-tenant-a",
+      "priority": 100,
+      "objective": "gpt-oss-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 1083,
+      "n_steady_ttft": 824,
+      "low_n_use_p90": false,
+      "http_200": 1083,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 9.025,
+      "ttft_p50_s": 0.14586396189406514,
+      "ttft_p90_s": 1.0196556989103556,
+      "ttft_p95_s": 1.4273645728826523,
+      "ttft_p99_s": 1.6456955329049379,
+      "latency_p50_s": 1.4454593290574849,
+      "latency_p90_s": 3.500684609869495,
+      "latency_p95_s": 3.9076158609241247,
+      "latency_p99_s": 4.188914460130036
+    },
+    {
+      "run_id": "02-test4_batch_noisy-r02",
+      "scenario": "test4_batch_noisy",
+      "tenant": "standard-tenant-a",
+      "priority": 0,
+      "objective": "gpt-oss-standard",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 1081,
+      "n_steady_ttft": 821,
+      "low_n_use_p90": false,
+      "http_200": 1081,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 9.008333333333333,
+      "ttft_p50_s": 0.14879886899143457,
+      "ttft_p90_s": 1.097157283918932,
+      "ttft_p95_s": 1.3259513471275568,
+      "ttft_p99_s": 1.6181395908351988,
+      "latency_p50_s": 1.4722207051236182,
+      "latency_p90_s": 3.511049835011363,
+      "latency_p95_s": 3.994758528890088,
+      "latency_p99_s": 4.090149423805997
+    }
+  ],
+  "metric_delta": {
+    "vllm": {
+      "vllm:prompt_tokens_total": 2278901.0,
+      "vllm:generation_tokens_total": 569728.0,
+      "prefix_cache": {
+        "vllm:prefix_cache_queries_total": 0.0,
+        "vllm:prefix_cache_hits_total": 0.0,
+        "hit_rate": null
+      },
+      "request_success_delta": {
+        "stop": 0.0,
+        "length": 4451.0,
+        "abort": 0.0,
+        "error": 0.0,
+        "repetition": 0.0
+      },
+      "vllm:time_to_first_token_seconds": {
+        "count": 4451.0,
+        "sum": 2096.345618247986,
+        "mean_s": 0.47098306408626955,
+        "p50_s": 0.5,
+        "p95_s": 2.5,
+        "p99_s": 2.5
+      },
+      "vllm:e2e_request_latency_seconds": {
+        "count": 4451.0,
+        "sum": 11281.06045293808,
+        "mean_s": 2.5345002140952775,
+        "p50_s": 5.0,
+        "p95_s": 5.0,
+        "p99_s": 5.0
+      }
+    },
+    "endpoint_picker_queue": []
+  },
+  "metric_sample_summary": {
+    "vllm:num_requests_running": {
+      "max": 128.0,
+      "mean": 75.78151260504201,
+      "p95": 128.0
+    },
+    "vllm:num_requests_waiting": {
+      "max": 72.0,
+      "mean": 10.722689075630251,
+      "p95": 56.0
+    }
+  }
+}

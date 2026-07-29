@@ -1,0 +1,31 @@
+{
+  "endpoint_name": "gpt-oss-20b-fc-b",
+  "model_name": "openai/gpt-oss-20b",
+  "base_url": "http://inference-gateway-istio.redhat-ods-applications.svc.cluster.local/llm-test/gpt-oss-20b-fc-b",
+  "epp_metrics_url": "http://gpt-oss-20b-fc-b-epp-service.llm-test.svc.cluster.local:9090/metrics",
+  "vllm_metrics_url": "https://gpt-oss-20b-fc-b-kserve-workload-svc.llm-test.svc.cluster.local:8000/metrics",
+  "stream_done_terminates_latency": true,
+  "input_tokens_target": 512,
+  "output_tokens": 64,
+  "prompt_pool_size": 384,
+  "sweep_duration_s": 30,
+  "scenario_duration_s": 300,
+  "drain_timeout_s": 120,
+  "repeats": 3,
+  "warmup_duration_s": 30,
+  "warmup_concurrency": 8,
+  "stabilization_repeats": 1,
+  "warmup_included_in_summaries": false,
+  "traffic_seed": 42,
+  "headers": [
+    "x-gateway-inference-objective",
+    "x-gateway-inference-fairness-id"
+  ],
+  "objectives": {
+    "100": "gpt-oss-premium",
+    "0": "gpt-oss-standard",
+    "-10": "gpt-oss-batch"
+  },
+  "flow_control_mode": "",
+  "queue_depth_threshold": ""
+}

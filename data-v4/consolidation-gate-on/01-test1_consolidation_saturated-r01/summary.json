@@ -1,0 +1,215 @@
+{
+  "run_id": "01-test1_consolidation_saturated-r01",
+  "scenario": "test1_consolidation_saturated",
+  "duration_s": 120,
+  "drain_timeout_s": 120,
+  "tenants": [
+    {
+      "fairness_id": "premium-tenant-a",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 15,
+          "amplitude": 4,
+          "period_s": 45,
+          "phase_offset": 0.0
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "premium-tenant-b",
+      "priority": 100,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 120,
+          "pattern": "noisy_sinusoidal",
+          "center": 15,
+          "amplitude": 4,
+          "period_s": 55,
+          "phase_offset": 0.4
+        }
+      ],
+      "objective": null
+    },
+    {
+      "fairness_id": "standard-tenant-a",
+      "priority": 0,
+      "phases": [
+        {
+          "start_s": 0,
+          "duration_s": 40,
+          "pattern": "noisy_sinusoidal",
+          "center": 10,
+          "amplitude": 3,
+          "period_s": 30,
+          "phase_offset": 0.2
+        },
+        {
+          "start_s": 40,
+          "duration_s": 80,
+          "pattern": "noisy_sinusoidal",
+          "center": 110,
+          "amplitude": 15,
+          "period_s": 35,
+          "phase_offset": 0.2,
+          "ramp_s": 10
+        }
+      ],
+      "objective": null
+    }
+  ],
+  "client_summary": [
+    {
+      "run_id": "01-test1_consolidation_saturated-r01",
+      "scenario": "test1_consolidation_saturated",
+      "tenant": "premium-tenant-a",
+      "priority": 100,
+      "objective": "gpt-oss-fcd-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 907,
+      "n_steady_ttft": 636,
+      "low_n_use_p90": false,
+      "http_200": 907,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 7.558333333333334,
+      "ttft_p50_s": 0.26124488306231797,
+      "ttft_p90_s": 0.6670508338138461,
+      "ttft_p95_s": 0.8078788269776851,
+      "ttft_p99_s": 1.1111010550521314,
+      "latency_p50_s": 2.8391506818588823,
+      "latency_p90_s": 3.2844838011078537,
+      "latency_p95_s": 3.4269074469339103,
+      "latency_p99_s": 3.7247097711078823
+    },
+    {
+      "run_id": "01-test1_consolidation_saturated-r01",
+      "scenario": "test1_consolidation_saturated",
+      "tenant": "premium-tenant-b",
+      "priority": 100,
+      "objective": "gpt-oss-fcd-premium",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 873,
+      "n_steady_ttft": 665,
+      "low_n_use_p90": false,
+      "http_200": 873,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 7.275,
+      "ttft_p50_s": 0.2748258060310036,
+      "ttft_p90_s": 0.6587615641765296,
+      "ttft_p95_s": 0.7794855679385364,
+      "ttft_p99_s": 1.0666584209538996,
+      "latency_p50_s": 2.8334871008992195,
+      "latency_p90_s": 3.2839819150976837,
+      "latency_p95_s": 3.3973315809853375,
+      "latency_p99_s": 3.6331421989016235
+    },
+    {
+      "run_id": "01-test1_consolidation_saturated-r01",
+      "scenario": "test1_consolidation_saturated",
+      "tenant": "standard-tenant-a",
+      "priority": 0,
+      "objective": "gpt-oss-fcd-standard",
+      "duration_s": 120,
+      "trim_s": 20.0,
+      "total": 3126,
+      "n_steady_ttft": 2971,
+      "low_n_use_p90": false,
+      "http_200": 3126,
+      "http_429": 0,
+      "http_503": 0,
+      "timeouts": 0,
+      "errors": 0,
+      "throughput_rps": 26.05,
+      "ttft_p50_s": 0.5164959069807082,
+      "ttft_p90_s": 0.9509136860724539,
+      "ttft_p95_s": 1.1163537160027772,
+      "ttft_p99_s": 1.3606547829695046,
+      "latency_p50_s": 3.1327897971495986,
+      "latency_p90_s": 3.5357147140894085,
+      "latency_p95_s": 3.689778200117871,
+      "latency_p99_s": 3.90499671199359
+    }
+  ],
+  "metric_delta": {
+    "vllm": {
+      "vllm:prompt_tokens_total": 2511860.0,
+      "vllm:generation_tokens_total": 627968.0,
+      "prefix_cache": {
+        "vllm:prefix_cache_queries_total": 0.0,
+        "vllm:prefix_cache_hits_total": 0.0,
+        "hit_rate": null
+      },
+      "request_success_delta": {
+        "stop": 0.0,
+        "length": 4906.0,
+        "abort": 0.0,
+        "error": 0.0,
+        "repetition": 0.0
+      },
+      "vllm:time_to_first_token_seconds": {
+        "count": 4906.0,
+        "sum": 1600.3336062431335,
+        "mean_s": 0.326199267477198,
+        "p50_s": 0.5,
+        "p95_s": 1.0,
+        "p99_s": 2.5
+      },
+      "vllm:e2e_request_latency_seconds": {
+        "count": 4906.0,
+        "sum": 12579.806951999664,
+        "mean_s": 2.564167743986886,
+        "p50_s": 5.0,
+        "p95_s": 5.0,
+        "p99_s": 5.0
+      }
+    },
+    "endpoint_picker_queue": [
+      {
+        "fairness_id": "premium-tenant-a",
+        "priority": "100",
+        "queue_count_delta": 907.0,
+        "queue_sum_s_delta": 62.63011790400117,
+        "queue_mean_ms": 69.05194917750956
+      },
+      {
+        "fairness_id": "premium-tenant-b",
+        "priority": "100",
+        "queue_count_delta": 873.0,
+        "queue_sum_s_delta": 62.26554625200032,
+        "queue_mean_ms": 71.32364977319625
+      },
+      {
+        "fairness_id": "standard-tenant-a",
+        "priority": "0",
+        "queue_count_delta": 3126.0,
+        "queue_sum_s_delta": 403.82160529999936,
+        "queue_mean_ms": 129.18157559181043
+      }
+    ]
+  },
+  "metric_sample_summary": {
+    "vllm:num_requests_running": {
+      "max": 128.0,
+      "mean": 90.6864406779661,
+      "p95": 128.0
+    },
+    "vllm:num_requests_waiting": {
+      "max": 33.0,
+      "mean": 6.4576271186440675,
+      "p95": 23.0
+    }
+  }
+}

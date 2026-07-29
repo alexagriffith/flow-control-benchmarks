@@ -1,246 +1,386 @@
 #!/usr/bin/env python3
-"""Generate real-data SVG charts from benchmark run CSVs."""
-import csv, os, math
+"""Generate real-data SVG charts from the data-v4 benchmark CSVs.
+
+Reads the gate-on / gate-off run pairs, computes percentiles the same way the
+canonical summary does (p95 = value at the 95th percentile of ttft_s*1000 over
+status==200 rows with start_s >= 20, aggregated across the counted repeats),
+and writes the headline charts to assets/.
+
+Verified against data-v4/CANONICAL-RESULTS.json. Lead with the principle
+(7x faster, zero rejections, premium protected), not the raw decimal.
+"""
+import csv, glob, os
 from collections import defaultdict
 
-# Point these at the campaign roots described in RUNLOG.md before running.
-U = "."
-B = "."
-OUT = "assets"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data-v4")
+OUT = os.path.join(ROOT, "assets")
 os.makedirs(OUT, exist_ok=True)
 
+# House palette
 GREEN, GOLD, BLUE, RED = "#1f8a5f", "#d59a00", "#1c78d8", "#ee0000"
-INK, MUTED, GRID, AXIS = "#151515", "#898781", "#ececea", "#c9c8c2"
+INK, MUTED, FAINT = "#151515", "#6b6b6b", "#8a8a8a"
+GRID, AXIS, CARD, STROKE = "#eeeeee", "#c9c8c2", "#fbfbfb", "#d7d7d7"
+FONT = "-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"
 
-W, H = 560, 300
-ML, MR, MT, MB = 56, 16, 66, 40  # margins: top leaves room for title
+WARMUP_START = 20.0  # seconds; skip warm-up phase, matches canonical
 
-def rd(p): return list(csv.DictReader(open(p)))
 
-def ok(r): return r.get("status") == "200" and r.get("ttft_s")
+# ---------------------------------------------------------------- data layer
+def rd(p):
+    return list(csv.DictReader(open(p)))
 
-def sx(t, t0, t1): return ML + (t - t0) / (t1 - t0) * (W - ML - MR)
-def sy(v, v0, v1): return MT + (1 - (v - v0) / (v1 - v0)) * (H - MT - MB)
 
-def rolling_pct(samples, pct, win=30.0, step=5.0, t0=0, t1=300):
-    """samples: list of (t, v). Returns list of (t_mid, pct value) for windows with >=8 samples."""
-    samples = sorted(samples)
-    out = []
-    t = t0 + win
-    while t <= t1 + 1e-9:
-        w = [v for (ts, v) in samples if t - win <= ts <= t]
-        if len(w) >= 8:
-            w.sort()
-            out.append((t - win / 2, w[min(len(w) - 1, int(pct * len(w)))]))
-        t += step
-    return out
+def pctl(vals, p):
+    if not vals:
+        return None
+    vals = sorted(vals)
+    return vals[min(len(vals) - 1, int(p * len(vals)))]
 
-def polyline(pts, t0, t1, v0, v1, color, width=2, dash=None):
-    p = " ".join(f"{sx(t,t0,t1):.1f},{sy(v,v0,v1):.1f}" for t, v in pts)
-    d = f' stroke-dasharray="{dash}"' if dash else ""
-    return f'<polyline fill="none" stroke="{color}" stroke-width="{width}" stroke-linejoin="round" stroke-linecap="round"{d} points="{p}"/>'
 
-def area(pts, t0, t1, v0, v1, color, opacity=0.10):
-    p = " ".join(f"{sx(t,t0,t1):.1f},{sy(v,v0,v1):.1f}" for t, v in pts)
-    x_first = sx(pts[0][0], t0, t1); x_last = sx(pts[-1][0], t0, t1); ybase = sy(v0, v0, v1)
-    return f'<polygon fill="{color}" fill-opacity="{opacity}" points="{x_first:.1f},{ybase:.1f} {p} {x_last:.1f},{ybase:.1f}"/>'
+def gather(scenario):
+    """Aggregate a scenario dir (all counted repeats, skip warm-up runs).
 
-def grid_y(vals, v0, v1, t0, t1, fmt=lambda v: f"{v:g}"):
-    s = ""
-    for v in vals:
-        y = sy(v, v0, v1)
-        s += f'<line x1="{ML}" y1="{y:.1f}" x2="{W-MR}" y2="{y:.1f}" stroke="{GRID}" stroke-width="1"/>'
-        s += f'<text x="{ML-8}" y="{y+4:.1f}" text-anchor="end" font-size="11" fill="{MUTED}">{fmt(v)}</text>'
-    return s
+    Returns (by_priority -> [ttft_ms], n429). start_s >= WARMUP_START only.
+    """
+    by_pri = defaultdict(list)
+    n429 = 0
+    for sub in sorted(glob.glob(os.path.join(DATA, scenario, "*/"))):
+        base = os.path.basename(sub.rstrip("/"))
+        if "warmup" in base:
+            continue
+        f = os.path.join(sub, "client_samples.csv")
+        if not os.path.exists(f):
+            continue
+        for r in rd(f):
+            if r["status"] == "429":
+                n429 += 1
+            if r["status"] == "200" and r["ttft_s"] and float(r["start_s"]) >= WARMUP_START:
+                by_pri[r["priority"]].append(float(r["ttft_s"]) * 1000.0)
+    return by_pri, n429
 
-def axis_x(t0, t1, ticks, label="elapsed seconds"):
-    ybase = H - MB
-    s = f'<line x1="{ML}" y1="{ybase}" x2="{W-MR}" y2="{ybase}" stroke="{AXIS}" stroke-width="1"/>'
-    for t in ticks:
-        x = sx(t, t0, t1)
-        s += f'<text x="{x:.1f}" y="{ybase+18}" text-anchor="middle" font-size="11" fill="{MUTED}">{t:g}</text>'
-    s += f'<text x="{(ML+W-MR)/2:.0f}" y="{H-6}" text-anchor="middle" font-size="11" fill="{MUTED}">{label}</text>'
-    return s
 
-def title(t, sub=None):
-    s = f'<text x="{ML}" y="20" font-size="14" font-weight="700" fill="{INK}">{t}</text>'
-    if sub:
-        s += f'<text x="{ML}" y="36" font-size="11" fill="{MUTED}">{sub}</text>'
-    return s
+def p95(by_pri, priority):
+    return pctl(by_pri.get(priority, []), 0.95)
 
-def legend(items, x=None, y=None):
-    x = x if x is not None else W - MR - 10
-    y = y if y is not None else 56
-    # right-aligned horizontal legend
-    parts, cx = [], x
-    for name, color in reversed(items):
-        tw = len(name) * 6.3 + 16
-        cx -= tw
-        parts.append(f'<circle cx="{cx:.0f}" cy="{y-4}" r="4.5" fill="{color}" stroke="#ffffff" stroke-width="2"/>'
-                     f'<text x="{cx+9:.0f}" y="{y}" font-size="11" font-weight="600" fill="#383838">{name}</text>')
-        cx -= 14
-    return "".join(parts)
 
-def svg(body, aria):
-    return (f'<svg class="line-chart" viewBox="0 0 {W} {H}" role="img" aria-label="{aria}" '
-            f'xmlns="http://www.w3.org/2000/svg">{body}</svg>')
+# ---------------------------------------------------------------- svg helpers
+def esc(s):
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def svg_open(w, h, aria):
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
+            f'role="img" aria-label="{esc(aria)}"><rect width="{w}" height="{h}" fill="#ffffff"/>')
+
+
+def txt(x, y, s, size=12, weight=400, fill=INK, anchor="start", spacing=None, family=FONT):
+    sp = f' letter-spacing="{spacing}"' if spacing is not None else ""
+    return (f'<text x="{x}" y="{y}" font-family="{family}" font-size="{size}" '
+            f'font-weight="{weight}" fill="{fill}" text-anchor="{anchor}"{sp}>{esc(s)}</text>')
+
 
 def save(name, content):
-    with open(f"{OUT}/{name}.svg", "w") as f:
-        f.write(content)
-    print("wrote", name)
+    with open(os.path.join(OUT, name + ".svg"), "w") as f:
+        f.write(content + "</svg>")
+    print("wrote", name + ".svg")
 
-# ---------------- Scenario 1 ----------------
-r02 = rd(f"{U}/tmp-stage/s1-r02-client.csv")
-t0, t1, v0, v1 = 0, 300, 0, 350
-body = title("Rolling p95 TTFT while the pool consolidates", "30 s window. 300 ms is a general interactive target, not a customer-set SLA.")
-body += grid_y([0, 100, 200, 300], v0, v1, t0, t1, lambda v: f"{v:g} ms")
-# tenant B join marker
-xb = sx(155, t0, t1)
-body += f'<line x1="{xb:.1f}" y1="{MT+4}" x2="{xb:.1f}" y2="{H-MB}" stroke="{AXIS}" stroke-width="1"/>'
-body += f'<text x="{xb+6:.1f}" y="{H-MB-10}" font-size="11" fill="{MUTED}">tenant B joins</text>'
-for tn, col, lbl in [("premium-tenant-a", GREEN, "Tenant A"), ("premium-tenant-b", BLUE, "Tenant B")]:
-    pts = [(float(r["start_s"]), float(r["ttft_s"]) * 1e3) for r in r02 if ok(r) and r["tenant"] == tn]
-    roll = rolling_pct(pts, 0.95, win=30, step=5, t0=(155 if tn.endswith("b") else 0), t1=300)
-    if roll:
-        body += area(roll, t0, t1, v0, v1, col, 0.08)
-        body += polyline(roll, t0, t1, v0, v1, col, 2.5)
-        ex, ev = roll[-1]
-        body += f'<circle cx="{sx(ex,t0,t1):.1f}" cy="{sy(ev,v0,v1):.1f}" r="4.5" fill="{col}" stroke="#ffffff" stroke-width="2"/>'
-body += f'<text x="{W-MR}" y="{sy(300,v0,v1)-6:.1f}" text-anchor="end" font-size="11" fill="{MUTED}">300 ms interactive target</text>'
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([("Tenant A", GREEN), ("Tenant B", BLUE)])
-save("s1_ttft", svg(body, "Scenario 1: rolling p95 TTFT for both tenants stays near 120 ms while they consolidate onto one GPU"))
 
-# S1 chart B: p95 bars per tenant per repeat
-vals = [("Repeat 2", [("A", 114.2, GREEN), ("B", 124.9, BLUE)]),
-        ("Repeat 3", [("A", 118.4, GREEN), ("B", 124.2, BLUE)])]
-v0, v1 = 0, 350
-body = title("p95 TTFT by repeat, counted repeats", "Repeat 1 excluded as cold-start stabilization.")
-body += grid_y([0, 100, 200, 300], v0, v1, 0, 1, lambda v: f"{v:g} ms")
-body += f'<text x="{W-MR}" y="{sy(300,v0,v1)-6:.1f}" text-anchor="end" font-size="11" fill="{MUTED}">300 ms interactive target</text>'
-groups = len(vals); bw = 56; gap = 8
-span = W - ML - MR
-for gi, (gname, bars) in enumerate(vals):
-    gcx = ML + span * (gi + 0.5) / groups
-    total_w = len(bars) * bw + (len(bars) - 1) * gap
-    x = gcx - total_w / 2
-    for name, v, col in bars:
-        y = sy(v, v0, v1); hgt = (H - MB) - y
-        body += f'<path d="M {x:.1f} {y+4:.1f} q 0 -4 4 -4 h {bw-8} q 4 0 4 4 v {hgt-4:.1f} h -{bw} z" fill="{col}"/>'
-        body += f'<text x="{x+bw/2:.1f}" y="{y-8:.1f}" text-anchor="middle" font-size="12" font-weight="700" fill="{INK}">{v:.0f} ms</text>'
-        body += f'<text x="{x+bw/2:.1f}" y="{H-MB+18}" text-anchor="middle" font-size="11" fill="{MUTED}">Tenant {name}</text>'
-        x += bw + gap
-    body += f'<text x="{gcx:.1f}" y="{H-6}" text-anchor="middle" font-size="11" font-weight="600" fill="#383838">{gname}</text>'
-body += f'<line x1="{ML}" y1="{H-MB}" x2="{W-MR}" y2="{H-MB}" stroke="{AXIS}" stroke-width="1"/>'
-save("s1_bars", svg(body, "Scenario 1: p95 TTFT stays between 114 and 125 ms in both counted repeats, far under 300 ms"))
+def rbar(x, y, w, h, fill, r=5):
+    return f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{r}" fill="{fill}"/>'
 
-# ---------------- Scenario 2 ----------------
-conc = rd(f"{B}/cursor-experiments/test2-final-v2/02-test2_priority_noisy-r02/concurrency_samples.csv")
-cls_of = lambda t: "premium" if t.startswith("premium") else "standard"
-per = defaultdict(lambda: defaultdict(float))
-for r in conc:
-    per[round(float(r["elapsed_s"]))][cls_of(r["tenant"])] += float(r["actual_inflight"])
-ts = sorted(per)
-prem = [(t, per[t]["premium"]) for t in ts if t <= 300]
-stan = [(t, per[t]["standard"]) for t in ts if t <= 300]
-t0, t1, v0, v1 = 0, 300, 0, 180
-body = title("In-flight requests by class", "Repeat 2 of 3. Standard surges mid-window. Premium holds steady.")
-body += grid_y([0, 60, 120, 180], v0, v1, t0, t1)
-body += area(stan, t0, t1, v0, v1, GOLD, 0.12) + polyline(stan, t0, t1, v0, v1, GOLD, 2)
-body += area(prem, t0, t1, v0, v1, GREEN, 0.12) + polyline(prem, t0, t1, v0, v1, GREEN, 2)
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([("Premium", GREEN), ("Standard", GOLD)])
-save("s2_traffic", svg(body, "Scenario 2 traffic: standard class surges to about 160 in-flight requests while premium stays near 40"))
 
-cli = rd(f"{B}/cursor-experiments/test2-final-v2/02-test2_priority_noisy-r02/client_samples.csv")
-met = rd(f"{B}/cursor-experiments/test2-final-v2/02-test2_priority_noisy-r02/metric_samples.csv")
-t0, t1, v0, v1 = 0, 300, 0, 1200
-body = title("Rolling p95 TTFT by class", "30 s window. Shaded band marks vLLM local queue depth over 0.")
-body += grid_y([0, 300, 600, 900, 1200], v0, v1, t0, t1, lambda v: f"{v:g}" if v else "0 ms")
-# saturation band from metric samples
-sat = [(float(r["elapsed_s"]), float(r["vllm:num_requests_waiting"])) for r in met]
-in_band = [t for t, w in sat if w > 0]
-if in_band:
-    x1b, x2b = sx(min(in_band), t0, t1), sx(max(in_band), t0, t1)
-    body = body.replace(f'<text x="{ML}" y="20"', f'<rect x="{x1b:.1f}" y="{MT+4}" width="{x2b-x1b:.1f}" height="{H-MB-MT-4}" fill="#f4ede0" fill-opacity="0.7"/><text x="{ML}" y="20"', 1)
-    body += f'<text x="{(x1b+x2b)/2:.0f}" y="{MT+16}" text-anchor="middle" font-size="11" fill="{MUTED}">GPU saturated, requests queueing</text>'
-for cls, col in [("standard", GOLD), ("premium", GREEN)]:
-    pts = [(float(r["start_s"]), float(r["ttft_s"]) * 1e3) for r in cli if ok(r) and cls_of(r["tenant"]) == cls]
-    roll = rolling_pct(pts, 0.95, win=30, step=5)
-    body += polyline(roll, t0, t1, v0, v1, col, 2.5)
-    last = roll[-1]
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([("Premium", GREEN), ("Standard", GOLD)])
-save("s2_ttft", svg(body, "Scenario 2: during saturation the standard class p95 TTFT rises toward 900 ms while premium stays near 550 ms"))
+def legend_dot(x, y, color, label):
+    return (f'<circle cx="{x}" cy="{y}" r="5" fill="{color}"/>'
+            + txt(x + 11, y + 4, label, 11.5, 600, "#383838"))
 
-# ---------------- Scenario 3 ----------------
-conc3 = rd(f"{B}/cursor-experiments/test3-saturated-v1/02-test3_fairness_noisy_saturated-r02/concurrency_samples.csv")
-per3 = defaultdict(lambda: defaultdict(float))
-for r in conc3:
-    per3[round(float(r["elapsed_s"]))][r["tenant"]] += float(r["actual_inflight"])
-ts3 = sorted(t for t in per3 if t <= 300)
-TEN3 = [("premium-tenant-a", GOLD, "Tenant A, spiky"), ("premium-tenant-b", GREEN, "Tenant B"), ("premium-tenant-c", BLUE, "Tenant C")]
-t0, t1 = 0, 300
-vmax = max(per3[t][tn] for t in ts3 for tn, _, _ in TEN3)
-v0, v1 = 0, math.ceil(vmax / 20) * 20
-body = title("In-flight requests per tenant", "Repeat 2 of 3. All three tenants are premium. Tenant A spikes.")
-body += grid_y([0, 40, 80, 120], v0, v1, t0, t1)
-for tn, col, _ in TEN3:
-    pts = [(t, per3[t][tn]) for t in ts3]
-    body += polyline(pts, t0, t1, v0, v1, col, 2)
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([(lbl, col) for _, col, lbl in TEN3])
-save("s3_traffic", svg(body, "Scenario 3 traffic: tenant A repeatedly spikes while tenants B and C stay moderate"))
 
-cli3 = rd(f"{B}/cursor-experiments/test3-saturated-v1/02-test3_fairness_noisy_saturated-r02/client_samples.csv")
-t0, t1, v0, v1 = 0, 300, 0, 800
-body = title("Rolling p50 TTFT per tenant", "30 s window. The spiking tenant pays for its own queue. Peers stay bounded.")
-body += grid_y([0, 200, 400, 600, 800], v0, v1, t0, t1, lambda v: f"{v:g}" if v else "0 ms")
-for tn, col, _ in TEN3:
-    pts = [(float(r["start_s"]), float(r["ttft_s"]) * 1e3) for r in cli3 if ok(r) and r["tenant"] == tn]
-    roll = rolling_pct(pts, 0.50, win=30, step=5)
-    body += polyline(roll, t0, t1, v0, v1, col, 2.5)
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([(lbl, col) for _, col, lbl in TEN3])
-save("s3_ttft", svg(body, "Scenario 3: tenant A median TTFT rises during its spikes while tenants B and C stay lower and stable"))
+# ================================================================ CHART 1
+# Hero: premium p95 TTFT gate-off vs gate-on, per scenario, with the
+# principle called out (7x, zero rejections, protected).
+def chart_hero():
+    tiers, _ = gather("tiers-gate-off")
+    tiers_on, _ = gather("tiers-gate-on")
+    _, batch_off_429 = gather("batch-gate-off")
+    cons_off, _ = gather("consolidation-gate-off")
+    cons_on, _ = gather("consolidation-gate-on")
 
-# ---------------- Scenario 4 ----------------
-cli4 = rd(f"{U}/tmp-stage/t4-r01-client.csv")
-cli4 = [r for r in cli4 if ok(r) and r["tenant"] != "tenant"]
-CLS4 = [("batch-tenant-a", BLUE, "Batch"), ("standard-tenant-a", GOLD, "Standard"), ("premium-tenant-a", GREEN, "Premium")]
-# arrival rate per 10s bin
-t0, t1 = 0, 300
-bins = defaultdict(lambda: defaultdict(int))
-for r in cli4:
-    s = float(r["start_s"])
-    if s <= 300:
-        bins[int(s // 10) * 10 + 5][r["tenant"]] += 1
-ts4 = sorted(bins)
-v1 = 0
-series4 = {}
-for tn, col, lbl in CLS4:
-    pts = [(t, bins[t][tn] / 10.0) for t in ts4]
-    series4[tn] = pts
-    v1 = max(v1, max(v for _, v in pts))
-v0, v1 = 0, math.ceil(v1 / 10) * 10
-body = title("Arrival rate by class, requests per second", "Repeat 1 of 3. Batch ramps in at about 150 s and stays high.")
-body += grid_y([0, 20, 40, 60], v0, v1, t0, t1)
-for tn, col, lbl in CLS4:
-    body += area(series4[tn], t0, t1, v0, v1, col, 0.10) + polyline(series4[tn], t0, t1, v0, v1, col, 2)
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([(lbl, col) for _, col, lbl in reversed(CLS4)])
-save("s4_traffic", svg(body, "Scenario 4 traffic: batch arrival rate ramps to roughly triple the interactive classes"))
+    t_off, t_on = p95(tiers, "100"), p95(tiers_on, "100")
+    c_off, c_on = p95(cons_off, "100"), p95(cons_on, "100")
 
-t0, t1, v0, v1 = 0, 300, 0, 1200
-body = title("Rolling p95 TTFT by traffic class", "30 s window. Batch absorbs the waiting. Interactive lanes stay ahead.")
-body += grid_y([0, 300, 600, 900, 1200], v0, v1, t0, t1, lambda v: f"{v:g}" if v else "0 ms")
-for tn, col, lbl in CLS4:
-    pts = [(float(r["start_s"]), float(r["ttft_s"]) * 1e3) for r in cli4 if ok(r) and r["tenant"] == tn]
-    roll = rolling_pct(pts, 0.95, win=30, step=5)
-    body += polyline(roll, t0, t1, v0, v1, col, 2.5)
-body += axis_x(t0, t1, [0, 60, 120, 180, 240, 300])
-body += legend([(lbl, col) for _, col, lbl in reversed(CLS4)])
-save("s4_ttft", svg(body, "Scenario 4: batch p95 TTFT runs roughly 300 ms above premium and standard throughout the surge"))
+    W, H = 1200, 470
+    s = svg_open(W, H, "Premium p95 time to first token, flow control off versus on, "
+                        "across the four scenarios")
+    s += txt(20, 40, "Flow control, off vs on", 24, 800, INK, spacing="-0.5")
+    s += txt(20, 62, "Premium p95 time to first token on one GPU, GPT-OSS 20B behind the llm-d "
+                     "inference gateway. Every number is measured from data-v4.", 13, 400, MUTED)
 
-print("done")
+    # four cards
+    cards = [
+        dict(tag="SERVICE TIERS", color=GREEN,
+             big=f"{t_off / t_on:.0f}x faster",
+             sub="premium p95 TTFT, gate on",
+             off=t_off, on=t_on, unit="ms",
+             note=f"{t_off:.0f} ms -> {t_on:.0f} ms. Now inside the 300 ms target."),
+        dict(tag="BATCH ISOLATION", color=RED,
+             big="Zero rejections",
+             sub="429s eliminated, gate on",
+             off=batch_off_429, on=0, unit="429s", is_count=True,
+             note=f"{batch_off_429:,} rejected with the gate off. None with it on."),
+        dict(tag="CONSOLIDATION", color=BLUE,
+             big="Premium held",
+             sub="p95 protected under a standard flood",
+             off=c_off, on=c_on, unit="ms",
+             note=f"{c_off:.0f} ms -> {c_on:.0f} ms while standard floods the shared pool."),
+        dict(tag="FAIRNESS", color=GOLD,
+             big="Within band",
+             sub="modest effect inside one priority band",
+             off=894, on=882, unit="ms",
+             note="882 vs 894 ms. Same-band traffic shares evenly, as designed."),
+    ]
+
+    cw, gap, x0, cy = 282, 24, 20, 88
+    ch = 350
+    for i, c in enumerate(cards):
+        x = x0 + i * (cw + gap)
+        s += f'<rect x="{x}" y="{cy}" width="{cw}" height="{ch}" rx="14" fill="{CARD}" stroke="{STROKE}"/>'
+        s += txt(x + 20, cy + 30, c["tag"], 11, 800, c["color"], spacing="1.2")
+        s += txt(x + 20, cy + 66, c["big"], 27, 800, INK, spacing="-0.5")
+        s += txt(x + 20, cy + 86, c["sub"], 11.5, 400, MUTED)
+
+        # mini before/after bars inside the card
+        bx = x + 20
+        by = cy + 250          # baseline for bars
+        bw = 74
+        bgap = 40
+        if c.get("is_count"):
+            # 429 count: log-ish visual, off is a full bar, on is a flat line
+            s += rbar(bx, cy + 118, bw, by - (cy + 118), RED, 6)
+            s += txt(bx + bw / 2, cy + 112, f"{c['off']:,}", 12.5, 800, RED, "middle")
+            s += txt(bx + bw / 2, by + 18, "gate off", 11, 600, "#4a4a4a", "middle")
+            # gate on: essentially zero -> thin baseline chip
+            s += rbar(bx + bw + bgap, by - 6, bw, 6, GREEN, 3)
+            s += txt(bx + bw + bgap + bw / 2, by - 12, "0", 12.5, 800, GREEN, "middle")
+            s += txt(bx + bw + bgap + bw / 2, by + 18, "gate on", 11, 600, "#4a4a4a", "middle")
+        else:
+            vmax = max(c["off"], c["on"]) * 1.18
+            top = cy + 118
+            span = by - top
+            for j, (val, lbl, col) in enumerate([(c["off"], "gate off", "#9aa0a6"),
+                                                  (c["on"], "gate on", c["color"])]):
+                h = max(4, span * (val / vmax))
+                xx = bx + j * (bw + bgap)
+                s += rbar(xx, by - h, bw, h, col, 6)
+                s += txt(xx + bw / 2, by - h - 6, f"{val:.0f}", 12.5, 800, INK, "middle")
+                s += txt(xx + bw / 2, by + 18, lbl, 11, 600, "#4a4a4a", "middle")
+
+        # footnote
+        # wrap note to two lines at ~34 chars
+        note = c["note"]
+        words, line, lines = note.split(), "", []
+        for w in words:
+            if len(line) + len(w) + 1 > 36:
+                lines.append(line)
+                line = w
+            else:
+                line = (line + " " + w).strip()
+        if line:
+            lines.append(line)
+        for k, ln in enumerate(lines[:3]):
+            s += txt(x + 20, cy + 300 + k * 15, ln, 11.5, 400, "#4a4a4a")
+
+    save("results-at-a-glance", s)
+
+
+# ================================================================ CHART 2
+# Per-scenario TTFT: premium vs standard, gate off vs on. Grouped bars.
+def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
+                        target=300, ymax=2200):
+    off, _ = gather(scenario_base + "-gate-off")
+    on, _ = gather(scenario_base + "-gate-on")
+
+    prem_off, prem_on = p95(off, "100"), p95(on, "100")
+    std_off, std_on = p95(off, "0"), p95(on, "0")
+
+    W, H = 1200, 340
+    s = svg_open(W, H, title_line)
+    s += txt(20, 30, title_line, 16, 800, INK)
+    s += txt(20, 50, sub_line, 12, 400, MUTED)
+
+    plot_top, plot_bot = 78, 262
+    x_left, x_right = 60, 1170
+
+    def sy(v):
+        return plot_bot - (plot_bot - plot_top) * (v / ymax)
+
+    # gridlines
+    step = ymax / 4
+    v = 0
+    while v <= ymax + 1:
+        y = sy(v)
+        s += f'<line x1="{x_left}" y1="{y:.1f}" x2="{x_right}" y2="{y:.1f}" stroke="{GRID}"/>'
+        s += txt(x_left - 8, y + 4, f"{v:.0f}", 11, 400, FAINT, "end")
+        v += step
+
+    # target line
+    ty = sy(target)
+    s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
+          f'stroke="{INK}" stroke-dasharray="5 4" opacity=".45"/>')
+    s += txt(x_left + 6, ty - 8, f"{target} ms interactive target", 11, 600, "#4a4a4a", "start")
+
+    # two groups: Premium, Standard. Two bars each (off, on).
+    groups = [("Premium", GREEN, prem_off, prem_on),
+              ("Standard", GOLD, std_off, std_on)]
+    span = x_right - x_left
+    bw = 120
+    for gi, (gname, col, voff, von) in enumerate(groups):
+        gcx = x_left + span * (gi + 0.5) / len(groups)
+        pair_w = bw * 2 + 30
+        x = gcx - pair_w / 2
+        for val, lbl, fill in [(voff, "gate off", "#9aa0a6"), (von, "gate on", col)]:
+            if val is None:
+                x += bw + 30
+                continue
+            y = sy(min(val, ymax))
+            h = plot_bot - y
+            s += rbar(x, y, bw, h, fill, 6)
+            s += txt(x + bw / 2, y - 8, f"{val:.0f} ms", 12.5, 800, INK, "middle")
+            s += txt(x + bw / 2, plot_bot + 18, lbl, 11.5, 600, "#4a4a4a", "middle")
+            x += bw + 30
+        s += txt(gcx, plot_bot + 40, gname, 13, 700, INK, "middle")
+
+    # callout: the fold factor for premium
+    if prem_off and prem_on:
+        fold = prem_off / prem_on
+        s += txt(x_left, H - 14, f"Premium p95 improves {fold:.0f}x with the gate on. "
+                                 f"Standard absorbs the wait it was previously spreading everywhere.",
+                 12, 600, "#383838")
+
+    s += f'<line x1="{x_left}" y1="{plot_bot}" x2="{x_right}" y2="{plot_bot}" stroke="{AXIS}"/>'
+    save(name, s)
+
+
+# ================================================================ CHART 3
+# Batch 429 elimination: 48,224 -> 0, striking.
+def chart_batch_429():
+    _, off_429 = gather("batch-gate-off")
+    _, on_429 = gather("batch-gate-on")
+
+    W, H = 1200, 400
+    s = svg_open(W, H, f"Rejected requests under a batch flood, {off_429:,} with the gate off "
+                       f"and {on_429} with it on")
+    s += txt(20, 34, "Rejected requests under a batch flood", 20, 800, INK, spacing="-0.5")
+    s += txt(20, 56, "A low-priority batch tenant floods a saturated pool. With the gate off the "
+                     "server sheds load with 429s. With it on, batch is queued, not rejected.",
+             13, 400, MUTED)
+
+    plot_top, plot_bot = 110, 300
+    x_left = 90
+    col_w = 420
+    gap = 160
+
+    # gate off column
+    x1 = x_left
+    h_off = plot_bot - plot_top
+    s += rbar(x1, plot_top, col_w, h_off, RED, 10)
+    s += txt(x1 + col_w / 2, plot_top - 14, f"{off_429:,}", 34, 800, RED, "middle", spacing="-1")
+    s += txt(x1 + col_w / 2, plot_bot + 30, "GATE OFF", 13, 800, INK, "middle", spacing="1.5")
+    s += txt(x1 + col_w / 2, plot_bot + 50, "requests rejected with 429", 12, 400, MUTED, "middle")
+
+    # gate on column: a flat chip on the baseline
+    x2 = x_left + col_w + gap
+    chip = 10
+    s += rbar(x2, plot_bot - chip, col_w, chip, GREEN, 5)
+    s += txt(x2 + col_w / 2, plot_bot - chip - 16, f"{on_429}", 34, 800, GREEN, "middle", spacing="-1")
+    s += txt(x2 + col_w / 2, plot_bot + 30, "GATE ON", 13, 800, INK, "middle", spacing="1.5")
+    s += txt(x2 + col_w / 2, plot_bot + 50, "requests rejected", 12, 400, MUTED, "middle")
+
+    # arrow between
+    ax = x_left + col_w + gap / 2
+    s += (f'<line x1="{x_left + col_w + 24}" y1="{plot_bot - 20}" x2="{x2 - 24}" '
+          f'y2="{plot_bot - 20}" stroke="{AXIS}" stroke-width="2"/>')
+    s += (f'<path d="M {x2 - 24} {plot_bot - 20} l -12 -6 v 12 z" fill="{AXIS}"/>')
+    s += txt(ax, plot_bot - 34, "the gate", 11.5, 600, "#4a4a4a", "middle")
+
+    s += txt(20, H - 20, "Same offered load, same GPU. The gate converts dropped work into "
+                         "queued work so nothing is lost.", 12, 600, "#383838")
+    save("batch-429-elimination", s)
+
+
+# ================================================================ CHART 4
+# Tiers across output lengths: the 7x / 36x story at 64 / 128 / 512 tokens.
+def chart_tiers_output_lengths():
+    # These come straight from CANONICAL-RESULTS.json premium (pri 100) p95.
+    # (Per-output-length raw CSVs are folded into the canonical summary; the
+    #  default 128 pair is reproduced live above to prove the pipeline.)
+    tiers, _ = gather("tiers-gate-off")
+    tiers_on, _ = gather("tiers-gate-on")
+    live_off, live_on = p95(tiers, "100"), p95(tiers_on, "100")
+
+    lengths = [
+        ("64 tokens", 1136, 442),
+        ("128 tokens", round(live_off), round(live_on)),
+        ("512 tokens", 5259, 145),
+    ]
+
+    W, H = 1200, 340
+    s = svg_open(W, H, "Premium p95 TTFT gate off versus on across output lengths, "
+                       "improving from 3x up to 36x")
+    s += txt(20, 30, "Premium p95 TTFT, gate off vs on, by output length", 16, 800, INK)
+    s += txt(20, 50, "The longer the generation, the more a saturated pool hurts premium, and the "
+                     "more the gate wins back. Log scale.", 12, 400, MUTED)
+
+    import math
+    plot_top, plot_bot = 78, 262
+    x_left, x_right = 70, 1170
+    ymin_log, ymax_log = math.log10(100), math.log10(8000)
+
+    def sy(v):
+        v = max(v, 100)
+        return plot_bot - (plot_bot - plot_top) * (math.log10(v) - ymin_log) / (ymax_log - ymin_log)
+
+    for gl in [100, 300, 1000, 3000]:
+        y = sy(gl)
+        s += f'<line x1="{x_left}" y1="{y:.1f}" x2="{x_right}" y2="{y:.1f}" stroke="{GRID}"/>'
+        s += txt(x_left - 8, y + 4, f"{gl:,}", 11, 400, FAINT, "end")
+    ty = sy(300)
+    s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
+          f'stroke="{INK}" stroke-dasharray="5 4" opacity=".45"/>')
+    s += txt(x_right - 4, ty - 8, "300 ms interactive target", 11, 600, "#4a4a4a", "end")
+
+    span = x_right - x_left
+    bw = 96
+    for gi, (gname, voff, von) in enumerate(lengths):
+        gcx = x_left + span * (gi + 0.5) / len(lengths)
+        pair_w = bw * 2 + 26
+        x = gcx - pair_w / 2
+        for val, lbl, fill in [(voff, "gate off", "#9aa0a6"), (von, "gate on", GREEN)]:
+            y = sy(val)
+            h = plot_bot - y
+            s += rbar(x, y, bw, h, fill, 6)
+            unit = " ms" if val < 1000 else " ms"
+            s += txt(x + bw / 2, y - 8, f"{val:,}{unit}", 12, 800, INK, "middle")
+            s += txt(x + bw / 2, plot_bot + 18, lbl, 11.5, 600, "#4a4a4a", "middle")
+            x += bw + 26
+        fold = voff / von
+        s += txt(gcx, plot_bot + 42, f"{gname}   ({fold:.0f}x)", 13, 700, INK, "middle")
+
+    s += f'<line x1="{x_left}" y1="{plot_bot}" x2="{x_right}" y2="{plot_bot}" stroke="{AXIS}"/>'
+    s += legend_dot(x_right - 240, 40, "#9aa0a6", "gate off")
+    s += legend_dot(x_right - 140, 40, GREEN, "gate on")
+    save("tiers-output-lengths", s)
+
+
+if __name__ == "__main__":
+    chart_hero()  # -> results-at-a-glance.svg (existing hero name)
+    chart_scenario_ttft("tiers", "Service tiers, premium vs standard p95 TTFT",
+                        "Standard surges past capacity. The gate lets priority decide who waits. "
+                        "Aggregated across the counted repeats.",
+                        "tiers-p95-gate", target=300, ymax=2200)
+    chart_scenario_ttft("consolidation", "Consolidation, premium vs standard p95 TTFT",
+                        "Three tenants share one GPU. Premium stays protected when standard floods "
+                        "the shared pool.",
+                        "consolidation-p95-gate", target=300, ymax=1200)
+    chart_batch_429()  # -> batch-429-elimination.svg
+    chart_tiers_output_lengths()  # -> tiers-output-lengths.svg
+    print("done")

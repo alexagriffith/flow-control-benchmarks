@@ -1,138 +1,98 @@
 # Flow control benchmarks for llm-d
 
-Flow control is the Endpoint Picker's policy layer for multi-tenant inference. While the GPU has capacity, requests pass straight through. When the pool comes under pressure, flow control activates, and new work waits in policy-aware queues in front of vLLM, so priority, fairness, and traffic class decide what runs next instead of arrival order.
+Flow control is the Endpoint Picker's policy layer for multi-tenant inference. While the GPU has capacity, requests pass straight through. When the pool saturates, flow control activates: new work waits in policy-aware queues in front of vLLM, so priority, fairness, and traffic class decide what runs next instead of arrival order.
 
-This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. Everything ran on one GPU serving GPT-OSS 20B behind the llm-d inference gateway.
+This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. Everything ran on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, with automatic prefix caching off so the latencies reflect scheduling rather than a warm cache.
 
-<img src="assets/results-at-a-glance.svg" width="100%" alt="Results at a glance: consolidation held 114 to 125 ms p95 TTFT, premium ran 41 ms against standard 379 ms, batch queued 202 ms against premium 64 ms, and the capacity envelope spread from 569 ms to 6.0 s at 160 concurrent">
+## What flow control does, in one screen
 
-**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware and tuning. The pattern is the finding. The target held during consolidation, priority ordered the queue under saturation, and batch absorbed the waiting. On different hardware the numbers move and the behavior stays.
+Same traffic, same GPU, the only change is whether flow control is on. Premium is the interactive tier, standard is normal traffic, batch is deferrable background work.
 
-<img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags requests, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
+<img src="assets/results-at-a-glance.svg" width="100%" alt="Premium p95 TTFT drops from 1778 ms without flow control to 251 ms with it under a service-tier surge; batch isolation turns 48,224 rejected requests into zero">
 
-## The capacity envelope
+- **A surge that isn't yours no longer sets your latency.** Under a standard surge, the premium p95 time to first token went from 1778 ms without flow control to 251 ms with it, roughly 7 times faster, and inside the 300 ms interactive objective. Standard absorbed the wait it created.
+- **Overload is queued, not rejected.** When batch traffic flooded the pool, the run without flow control returned 48,224 HTTP 429 rejections. With flow control on, zero. The platform held the deferrable work until capacity existed instead of pushing retries back to the application.
+- **It costs nothing when the pool is calm.** When the GPU has headroom, gate-on and gate-off match. Flow control is the insurance that only charges under pressure.
 
-Before any scenario, we swept the pool to learn its shape. Five request shapes, from short interactive to long generation, each stepped from 16 to 160 concurrent requests.
+**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware and tuning. The pattern is the finding: premium held its objective through a surge it did not cause, and deferrable work waited instead of failing. On different hardware the numbers move and the behavior stays.
 
-**What it proves.** Concurrency alone does not describe load. Every shape first showed vLLM waiting requests at 160 concurrent, and the cost of operating there ranged from 569 ms p95 TTFT at 165 requests per second to 6.0 s at 27 requests per second.
-
-<img src="assets/capacity-envelope.svg" width="100%" alt="p95 TTFT by concurrency for five request shapes, all first queueing at 160 concurrent with an order of magnitude spread in cost">
-
-| Shape | Requests/s at 160 | p95 TTFT at 160 | Mean EPP queue at 160 |
-|---|---:|---:|---:|
-| 256 in / 64 out | 165.1 | 569 ms | 47 ms |
-| 512 in / 128 out | 88.4 | 689 ms | 102 ms |
-| 1024 in / 128 out | 84.9 | 761 ms | 91 ms |
-| 512 in / 512 out | 27.2 | 6.0 s | 56 ms |
-| 2048 in / 256 out | 40.0 | 2.4 s | 119 ms |
-
-The sweep ran 20 s per concurrency point in a single pass, so read it as a shape finder rather than a precision measurement. The requests per second and p95 TTFT columns come from the sweep summaries in `data/capacity-sweeps/`, and the queue column comes from the endpoint-picker metrics recorded during that pass, written up in [`SWEEP-NOTES.md`](data/capacity-sweeps/SWEEP-NOTES.md).
-
-**Why it matters.** This is how every operating point below was chosen. Consolidation runs below the knee, and the saturation scenarios run above it on purpose. A platform team runs this same sweep once per hardware and model pair to place its own operating points. Data in [`data/capacity-sweeps/`](data/capacity-sweeps/).
-
-## Consolidation without giving up latency
-
-**What it proves.** Two interactive workloads can share one GPU and uphold an interactive latency target, here 300 ms p95 TTFT as a general working target.
-
-**What we saw.** Tenant A ran alone, then tenant B joined mid-run. Across both tenants and both counted repeats the p95 TTFT held at 114 to 125 ms, inside the target, with all 1,298 counted requests returning HTTP 200.
-
-<p>
-<img src="assets/consolidation-ttft.svg" width="49%" alt="Rolling p95 TTFT stays near 120 ms for both tenants while they consolidate onto one GPU">
-<img src="assets/consolidation-p95.svg" width="49%" alt="p95 TTFT per repeat: 114 and 125 ms, then 118 and 124 ms, far under the 300 ms target">
-</p>
-
-**Why it matters.** Consolidation is a cost decision. The shared GPU upholds the target with measured evidence, and flow control is the insurance if a spike pushes the pool past capacity.
-
-*SLA rerun, 2026-07-23. 300 s of traffic per repeat, one stabilization pass plus two counted repeats. The stabilization pass is excluded from every number here. Data in [`data/consolidation/`](data/consolidation/).*
+<img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags each request, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
 ## Service tiers under mixed load
 
 **What it proves.** When the pool saturates, priority decides who waits. Premium stays ahead while standard absorbs the queue.
 
-**What we saw.** Standard traffic surged past what the GPU could absorb. vLLM ran a full batch of 128 with up to 54 requests waiting, so the pool was genuinely past capacity. The p50 TTFT averaged 41 ms across the premium tenants and 379 ms across the standard tenants. Both non-200 responses in the run landed on a standard tenant.
+**What we saw.** Standard traffic surged past what the GPU could absorb, so vLLM ran a full batch of 128 with requests waiting behind it. Without flow control, premium and standard degraded together, and the premium p95 TTFT reached 1778 ms. With flow control on, the premium p95 TTFT held at 251 ms while standard rose to 691 ms. Priority moved the wait from the tier that had an objective to the tier that could absorb it.
 
-<p>
-<img src="assets/priority-traffic.svg" width="49%" alt="Standard class surges to about 160 in-flight requests while premium holds near 40">
-<img src="assets/priority-ttft.svg" width="49%" alt="During saturation the standard p95 TTFT rises toward 900 ms while premium settles lower">
-</p>
+<img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation, premium p95 TTFT holds near 251 ms with flow control while standard rises to about 691 ms; without flow control both climb past 1700 ms">
+
+The gap widens with output length, because longer generations hold a slot longer and make the queue matter more. At 512 output tokens the premium p95 TTFT went from 5259 ms without flow control to 145 ms with it.
 
 **Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
 
-*Noisy priority run, 2026-07-24. Three counted repeats, 300 s each, 53,399 requests, 2 non-200. Data in [`data/priority/`](data/priority/).*
+*Noisy priority run, 512 input / 128 output tokens, three counted 120 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`data-v4/tiers-gate-on`](data-v4/tiers-gate-on) and [`data-v4/tiers-gate-off`](data-v4/tiers-gate-off).*
 
 ## Batch isolation under surge
 
-**What it proves.** Batch traffic cannot displace interactive traffic, even when it dominates the arrival rate.
+**What it proves.** Deferrable work fills the pool without displacing interactive work, and the gate moves the retry burden from the application to the platform.
 
-**What we saw.** Batch ramped to about three times the interactive arrival rate. Mean queue time averaged 202 ms for batch against 64 ms for premium and 66 ms for standard, consistent across all three repeats. Both non-200 responses in the run landed on the batch tenant.
+**What we saw.** Batch traffic ramped past what the pool could serve. Without flow control, the saturation shed load, and 48,224 requests returned HTTP 429. With flow control on, zero requests were rejected. Batch was queued behind the interactive tiers, its p95 TTFT rose as it waited, and interactive latency was unharmed. The served throughput was nearly the same in both arms. What changed is who handled the overflow.
 
-<p>
-<img src="assets/batch-traffic.svg" width="49%" alt="Batch arrival rate ramps to roughly triple the interactive classes at 150 seconds">
-<img src="assets/batch-ttft.svg" width="49%" alt="Batch p95 TTFT runs roughly 300 ms above premium and standard throughout the surge">
-</p>
+<img src="assets/batch-429-elimination.svg" width="100%" alt="Without flow control 48,224 batch requests are rejected with HTTP 429; with flow control on, zero rejections, and batch is queued behind the interactive tiers instead">
 
-<img src="assets/batch-queue.svg" width="100%" alt="Mean EPP queue time bars: premium 64 ms, standard 66 ms, batch 202 ms">
+**Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
-**Why it matters.** Overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, without risking interactive SLOs. That is what lets a consolidated pool run hot.
+*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`data-v4/batch-gate-on`](data-v4/batch-gate-on) and [`data-v4/batch-gate-off`](data-v4/batch-gate-off).*
 
-*Clean pressure pass, 2026-07-21. Three counted repeats, 53,954 requests, 2 non-200. Data in [`data/batch-isolation/`](data/batch-isolation/).*
+## Consolidation without giving up latency
 
-## The first pressure campaign
+**What it proves.** Two premium tenants share one GPU, and when a standard tenant floods the pool, flow control keeps the premium tenants ahead of the flood.
 
-The first campaign, on 2026-07-21, pushed one endpoint to doubled load and served every request at 513 to 606 ms p95 TTFT. It showed the mechanism working end to end at the first configuration we tried. Tuning the configuration brings that number down, which is what the runs above show at their chosen operating points. The report and the run-level data from that campaign are kept here so the progression is visible.
+**What we saw.** Two premium tenants ran together while a standard tenant ramped in and pushed the pool to a full batch of 128 with requests waiting. With flow control on, the premium p95 TTFT held at 795 ms against standard at 1062 ms. The separation is the point: the shared pool ran hot, and the interactive tenants kept their place in line.
 
-[`report/flow-control-under-pressure.html`](report/flow-control-under-pressure.html) is the written report, and the PDF beside it renders in the browser. Run-level and per-tenant rollups are in [`data/first-pressure-campaign/`](data/first-pressure-campaign/).
+<img src="assets/consolidation-p95-gate.svg" width="100%" alt="Two premium tenants share a GPU; when a standard tenant floods the pool, premium p95 TTFT stays below standard with flow control on">
 
-## What fairness controls, and what priority controls
+**Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
-Fairness divides a band's capacity among the tenants inside it, so one tenant's burst cannot starve its neighbors. Priority decides which band is served first, which is what holds one workload steady while another surges. [`docs/fairness-vs-isolation.md`](docs/fairness-vs-isolation.md) puts both side by side with the configuration for each, and covers the levers in between.
+*Saturated consolidation run, three counted repeats. Data in [`data-v4/consolidation-gate-on`](data-v4/consolidation-gate-on) and [`data-v4/consolidation-gate-off`](data-v4/consolidation-gate-off).*
 
-## What we ran
+## Where flow control does little, stated plainly
 
-<img src="assets/evidence-board.svg" width="100%" alt="Every run in the campaign, what it proves, its headline number, and whether it is published">
+Flow control arbitrates across priority bands. Where there is no priority gap to enforce, it has little to do, and the honest result is a small one.
 
-## In progress
+- **Same-band fairness.** Three tenants at one priority, one bursting: fairness bounds the burster's share of the pool so it cannot starve its peers, but it does not insulate a peer's latency from its neighbor, because all three compete for the same batch. The gate bounds throughput, not tail latency, inside a band.
+- **A calm pool.** Below saturation there is no queue to order, so gate-on and gate-off match. Low latency there comes from headroom, not policy.
 
-The same-band fairness scenario is being rerun as a matched pair, once with all tenants in one band and once with the burster moved down, so the two mechanisms can be read against each other on identical traffic.
+Reporting these keeps the strong claims credible. What flow control changes is who waits when the pool is contested across tiers.
+
+## The concurrency detector, and the limit of a latency SLO
+
+The shipped stack gates on queue depth: it reacts once vLLM's queue builds. An alternative detector, from upstream llm-d, caps in-flight concurrency directly. We swept its `maxConcurrency` from 32 to 128 to find whether any setting holds premium under 300 ms at a saturating load.
+
+<img src="assets/upstream-sweep.svg" width="100%" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens">
+
+The premium p95 TTFT traces a U: it bottoms at 461 ms at `maxConcurrency` 48, then rises as the cap loosens and premium competes with more admitted standard traffic. Standard improves as the cap loosens, from 12.7 s down to 2.7 s. No setting reaches a premium p95 under 300 ms at this offered load; the floor is set by GPU capacity, not by the policy. Reaching a 300 ms premium SLO under a saturating load takes headroom or more capacity, not a tighter cap. The concurrency detector is a separation control, not a latency-SLO control.
+
+*Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`data-v4/upstream-sweep`](data-v4/upstream-sweep).*
+
+## Scope
+
+Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms. The multi-replica behavior of the endpoint picker is a separate study.
+
+A verification gap earlier in this campaign sent tenants to pools without priority objectives, so the gate saw every request at priority 0 and the tier results collapsed to no effect. Every counted run here was re-run with the priority resolution verified in the flow-control queue metric before the data was kept. The invalidated runs are archived, not deleted, and the correction is recorded in the run log.
 
 ## Learn flow control
 
 **[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)**
 
-Six stops take you from the cost problem to the dispatch path, the saturation gate, and what the policy does under pressure, ending in a playground where you drive the load yourself. It autoplays, and it runs in light or dark. Source is at [`learn/flow-control-journey.html`](learn/flow-control-journey.html).
+Six stops take you from the cost problem to the dispatch path, the saturation gate, and what the policy does under pressure, ending in a playground where you drive the load yourself. It autoplays and runs in light or dark. Source is at [`learn/flow-control-journey.html`](learn/flow-control-journey.html). [The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html) is the same material as a page to read.
 
-[The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html) is the same material as a page to read rather than click through.
+## Ordering is not occupancy
 
-Both are single self-contained files written against the upstream llm-d Endpoint Picker documentation. The links above are served by GitHub Pages from this repo, and either file also runs if you download it and open it locally. Charts inside the explainer that carry measured numbers say so, and the curves around them are redrawn for teaching rather than plotted from the samples.
+Fairness divides a band's capacity among the tenants inside it. Priority decides which band is served first. Neither one limits how much of the running batch a tenant holds, which is what sets latency once the pool is saturated. [`docs/fairness-vs-isolation.md`](docs/fairness-vs-isolation.md) walks a request through the mechanism and covers how to size the batch and the queue limits. [`docs/tuning-map.md`](docs/tuning-map.md) maps the question you are asking onto the one mechanism that answers it.
 
-## Policy auditability
+## Pipeline
 
-The policy is verifiable from four records in four layers, from the request header to the GPU runtime.
+`pipeline/benchmark_v4.py` is the runner that produced every accepted run. It drives multi-tenant traffic through the gateway with per-tenant objective and fairness headers, verifies priority resolution and gate state before counting, logs every request, scrapes vLLM and Endpoint Picker metrics, and writes one directory per repeat with `client_samples.csv`, `metric_samples.csv`, and `summary.json`. `pipeline/gen_charts.py` draws every chart in `assets/` from those CSVs. Same data in, identical charts out.
 
-| Layer | What it records | Why it matters |
-|---|---|---|
-| Request headers | `x-gateway-inference-objective`, `x-gateway-inference-fairness-id` | Traffic is classified by trusted platform policy, not by a hidden route |
-| InferenceObjective | Premium 100, standard 0, batch -10 | Business priority maps to a concrete platform resource |
-| Endpoint Picker queues | Priority band, fairness ID, queue duration | Queueing can be explained by tenant and traffic class |
-| vLLM metrics | Running and waiting requests | Shows when the GPU runtime is actually saturated |
-
-## Methodology
-
-Traffic for the saturation scenarios is noisy and sinusoidal on purpose, closer to production arrival patterns than a flat synthetic load, and each traffic chart shows the pattern that ran. We measured TTFT client side, from request start to first streamed token, through the gateway. Each scenario ran 300 s of active traffic with repeats, warmup and stabilization excluded. Every request is logged individually, and every chart is drawn from that per-request data. Prompts targeted 512 input tokens with fixed response lengths, a benchmark control, so end-to-end latency here is not a production prediction. TTFT is the comparable metric.
-
-Each result comes from its own accepted campaign. [`RUNLOG.md`](RUNLOG.md) lists them with the bar each one had to clear.
-
-## Repo layout
-
-| Path | Contents |
-|---|---|
-| [`data/`](data/) | Summaries, configs, and per-request samples from the accepted runs |
-| [`assets/`](assets/) | Every chart, generated from the data |
-| [`pipeline/`](pipeline/) | The benchmark runner and the chart generator |
-| [`report/`](report/) | The first campaign report, HTML and PDF |
-| [`learn/`](learn/) | The flow control explainer page |
-| [`RUNLOG.md`](RUNLOG.md) | Each campaign, its verdict, and the reason |
-
-## Reproducing it
-
-`pipeline/benchmark_v3.py` drives the traffic and writes per-request samples, and `pipeline/gen_charts.py` redraws every chart from those samples. Point the runner at an llm-d gateway with priority bands configured as premium 100, standard 0, and batch -10. See [`pipeline/README.md`](pipeline/README.md).
+The first campaign's report and its run-level data are archived in [`archive/`](archive/) so the progression is visible. The numbers in this README supersede it.
