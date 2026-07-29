@@ -168,3 +168,8 @@ Six stops take you from the cost problem to the dispatch path, the saturation ga
 `pipeline/benchmark_v4.py` is the runner that produced every accepted run. It drives multi-tenant traffic through the gateway with per-tenant objective and fairness headers, verifies priority resolution and gate state before counting, logs every request, scrapes vLLM and Endpoint Picker metrics, and writes one directory per repeat with `client_samples.csv`, `metric_samples.csv`, and `summary.json`. `pipeline/gen_charts.py` draws every chart in `assets/` from those CSVs. Same data in, identical charts out.
 
 The first campaign's report and its run-level data are archived in [`archive/`](archive/) so the progression is visible. The numbers in this README supersede it.
+
+
+## Other resources
+
+- [First pressure campaign report](report/flow-control-under-pressure.html) — the 2026-07-21 run, kept for the progression. It ran with prefix caching on, so its latencies reflect a warm cache; the report carries that note at the top. The verified numbers on this page supersede it.
