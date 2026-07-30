@@ -440,8 +440,13 @@ footer a{color:var(--txt2)}
 
 <section class="chapter" id="knee-choice">
   <h2>The knee is a choice</h2>
-  <p>Two knees live in this chart. The <b>admission knee</b> follows the <code>max-num-seqs</code> cap wherever we set it — a config value looking back at you — while the <b>hardware knee</b> is where added batch stops buying throughput, and our curve was still climbing when it reached the cap.</p>
-  <p>So the knee is chosen, and the sweep prices the choice: cap at 64 and the pool queues sooner at roughly 37 requests per second with a lighter, faster-stepping batch; cap at 128 and it earns the measured 52.</p>
+  <p>Would the knee sit at 64 if we set <code>max-num-seqs</code> to 64? Yes — the knee follows the cap, mostly, and the reason why is the most useful thing this chart teaches.</p>
+  <p>The knee we measured is an <b>admission knee</b>: throughput climbs with offered concurrency until the running batch pins at the <code>max-num-seqs</code> ceiling, and past that point extra offered load can only queue. Set the cap to 64 and the running batch pins at 64, the queue forms behind 64, and the knee in offered-concurrency space moves to about 64. In that sense the knee is a config value looking back at you.</p>
+  <p>But there is a second knee underneath, and it is the one that prices your choice. The GPU has its own <b>compute knee</b> — the batch size where adding more sequences stops buying token throughput because the hardware is saturated. Our sweep locates it: 24.1 requests per second at 32 running, 37.1 at 64, 45.5 at 96, 52.0 at 128 — still climbing all the way to the cap. The hardware knee for this model, GPU, and shape sits at or beyond 128.</p>
+  <ul>
+    <li><b>Cap at 64</b> — the knee moves to 64, and you give up real throughput the GPU could have delivered: roughly 37 against 52 requests per second, about 30% less.</li>
+    <li><b>In exchange</b> — a lighter running batch means faster decode steps, so lower time to first token and time per output token, plus more key-value (KV) cache headroom. It is the latency-throughput dial, set at the engine.</li>
+  </ul>
   <div class="fig">
     <figure class="assetcard">
       <svg viewBox="0 0 760 320" role="img" aria-label="Throughput versus running batch size: the measured curve climbs from 24 to 52 requests per second between 32 and 128 concurrent; vertical cap lines at 64 and 128 show that the admission cap chooses the operating point on the curve">
@@ -489,7 +494,7 @@ footer a{color:var(--txt2)}
     <div class="src">sweep: 32/64/96/128 concurrent → 24.1/37.1/45.5/52.0 requests per second · two passes agreed</div>
   </div>
   <p>The cap that binds is workload-shaped. <code>max-num-seqs</code> limits how many requests run; <code>max-num-batched-tokens</code> limits how many tokens each step may carry; the key-value (KV) cache limits how much context the pool can hold. Whichever fills first sets the real ceiling — at 512 input and 128 output tokens, sequences fill first, so the knee lands exactly on the cap.</p>
-  <p>The upstream concurrency detector's <code>maxConcurrency</code> is the same dial implemented in software at the Endpoint Picker: it moves the knee below the engine's cap without touching the engine, which is precisely what its sweep traces — each setting is a chosen point on this curve, priced in throughput.</p>
+  <p>The upstream concurrency detector's <code>maxConcurrency</code> is the same dial implemented in software, at the Endpoint Picker instead of the engine. Capping admission at 32, 48, 64, and 96 pinned the running batch at 29, 39, 46, and 61 — a movable knee below the engine's — and traded latency against throughput exactly this way. The knee is not found, it is chosen; the sweep tells you what each choice costs.</p>
 </section>
 
 
