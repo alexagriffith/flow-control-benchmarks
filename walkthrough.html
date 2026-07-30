@@ -754,9 +754,12 @@ footer a{color:var(--txt2)}
         <rect x="140" y="152" width="176" height="42" rx="8" fill="var(--gold-soft,rgba(201,133,0,.12))" stroke="var(--gold,#c98500)"/>
         <text x="228" y="170" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--gold,#c98500)" text-anchor="middle">priority-ordered queue</text>
         <text x="228" y="186" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)" text-anchor="middle">premium ahead of standard</text>
-        <!-- telemetry arrow (reactive, after) -->
-        <path d="M 236 194 q 60 26 0 50" fill="none" stroke="var(--txt3,#84899a)" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M 236 244 l 6 -6 h -10 z" fill="var(--txt3,#84899a)"/>
-        <text x="228" y="262" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt3,#84899a)" text-anchor="middle">telemetry read after the queue forms</text>
+        <!-- telemetry flows down into the detector -->
+        <line x1="228" y1="194" x2="228" y2="220" stroke="var(--txt3,#84899a)" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M 228 228 l -5 -8 h 10 z" fill="var(--txt3,#84899a)"/>
+        <text x="236" y="212" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)">telemetry</text>
+        <rect x="140" y="228" width="176" height="40" rx="8" fill="var(--base,#ffffff)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="228" y="245" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">utilization detector</text>
+        <text x="228" y="260" font-family="Inter,sans-serif" font-size="8.5" fill="var(--txt3,#84899a)" text-anchor="middle">reads it after the queue has formed</text>
         <text x="24" y="300" font-family="Inter,sans-serif" font-size="11.5" font-weight="700" fill="var(--txt,#151515)">Decides who waits.</text>
         <text x="24" y="316" font-family="Inter,sans-serif" font-size="11.5" fill="var(--txt2,#4c5260)">Cannot cap the batch.</text>
         <!-- RIGHT: concurrency -->
