@@ -67,21 +67,31 @@ main{max-width:820px;margin:0 auto;padding:0 22px 120px}
 .hero h1{font-size:clamp(30px,5.5vw,46px);font-weight:680;letter-spacing:-.025em;line-height:1.08;margin:0 0 20px}
 .hero p{font-size:16.5px;color:var(--txt2);max-width:660px;margin:0 0 8px}
 .hero .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+.hero ol.results,.hero ul.results{margin:26px 0 0;padding-left:24px;max-width:680px}
+.hero ol.results li,.hero ul.results li{margin-bottom:11px;color:var(--txt2);font-size:15px;line-height:1.55}
+.hero ol.results li b,.hero ul.results li b{color:var(--txt)}
 .tag{font-size:11.5px;color:var(--txt2);border:1px solid var(--b2);border-radius:6px;padding:4px 10px;background:var(--base)}
 .tag b{color:var(--txt);font-weight:600}
 
 /* ---------- chapter ---------- */
 .chapter{padding:56px 0 20px;border-bottom:1px solid var(--b1);scroll-margin-top:64px}
+.chapter:first-of-type{padding-top:40px}
 .chapter:last-of-type{border-bottom:none}
 .step-no{display:inline-flex;align-items:center;gap:10px;font-size:12px;color:var(--txt3);
   letter-spacing:.07em;text-transform:uppercase;font-weight:600;margin-bottom:14px}
 .step-no .badge{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
   font-size:12.5px;color:#fff;font-weight:700;letter-spacing:0}
 .chapter h2{font-size:clamp(23px,3.6vw,30px);font-weight:660;letter-spacing:-.02em;line-height:1.14;margin:0 0 16px}
+.chapter h3{font-size:16px;font-weight:640;letter-spacing:-.01em;margin:30px 0 8px;color:var(--txt)}
+.chapter h3:first-of-type{margin-top:22px}
+.hl{font-weight:640;color:var(--txt)}
+.hl code, .chapter p code, td code{font-family:"Geist Mono",ui-monospace,Menlo,monospace;font-size:.92em;color:var(--txt)}
 .chapter p{font-size:15.5px;color:var(--txt2);margin:0 0 16px;max-width:700px}
 .chapter p b, .chapter li b{color:var(--txt);font-weight:600}
-.chapter ul{margin:0 0 16px;padding-left:20px;color:var(--txt2);max-width:700px}
-.chapter li{margin-bottom:7px}
+.chapter ul,.chapter ol{margin:0 0 16px;padding-left:20px;color:var(--txt2);max-width:700px}
+.chapter li{margin-bottom:8px}
+.metrics li{margin-bottom:12px;list-style:none;margin-left:-16px}
+.chapter ol li{padding-left:4px}
 
 /* ---------- callout number(s) ---------- */
 .bignums{display:flex;flex-wrap:wrap;gap:14px;margin:26px 0}
@@ -93,12 +103,15 @@ main{max-width:820px;margin:0 auto;padding:0 22px 120px}
 .v.green{color:var(--green)} .v.gold{color:var(--gold)} .v.blue{color:var(--blue)} .v.red{color:var(--red)}
 
 /* ---------- inline SVG figure block ---------- */
-.fig{margin:26px 0 8px}
+.fig{margin:20px auto 6px;max-width:720px}
 .fig .diagram{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:22px}
-.fig figcaption{font-size:12.5px;color:var(--txt3);margin-top:10px;padding-left:2px}
-/* embedded asset charts (white-bg svgs) get a permanent light card so they read in both themes */
-.assetcard{background:#ffffff;border:1px solid var(--b1);border-radius:14px;padding:14px;overflow:hidden}
-.assetcard img{display:block;width:100%;height:auto}
+.fig figcaption{font-size:13.5px;color:var(--txt2);margin-top:10px;padding-left:2px}
+.src{font-size:11px;color:var(--txt3);font-family:"Geist Mono",ui-monospace,Menlo,monospace;margin-top:6px;padding-left:2px}
+.src a{color:var(--txt3);text-decoration:none;border-bottom:1px dotted var(--b2)}
+.src a:hover{color:var(--blue);border-color:var(--blue);text-decoration:none}
+/* embedded asset charts are inlined theme-aware svgs; the card follows the theme */
+.assetcard{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:14px;overflow:hidden;margin:0}
+.assetcard img,.assetcard svg{display:block;width:100%;height:auto}
 
 /* ---------- note / verify box ---------- */
 .note{border-left:3px solid var(--green);background:var(--green-soft);border-radius:0 10px 10px 0;
@@ -116,14 +129,39 @@ svg text{font-family:Inter,-apple-system,"Segoe UI",sans-serif}
 svg .mono-t{font-family:"Geist Mono",ui-monospace,Menlo,monospace}
 
 /* ---------- table ---------- */
-.tblwrap{overflow-x:auto;margin:22px 0;border:1px solid var(--b1);border-radius:12px}
-table{border-collapse:collapse;width:100%;font-size:13px;min-width:460px}
-th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--b1);white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
+.tblwrap{overflow-x:auto;width:fit-content;max-width:100%;margin:18px auto;border:1px solid var(--b1);border-radius:12px}
+table{border-collapse:collapse;width:auto;font-size:13px}
+th,td{padding:7px 16px;text-align:left;border-bottom:1px solid var(--b1);white-space:nowrap}
+td:first-child,th:first-child{border-right:1px solid var(--b1)}
 thead th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt3);font-weight:600;background:var(--raised)}
 tbody tr:last-child td{border-bottom:none}
 td.hi{color:var(--green);font-weight:700;font-family:"Geist Mono",ui-monospace,monospace}
 td.mono{font-family:"Geist Mono",ui-monospace,monospace}
+td.wrap{white-space:normal}
+table.kv td:first-child{width:auto}
+table.kv td.mono{font-size:12px;white-space:normal;word-break:break-word}
+/* compact variant — denser two-column key/value table with a center divider */
+.tblwrap.compact{margin:16px auto}
+.tblwrap.compact:has(table.kv){max-width:680px}
+.tblwrap.compact table{font-size:12.5px;min-width:0}
+.tblwrap.compact th,.tblwrap.compact td{padding:5px 14px}
+.tblwrap.compact thead th{font-size:10px}
+.tblwrap.compact th,.tblwrap.compact td{text-align:left}
+/* divider between EVERY column, not just after the first; size columns to content */
+.tblwrap.compact td,.tblwrap.compact th{border-right:1px solid var(--b1)}
+.tblwrap.compact td:last-child,.tblwrap.compact th:last-child{border-right:none}
+.tblwrap.compact td:first-child,.tblwrap.compact th:first-child{width:1%;white-space:nowrap}
+
+/* ---------- view-the-data dropdown ---------- */
+details.viewdata{margin:14px 0 6px}
+details.viewdata>summary{cursor:pointer;display:inline-block;font-size:12.5px;color:var(--txt2);
+  border:1px solid var(--b2);border-radius:8px;padding:5px 13px;background:var(--base);
+  list-style:none;transition:all .18s var(--ease);user-select:none}
+details.viewdata>summary::-webkit-details-marker{display:none}
+details.viewdata>summary::before{content:"▸ ";color:var(--txt3)}
+details.viewdata[open]>summary::before{content:"▾ "}
+details.viewdata>summary:hover{border-color:var(--b3);color:var(--txt)}
+details.viewdata .tblwrap{margin-top:12px}
 
 /* ---------- toc ---------- */
 #toc{position:fixed;left:calc(50% + 430px);top:120px;width:180px;font-size:12px;display:none}
@@ -159,303 +197,641 @@ footer a{color:var(--txt2)}
 
 <!-- ================= HERO ================= -->
 <section class="hero">
-  <div class="eyebrow">llm-d · Endpoint Picker</div>
-  <h1>How we got the numbers,<br>one pass at a time.</h1>
-  <p>The README shows the results at a glance. This is the longer story: what we tested, in the order we tested it, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.</p>
-  <p>Flow control is a queueing policy. The whole job is making queue behavior visible and honest, so the discipline that runs through every chapter is the same one: verify what the metric is actually reporting before trusting the latency it produces.</p>
-  <div class="meta">
-    <span class="tag"><b>One H100</b> · GPT-OSS 20B</span>
-    <span class="tag"><b>llm-d</b> inference gateway</span>
-    <span class="tag">prefix caching <b>off</b></span>
-    <span class="tag">metric <b>p95 TTFT</b></span>
-  </div>
-</section>
-
-<!-- ================= CH 1 ================= -->
-<section class="chapter" id="ch1">
-  <div class="step-no"><span class="badge" style="background:var(--green)">1</span>Ground truth first</div>
-  <h2>Check the cluster before trusting any prior number</h2>
-  <p>The first move was to read the deployed state instead of the plan's assumptions. Automatic prefix caching was on, at a <b>96.9% hit rate</b>. That single fact invalidated the earlier headline latencies. A premium median near 41 ms was a cache result, not a scheduling result. The benchmark was measuring a warm cache and calling it flow control.</p>
-  <p>So the measurement got rebuilt to isolate scheduling. Prefix caching was turned off at the engine, and confirmed off on every run by a near-zero hit rate in the vLLM metric. As a second layer, the prompt pool was regenerated so each prompt has a randomized head and a unique body, with only a short shared system preamble. The cache is off; the unique prompts make sure it stays irrelevant even if it were on.</p>
-  <div class="bignums">
-    <div class="bignum"><div class="k">Prefix cache hit rate, before</div><div class="v red">96.9%</div><div class="sub">latencies reflected a warm cache, not scheduling</div></div>
-    <div class="bignum"><div class="k">Prefix cache hit rate, every counted run</div><div class="v green">~0%</div><div class="sub">cache off at the engine; prompts randomized so it stays irrelevant</div></div>
-  </div>
-  <div class="note green">
-    <span class="lbl">The discipline</span>
-    Every counted run records its prefix-cache hit rate. If the cache is warm, the number is thrown out. This is the first instance of the rule that governs the whole campaign: verify what the metric is measuring before you believe the latency.
-  </div>
-</section>
-
-<!-- ================= CH 2 ================= -->
-<section class="chapter" id="ch2">
-  <div class="step-no"><span class="badge" style="background:var(--green)">2</span>Find the operating point</div>
-  <h2>Sweep to the knee, don't guess it</h2>
-  <p>A queueing policy has nothing to do until the pool is full, so every scenario has to run at saturation. To find where this pool saturates, a single tenant was swept from 32 to 200 concurrent requests, with prefix caching off, over two passes in randomized order.</p>
-  <p>Throughput peaked at <b>128 concurrent</b> and fell past it. At that point vLLM's running batch pins at its 128 limit and a real queue forms behind it. The two passes agreed. An earlier guess of ~175 turned out to be a prefix-cache artifact, cheap cached prefill inflating apparent capacity, and it went away once the cache was off.</p>
-  <div class="fig">
-    <figure class="assetcard">
-      <img src="assets/operating-point-sweep.svg" alt="Single-tenant sweep from 32 to 200 concurrent: throughput peaks at 128 requests per second then falls, while p95 TTFT climbs steadily. The knee at 128 is the chosen operating point.">
-    </figure>
-    <figcaption>Throughput (green) tops out at 128 while p95 TTFT (gold) keeps climbing. Past the knee you buy latency, not goodput. Measured, two passes.</figcaption>
-  </div>
-  <div class="bignums">
-    <div class="bignum"><div class="k">Operating point</div><div class="v green">128</div><div class="sub">aggregate concurrency, confirmed across two passes</div></div>
-    <div class="bignum"><div class="k">Where the queue forms</div><div class="v gold">run batch = 128</div><div class="sub">pool full, waiting positive; policy now has work to do</div></div>
-  </div>
-</section>
-
-<!-- ================= CH 3 ================= -->
-<section class="chapter" id="ch3">
-  <div class="step-no"><span class="badge" style="background:var(--blue)">3</span>Run the matrix</div>
-  <h2>One run is not a result</h2>
-  <p>With the operating point set, the campaign ran a matrix: four scenarios that each isolate a different question, the gate on and off, three output lengths, and three counted repeats of every cell. Repeats are not decoration. Run-to-run variance is real, and a single pass can land anywhere in it, so a cell only counts when three 120-second repeats agree.</p>
-  <ul>
-    <li><b>Service tiers</b> — premium, standard, and batch contend for a saturated pool. Does priority decide who waits?</li>
-    <li><b>Batch isolation</b> — a deferrable batch tenant floods the pool. Is overflow queued or rejected?</li>
-    <li><b>Consolidation</b> — two premium tenants share a GPU while a standard tenant floods it. Do the interactive tenants keep their place?</li>
-    <li><b>Same-band fairness</b> — a greedy tenant bursts against equal-priority peers. What does fairness actually bound?</li>
+  <h1>Measuring flow control<br>under pressure.</h1>
+  <p class="lead">Flow control enables intelligent request queuing on a shared pool. This walkthrough details the benchmark results.</p>
+  <ul class="results">
+    <li><b>Service tiers.</b> On a saturated pool with flow control on, premium p95 time to first token (TTFT) holds at 1117 ms against 1406 ms for standard, a ~1.25x separation, stable across repeats.</li>
+    <li><b>Batch isolation.</b> Overload is queued instead of dropped. 48,224 rejected requests become 0 at the same offered load.</li>
+    <li><b>Fairness.</b> Round-robin bounds a bursty tenant inside its band: the burster's queue time runs ~2.6x its peers' while the peers hold steady and nobody starves.</li>
+    <li><b>Limits.</b> Round-robin fairness handles tenants within one priority band. Flow control matters most when protecting one priority from another.</li>
   </ul>
-  <div class="fig">
-    <figure class="diagram">
-      <svg viewBox="0 0 760 210" width="100%" role="img" aria-label="The benchmark matrix: 4 scenarios by gate on/off by 3 output lengths by 3 repeats">
-        <!-- axis rails -->
-        <text x="20" y="26" font-size="12.5" font-weight="600" fill="var(--txt)">The counted matrix</text>
-        <g font-size="12" fill="var(--txt2)">
-          <!-- scenarios -->
-          <rect x="20" y="52" width="150" height="118" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
-          <text x="30" y="70" font-size="10.5" fill="var(--txt3)">4 scenarios</text>
-          <rect x="30" y="78" width="130" height="18" rx="4" fill="var(--inset)"/><rect x="30" y="78" width="3.5" height="18" fill="var(--blue)"/><text x="40" y="91" font-size="10.5">service tiers</text>
-          <rect x="30" y="100" width="130" height="18" rx="4" fill="var(--inset)"/><rect x="30" y="100" width="3.5" height="18" fill="var(--green)"/><text x="40" y="113" font-size="10.5">batch isolation</text>
-          <rect x="30" y="122" width="130" height="18" rx="4" fill="var(--inset)"/><rect x="30" y="122" width="3.5" height="18" fill="var(--gold)"/><text x="40" y="135" font-size="10.5">consolidation</text>
-          <rect x="30" y="144" width="130" height="18" rx="4" fill="var(--inset)"/><rect x="30" y="144" width="3.5" height="18" fill="var(--txt3)"/><text x="40" y="157" font-size="10.5">fairness</text>
-          <!-- x1 -->
-          <text x="196" y="115" font-size="15" fill="var(--txt3)">×</text>
-          <rect x="220" y="82" width="120" height="58" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
-          <text x="230" y="100" font-size="10.5" fill="var(--txt3)">gate</text>
-          <text x="230" y="122" font-size="11" class="mono-t">on / off</text>
-          <!-- x2 -->
-          <text x="360" y="115" font-size="15" fill="var(--txt3)">×</text>
-          <rect x="384" y="82" width="130" height="58" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
-          <text x="394" y="100" font-size="10.5" fill="var(--txt3)">output tokens</text>
-          <text x="394" y="122" font-size="11" class="mono-t">64 · 128 · 512</text>
-          <!-- x3 -->
-          <text x="534" y="115" font-size="15" fill="var(--txt3)">×</text>
-          <rect x="558" y="82" width="118" height="58" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
-          <text x="568" y="100" font-size="10.5" fill="var(--txt3)">repeats</text>
-          <text x="568" y="122" font-size="11" class="mono-t">3 × 120 s</text>
-          <!-- result -->
-          <text x="694" y="115" font-size="15" fill="var(--txt3)">=</text>
-        </g>
-        <rect x="712" y="82" width="42" height="58" rx="9" fill="var(--green-soft)" stroke="var(--green)"/>
-        <text x="733" y="108" font-size="13" font-weight="700" fill="var(--green)" text-anchor="middle" class="mono-t">72</text>
-        <text x="733" y="126" font-size="9" fill="var(--green)" text-anchor="middle">runs</text>
-      </svg>
-    </figure>
-    <figcaption>Each cell is three repeats. Percentiles only get reported once the repeats agree.</figcaption>
-  </div>
 </section>
 
-<!-- ================= CH 4 ================= -->
-<section class="chapter" id="ch4">
-  <div class="step-no"><span class="badge" style="background:var(--red)">4</span>The bug that hid the story</div>
-  <h2>The gate ran, but had nothing to prioritize</h2>
-  <p>For a stretch of the campaign the tier results refused to separate. Gate-on looked identical to gate-off, which is exactly the symptom you would see if the gate were doing nothing. The gate was on. The problem was upstream of it.</p>
-  <p>A request carries an objective name in a header. The Endpoint Picker resolves that name to an <b>InferenceObjective</b> bound to the pool, and that objective supplies the integer priority the gate sorts by. The tenants were being sent to inference pools with no objectives bound, so every request resolved to <b>priority 0</b>. The gate opened and closed correctly, but with one flat band there was nothing to order. Premium and standard sat in the same band.</p>
-  <div class="fig">
-    <figure class="diagram">
-      <svg viewBox="0 0 760 260" width="100%" role="img" aria-label="Priority resolution: bound objectives give premium priority 100; a missing binding collapses everything to priority 0">
-        <!-- BROKEN side -->
-        <text x="20" y="24" font-size="11" font-weight="700" fill="var(--red)" letter-spacing=".04em">OBJECTIVE NOT BOUND</text>
-        <rect x="20" y="36" width="330" height="200" rx="11" fill="var(--red-soft)" stroke="var(--red)" stroke-opacity=".5"/>
-        <text x="36" y="60" font-size="11.5" fill="var(--txt2)">every tier resolves to the same band</text>
-        <g class="mono-t" font-size="11">
-          <rect x="36" y="74" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="36" y="74" width="4" height="30" fill="var(--txt3)"/>
-          <text x="50" y="93" fill="var(--txt)">premium</text><text x="322" y="93" fill="var(--red)" text-anchor="end">pri 0</text>
-          <rect x="36" y="110" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="36" y="110" width="4" height="30" fill="var(--txt3)"/>
-          <text x="50" y="129" fill="var(--txt)">standard</text><text x="322" y="129" fill="var(--red)" text-anchor="end">pri 0</text>
-          <rect x="36" y="146" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="36" y="146" width="4" height="30" fill="var(--txt3)"/>
-          <text x="50" y="165" fill="var(--txt)">batch</text><text x="322" y="165" fill="var(--red)" text-anchor="end">pri 0</text>
-        </g>
-        <text x="36" y="200" font-size="11" fill="var(--txt2)">gate runs, one flat band,</text>
-        <text x="36" y="216" font-size="11" fill="var(--txt2)">nothing to order — on == off</text>
-
-        <!-- arrow -->
-        <text x="378" y="140" font-size="20" fill="var(--txt3)" text-anchor="middle">→</text>
-        <text x="378" y="162" font-size="10" fill="var(--green)" text-anchor="middle">bind</text>
-        <text x="378" y="174" font-size="10" fill="var(--green)" text-anchor="middle">per pool</text>
-
-        <!-- FIXED side -->
-        <text x="410" y="24" font-size="11" font-weight="700" fill="var(--green)" letter-spacing=".04em">OBJECTIVE BOUND</text>
-        <rect x="410" y="36" width="330" height="200" rx="11" fill="var(--green-soft)" stroke="var(--green)" stroke-opacity=".5"/>
-        <text x="426" y="60" font-size="11.5" fill="var(--txt2)">priority resolves and the gate can sort</text>
-        <g class="mono-t" font-size="11">
-          <rect x="426" y="74" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="426" y="74" width="4" height="30" fill="var(--blue)"/>
-          <text x="440" y="93" fill="var(--txt)">premium</text><text x="712" y="93" fill="var(--green)" text-anchor="end" font-weight="700">pri 100</text>
-          <rect x="426" y="110" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="426" y="110" width="4" height="30" fill="var(--gold)"/>
-          <text x="440" y="129" fill="var(--txt)">standard</text><text x="712" y="129" fill="var(--txt2)" text-anchor="end">pri 0</text>
-          <rect x="426" y="146" width="298" height="30" rx="6" fill="var(--inset)"/><rect x="426" y="146" width="4" height="30" fill="var(--green)"/>
-          <text x="440" y="165" fill="var(--txt)">batch</text><text x="712" y="165" fill="var(--txt2)" text-anchor="end">pri -10</text>
-        </g>
-        <text x="426" y="200" font-size="11" fill="var(--txt2)">premium jumps the queue when</text>
-        <text x="426" y="216" font-size="11" fill="var(--txt2)">the pool saturates</text>
-      </svg>
-    </figure>
-    <figcaption>Without the binding, all tiers collapse to priority 0 and the gate has one flat band. With it, premium resolves to 100 and outranks the rest under saturation.</figcaption>
-  </div>
-  <p>It was caught by reading the priority the flow-control queue metric reported, not the client latency. Premium and standard were sharing one band. The fix was to bind objectives per pool, and from that point every gate-on run <b>preflights</b> that premium resolves to priority 100 or the run aborts. The seventeen affected runs were archived, not deleted, and re-run.</p>
-  <div class="note red">
-    <span class="lbl">The correction, matter-of-fact</span>
-    The broken gate-on tier number was 1411 ms, indistinguishable from gate-off, because premium was priority 0. With the binding verified, the real number appears. <b>A gate can only act on priority it can see.</b>
-  </div>
-</section>
-
-<!-- ================= CH 5 ================= -->
-<section class="chapter" id="ch5">
-  <div class="step-no"><span class="badge" style="background:var(--green)">5</span>The verified results</div>
-  <h2>Priority keeps premium's turn under a surge</h2>
-  <p>With premium verified at priority 100, the result the campaign was built to find appears. Under a standard surge past capacity, the premium p95 time to first token holds inside a 300 ms interactive objective while standard absorbs the wait it created.</p>
-
-  <div class="fig">
-    <figure class="diagram">
-      <svg viewBox="0 0 720 220" width="100%" role="img" aria-label="Premium p95 TTFT collapses from 1778 ms gate off to 251 ms gate on, under the 300 ms objective">
-        <text x="20" y="26" font-size="12.5" font-weight="600" fill="var(--txt)">Service tiers · premium p95 TTFT · 128 output tokens</text>
-        <!-- scale reference: 2000ms across ~600px -->
-        <!-- 300ms objective line -->
-        <line x1="150" y1="52" x2="150" y2="196" stroke="var(--red)" stroke-dasharray="4 4" opacity=".55"/>
-        <text x="150" y="46" font-size="10" fill="var(--red)" text-anchor="middle">300 ms objective</text>
-        <!-- gate off bar -->
-        <text x="20" y="86" font-size="12" fill="var(--txt2)">gate off</text>
-        <rect x="90" y="70" width="600" height="26" rx="6" fill="var(--inset)"/>
-        <rect x="90" y="70" width="546" height="26" rx="6" fill="var(--txt3)" opacity=".6"/>
-        <text x="648" y="88" font-size="13" font-weight="700" class="mono-t" fill="var(--txt)" text-anchor="end">1778 ms</text>
-        <!-- gate on bar -->
-        <text x="20" y="150" font-size="12" fill="var(--txt2)">gate on</text>
-        <rect x="90" y="134" width="600" height="26" rx="6" fill="var(--inset)"/>
-        <rect x="90" y="134" width="77" height="26" rx="6" fill="var(--green)"/>
-        <text x="176" y="152" font-size="13" font-weight="700" class="mono-t" fill="var(--green)">251 ms</text>
-        <!-- collapse note -->
-        <text x="90" y="192" font-size="11.5" fill="var(--txt2)">~7× faster, and back under the objective. Standard took the wait.</text>
-      </svg>
-    </figure>
-    <figcaption>Custom bar drawn to scale. The 300 ms objective is the dashed line; gate-off overshoots it by 6×, gate-on lands under it.</figcaption>
-  </div>
-
-  <div class="bignums">
-    <div class="bignum"><div class="k">Premium p95, gate off → on</div><div class="v green">7×</div><div class="sub">1778 ms → 251 ms at 128 output tokens, under the 300 ms objective</div></div>
-    <div class="bignum"><div class="k">Same result, 512 output tokens</div><div class="v green">36×</div><div class="sub">5259 ms → 145 ms; longer generations hold a slot longer, so the queue matters more</div></div>
-  </div>
-
-  <p>The published chart, drawn from the counted repeats:</p>
+<!-- ================= REQUEST PATH ================= -->
+<section class="chapter" id="request-path">
+  <h2>Request path</h2>
+  <p class="lead">Each tenant tags its requests with a tier and a tenant id, flow control orders them by priority, and one shared vLLM pool serves the result.</p>
   <div class="fig">
     <figure class="assetcard">
-      <img src="assets/tiers-p95-gate.svg" alt="Under saturation, premium p95 TTFT holds near 251 ms with flow control while standard rises to about 691 ms. Without flow control both climb past 1700 ms.">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 320" role="img" aria-label="Request path: three tenants pass through the Endpoint Picker flow-control policy into a shared vLLM pool on one H100."><rect width="940" height="320" fill="var(--base,#ffffff)"/><text x="30" y="26" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" text-anchor="start" letter-spacing="2">TENANTS</text><rect x="30" y="44" width="188" height="56" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1.1"/><text x="48" y="68" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="650" fill="var(--txt,#151515)" text-anchor="start">premium</text><text x="48" y="86" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="600" fill="var(--green,#1f8a5f)" text-anchor="start">priority 100</text><line x1="218" y1="72" x2="332" y2="150" stroke="var(--txt3,#84899a)" stroke-width="1.3"/><rect x="30" y="116" width="188" height="56" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1.1"/><text x="48" y="140" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="650" fill="var(--txt,#151515)" text-anchor="start">standard</text><text x="48" y="158" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">priority 0</text><line x1="218" y1="144" x2="332" y2="150" stroke="var(--txt3,#84899a)" stroke-width="1.3"/><rect x="30" y="188" width="188" height="56" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1.1"/><text x="48" y="212" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="650" fill="var(--txt,#151515)" text-anchor="start">batch</text><text x="48" y="230" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="start">priority -10</text><line x1="218" y1="216" x2="332" y2="150" stroke="var(--txt3,#84899a)" stroke-width="1.3"/><path d="M 324 145 L 336 150 L 325 156 Z" fill="var(--txt3,#84899a)"/><text x="30" y="282" font-family="ui-monospace,Menlo,monospace" font-size="10" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">tier   header  x-llm-d-inference-objective</text><text x="30" y="298" font-family="ui-monospace,Menlo,monospace" font-size="10" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">tenant header  x-llm-d-inference-fairness-id</text><text x="340" y="26" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" text-anchor="start" letter-spacing="2">ENDPOINT PICKER</text><rect x="340" y="44" width="250" height="232" rx="10" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1.1"/><text x="358" y="72" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="14.5" font-weight="650" fill="var(--txt,#151515)" text-anchor="start">flow control</text><text x="358" y="90" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">priority-aware admission queue</text><rect x="358" y="110" width="44" height="28" rx="5" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="380" y="128" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="700" fill="var(--green,#1f8a5f)" text-anchor="middle">100</text><rect x="412" y="110" width="44" height="28" rx="5" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="434" y="128" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="700" fill="var(--txt2,#4c5260)" text-anchor="middle">0</text><rect x="466" y="110" width="44" height="28" rx="5" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="488" y="128" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="700" fill="var(--txt2,#4c5260)" text-anchor="middle">0</text><rect x="520" y="110" width="44" height="28" rx="5" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="542" y="128" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="11" font-weight="700" fill="var(--txt3,#84899a)" text-anchor="middle">-10</text><text x="358" y="164" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10.5" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">admits by priority while the pool has room;</text><text x="358" y="180" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10.5" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">queues instead of rejecting when it does not</text><rect x="358" y="196" width="214" height="60" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="368" y="216" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10.5" font-weight="600" fill="var(--gold,#c98500)" text-anchor="start">unmatched header or unsaturated</text><text x="368" y="232" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10.5" font-weight="600" fill="var(--gold,#c98500)" text-anchor="start">pool: every tier logs priority 0,</text><text x="368" y="248" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10.5" font-weight="600" fill="var(--gold,#c98500)" text-anchor="start">and nothing queues</text><line x1="590" y1="150" x2="648" y2="150" stroke="var(--txt3,#84899a)" stroke-width="1.6"/><path d="M 640 144 L 652 150 L 640 156 Z" fill="var(--txt3,#84899a)"/><text x="658" y="26" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" text-anchor="start" letter-spacing="2">SHARED POOL</text><rect x="658" y="44" width="254" height="232" rx="10" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1.1"/><text x="676" y="72" font-family="Inter,-apple-system,Segoe UI,sans-serif" font-size="14.5" font-weight="650" fill="var(--txt,#151515)" text-anchor="start">vLLM, 1x H100, TP 1</text><text x="676" y="90" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">openai/gpt-oss-20b</text><rect x="676" y="106" width="218" height="24" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="686" y="122" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="400" fill="var(--txt,#151515)" text-anchor="start">max-num-seqs 128</text><rect x="676" y="136" width="218" height="24" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="686" y="152" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="400" fill="var(--txt,#151515)" text-anchor="start">max-num-batched-tokens 8192</text><rect x="676" y="166" width="218" height="24" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="686" y="182" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="400" fill="var(--txt,#151515)" text-anchor="start">max-model-len 32768</text><rect x="676" y="196" width="218" height="24" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="686" y="212" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="400" fill="var(--txt,#151515)" text-anchor="start">gpu-memory-utilization 0.90</text><rect x="676" y="226" width="218" height="24" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="686" y="242" font-family="ui-monospace,Menlo,monospace" font-size="10.5" font-weight="400" fill="var(--txt,#151515)" text-anchor="start">prefix caching off</text></svg>
     </figure>
-    <figcaption>Premium collapses with the gate on; standard rises to 691 ms as it absorbs the surge. Aggregated across the counted repeats.</figcaption>
+    <figcaption>Three tenants share one H100. The tier rides on the objective header, the tenant on the fairness header. Flow control admits by priority and queues rather than rejects when the pool is full.</figcaption>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/director.go">requestcontrol/director.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/admission.go">requestcontrol/admission.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/controller.go">flowcontrol/controller/controller.go</a></div>
+  </div>
+</section>
+
+<!-- ================= HOW PRIORITY IS DECIDED ================= -->
+<section class="chapter" id="priority-mechanics">
+  <h2>How priority is decided</h2>
+  <p class="lead">Trace one request from its headers to a dispatch decision. Four stages turn a header into a priority, test whether the pool is saturated, and, only then, order the queue.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" role="img" aria-label="Four stages: a request carries an objective header and a fairness id; the Endpoint Picker resolves the objective to an integer priority; the utilization detector tests saturation as the worse of queue-depth and KV-cache ratios; below saturation the request passes straight through, at or above it flow control queues by strict priority across bands and round-robin within a band.">
+        <rect width="680" height="300" fill="var(--base,#ffffff)"/>
+        <!-- stage 1: arrive -->
+        <text x="16" y="24" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">1 · REQUEST ARRIVES</text>
+        <rect x="16" y="34" width="150" height="94" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="28" y="56" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9" fill="var(--txt2,#4c5260)">x-llm-d-inference-</text>
+        <text x="28" y="68" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9" font-weight="700" fill="var(--txt,#151515)">  objective</text>
+        <text x="28" y="82" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt3,#84899a)">its tier</text>
+        <text x="28" y="102" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9" fill="var(--txt2,#4c5260)">x-llm-d-inference-</text>
+        <text x="28" y="114" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9" font-weight="700" fill="var(--txt,#151515)">  fairness-id</text>
+        <text x="28" y="124" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt3,#84899a)"> </text>
+        <path d="M 166 81 L 186 81" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 186 81 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- stage 2: resolve priority -->
+        <text x="196" y="24" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">2 · RESOLVE PRIORITY</text>
+        <rect x="196" y="34" width="150" height="94" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="208" y="52" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">Endpoint Picker binds</text>
+        <text x="208" y="64" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">the objective to an</text>
+        <text x="208" y="76" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">InferenceObjective:</text>
+        <text x="208" y="94" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9.5" font-weight="700" fill="var(--green,#1f8a5f)">premium 100</text>
+        <text x="208" y="106" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9.5" font-weight="700" fill="var(--txt2,#4c5260)">standard 0</text>
+        <text x="208" y="118" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="9.5" font-weight="700" fill="var(--txt3,#84899a)">batch −10 · unbound → 0</text>
+        <path d="M 346 81 L 366 81" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 366 81 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- stage 3: saturation test -->
+        <text x="376" y="24" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">3 · SATURATED?</text>
+        <rect x="376" y="34" width="150" height="94" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="388" y="52" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">utilization detector =</text>
+        <text x="388" y="68" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="8.5" fill="var(--txt,#151515)">max( QueueDepth / 4,</text>
+        <text x="388" y="80" font-family="&quot;Geist Mono&quot;,ui-monospace,Menlo,monospace" font-size="8.5" fill="var(--txt,#151515)">     KVCache / 0.8 )</text>
+        <text x="388" y="100" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt3,#84899a)">below the 1.0 ceiling → pass</text>
+        <text x="388" y="114" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--gold,#c98500)">at the ceiling → queue</text>
+        <path d="M 526 81 L 546 81" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 546 81 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- stage 4: queue decision -->
+        <text x="556" y="24" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">4 · ORDER</text>
+        <rect x="556" y="34" width="108" height="94" rx="8" fill="var(--gold-soft,rgba(201,133,0,.12))" stroke="var(--gold,#c98500)"/>
+        <text x="568" y="54" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--txt,#151515)">across bands:</text>
+        <text x="568" y="66" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">strict priority</text>
+        <text x="568" y="80" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)">100 → 0 → −10</text>
+        <text x="568" y="102" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--txt,#151515)">within a band:</text>
+        <text x="568" y="114" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)">round-robin</text>
+        <text x="568" y="124" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)">tenants take turns</text>
+        <!-- footer note -->
+        <line x1="16" y1="150" x2="664" y2="150" stroke="var(--b1,rgba(10,12,20,.08))"/>
+        <text x="16" y="172" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)">Below saturation, stage 4 never runs.</text>
+        <text x="16" y="188" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">The request passes straight through and flow control is invisible. Only once the detector reads</text>
+        <text x="16" y="203" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">saturation does the priority resolved in stage 2 decide who is dispatched next. Each dispatch cycle moves</text>
+        <text x="16" y="218" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">one request, highest band first; at the ceiling the whole cycle halts so no band worsens the saturation.</text>
+        <!-- scenario legend -->
+        <text x="16" y="232" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">THE THREE STATES BELOW</text>
+        <rect x="16" y="242" width="10" height="10" rx="2" fill="var(--green,#1f8a5f)"/><text x="32" y="251" font-family="Inter,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)">A · capacity, all pass through</text>
+        <rect x="236" y="242" width="10" height="10" rx="2" fill="var(--gold,#c98500)"/><text x="252" y="251" font-family="Inter,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)">B · saturated, mixed tiers</text>
+        <rect x="456" y="242" width="10" height="10" rx="2" fill="var(--blue,#1c78d8)"/><text x="472" y="251" font-family="Inter,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)">C · saturated, same band</text>
+      </svg>
+    </figure>
+    <figcaption>A header becomes an integer priority, the detector tests saturation as the worse of the queue-depth and key-value (KV) cache ratios, and only a saturated pool reaches the ordering stage.</figcaption>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/director.go#L206-L255">requestcontrol/director.go:206–255</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector/utilization">plugins/flowcontrol/saturationdetector/utilization</a></div>
   </div>
 
-  <div class="tblwrap">
+  <h3>Three states of the same mechanism</h3>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" role="img" aria-label="Three scenario states. State A, pool has capacity: premium, standard, and batch all pass straight through, the queue is empty, flow control is invisible. State B, pool saturated with mixed tiers: premium jumps the queue, standard waits, batch waits longest, which is why premium p95 drops. State C, pool saturated with three tenants in the same band at priority 100: round-robin rotates whose request dispatches next, bounding a bursty tenant's share.">
+        <rect width="680" height="320" fill="var(--base,#ffffff)"/>
+        <!-- ===== STATE A ===== -->
+        <rect x="12" y="12" width="212" height="296" rx="10" fill="none" stroke="var(--b1,rgba(10,12,20,.08))"/>
+        <rect x="12" y="12" width="212" height="34" rx="10" fill="var(--green-soft,rgba(31,138,95,.12))"/>
+        <text x="26" y="27" font-family="Inter,sans-serif" font-size="10.5" font-weight="800" fill="var(--green,#1f8a5f)">A · POOL HAS CAPACITY</text>
+        <text x="26" y="40" font-family="Inter,sans-serif" font-size="9" fill="var(--txt2,#4c5260)">detector below 1 · queue empty</text>
+        <!-- three requests passing straight through -->
+        <rect x="26" y="66" width="52" height="22" rx="5" fill="var(--raised,#f1f2f6)" stroke="var(--green,#1f8a5f)"/><text x="52" y="81" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">premium</text>
+        <path d="M 88 77 L 138 77" stroke="var(--green,#1f8a5f)" stroke-width="1.4"/><path d="M 138 77 l -8 -4 v 8 z" fill="var(--green,#1f8a5f)"/>
+        <rect x="26" y="98" width="52" height="22" rx="5" fill="var(--raised,#f1f2f6)" stroke="var(--txt3,#84899a)"/><text x="52" y="113" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">standard</text>
+        <path d="M 88 109 L 138 109" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 138 109 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <rect x="26" y="130" width="52" height="22" rx="5" fill="var(--raised,#f1f2f6)" stroke="var(--txt3,#84899a)"/><text x="52" y="145" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">batch</text>
+        <path d="M 88 141 L 138 141" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 138 141 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <rect x="148" y="66" width="64" height="86" rx="6" fill="var(--inset,#eceef2)" stroke="var(--b1,rgba(10,12,20,.08))"/>
+        <text x="180" y="104" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)" text-anchor="middle">engine</text>
+        <text x="180" y="116" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)" text-anchor="middle">has room</text>
+        <text x="26" y="188" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--txt,#151515)">Priority is resolved but</text>
+        <text x="26" y="202" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--txt,#151515)">never used.</text>
+        <text x="26" y="220" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">All three tiers dispatch on</text>
+        <text x="26" y="234" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">arrival. Stage 4 is skipped;</text>
+        <text x="26" y="248" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">flow control is invisible.</text>
+        <!-- ===== STATE B ===== -->
+        <rect x="234" y="12" width="212" height="296" rx="10" fill="none" stroke="var(--b1,rgba(10,12,20,.08))"/>
+        <rect x="234" y="12" width="212" height="34" rx="10" fill="var(--gold-soft,rgba(201,133,0,.12))"/>
+        <text x="248" y="27" font-family="Inter,sans-serif" font-size="10.5" font-weight="800" fill="var(--gold,#c98500)">B · SATURATED, MIXED TIERS</text>
+        <text x="248" y="40" font-family="Inter,sans-serif" font-size="9" fill="var(--txt2,#4c5260)">detector ≥ 1 · strict priority</text>
+        <!-- queue: premium jumps ahead -->
+        <text x="248" y="64" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)">queue, front → back</text>
+        <rect x="248" y="72" width="46" height="22" rx="5" fill="var(--green,#1f8a5f)"/><text x="271" y="87" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">premium</text>
+        <rect x="298" y="72" width="46" height="22" rx="5" fill="var(--gold,#c98500)"/><text x="321" y="87" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">standard</text>
+        <rect x="348" y="72" width="40" height="22" rx="5" fill="var(--txt3,#84899a)"/><text x="368" y="87" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">batch</text>
+        <path d="M 392 83 L 420 83" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 420 83 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <text x="392" y="112" font-family="Inter,sans-serif" font-size="8.5" fill="var(--txt3,#84899a)" text-anchor="middle">next</text>
+        <text x="392" y="122" font-family="Inter,sans-serif" font-size="8.5" fill="var(--txt3,#84899a)" text-anchor="middle">slot</text>
+        <!-- dispatch order badges -->
+        <text x="271" y="110" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="var(--green,#1f8a5f)" text-anchor="middle">1st</text>
+        <text x="321" y="110" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="var(--gold,#c98500)" text-anchor="middle">2nd</text>
+        <text x="368" y="110" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="var(--txt3,#84899a)" text-anchor="middle">3rd</text>
+        <text x="248" y="150" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--txt,#151515)">Premium jumps the queue.</text>
+        <text x="248" y="170" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">Every opening in the running</text>
+        <text x="248" y="184" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">batch goes to the highest band</text>
+        <text x="248" y="198" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">first: premium, then standard,</text>
+        <text x="248" y="212" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">then batch waits longest.</text>
+        <text x="248" y="236" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--gold,#c98500)">This is why premium stays ahead:</text>
+        <text x="248" y="250" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">p95 1117 ms vs 1406 ms at 128 out.</text>
+        <!-- ===== STATE C ===== -->
+        <rect x="456" y="12" width="212" height="296" rx="10" fill="none" stroke="var(--b1,rgba(10,12,20,.08))"/>
+        <rect x="456" y="12" width="212" height="34" rx="10" fill="var(--blue-soft,rgba(28,120,216,.10))"/>
+        <text x="470" y="27" font-family="Inter,sans-serif" font-size="10.5" font-weight="800" fill="var(--blue,#1c78d8)">C · SATURATED, SAME BAND</text>
+        <text x="470" y="40" font-family="Inter,sans-serif" font-size="9" fill="var(--txt2,#4c5260)">three tenants, all priority 100</text>
+        <!-- round robin ring -->
+        <text x="470" y="64" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)">round-robin, taking turns</text>
+        <rect x="470" y="74" width="40" height="22" rx="5" fill="var(--green,#1f8a5f)"/><text x="490" y="89" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">A</text>
+        <path d="M 514 85 L 528 85" stroke="var(--txt3,#84899a)" stroke-width="1.2"/><path d="M 528 85 l -6 -3 v 6 z" fill="var(--txt3,#84899a)"/>
+        <rect x="532" y="74" width="40" height="22" rx="5" fill="var(--green,#1f8a5f)" opacity="0.7"/><text x="552" y="89" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">B</text>
+        <path d="M 576 85 L 590 85" stroke="var(--txt3,#84899a)" stroke-width="1.2"/><path d="M 590 85 l -6 -3 v 6 z" fill="var(--txt3,#84899a)"/>
+        <rect x="594" y="74" width="40" height="22" rx="5" fill="var(--green,#1f8a5f)" opacity="0.5"/><text x="614" y="89" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">C</text>
+        <path d="M 490 100 q 72 30 124 0" fill="none" stroke="var(--blue,#1c78d8)" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M 614 100 l -3 -7 l 8 3 z" fill="var(--blue,#1c78d8)"/>
+        <text x="552" y="128" font-family="Inter,sans-serif" font-size="9" fill="var(--blue,#1c78d8)" text-anchor="middle">then back to A</text>
+        <text x="470" y="158" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--txt,#151515)">No band jumps another.</text>
+        <text x="470" y="178" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">All three sit at priority 100, so</text>
+        <text x="470" y="192" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">ordering rotates whose request</text>
+        <text x="470" y="206" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">dispatches next, A then B then C.</text>
+        <text x="470" y="230" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--blue,#1c78d8)">Bounds a bursty tenant's share.</text>
+        <text x="470" y="244" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">A cannot crowd out B and C by</text>
+        <text x="470" y="258" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">flooding; the turn always comes.</text>
+      </svg>
+    </figure>
+    <figcaption>The same four stages under three loads. With capacity, priority is resolved but never used; under saturation, strict priority across bands lifts premium, and round-robin within a band gives same-priority tenants turns.</figcaption>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/internal/processor.go#L343-L400">controller/internal/processor.go:343–400</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/roundrobin">plugins/flowcontrol/fairness/roundrobin</a></div>
+  </div>
+</section>
+
+<!-- ================= KNOBS ================= -->
+<section class="chapter" id="knobs">
+  <h2>The knobs</h2>
+  <p class="lead">Six settings decide how much load reaches the engine and when flow control calls the pool saturated. These are the only dials in play across every scenario.</p>
+  <div class="tblwrap compact">
     <table>
-      <thead><tr><th>tier</th><th>p50 off</th><th>p95 off</th><th>p50 on</th><th>p95 on</th></tr></thead>
+      <thead><tr><th>Knob</th><th>Owner</th><th>What it does</th><th>Set to</th></tr></thead>
       <tbody>
-        <tr><td>premium</td><td class="mono">176</td><td class="mono">1778</td><td class="mono">82</td><td class="hi">251</td></tr>
-        <tr><td>standard</td><td class="mono">589</td><td class="mono">2054</td><td class="mono">155</td><td class="mono">691</td></tr>
+        <tr><td class="mono wrap">max-num-seqs</td><td class="wrap">vLLM engine</td><td class="wrap">Max requests the engine runs at once, the running-batch ceiling</td><td class="mono">128</td></tr>
+        <tr><td class="mono wrap">queueDepthThreshold</td><td class="wrap">utilization detector</td><td class="wrap">Queue length that counts as saturated</td><td class="mono">4</td></tr>
+        <tr><td class="mono wrap">kvCacheUtilThreshold</td><td class="wrap">utilization detector</td><td class="wrap">KV-cache fraction that counts as saturated</td><td class="mono">0.8</td></tr>
+        <tr><td class="mono wrap">maxConcurrency</td><td class="wrap">concurrency detector</td><td class="wrap">Hard cap on in-flight requests; the only knob that reduces load on the engine</td><td class="mono">swept 32–128</td></tr>
+        <tr><td class="mono wrap">headroom</td><td class="wrap">concurrency detector</td><td class="wrap">Allowed burst above the cap</td><td class="mono">0 (default)</td></tr>
+        <tr><td class="wrap">priority bands</td><td class="wrap">flow-control ordering</td><td class="wrap">The dispatch order, not a detector: premium 100, standard 0, batch −10</td><td class="mono">100 / 0 / −10</td></tr>
       </tbody>
+    </table>
+  </div>
+  <p>The scenarios run the <b>utilization detector</b>, which ships enabled and reads real engine telemetry: the worse of <code>QueueDepth / queueDepthThreshold</code> and <code>KVCacheUsage / kvCacheUtilThreshold</code> per endpoint, averaged across the pool, with backpressure once that ratio crosses one. It reacts to a queue that already exists and cannot cap the running batch, so the engine still fills to <code>max-num-seqs</code>. The concurrency detector, characterized later, is the only one that caps in-flight load before the engine.</p>
+</section>
+
+<!-- ================= OPERATING POINT ================= -->
+<section class="chapter" id="operating-point">
+  <h2>How we chose the operating point and configuration</h2>
+  <p class="lead">Flow control queues are populated when the system reaches saturation, so before the experiments we sweep the model server with a single tenant to find the saturation point. To be confident in the data, the sweep tested from 32 to 200 concurrent requests, twice, in reversed order.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" data-chart="operating-point" role="img" aria-label="Single-tenant sweep 32 to 200 concurrent. Throughput on the left axis peaks at 128; p95 TTFT on the right axis climbs steadily."><rect width="680" height="340" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Operating point: throughput peaks at 128, latency climbs past it</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">Single tenant, 512 in / 128 out, 180 s per point. Two passes, reversed order, agreed.</text><line x1="58" y1="286.0" x2="622" y2="286.0" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="47" y="290.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--green,#1f8a5f)" text-anchor="end" opacity="0.55">0</text><line x1="58" y1="236.0" x2="622" y2="236.0" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="47" y="240.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--green,#1f8a5f)" text-anchor="end" opacity="0.55">15</text><line x1="58" y1="186.0" x2="622" y2="186.0" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="47" y="190.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--green,#1f8a5f)" text-anchor="end" opacity="0.55">30</text><line x1="58" y1="136.0" x2="622" y2="136.0" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="47" y="140.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--green,#1f8a5f)" text-anchor="end" opacity="0.55">45</text><line x1="58" y1="86.0" x2="622" y2="86.0" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="47" y="90.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--green,#1f8a5f)" text-anchor="end" opacity="0.55">60</text><text x="633" y="290.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--gold,#c98500)" text-anchor="start" opacity="0.55">0</text><text x="633" y="240.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--gold,#c98500)" text-anchor="start" opacity="0.55">500</text><text x="633" y="190.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--gold,#c98500)" text-anchor="start" opacity="0.55">1,000</text><text x="633" y="140.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--gold,#c98500)" text-anchor="start" opacity="0.55">1,500</text><text x="633" y="90.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="400" fill="var(--gold,#c98500)" text-anchor="start" opacity="0.55">2,000</text><text x="47" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--green,#1f8a5f)" text-anchor="start">Throughput (rps)</text><text x="633" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--gold,#c98500)" text-anchor="end">p95 TTFT (ms)</text><line x1="380.2857142857143" y1="82" x2="380.2857142857143" y2="286" stroke="var(--blue,#1c78d8)" stroke-dasharray="5 4"/><text x="380.2857142857143" y="68" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--blue,#1c78d8)" text-anchor="middle">cap = 128 (set)</text><polyline fill="none" stroke="var(--green,#1f8a5f)" stroke-width="2.6" stroke-linejoin="round" points="58.0,205.7 165.4,162.3 272.9,134.3 380.3,112.7 487.7,129.0 622.0,117.3"/><circle cx="58.0" cy="205.7" r="4.5" fill="var(--green,#1f8a5f)"/><text x="58.0" y="196.66666666666669" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">24.1</text><circle cx="165.4" cy="162.3" r="4.5" fill="var(--green,#1f8a5f)"/><text x="165.42857142857142" y="153.33333333333331" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">37.1</text><circle cx="272.9" cy="134.3" r="4.5" fill="var(--green,#1f8a5f)"/><text x="272.85714285714283" y="125.33333333333334" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">45.5</text><circle cx="380.3" cy="112.7" r="4.5" fill="var(--green,#1f8a5f)"/><text x="380.2857142857143" y="103.66666666666666" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">52.0</text><circle cx="487.7" cy="129.0" r="4.5" fill="var(--green,#1f8a5f)"/><text x="487.71428571428567" y="120.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">47.1</text><circle cx="622.0" cy="117.3" r="4.5" fill="var(--green,#1f8a5f)"/><text x="618.0" y="106.33333333333331" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="end">50.6</text><polyline fill="none" stroke="var(--gold,#c98500)" stroke-width="2.6" stroke-linejoin="round" points="58.0,259.9 165.4,211.6 272.9,191.2 380.3,189.3 487.7,140.5 622.0,104.6"/><circle cx="58.0" cy="259.9" r="4.5" fill="var(--gold,#c98500)"/><text x="58.0" y="275.9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">261</text><circle cx="165.4" cy="211.6" r="4.5" fill="var(--gold,#c98500)"/><text x="165.42857142857142" y="227.6" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">744</text><circle cx="272.9" cy="191.2" r="4.5" fill="var(--gold,#c98500)"/><text x="272.85714285714283" y="207.2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">948</text><circle cx="380.3" cy="189.3" r="4.5" fill="var(--gold,#c98500)"/><text x="380.2857142857143" y="205.3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">967</text><circle cx="487.7" cy="140.5" r="4.5" fill="var(--gold,#c98500)"/><text x="487.71428571428567" y="156.5" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1,455</text><circle cx="622.0" cy="104.6" r="4.5" fill="var(--gold,#c98500)"/><text x="618.0" y="134.6" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="end">1,814</text><line x1="58" y1="286" x2="622" y2="286" stroke="var(--b2,rgba(10,12,20,.18))"/><text x="58.0" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">32</text><text x="165.42857142857142" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">64</text><text x="272.85714285714283" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">96</text><text x="380.2857142857143" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">128</text><text x="487.71428571428567" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">160</text><text x="622.0" y="304" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">200</text><text x="340.0" y="324" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="middle">offered concurrency</text></svg>
+    </figure>
+    <figcaption>Throughput peaks at 128 concurrent requests in flight and 52.0 requests per second, then falls, while the p95 TTFT tail keeps climbing. Both passes land on the same knee.</figcaption>
+  </div>
+  <p>We set <code>max-num-seqs</code> to 128, the running-batch capacity chosen for this H100, so the sweep confirms saturation there rather than discovering the number. At 128 concurrent the batch pins at the cap and a real queue forms, so every scenario runs at this operating point.</p>
+  <details class="viewdata">
+    <summary>View the data</summary>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Concurrency</th><th>Throughput rps</th><th>TTFT p50 ms</th><th>TTFT p95 ms</th><th>Running batch mean</th><th>Waiting p95</th></tr></thead>
+        <tbody><tr><td class="mono">32</td><td class="mono">24.1</td><td class="mono">171</td><td class="mono">261</td><td class="mono">28</td><td class="mono">4</td></tr><tr><td class="mono">64</td><td class="mono">37.1</td><td class="mono">307</td><td class="mono">744</td><td class="mono">54</td><td class="mono">23</td></tr><tr><td class="mono">96</td><td class="mono">45.5</td><td class="mono">427</td><td class="mono">948</td><td class="mono">82</td><td class="mono">45</td></tr><tr><td class="hi">128</td><td class="hi">52.0</td><td class="mono">566</td><td class="mono">967</td><td class="mono">99</td><td class="mono">68</td></tr><tr><td class="mono">160</td><td class="mono">47.1</td><td class="mono">708</td><td class="mono">1455</td><td class="mono">122</td><td class="mono">32</td></tr><tr><td class="mono">200</td><td class="mono">50.6</td><td class="mono">1523</td><td class="mono">1814</td><td class="mono">122</td><td class="mono">72</td></tr></tbody>
+      </table>
+    </div>
+  </details>
+
+  <h3>Input fixed at 512, output swept 64 / 128 / 512</h3>
+  <p>Input is fixed at 512 tokens; output is swept across 64, 128, and 512 in every scenario, with 128 the headline. This stands in for short interactive work such as chat turns, retrieval-augmented generation (RAG) answers, and tool calls, where a brief reply makes time to first token the felt latency. Output length is the limiter under saturation: a longer generation holds its GPU slot for more decode steps, so a request that misses the running batch waits longer for the next opening.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 150" role="img" aria-label="Three request shapes: input fixed at 512 tokens, output swept across 64, 128, and 512 tokens.">
+        <rect width="680" height="150" fill="var(--base,#ffffff)"/>
+        <text x="16" y="26" font-family="Inter,sans-serif" font-size="12.5" font-weight="700" fill="var(--txt,#151515)">Three request shapes, one swept dimension</text>
+        <text x="16" y="44" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">Input 512 tokens, held constant. Output is the swept dimension.</text>
+        <!-- row 1: 64 -->
+        <text x="16" y="76" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)">64 out</text>
+        <rect x="90" y="66" width="360" height="14" rx="3" fill="var(--blue-soft,rgba(28,120,216,.10))" stroke="var(--blue,#1c78d8)" stroke-width="1"/>
+        <text x="270" y="76" font-family="Inter,sans-serif" font-size="9.5" fill="var(--blue,#1c78d8)" text-anchor="middle">512 in</text>
+        <rect x="450" y="66" width="26" height="14" rx="3" fill="var(--green-soft,rgba(31,138,95,.12))" stroke="var(--green,#1f8a5f)" stroke-width="1"/>
+        <!-- row 2: 128 (headline) -->
+        <text x="16" y="100" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--green,#1f8a5f)">128 out</text>
+        <rect x="90" y="90" width="360" height="14" rx="3" fill="var(--blue-soft,rgba(28,120,216,.10))" stroke="var(--blue,#1c78d8)" stroke-width="1"/>
+        <text x="270" y="100" font-family="Inter,sans-serif" font-size="9.5" fill="var(--blue,#1c78d8)" text-anchor="middle">512 in</text>
+        <rect x="450" y="90" width="52" height="14" rx="3" fill="var(--green-soft,rgba(31,138,95,.12))" stroke="var(--green,#1f8a5f)" stroke-width="1.4"/>
+        <text x="512" y="100" font-family="Inter,sans-serif" font-size="9.5" font-weight="700" fill="var(--green,#1f8a5f)">headline</text>
+        <!-- row 3: 512 -->
+        <text x="16" y="124" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)">512 out</text>
+        <rect x="90" y="114" width="360" height="14" rx="3" fill="var(--blue-soft,rgba(28,120,216,.10))" stroke="var(--blue,#1c78d8)" stroke-width="1"/>
+        <text x="270" y="124" font-family="Inter,sans-serif" font-size="9.5" fill="var(--blue,#1c78d8)" text-anchor="middle">512 in</text>
+        <rect x="450" y="114" width="208" height="14" rx="3" fill="var(--green-soft,rgba(31,138,95,.12))" stroke="var(--green,#1f8a5f)" stroke-width="1"/>
+      </svg>
+    </figure>
+    <figcaption>Input is held at 512 tokens; output is swept across 64, 128, and 512. The 128-token shape is the headline; the full ladder appears in the service-tiers result.</figcaption>
+  </div>
+  <div class="tblwrap compact">
+    <table class="">
+      <thead><tr><th>Choice</th><th>Value</th><th>Why</th></tr></thead>
+      <tbody><tr><td class="wrap">Input length</td><td class="mono wrap">512 in (fixed)</td><td class="wrap">Short interactive work; held constant across every scenario</td></tr><tr><td class="wrap">Output length</td><td class="mono wrap">64 / 128 / 512 (swept)</td><td class="wrap">Output is the saturation limiter, so we swept it; 128 is the headline</td></tr><tr><td class="mono wrap">max-num-seqs</td><td class="mono wrap">128 (set)</td><td class="wrap">The engine's running-batch cap we set; the sweep confirmed the knee lands here</td></tr><tr><td class="mono wrap">max-num-batched-tokens</td><td class="mono wrap">8192</td><td class="wrap">Prefill budget per step for this model and GPU</td></tr><tr><td class="wrap">Prefix caching</td><td class="mono wrap">off</td><td class="wrap">Latencies reflect scheduling, not a warm cache</td></tr><tr><td class="wrap">Repeats</td><td class="mono wrap">3 counted</td><td class="wrap">Each headline is the median of the three per-repeat p95s, steady-state trimmed, with the min–max range shown</td></tr></tbody>
+    </table>
+  </div>
+  <p>The sweep ran 180 s per point over two passes in randomized order, and both agreed. Data in <code>data-v4/operating-point-sweep</code>.</p>
+</section>
+
+<section class="chapter" id="knee-choice">
+  <h2>The knee is a choice</h2>
+  <p>The knee sits at 128 concurrent requests because that is the engine's <code>max-num-seqs</code> admission cap — a value we set, not a property we discovered. What the sweep discovers is the price of each place you could put it.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg viewBox="0 0 760 320" role="img" aria-label="Throughput versus running batch size: the measured curve climbs from 24 to 52 requests per second between 32 and 128 concurrent; vertical cap lines at 64 and 128 show that the admission cap chooses the operating point on the curve">
+        <defs><marker id="kn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--txt3)"/></marker></defs>
+        <!-- axes -->
+        <line x1="70" y1="250" x2="700" y2="250" stroke="var(--b2)"/>
+        <line x1="70" y1="250" x2="70" y2="40" stroke="var(--b2)"/>
+        <text x="385" y="282" font-size="11" fill="var(--txt3)" text-anchor="middle">running batch size (concurrent requests)</text>
+        <text x="30" y="145" font-size="11" fill="var(--txt3)" transform="rotate(-90 30 145)" text-anchor="middle">throughput, requests per second</text>
+        <!-- y ticks -->
+        <g font-size="9.5" fill="var(--txt3)" text-anchor="end">
+          <text x="64" y="254">0</text><text x="64" y="182">20</text><text x="64" y="110">40</text><text x="64" y="52">56</text>
+        </g>
+        <!-- x ticks: 32, 64, 96, 128 mapped to x = 70 + (v/140)*630 -->
+        <g font-size="10" fill="var(--txt3)" text-anchor="middle" class="mono">
+          <text x="214" y="266">32</text><text x="358" y="266">64</text><text x="502" y="266">96</text><text x="646" y="266">128</text>
+        </g>
+        <!-- measured curve: y = 250 - (rps/56)*198 → 24.1→165; 37.1→119; 45.5→89; 52.0→66 -->
+        <path d="M214 165 C 270 145, 310 128, 358 119 C 410 109, 455 97, 502 89 C 555 80, 600 71, 646 66"
+              fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linecap="round"/>
+        <g>
+          <circle cx="214" cy="165" r="4.5" fill="var(--green)"/><text x="214" y="152" font-size="10" fill="var(--txt2)" text-anchor="middle" class="mono">24.1</text>
+          <circle cx="358" cy="119" r="4.5" fill="var(--green)"/><text x="358" y="106" font-size="10" fill="var(--txt2)" text-anchor="middle" class="mono">37.1</text>
+          <circle cx="502" cy="89" r="4.5" fill="var(--green)"/><text x="502" y="76" font-size="10" fill="var(--txt2)" text-anchor="middle" class="mono">45.5</text>
+          <circle cx="646" cy="66" r="4.5" fill="var(--green)"/><text x="624" y="60" font-size="10" fill="var(--txt2)" text-anchor="end" class="mono">52.0</text>
+        </g>
+        <!-- dashed continuation: hardware knee at or beyond the cap -->
+        <path d="M646 66 C 672 63, 688 62, 700 61" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="3 5" opacity=".55"/>
+        <text x="700" y="84" font-size="9.5" fill="var(--txt3)" text-anchor="end">still climbing —</text>
+        <text x="700" y="96" font-size="9.5" fill="var(--txt3)" text-anchor="end">hardware knee ≥ 128</text>
+        <!-- movable cap lines -->
+        <line x1="358" y1="250" x2="358" y2="98" stroke="var(--gold)" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <text x="358" y="88" font-size="10.5" font-weight="600" fill="var(--gold)" text-anchor="middle">cap at 64</text>
+        <text x="358" y="298" font-size="9.5" fill="var(--gold)" text-anchor="middle">≈ 37 rps · shorter steps, lower tail</text>
+        <line x1="646" y1="250" x2="646" y2="45" stroke="var(--blue)" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <text x="646" y="36" font-size="10.5" font-weight="600" fill="var(--blue)" text-anchor="middle">cap at 128 · benchmarked</text>
+        <text x="646" y="298" font-size="9.5" fill="var(--blue)" text-anchor="middle">≈ 52 rps · the measured knee</text>
+        <!-- arrow between caps -->
+        <line x1="380" y1="230" x2="624" y2="230" stroke="var(--txt3)" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#kn)"/>
+        <line x1="624" y1="238" x2="380" y2="238" stroke="var(--txt3)" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#kn)"/>
+        <text x="502" y="222" font-size="9.5" fill="var(--txt3)" text-anchor="middle">moving the cap moves the knee</text>
+      </svg>
+    </figure>
+    <figcaption>Lower the cap and the knee follows it: at 64 the pool queues sooner and serves ≈37 requests per second; at 128 it reaches the measured 52. The curve was still climbing at the cap, so the hardware's own knee sits at or beyond 128 — every point below it is a latency-for-throughput trade you choose.</figcaption>
+    <div class="src">sweep: 32/64/96/128 concurrent → 24.1/37.1/45.5/52.0 requests per second · two passes agreed</div>
+  </div>
+  <p>The cap that binds is workload-shaped. <code>max-num-seqs</code> limits how many requests run; <code>max-num-batched-tokens</code> limits how many tokens each step may carry; the key-value (KV) cache limits how much context the pool can hold. Whichever fills first sets the real ceiling — at 512 input and 128 output tokens, sequences fill first, so the knee lands exactly on the cap.</p>
+  <p>The upstream concurrency detector's <code>maxConcurrency</code> is the same dial implemented in software at the Endpoint Picker: it moves the knee below the engine's cap without touching the engine, which is precisely what its sweep traces — each setting is a chosen point on this curve, priced in throughput.</p>
+</section>
+
+
+<!-- ================= SETUP & VERIFICATION ================= -->
+<section class="chapter" id="setup">
+  <h2>Setup and verification</h2>
+  <p class="lead">All runs follow the same basic setup.</p>
+  <div class="tblwrap compact">
+    <table class="kv">
+      <thead><tr><th>Arg</th><th>Value</th><th>Where set / verified</th></tr></thead>
+      <tbody><tr><td class="wrap">Model</td><td class="mono wrap">openai/gpt-oss-20b</td><td class="wrap">serving pod spec</td></tr><tr><td class="wrap">Hardware</td><td class="wrap">one H100, TP 1</td><td class="wrap">serving pod spec</td></tr><tr><td class="mono wrap">max-num-seqs</td><td class="mono">128</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">max-num-batched-tokens</td><td class="mono">8192</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">max-model-len</td><td class="mono">32768</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">gpu-memory-utilization</td><td class="mono">0.90</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">enable_prefix_caching</td><td class="mono">False</td><td class="wrap">startup log; vllm:prefix_cache_queries_total stays flat</td></tr><tr><td class="wrap">input / output tokens</td><td class="mono">512 in / 64,128,512 out</td><td class="wrap">client request config; input fixed, output swept, 128 is the headline</td></tr></tbody>
+    </table>
+  </div>
+
+  <h3>Prefix caching off</h3>
+  <p>Prefix caching is off, so latencies reflect scheduling and not a warm cache. Disabling Automatic Prefix Caching (APC) ensures no cache is used even if one exists.</p>
+
+  <h3>Per-request headers</h3>
+  <p>Each request carries two headers. One names its tier, the other names its tenant.</p>
+  <div class="tblwrap compact">
+    <table class="kv">
+      <thead><tr><th>Header</th><th>Carries</th></tr></thead>
+      <tbody><tr><td class="mono wrap">x-llm-d-inference-objective</td><td class="wrap">the priority tier, premium, standard, or batch</td></tr><tr><td class="mono wrap">x-llm-d-inference-fairness-id</td><td class="wrap">the tenant, used for same-band fairness</td></tr></tbody>
+    </table>
+  </div>
+  <p>The older <code>x-gateway-inference-objective</code> and <code>x-gateway-inference-fairness-id</code> forms are deprecated aliases and are still accepted; the harness sent the alias forms, which resolve identically.</p>
+
+  <h3>How a tier becomes a priority</h3>
+  <p>The header becomes a real priority only once the Endpoint Picker resolves it against a matching objective in a saturated pool, so we verify premium resolves to 100 before every run.</p>
+  <div class="tblwrap compact">
+    <table class="kv">
+      <thead><tr><th>Tier</th><th>Resolves to</th></tr></thead>
+      <tbody><tr><td class="wrap">premium</td><td class="mono">100</td></tr><tr><td class="wrap">standard</td><td class="mono">0</td></tr><tr><td class="wrap">batch</td><td class="mono">-10</td></tr></tbody>
+    </table>
+  </div>
+
+  <h3>Verification</h3>
+  <p>Two conditions are checked before any latency is trusted.</p>
+  <div class="tblwrap compact">
+    <table class="kv">
+      <thead><tr><th>Check</th><th>Where</th><th>Passes when</th></tr></thead>
+      <tbody><tr><td class="wrap">Priority routing</td><td class="wrap">Endpoint Picker /metrics</td><td class="mono wrap">queue_duration_seconds{priority=&quot;100&quot;} present for premium</td></tr><tr><td class="wrap">Pool saturated</td><td class="wrap">vLLM /metrics</td><td class="mono wrap">num_requests_running pinned at 128 and num_requests_waiting &gt; 0</td></tr></tbody>
     </table>
   </div>
 </section>
 
-<!-- ================= CH 6 ================= -->
-<section class="chapter" id="ch6">
-  <div class="step-no"><span class="badge" style="background:var(--green)">6</span>The verified results</div>
-  <h2>Overload is queued, not rejected</h2>
-  <p>When a deferrable batch tenant floods the saturated pool, the difference is stark and load-independent. Without the gate, the server sheds the overflow and returns HTTP 429 to the application. With the gate on, batch is queued behind the interactive tiers and nothing is rejected. Served throughput is nearly the same in both arms. What changes is who handles the overflow.</p>
-
+<!-- ================= SERVICE TIERS ================= -->
+<section class="chapter" id="tiers">
+  <h2>Service tiers</h2>
+  <p class="lead">When the pool saturates, priority decides who waits. The runs below hold the pool at the operating point with flow control on and measure the separation between tiers.</p>
+  <p>Decoding pace held through the saturation: mean time per output token stayed at 19–21 ms in every repeat, read from <code>vllm:inter_token_latency_seconds</code>. The queue decides who starts; the pace of tokens already flowing barely moves.</p>
   <div class="fig">
     <figure class="assetcard">
-      <img src="assets/batch-429-elimination.svg" alt="Without flow control 48,224 batch requests are rejected with HTTP 429. With flow control on, zero rejections, and batch is queued behind the interactive tiers instead.">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" data-chart="traffic-tiers" role="img" aria-label="Offered in-flight requests per tier over the run: standard surges past the batch cap mid-run, premium holds steady."><rect width="680" height="300" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Offered load over the run: standard surges, premium holds</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">In-flight requests per tier. Standard floods mid-run while premium keeps a steady low rate.</text><line x1="52" y1="238.0" x2="648" y2="238.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="242.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">0</text><line x1="52" y1="201.63636363636363" x2="648" y2="201.63636363636363" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="205.63636363636363" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">250</text><line x1="52" y1="165.27272727272728" x2="648" y2="165.27272727272728" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="169.27272727272728" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">500</text><line x1="52" y1="128.90909090909093" x2="648" y2="128.90909090909093" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="132.90909090909093" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">750</text><line x1="52" y1="92.54545454545456" x2="648" y2="92.54545454545456" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="96.54545454545456" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">1,000</text><line x1="52" y1="238" x2="648" y2="238" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1"/><rect x="52" y="78" width="49.66666666666666" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><rect x="598.3333333333334" y="78" width="49.66666666666663" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><text x="56" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="start">warm-up</text><text x="644" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="end">cool-down</text><polyline points="52.0,232.61818181818182 101.66666666666666,222.29090909090908 151.33333333333331,223.01818181818183 201.0,223.45454545454544 250.66666666666666,223.6 300.33333333333337,222.5818181818182 350.0,220.54545454545456 399.6666666666667,222.72727272727272 449.3333333333333,224.9090909090909 499.0,223.45454545454544 548.6666666666667,219.96363636363637 598.3333333333334,220.54545454545456 648.0,231.3090909090909" fill="none" stroke="var(--green,#1f8a5f)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="52.0,232.47272727272727 101.66666666666666,223.45454545454544 151.33333333333331,224.9090909090909 201.0,194.36363636363637 250.66666666666666,112.9090909090909 300.33333333333337,107.0909090909091 350.0,92.54545454545456 399.6666666666667,114.36363636363637 449.3333333333333,110.0 499.0,107.0909090909091 548.6666666666667,194.36363636363637 598.3333333333334,224.9090909090909 648.0,230.0" fill="none" stroke="var(--gold,#c98500)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><text x="52.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">0s</text><text x="201.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">30s</text><text x="350.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">60s</text><text x="499.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">90s</text><text x="648.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">120s</text><text x="350.0" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="middle">time (elapsed seconds)</text><line x1="52" y1="60" x2="74" y2="60" stroke="var(--green,#1f8a5f)" stroke-width="2.6"/><text x="80" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">premium</text><line x1="178" y1="60" x2="200" y2="60" stroke="var(--gold,#c98500)" stroke-width="2.6"/><text x="206" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">standard</text></svg>
     </figure>
-    <figcaption>Same offered load, same GPU. The gate converts dropped work into queued work.</figcaption>
+    <figcaption>Offered in-flight requests per tier over the run. Standard surges past the batch cap mid-run while premium holds a low steady rate. Warm-up and cool-down are shaded.</figcaption>
   </div>
-
-  <div class="bignums">
-    <div class="bignum"><div class="k">Rejections, gate off</div><div class="v red">48,224</div><div class="sub">HTTP 429, retry burden pushed back to the application</div></div>
-    <div class="bignum"><div class="k">Rejections, gate on</div><div class="v green">0</div><div class="sub">batch held until capacity existed; interactive latency unharmed</div></div>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 330" data-chart="tiers-sep" role="img" aria-label="Service tiers with flow control on: premium p95 TTFT 1117 ms, range 1056 to 1211 across three repeats, versus standard 1406 ms, about 1.25x separation.">
+        <rect width="680" height="330" fill="var(--base,#ffffff)"/>
+        <text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" letter-spacing="-0.2">Service tiers, flow control on: premium clears first on a saturated pool</text>
+        <text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">p95 TTFT, median of three per-repeat percentiles, 512 in / 128 out, steady-state trimmed.</text>
+        <line x1="52" y1="264" x2="664" y2="264" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <line x1="52" y1="204" x2="664" y2="204" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="208" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">500</text>
+        <line x1="52" y1="144" x2="664" y2="144" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="148" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">1,000</text>
+        <line x1="52" y1="84" x2="664" y2="84" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="88" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">1,500</text>
+        <text x="45" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">0</text>
+        <rect x="170" y="130" width="84" height="134" rx="5" fill="var(--green,#1f8a5f)"/>
+        <line x1="212" y1="118.7" x2="212" y2="137.3" stroke="var(--txt,#151515)" stroke-width="1.6"/>
+        <line x1="206" y1="118.7" x2="218" y2="118.7" stroke="var(--txt,#151515)" stroke-width="1.6"/>
+        <line x1="206" y1="137.3" x2="218" y2="137.3" stroke="var(--txt,#151515)" stroke-width="1.6"/>
+        <text x="212" y="108" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1117 ms</text>
+        <text x="212" y="286" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">Premium</text>
+        <text x="212" y="302" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)" text-anchor="middle">range 1056–1211 ms · spread 1.15x</text>
+        <rect x="420" y="95.3" width="84" height="168.7" rx="5" fill="var(--gold,#c98500)"/>
+        <text x="462" y="87" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1406 ms</text>
+        <text x="462" y="286" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">Standard</text>
+        <text x="462" y="302" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)" text-anchor="middle">queued behind premium each cycle</text>
+        <text x="337" y="160" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">~1.25x</text>
+        <text x="337" y="175" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt2,#4c5260)" text-anchor="middle">separation</text>
+        <text x="16" y="324" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">Premium p50 is 374 ms while the pool stays pinned at its 128-slot cap with a real queue behind it.</text>
+      </svg>
+    </figure>
+    <figcaption>With flow control on and the pool saturated, premium p95 TTFT settles at 1117 ms against 1406 ms for standard, a ~1.25x separation that held across all three repeats.</figcaption>
   </div>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" data-chart="tiers-repeats" role="img" aria-label="Premium p95 TTFT per repeat: 1211, 1117, and 1056 ms, with the median at 1117 ms and a 1.15x spread.">
+        <rect width="680" height="300" fill="var(--base,#ffffff)"/>
+        <text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" letter-spacing="-0.2">Premium p95 TTFT per repeat</text>
+        <text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">Each repeat's own steady-state p95; the headline is the median of the three.</text>
+        <line x1="52" y1="240" x2="664" y2="240" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <line x1="52" y1="192" x2="664" y2="192" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="196" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">400</text>
+        <line x1="52" y1="144" x2="664" y2="144" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="148" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">800</text>
+        <line x1="52" y1="96" x2="664" y2="96" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="45" y="100" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">1,200</text>
+        <text x="45" y="244" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt3,#84899a)" text-anchor="end">0</text>
+        <line x1="52" y1="106" x2="664" y2="106" stroke="var(--blue,#1c78d8)" stroke-width="1.4" stroke-dasharray="5 4"/>
+        <text x="660" y="120" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="700" fill="var(--blue,#1c78d8)" text-anchor="end">median 1117 ms</text>
+        <rect x="140" y="94.7" width="72" height="145.3" rx="5" fill="var(--green,#1f8a5f)" opacity="0.75"/>
+        <text x="176" y="86.7" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1211</text>
+        <rect x="300" y="106" width="72" height="134" rx="5" fill="var(--green,#1f8a5f)"/>
+        <text x="336" y="98" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1117</text>
+        <rect x="460" y="113.3" width="72" height="126.7" rx="5" fill="var(--green,#1f8a5f)" opacity="0.75"/>
+        <text x="496" y="98" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">1056</text>
+        <text x="176" y="258" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">repeat 1</text>
+        <text x="336" y="258" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">repeat 2</text>
+        <text x="496" y="258" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">repeat 3</text>
+        <text x="16" y="288" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">The spread across repeats is 1.15x, inside the ≤1.5x stability gate this round applies to every headline.</text>
+      </svg>
+    </figure>
+    <figcaption>The three repeats land within a 1.15x band, so the 1117 ms headline is a stable scheduling result, not a lucky draw.</figcaption>
+  </div>
+  <details class="viewdata">
+    <summary>View the data</summary>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Repeat</th><th>Premium p95</th><th>Premium p50</th><th>Steady samples</th></tr></thead>
+        <tbody><tr><td class="mono">r01</td><td class="mono">1211 ms</td><td class="mono">510 ms</td><td class="mono">4108</td></tr><tr><td class="mono">r02</td><td class="mono">1117 ms</td><td class="mono">374 ms</td><td class="mono">4420</td></tr><tr><td class="mono">r03</td><td class="mono">1056 ms</td><td class="mono">345 ms</td><td class="mono">4537</td></tr><tr><td class="">median</td><td class="hi">1117 ms</td><td class="mono">374 ms</td><td class="mono">&mdash;</td></tr></tbody>
+      </table>
+    </div>
+  </details>
+  <p>Premium at roughly 48 aggregate requests per second genuinely competes for the 128 running slots, so its ~1.1 s steady-state tail is a real scheduling result; the separation comes from standard waiting the extra cycle behind it.</p>
   <div class="note green">
-    <span class="lbl">Reproducible</span>
-    The elimination held at every output length tested — 44,485 → 0 at 64 tokens, 48,224 → 0 at 128, 53,940 → 0 at 512. This is the campaign's most load-independent result.
+    <span class="lbl">What we learned</span>
+    An earlier cut of this result pooled every repeat into one percentile, and a startup transient in one repeat produced a headline the steady state could not reproduce. Every headline now passes four guards: <b>per-repeat percentiles</b>, never pooled across repeats; a <b>steady-state trim</b> before counting; a <b>spread gate</b>, max/min &le; 1.5x across repeats; and <b>saturation verified</b> from the serving metrics, not assumed.
   </div>
+
+  <h3>Output length ladder</h3>
+  <p>The 64- and 512-output-token arms of this scenario are being restated with per-repeat percentiles; their earlier pooled numbers are withdrawn. The 128-output result above is the restated headline.</p>
+  <p>A latency-sensitive product keeps its experience through a surge it did not cause, which is what makes a tiered service-level agreement (SLA) enforceable on shared capacity.</p>
 </section>
 
-<!-- ================= CH 7 ================= -->
-<section class="chapter" id="ch7">
-  <div class="step-no"><span class="badge" style="background:var(--gold)">7</span>The verified results</div>
-  <h2>Consolidation holds the line; fairness marks its edge</h2>
-  <p>Two more scenarios fill in what the policy does and where its leverage ends.</p>
-  <p><b>Consolidation.</b> Two premium tenants share one GPU while a standard tenant ramps in and pushes the pool to a full batch. With the gate on, premium p95 TTFT held at <b>795 ms</b> against standard at <b>1062 ms</b>. The shared pool ran hot and the interactive tenants kept their place in line, which is the whole reason to consolidate onto one GPU in the first place.</p>
-  <div class="bignums">
-    <div class="bignum"><div class="k">Consolidation, premium p95</div><div class="v gold">795 ms</div><div class="sub">held ahead of standard at 1062 ms while a flood filled the pool</div></div>
-  </div>
-  <p><b>Same-band fairness.</b> Three tenants ran at the same priority, and one burst to several times the load of the other two. Fairness bounds the greedy tenant's share of the pool, so it takes its turn instead of monopolizing dispatch. It does not lower a peer's tail latency, because all three sit in one band and compete for the same running batch. Fairness bounds throughput inside a band; it does not create a latency tier inside one.</p>
-  <div class="note gold">
-    <span class="lbl">The honest boundary</span>
-    Flow control's leverage is real where priorities genuinely differ across bands. Give it equal tenants in one band, or a pool with room to spare, and it has little to arbitrate. It arbitrates <b>across</b> priority bands, not among equals.
-  </div>
+<!-- ================= MULTI-REPLICA ================= -->
+<section class="chapter" id="multireplica">
+  <h2>Tier protection holds on two replicas</h2>
+  <p class="lead">The same service-tiers scenario on a two-replica pool with flow control on kept premium ahead of standard, so the ordering survives scale-out.</p>
+  <p>The two-replica percentiles are being restated with per-repeat percentiles. What the pass established stands: premium stayed ahead of standard on the scaled pool, and no requests were rejected. Data in <code>data-v4/multi-replica-tiers</code>.</p>
 </section>
 
-<!-- ================= CH 8 ================= -->
-<section class="chapter" id="ch8">
-  <div class="step-no"><span class="badge" style="background:var(--blue)">8</span>The detector sweep</div>
-  <h2>A separation control, not a latency-SLO control</h2>
-  <p>Every result above uses the shipped <b>utilization detector</b>, which gates on vLLM queue depth. An alternative <b>concurrency detector</b> from upstream llm-d caps in-flight concurrency directly, so it was swept to see whether any setting could hold premium under 300 ms at a saturating load. Its <code class="mono">maxConcurrency</code> ran from 32 to 128.</p>
-
+<!-- ================= BATCH ISOLATION ================= -->
+<section class="chapter" id="batch">
+  <h2>Batch isolation</h2>
+  <p class="lead">A batch flood past the pool's capacity is queued instead of rejected, and interactive latency is unharmed.</p>
   <div class="fig">
     <figure class="assetcard">
-      <img src="assets/upstream-sweep.svg" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens.">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" data-chart="traffic-batch" role="img" aria-label="Offered in-flight requests per tier: batch ramps in after the interactive tiers and floods the pool."><rect width="680" height="300" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Offered load over the run: batch ramps in behind the interactive tiers</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">In-flight requests per tier. Batch floods the pool after the interactive tiers are established.</text><line x1="52" y1="238.0" x2="648" y2="238.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="242.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">0</text><line x1="52" y1="198.0" x2="648" y2="198.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="202.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">250</text><line x1="52" y1="158.0" x2="648" y2="158.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="162.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">500</text><line x1="52" y1="118.0" x2="648" y2="118.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="122.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">750</text><line x1="52" y1="78.0" x2="648" y2="78.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="82.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">1,000</text><line x1="52" y1="238" x2="648" y2="238" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1"/><rect x="52" y="78" width="49.66666666666666" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><rect x="598.3333333333334" y="78" width="49.66666666666663" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><text x="56" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="start">warm-up</text><text x="644" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="end">cool-down</text><polyline points="52.0,231.92 101.66666666666666,220.4 151.33333333333331,223.6 201.0,222.0 250.66666666666666,221.2 300.33333333333337,222.8 350.0,220.4 399.6666666666667,222.0 449.3333333333333,220.4 499.0,223.6 548.6666666666667,220.4 598.3333333333334,222.0 648.0,231.12" fill="none" stroke="var(--green,#1f8a5f)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="52.0,231.28 101.66666666666666,222.8 151.33333333333331,222.0 201.0,223.6 250.66666666666666,220.4 300.33333333333337,222.0 350.0,223.6 399.6666666666667,220.4 449.3333333333333,222.0 499.0,220.4 548.6666666666667,222.0 598.3333333333334,222.8 648.0,228.4" fill="none" stroke="var(--gold,#c98500)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="52.0,238.0 101.66666666666666,238.0 151.33333333333331,238.0 201.0,238.0 250.66666666666666,238.0 300.33333333333337,238.0 350.0,223.6 399.6666666666667,153.2 449.3333333333333,118.0 499.0,97.19999999999999 548.6666666666667,116.4 598.3333333333334,126.0 648.0,167.92000000000002" fill="none" stroke="var(--red,#ee0000)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><text x="52.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">0s</text><text x="201.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">30s</text><text x="350.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">60s</text><text x="499.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">90s</text><text x="648.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">120s</text><text x="350.0" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="middle">time (elapsed seconds)</text><line x1="52" y1="60" x2="74" y2="60" stroke="var(--green,#1f8a5f)" stroke-width="2.6"/><text x="80" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">premium</text><line x1="178" y1="60" x2="200" y2="60" stroke="var(--gold,#c98500)" stroke-width="2.6"/><text x="206" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">standard</text><line x1="312" y1="60" x2="334" y2="60" stroke="var(--red,#ee0000)" stroke-width="2.6"/><text x="340" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">batch</text></svg>
     </figure>
-    <figcaption>Premium p95 (green) traces a U with a floor of 461 ms at maxConcurrency 48. Standard (gold) improves as the cap loosens.</figcaption>
+    <figcaption>Offered in-flight requests per tier over the run. Batch ramps in behind the interactive tiers and floods the pool well past the batch cap.</figcaption>
   </div>
-
-  <div class="bignums">
-    <div class="bignum"><div class="k">Best premium tail, whole campaign</div><div class="v blue">461 ms</div><div class="sub">at maxConcurrency 48; the U-curve minimum</div></div>
-    <div class="bignum"><div class="k">Settings under the 300 ms objective</div><div class="v red">none</div><div class="sub">the floor is set by GPU capacity, not by the policy</div></div>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" data-chart="batch-429" role="img" aria-label="Under a batch flood 48,224 requests are rejected with HTTP 429 with flow control off; zero with flow control on."><rect width="680" height="300" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Rejected requests under a batch flood</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">A low-priority batch tenant floods a saturated pool. Flow control off sheds the overflow with</text><text x="16" y="59" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">HTTP 429s. Flow control on queues it instead.</text><rect x="60" y="96" width="240" height="150" rx="8" fill="var(--red,#ee0000)"/><text x="180" y="88" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="26" font-weight="800" fill="var(--red,#ee0000)" text-anchor="middle" letter-spacing="-0.5">48,224</text><text x="180" y="180" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="1" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start"></text><text x="180" y="266" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle" letter-spacing="1.2">FLOW CONTROL OFF</text><text x="180" y="284" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="middle">requests rejected with 429</text><rect x="390" y="238" width="240" height="8" rx="4" fill="var(--green,#1f8a5f)"/><text x="510" y="226" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="26" font-weight="800" fill="var(--green,#1f8a5f)" text-anchor="middle" letter-spacing="-0.5">0</text><text x="510" y="266" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle" letter-spacing="1.2">FLOW CONTROL ON</text><text x="510" y="284" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="middle">requests rejected</text><line x1="318" y1="180" x2="362" y2="180" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="2"/><path d="M 362 180 l -10 -5 v 10 z" fill="var(--b2,rgba(10,12,20,.18))"/><text x="340" y="168" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">queued</text></svg>
+    </figure>
+    <figcaption>Same offered load, same GPU. Flow control off sheds 48,224 requests with HTTP 429; flow control on rejects zero and holds the deferrable work.</figcaption>
   </div>
-  <p>Tightening the cap protects premium and starves standard; loosening it converges them. That is a clean separation dial, but no setting reaches a premium p95 under 300 ms at this offered load. Reaching a 300 ms objective under saturation takes headroom or more capacity, not a tighter cap. The concurrency detector separates tiers; it does not lower absolute latency.</p>
-  <div class="tblwrap">
-    <table>
-      <thead><tr><th>maxConcurrency</th><th>running</th><th>premium p95</th><th>standard p95</th></tr></thead>
-      <tbody>
-        <tr><td class="mono">32</td><td class="mono">29</td><td class="mono">568</td><td class="mono">12722</td></tr>
-        <tr><td class="mono">48</td><td class="mono">39</td><td class="hi">461</td><td class="mono">7808</td></tr>
-        <tr><td class="mono">64</td><td class="mono">46</td><td class="mono">582</td><td class="mono">5207</td></tr>
-        <tr><td class="mono">96</td><td class="mono">61</td><td class="mono">761</td><td class="mono">3714</td></tr>
-        <tr><td class="mono">128</td><td class="mono">70</td><td class="mono">907</td><td class="mono">2697</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <p>The 48,224 rejections at 128 output tokens become 0 at the same offered load; the held work waits instead of failing.</p>
+  <p>Batch’s own TTFT percentiles under the flood are being restated with per-repeat percentiles. The mechanism is unchanged: held work waits longer because it is queued behind the interactive tiers instead of being shed.</p>
+  <p>Deferrable work is held and processed later. Overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day: the platform holds the work until capacity exists instead of pushing retries back to the application. Rejections at every output length are shown below.</p>
+  <details class="viewdata">
+    <summary>View the data</summary>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Output tokens</th><th>429s off</th><th>429s on</th></tr></thead>
+        <tbody><tr><td class="mono">64</td><td class="mono">44,485</td><td class="hi">0</td></tr><tr><td class="mono">128</td><td class="mono">48,224</td><td class="hi">0</td></tr><tr><td class="mono">512</td><td class="mono">53,940</td><td class="hi">0</td></tr></tbody>
+      </table>
+    </div>
+  </details>
 </section>
 
-<!-- ================= CH 9 ================= -->
-<section class="chapter" id="ch9">
-  <div class="step-no"><span class="badge" style="background:var(--green)">9</span>Scope</div>
-  <h2>What the numbers are, and what carries</h2>
-  <p>Every run above is a single replica on one H100, so the absolute latencies track that hardware and tuning. Cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result with premium p95 TTFT at <b>177 ms</b>, so the behavior transfers even though the number moves.</p>
-  <div class="bignums">
-    <div class="bignum"><div class="k">Two-replica tier result</div><div class="v green">177 ms</div><div class="sub">reproduces the single-replica behavior on a second replica</div></div>
-    <div class="bignum"><div class="k">Invalidated runs</div><div class="v gold">archived</div><div class="sub">the priority-0 runs are kept, not deleted, so the correction is visible</div></div>
+<!-- ================= CONSOLIDATION ================= -->
+<section class="chapter" id="consolidation">
+  <h2>Consolidation</h2>
+  <p class="lead">Two premium tenants share one GPU at higher utilization while a lower-priority tenant floods the pool. This scenario prices whether the interactive tenants keep their tail through the flood.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" data-chart="traffic-consolidation" role="img" aria-label="Two premium tenants hold a steady packed load while a standard tenant floods the pool."><rect width="680" height="300" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Offered load over the run: two premium tenants steady, standard floods</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">In-flight requests. Two premium tenants hold a packed steady load; a standard tenant floods mid-run.</text><line x1="52" y1="238.0" x2="648" y2="238.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="242.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">0</text><line x1="52" y1="184.66666666666669" x2="648" y2="184.66666666666669" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="188.66666666666669" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">300</text><line x1="52" y1="131.33333333333334" x2="648" y2="131.33333333333334" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="135.33333333333334" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">600</text><line x1="52" y1="78.0" x2="648" y2="78.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="45" y="82.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">900</text><line x1="52" y1="238" x2="648" y2="238" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1"/><rect x="52" y="78" width="49.66666666666666" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><rect x="598.3333333333334" y="78" width="49.66666666666663" height="160" fill="var(--txt3,#84899a)" opacity="0.06"/><text x="56" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="start">warm-up</text><text x="644" y="90" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="end">cool-down</text><polyline points="52.0,225.2 101.66666666666666,202.44444444444446 151.33333333333331,206.0 201.0,208.48888888888888 250.66666666666666,202.44444444444446 300.33333333333337,198.17777777777778 350.0,200.84444444444443 399.6666666666667,211.33333333333334 449.3333333333333,206.0 499.0,198.0 548.6666666666667,198.53333333333333 598.3333333333334,204.22222222222223 648.0,222.7111111111111" fill="none" stroke="var(--green,#1f8a5f)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="52.0,233.2 101.66666666666666,227.33333333333334 151.33333333333331,228.22222222222223 201.0,225.55555555555554 250.66666666666666,225.0222222222222 300.33333333333337,208.13333333333333 350.0,131.33333333333334 399.6666666666667,127.77777777777777 449.3333333333333,113.55555555555556 499.0,106.97777777777779 548.6666666666667,120.66666666666667 598.3333333333334,104.84444444444443 648.0,174.53333333333333" fill="none" stroke="var(--gold,#c98500)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><text x="52.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">0s</text><text x="201.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">30s</text><text x="350.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">60s</text><text x="499.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">90s</text><text x="648.0" y="256" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">120s</text><text x="350.0" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="middle">time (elapsed seconds)</text><line x1="52" y1="60" x2="74" y2="60" stroke="var(--green,#1f8a5f)" stroke-width="2.6"/><text x="80" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">premium</text><line x1="178" y1="60" x2="200" y2="60" stroke="var(--gold,#c98500)" stroke-width="2.6"/><text x="206" y="64" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">standard</text></svg>
+    </figure>
+    <figcaption>Offered in-flight requests over the run. Two premium tenants hold a steady packed load while a standard tenant floods the shared pool mid-run.</figcaption>
   </div>
-  <p>The pattern is the finding, not the absolute numbers. Premium held its objective through a surge it did not cause, deferrable work waited instead of failing, and the concurrency dial separates tiers without lowering the floor. On different hardware the latencies move and the behavior stays.</p>
-  <div class="note blue">
-    <span class="lbl">Where to go next</span>
-    The <a href="README.md">README</a> is the at-a-glance version with the full tables and data links. The <a href="learn/flow-control-journey.html">interactive explainer</a> walks the mechanism itself and ends in a playground you drive.
+  
+  <p>The consolidation percentiles are being restated with per-repeat percentiles; the earlier pooled numbers are withdrawn. The business case the scenario tests is unchanged: consolidate tenants onto one GPU, keep the same interactive SLA, and raise utilization instead of buying dedicated hardware. Consolidation only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control holds that line once the pool saturates.</p>
+</section>
+
+<!-- ================= SAME-BAND FAIRNESS ================= -->
+<section class="chapter" id="fairness">
+  <h2>Same-band fairness</h2>
+  <p class="lead">Within one priority band, round-robin bounds a bursty tenant’s share of dispatch turns. Three premium tenants ran at the same priority while tenant A burst to roughly ten times its peers’ rate.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 330" data-chart="fairness-bigburst" role="img" aria-label="Two panels. Left: served rate during the burst, tenant A 82 requests per second against 6 for each peer. Right: time queued in the Endpoint Picker, 45 ms for A against 17.5 and 17.3 ms for the peers, about 2.6x.">
+        <rect width="680" height="330" fill="var(--base,#ffffff)"/>
+        <text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" letter-spacing="-0.2">Fairness under a big burst: the burster is served, its excess waits</text>
+        <text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">Three tenants, one band, flow control on. Median of three 300 s repeats, steady-state trimmed.</text>
+        <line x1="340" y1="60" x2="340" y2="300" stroke="var(--b1,rgba(10,12,20,.08))" stroke-dasharray="4 4"/>
+        <text x="40" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">SERVED RATE (RPS)</text>
+        <line x1="40" y1="250" x2="316" y2="250" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <line x1="40" y1="170" x2="316" y2="170" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="34" y="174" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt3,#84899a)" text-anchor="end">40</text>
+        <line x1="40" y1="90" x2="316" y2="90" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="34" y="94" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt3,#84899a)" text-anchor="end">80</text>
+        <rect x="64" y="86" width="56" height="164" rx="5" fill="var(--red,#ee0000)" opacity="0.85"/>
+        <text x="92" y="78" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">82</text>
+        <rect x="160" y="238" width="56" height="12" rx="4" fill="var(--green,#1f8a5f)"/>
+        <text x="188" y="230" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">6</text>
+        <rect x="256" y="238" width="56" height="12" rx="4" fill="var(--green,#1f8a5f)"/>
+        <text x="284" y="230" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">6</text>
+        <text x="92" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">A (burster)</text>
+        <text x="188" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">B (peer)</text>
+        <text x="284" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">C (peer)</text>
+        <text x="40" y="292" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="600" fill="var(--txt2,#4c5260)">served through the burst · no starvation</text>
+        <text x="364" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.2">TIME QUEUED IN THE ENDPOINT PICKER (MS)</text>
+        <line x1="364" y1="250" x2="648" y2="250" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <line x1="364" y1="175" x2="648" y2="175" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="358" y="179" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt3,#84899a)" text-anchor="end">25</text>
+        <line x1="364" y1="100" x2="648" y2="100" stroke="var(--b1,rgba(10,12,20,.08))"/><text x="358" y="104" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" fill="var(--txt3,#84899a)" text-anchor="end">50</text>
+        <rect x="388" y="115" width="56" height="135" rx="5" fill="var(--red,#ee0000)" opacity="0.85"/>
+        <text x="416" y="107" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">45</text>
+        <rect x="484" y="197.5" width="56" height="52.5" rx="5" fill="var(--green,#1f8a5f)"/>
+        <text x="512" y="189.5" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">17.5</text>
+        <rect x="580" y="198.1" width="56" height="51.9" rx="5" fill="var(--green,#1f8a5f)"/>
+        <text x="608" y="190.1" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11.5" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle">17.3</text>
+        <text x="416" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">A (burster)</text>
+        <text x="512" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">B (peer)</text>
+        <text x="608" y="268" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">C (peer)</text>
+        <text x="364" y="292" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="600" fill="var(--txt2,#4c5260)">the burster waits ~2.6x longer for its turns</text>
+      </svg>
+    </figure>
+    <figcaption>Round-robin gives every flow a turn, so the burster is served at 82 requests per second and nobody starves, but its excess waits in its own queue, ~2.6x the peers’ queue time, while the peers hold flat.</figcaption>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/roundrobin">plugins/flowcontrol/fairness/roundrobin</a></div>
   </div>
+  <details class="viewdata">
+    <summary>View the data</summary>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Tenant</th><th>Offered pattern</th><th>Served rate</th><th>Queue time</th></tr></thead>
+        <tbody>
+          <tr><td class="wrap">A (burster)</td><td class="wrap">steady, then a sustained burst</td><td class="mono">82 rps</td><td class="mono">45 ms</td></tr>
+          <tr><td class="wrap">B (peer)</td><td class="wrap">steady</td><td class="mono">6 rps</td><td class="hi">17.5 ms</td></tr>
+          <tr><td class="wrap">C (peer)</td><td class="wrap">steady</td><td class="mono">6 rps</td><td class="hi">17.3 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <p>Round-robin’s unit of fairness is the <b>dispatch turn</b>, so it bounds the burster’s share of turns rather than the peers’ latency; peers’ TTFT under saturation is set by the shared running batch, which the burst raised for everyone. The signature to watch is queue time per tenant: the burster’s excess stacks up in its own queue while the peers’ queue time stays flat. Every request from every tenant completed with zero errors in all three repeats.</p>
+  <p>A second arm demoted the burster to a lower priority band mid-burst. That changed dispatch ordering, not the outcome: the peers’ queue time was already flat under round-robin, so the demotion had nothing left to fix.</p>
+</section>
+
+<!-- ================= CONCURRENCY DETECTOR ================= -->
+<section class="chapter" id="detector">
+  <h2>Two saturation detectors</h2>
+  <p class="lead">Both detectors gate the same flow-control admission queue. They differ only in how they decide the pool is saturated, and that difference decides whether the running batch can be thinned at all.</p>
+  <p>The <b>utilization detector</b> ran every scenario above. It is the shipped default and enables automatically. It reads engine telemetry, queue depth and KV-cache usage, and computes saturation as the worse of the two ratios, averaged across the pool. Because it reads telemetry, it reacts <b>after</b> a queue or KV pressure has built. And because it only applies backpressure, it cannot cap the running batch: the engine still fills to <code>max-num-seqs</code>, 128, and the detector decides who waits behind it.</p>
+  <p>The <b>concurrency detector</b> is the upstream <code>maxConcurrency</code> variant. It computes saturation as in-flight load over pool capacity and hooks the request lifecycle synchronously, reacting to a new request <b>before</b> telemetry updates. It is the only detector that caps in-flight load: <code>maxConcurrency</code> is a hard ceiling on how many requests reach the engine at once, which thins the running batch. Its documented tradeoff is that it runs open-loop, blind to GPU telemetry, so if token estimates drift or generations run long the KV cache can fill and the engine preempts or swaps to CPU with severe decode-latency spikes it never sees.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" role="img" aria-label="Side by side: the utilization detector reads queue and KV telemetry and reacts after the batch fills to 128, so it orders the queue but cannot cap the batch; the concurrency detector caps in-flight requests before the engine, thinning the running batch.">
+        <rect width="680" height="340" fill="var(--base,#ffffff)"/>
+        <!-- divider -->
+        <line x1="340" y1="40" x2="340" y2="316" stroke="var(--b1,rgba(10,12,20,.08))" stroke-dasharray="4 4"/>
+        <!-- LEFT: utilization -->
+        <text x="24" y="30" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.5">UTILIZATION DETECTOR (SHIPPED)</text>
+        <text x="24" y="52" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">reads queue depth + KV telemetry</text>
+        <!-- incoming stream -->
+        <text x="24" y="86" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" fill="var(--txt2,#4c5260)">requests</text>
+        <line x1="90" y1="82" x2="132" y2="82" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 132 82 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- full batch box -->
+        <rect x="140" y="66" width="176" height="70" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="228" y="86" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">running batch</text>
+        <text x="228" y="118" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="var(--txt,#151515)" text-anchor="middle" class="mono-t">128</text>
+        <text x="228" y="132" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)" text-anchor="middle">fills to max-num-seqs</text>
+        <!-- queue behind -->
+        <rect x="140" y="152" width="176" height="42" rx="8" fill="var(--gold-soft,rgba(201,133,0,.12))" stroke="var(--gold,#c98500)"/>
+        <text x="228" y="170" font-family="Inter,sans-serif" font-size="10.5" font-weight="700" fill="var(--gold,#c98500)" text-anchor="middle">priority-ordered queue</text>
+        <text x="228" y="186" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt2,#4c5260)" text-anchor="middle">premium ahead of standard</text>
+        <!-- telemetry arrow (reactive, after) -->
+        <path d="M 236 194 q 60 26 0 50" fill="none" stroke="var(--txt3,#84899a)" stroke-width="1.2" stroke-dasharray="3 3"/><path d="M 236 244 l 6 -6 h -10 z" fill="var(--txt3,#84899a)"/>
+        <text x="228" y="262" font-family="Inter,sans-serif" font-size="9.5" fill="var(--txt3,#84899a)" text-anchor="middle">telemetry read after the queue forms</text>
+        <text x="24" y="300" font-family="Inter,sans-serif" font-size="11.5" font-weight="700" fill="var(--txt,#151515)">Decides who waits.</text>
+        <text x="24" y="316" font-family="Inter,sans-serif" font-size="11.5" fill="var(--txt2,#4c5260)">Cannot cap the batch.</text>
+        <!-- RIGHT: concurrency -->
+        <text x="360" y="30" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--txt3,#84899a)" letter-spacing="1.5">CONCURRENCY DETECTOR (UPSTREAM)</text>
+        <text x="360" y="52" font-family="Inter,sans-serif" font-size="11" fill="var(--txt2,#4c5260)">caps in-flight load before the engine</text>
+        <text x="360" y="86" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" fill="var(--txt2,#4c5260)">requests</text>
+        <line x1="426" y1="82" x2="452" y2="82" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 452 82 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- gate -->
+        <rect x="458" y="66" width="34" height="70" rx="6" fill="var(--green-soft,rgba(31,138,95,.12))" stroke="var(--green,#1f8a5f)" stroke-width="1.4"/>
+        <text x="475" y="104" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="var(--green,#1f8a5f)" text-anchor="middle" transform="rotate(-90 475 104)">maxConcurrency cap</text>
+        <line x1="492" y1="82" x2="516" y2="82" stroke="var(--txt3,#84899a)" stroke-width="1.4"/><path d="M 516 82 l -8 -4 v 8 z" fill="var(--txt3,#84899a)"/>
+        <!-- thinned batch -->
+        <rect x="522" y="66" width="134" height="70" rx="8" fill="var(--raised,#f1f2f6)" stroke="var(--b2,rgba(10,12,20,.18))"/>
+        <text x="589" y="86" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="var(--txt,#151515)" text-anchor="middle">running batch</text>
+        <text x="589" y="118" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="var(--green,#1f8a5f)" text-anchor="middle" class="mono-t">&lt; 128</text>
+        <text x="589" y="132" font-family="Inter,sans-serif" font-size="9" fill="var(--txt3,#84899a)" text-anchor="middle">thinned by the cap</text>
+        <!-- synchronous label -->
+        <text x="360" y="176" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--green,#1f8a5f)">synchronous: reacts before telemetry updates</text>
+        <text x="360" y="200" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">blind to KV pressure, so long generations can</text>
+        <text x="360" y="214" font-family="Inter,sans-serif" font-size="10" fill="var(--txt2,#4c5260)">fill the cache and force preemption unseen</text>
+        <text x="360" y="300" font-family="Inter,sans-serif" font-size="11.5" font-weight="700" fill="var(--txt,#151515)">Caps in-flight load.</text>
+        <text x="360" y="316" font-family="Inter,sans-serif" font-size="11.5" fill="var(--green,#1f8a5f)">Thins the batch.</text>
+      </svg>
+    </figure>
+    <figcaption>Same admission queue, two ways to call saturation. The utilization detector lets the batch fill to 128 and orders the queue behind it; the concurrency detector caps admissions before the engine so the running batch is smaller.</figcaption>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector/utilization">plugins/flowcontrol/saturationdetector/utilization</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector">saturationdetector</a></div>
+  </div>
+  <p>We characterized the concurrency detector alone by sweeping <code>maxConcurrency</code> under a single saturating load, so the chart below is a real tuning result, not a switch.</p>
+  <div class="fig">
+    <figure class="assetcard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" data-chart="upstream-sweep" role="img" aria-label="Premium p95 TTFT versus maxConcurrency forms a U with its floor of 461 ms at maxConcurrency 48; standard p95 falls from 12,722 ms at cap 32 to 2,697 ms at cap 128."><rect width="680" height="520" fill="var(--base,#ffffff)"/><text x="16" y="26" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="var(--txt,#151515)" text-anchor="start" letter-spacing="-0.2">Concurrency detector: turning maxConcurrency moves the pain</text><text x="16" y="44" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt2,#4c5260)" text-anchor="start">Same load at every cap. Premium bottoms at maxConcurrency 48; standard improves as the cap loosens.</text><line x1="66" y1="250.0" x2="640" y2="250.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="254.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">0</text><line x1="66" y1="208.0" x2="640" y2="208.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="212.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">250</text><line x1="66" y1="166.0" x2="640" y2="166.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="170.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">500</text><line x1="66" y1="124.0" x2="640" y2="124.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="128.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">750</text><line x1="66" y1="82.0" x2="640" y2="82.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="86.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">1,000</text><line x1="66" y1="250" x2="640" y2="250" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1"/><text x="66" y="74" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--green,#1f8a5f)" text-anchor="start">Premium p95 TTFT (ms)</text><polyline points="66.0,154.57600000000002 209.5,172.552 353.0,152.224 496.5,122.152 640.0,97.624" fill="none" stroke="var(--green,#1f8a5f)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="66.0" cy="154.57600000000002" r="3.5" fill="var(--green,#1f8a5f)"/><text x="66.0" y="144.57600000000002" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">568</text><circle cx="209.5" cy="172.552" r="3.5" fill="var(--green,#1f8a5f)"/><text x="209.5" y="162.552" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">461</text><circle cx="353.0" cy="152.224" r="3.5" fill="var(--green,#1f8a5f)"/><text x="353.0" y="142.224" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">582</text><circle cx="496.5" cy="122.152" r="3.5" fill="var(--green,#1f8a5f)"/><text x="496.5" y="112.152" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">761</text><circle cx="640.0" cy="97.624" r="3.5" fill="var(--green,#1f8a5f)"/><text x="640.0" y="87.624" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">907</text><circle cx="209.5" cy="172.552" r="8.5" fill="none" stroke="var(--green,#1f8a5f)" stroke-width="1.5"/><text x="209.5" y="196.552" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="800" fill="var(--green,#1f8a5f)" text-anchor="middle">461 ms floor</text><line x1="66" y1="468.0" x2="640" y2="468.0" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="472.0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">0</text><line x1="66" y1="429.2307692307692" x2="640" y2="429.2307692307692" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="433.2307692307692" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">3,000</text><line x1="66" y1="390.46153846153845" x2="640" y2="390.46153846153845" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="394.46153846153845" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">6,000</text><line x1="66" y1="351.6923076923077" x2="640" y2="351.6923076923077" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="355.6923076923077" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">9,000</text><line x1="66" y1="312.9230769230769" x2="640" y2="312.9230769230769" stroke="var(--b1,rgba(10,12,20,.08))" stroke-width="1"/><text x="59" y="316.9230769230769" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="end">12,000</text><line x1="66" y1="468" x2="640" y2="468" stroke="var(--b2,rgba(10,12,20,.18))" stroke-width="1"/><text x="66" y="294" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--gold,#c98500)" text-anchor="start">Standard p95 TTFT (ms)</text><polyline points="66.0,303.5926153846154 209.5,367.09661538461535 353.0,400.70953846153844 496.5,420.0036923076923 640.0,433.14646153846155" fill="none" stroke="var(--gold,#c98500)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="66.0" cy="303.5926153846154" r="3.5" fill="var(--gold,#c98500)"/><text x="74.0" y="293.5926153846154" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="start">12,722</text><circle cx="209.5" cy="367.09661538461535" r="3.5" fill="var(--gold,#c98500)"/><text x="209.5" y="357.09661538461535" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">7,808</text><circle cx="353.0" cy="400.70953846153844" r="3.5" fill="var(--gold,#c98500)"/><text x="353.0" y="390.70953846153844" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">5,207</text><circle cx="496.5" cy="420.0036923076923" r="3.5" fill="var(--gold,#c98500)"/><text x="496.5" y="410.0036923076923" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">3,714</text><circle cx="640.0" cy="433.14646153846155" r="3.5" fill="var(--gold,#c98500)"/><text x="640.0" y="423.14646153846155" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt2,#4c5260)" text-anchor="middle">2,697</text><text x="66.0" y="486" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">32</text><text x="209.5" y="486" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="var(--green,#1f8a5f)" text-anchor="middle">48</text><text x="353.0" y="486" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">64</text><text x="496.5" y="486" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">96</text><text x="640.0" y="486" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="400" fill="var(--txt3,#84899a)" text-anchor="middle">128</text><text x="353" y="504" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="11" font-weight="600" fill="var(--txt3,#84899a)" text-anchor="middle">maxConcurrency (in-flight cap)</text></svg>
+    </figure>
+    <figcaption>Premium p95 TTFT traces a U with its floor of 461 ms at maxConcurrency 48; standard p95 falls from 12,722 ms at cap 32 to 2,697 ms at cap 128. Note the standard panel spans thirteen times the premium panel's range.</figcaption>
+  </div>
+  <details class="viewdata">
+    <summary>View the data</summary>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>maxConcurrency</th><th>Running batch</th><th>Premium p95</th><th>Standard p95</th></tr></thead>
+        <tbody><tr><td class="mono">32</td><td class="mono">29</td><td class="mono">568 ms</td><td class="mono">12722 ms</td></tr><tr><td class="mono">48</td><td class="mono">39</td><td class="hi">461 ms</td><td class="mono">7808 ms</td></tr><tr><td class="mono">64</td><td class="mono">46</td><td class="mono">582 ms</td><td class="mono">5207 ms</td></tr><tr><td class="mono">96</td><td class="mono">61</td><td class="mono">761 ms</td><td class="mono">3714 ms</td></tr><tr><td class="mono">128</td><td class="mono">70</td><td class="mono">907 ms</td><td class="mono">2697 ms</td></tr></tbody>
+      </table>
+    </div>
+  </details>
+  <p>Flow control <b>always</b> orders the queue, so premium is dispatched before standard regardless of the cap; premium never waits behind standard. What <code>maxConcurrency</code> changes is <b>batch crowding</b>: a looser cap admits more requests into the running batch, so once premium is in that crowded batch its own decode slows and its tail rises. At a tight cap (32) few requests are admitted, so premium clears fast, 568&nbsp;ms, but standard is starved, 12,722&nbsp;ms. At a loose cap (128) the batch crowds and both tails climb, premium 907&nbsp;ms and standard 2,697&nbsp;ms. The cap controls how full the batch gets, which hits everyone's decode; queue-ordering only decides who enters first.</p>
+  <ul>
+    <li><b>The concurrency detector gives a better, tunable premium tail.</b> Its best premium p95 is 461&nbsp;ms at <code>maxConcurrency</code> 48. Because it can thin the batch, it protects premium harder than the shipped utilization detector under the same load, which cannot cap and so leaves premium in the full 128-request batch. The cost is standard's tail, which lengthens as the cap tightens.</li>
+    <li><b>maxConcurrency is a dial, not a switch.</b> The premium-optimal point is 48, not the tightest cap. Below it even premium queues against the cap; above it the batch crowds and premium's decode slows. Standard moves the opposite way, 12,722&nbsp;ms at cap 32 to 2,697&nbsp;ms at cap 128, so the cap sets where the pain lands between the tiers.</li>
+    <li><b>Output length sets how hard the cap bites.</b> A longer generation holds each admitted slot for more decode steps, so at a fixed cap a longer output pushes more work into the queue and lengthens every tail. The output-length ladder in the tiers scenario is being restated with the same per-repeat method.</li>
+  </ul>
+  <p>The four scenarios above were not run under the concurrency detector; that head-to-head is future work. The concurrency detector was characterized only through the <code>maxConcurrency</code> sweep.</p>
+</section>
+
+<!-- ================= LIMITS ================= -->
+<section class="chapter" id="limits">
+  <h2>Limits</h2>
+  <p class="lead">Round-robin fairness handles tenants within one priority band. Flow control matters most when protecting one priority from another.</p>
+  <ul>
+    <li><b>Priority isolation protects one band from another.</b> Premium p95 TTFT held ~1.25x ahead of standard, 1117 ms against 1406 ms, on a pool pinned at its cap, and 44k to 54k batch rejections became 0 at every output length.</li>
+    <li><b>Round-robin fairness bounds a bursty tenant’s share of dispatch turns inside its own band.</b> Under a big burst the burster’s queue time ran ~2.6x its peers’ while the peers held flat and nobody starved. It does not lower peers’ latency, which the shared running batch sets.</li>
+    <li><b>The absolute latencies track one H100.</b> On other hardware the numbers move and the behavior holds: the tier with an objective kept it, and deferrable work waited instead of failing.</li>
+  </ul>
 </section>
 
 </main>
 
+
 <footer>
-  Measured on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, prefix caching off. Every gate-on run verified premium at priority 100 before counting. Charts drawn from the counted repeats; the same data produces identical charts.
+  Measured on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, prefix caching off. Every run verified priority resolution before counting. Charts drawn from the counted repeats.
 </footer>
 
 <script>
