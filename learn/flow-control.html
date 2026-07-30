@@ -38,6 +38,19 @@
   .tile .num { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
   .tile .unit { font-size: 11px; color: var(--muted); margin-top: 1px; }
   .tile .why { font-size: 11.5px; color: #4a4a4a; margin-top: 8px; line-height: 1.4; }
+  .src { font-size: 11px; color: #8a8a8a; font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 8px; line-height: 1.6; }
+  .src a { color: #8a8a8a; text-decoration: none; border-bottom: 1px dotted #c9c9c9; }
+  .src a:hover { color: var(--red); border-bottom-color: var(--red); }
+  .stack { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
+  .chip { display: flex; justify-content: space-between; gap: 10px; background: var(--soft); border-left: 3px solid var(--line); border-radius: 0 7px 7px 0; padding: 4px 10px; font-size: 11.5px; }
+  .chip .lab { color: var(--muted); }
+  .chip .val { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; color: var(--ink); text-align: right; }
+  .chip.band { border-left-color: var(--red); }
+  .chip.det { border-left-color: var(--gold); }
+  .chip.cap { border-left-color: var(--blue); }
+  .buys { color: var(--green); font-size: 12px; line-height: 1.45; margin: 0 0 4px; }
+  .costs { color: var(--muted); font-size: 12px; line-height: 1.45; margin: 0; }
+  .buys strong, .costs strong { color: inherit; }
   @media (max-width: 820px) { .grid2, .grid4, .tiles { grid-template-columns: 1fr 1fr; } }
 
   @media print {
@@ -52,7 +65,6 @@
 <main>
 
 <div class="hero">
-  <div class="eyebrow">llm-d · Endpoint Picker · a learning resource</div>
   <h1>Flow control makes shared inference predictable.</h1>
   <p class="lede">Flow control is the Endpoint Picker's policy layer for multi-tenant inference. While the pool has capacity, requests move through without being held. When the pool is under pressure, flow control activates. New work waits in policy-aware queues in front of the model servers, so priority, fairness, and tenant rules decide what runs next.</p>
   <p class="lede">This page explains the mechanism end to end. What breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it.</p>
@@ -76,7 +88,7 @@
   </svg>
   </div>
   <div class="grid4" style="margin-top:12px">
-    <div class="card"><h3>Noisy neighbor</h3><p>One tenant with heavy prompts monopolizes KV cache and queue space, starving the rest.</p></div>
+    <div class="card"><h3>Noisy neighbor</h3><p>One tenant with heavy prompts monopolizes key-value (KV) cache and queue space, starving the rest.</p></div>
     <div class="card"><h3>Scheduling regret</h3><p>Once a request enters a server's local queue it cannot move, even when a better endpoint frees up.</p></div>
     <div class="card"><h3>Priority inversion</h3><p>Model servers batch by arrival, not business priority. Real-time work gets stuck behind offline batches.</p></div>
     <div class="card"><h3>Resource asymmetry</h3><p>One huge-context request can outweigh hundreds of small ones. Request counts miss it.</p></div>
@@ -90,14 +102,14 @@
     <thead><tr><th style="width:50%">What it does</th><th>Where its reach ends</th></tr></thead>
     <tbody><tr>
       <td><p>A centralized, policy-aware queue in the Endpoint Picker, in front of the model servers. It enforces priority across traffic classes, fairness across tenants, and ordering within a tenant.</p><p style="margin-top:8px">It is work-conserving. If the pool has capacity, it dispatches.</p><p style="margin-top:8px;margin-bottom:0">It routes late. A dispatched request lands on the endpoint that just freed up or holds its prefix cache.</p></td>
-      <td><p>More capacity. Flow control decides when and in what order requests dispatch, and it cannot make the pool faster.</p><p style="margin-top:8px;margin-bottom:0">When demand exceeds capacity, the wait still exists. Flow control moves it into the EPP queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p></td>
+      <td><p>More capacity. Flow control decides when and in what order requests dispatch, and it cannot make the pool faster.</p><p style="margin-top:8px;margin-bottom:0">When demand exceeds capacity, the wait still exists. Flow control moves it into the Endpoint Picker (EPP) queue and decides where and for whom time to first token is accrued, protecting generation speed for everything already running.</p></td>
     </tr></tbody>
   </table>
   <div class="figure">
-  <svg viewBox="0 0 920 210" role="img" aria-label="Two states: gate open, requests pass straight through; gate closed, priority bands decide who waits">
-    <text x="18" y="24" font-size="14" font-weight="700" fill="#151515">The two states of the system</text>
+  <svg viewBox="0 0 920 235" role="img" aria-label="Two regimes of one saturation gradient: under the ceiling, requests pass straight through; at or over it, priority bands decide who waits">
+    <text x="18" y="24" font-size="14" font-weight="700" fill="#151515">One gradient, two regimes</text>
     <rect x="18" y="42" width="430" height="140" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
-    <text x="34" y="66" font-size="12" font-weight="800" fill="#1f8a5f">POOL HAS CAPACITY · gate open</text>
+    <text x="34" y="66" font-size="12" font-weight="800" fill="#1f8a5f">SATURATION UNDER THE CEILING · dispatching</text>
     <circle cx="60" cy="106" r="7" fill="#1f8a5f"/><circle cx="86" cy="106" r="7" fill="#d59a00"/><circle cx="112" cy="106" r="7" fill="#1c78d8"/>
     <line x1="130" y1="106" x2="330" y2="106" stroke="#9a9a9a" stroke-width="2"/>
     <path d="M330 100 l10 6 l-10 6z" fill="#9a9a9a"/>
@@ -106,7 +118,7 @@
     <text x="391" y="110" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">vLLM</text>
     <text x="34" y="164" font-size="11.5" fill="#5f6368">Requests move straight through. Flow control is invisible.</text>
     <rect x="472" y="42" width="430" height="140" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
-    <text x="488" y="66" font-size="12" font-weight="800" fill="#b23b3b">POOL SATURATED · gate closed</text>
+    <text x="488" y="66" font-size="12" font-weight="800" fill="#b23b3b">SATURATION AT THE CEILING · dispatch halted</text>
     <rect x="488" y="80" width="70" height="14" rx="7" fill="#1f8a5f"/><text x="566" y="91" font-size="10" fill="#5f6368">premium dispatches first</text>
     <rect x="488" y="100" width="50" height="14" rx="7" fill="#d59a00"/><text x="546" y="111" font-size="10" fill="#5f6368">standard waits behind</text>
     <rect x="488" y="120" width="90" height="14" rx="7" fill="#1c78d8"/><text x="586" y="131" font-size="10" fill="#5f6368">batch absorbs the queue</text>
@@ -114,6 +126,7 @@
     <rect x="806" y="88" width="78" height="40" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/>
     <text x="845" y="112" font-size="11" font-weight="700" fill="#151515" text-anchor="middle">vLLM</text>
     <text x="488" y="164" font-size="11.5" fill="#5f6368">New work queues by band. The policy decides who goes next.</text>
+    <text x="460" y="216" font-size="12" fill="#4a4a4a" text-anchor="middle">Saturation is a measured gradient, not a switch. Each dispatch cycle re-measures it and compares it to the ceiling.</text>
   </svg>
   </div>
   <div class="note">That trade is the honest core of the system. Enabling flow control is an explicit choice to protect time per output token, the reading pace of every stream already in flight, at the price of queue time for new arrivals when the pool is full.</div>
@@ -153,18 +166,19 @@
     <rect x="348" y="226" width="268" height="58" rx="9" fill="#f6f6f6"/><rect x="348" y="226" width="6" height="58" rx="3" fill="#1c78d8"/>
     <text x="364" y="246" font-size="12" font-weight="700" fill="#151515">Band -10 · sheddable · bounded queue</text>
     <rect x="364" y="256" width="110" height="16" rx="8" fill="#1c78d8" opacity=".8"/><text x="369" y="268" font-size="10" fill="#fff" font-weight="700">batch queue</text>
-    <text x="348" y="308" font-size="10.5" fill="#5f6368">Per-band request and byte limits protect the gateway's</text>
-    <text x="348" y="323" font-size="10.5" fill="#5f6368">memory. Past a band's limit, arrivals get HTTP 429.</text>
-    <text x="348" y="343" font-size="10.5" fill="#5f6368">A queued request that outlives its TTL gets HTTP 503.</text>
+    <text x="348" y="303" font-size="10.5" fill="#5f6368">Per-band request and byte limits protect the</text>
+    <text x="348" y="318" font-size="10.5" fill="#5f6368">gateway's memory. Past a band's limit, arrivals get</text>
+    <text x="348" y="333" font-size="10.5" fill="#5f6368">HTTP 429. A queued request that outlives its</text>
+    <text x="348" y="348" font-size="10.5" fill="#5f6368">time-to-live (TTL) gets HTTP 503.</text>
     <line x1="632" y1="188" x2="678" y2="188" stroke="#9a9a9a" stroke-width="1.6" marker-end="url(#a)"/>
     <!-- 4 gate -->
     <rect x="680" y="120" width="226" height="136" rx="12" fill="#fff6f6" stroke="#e4bcbc"/>
     <text x="696" y="144" font-size="11" font-weight="900" fill="#ee0000" letter-spacing="1.4">4 · THE GATE</text>
     <text x="696" y="166" font-size="13.5" font-weight="700" fill="#151515">Saturation detector</text>
-    <text x="696" y="186" font-size="11.5" fill="#5f6368">Pool has room → dispatch.</text>
-    <text x="696" y="203" font-size="11.5" fill="#5f6368">Pool saturated → hold everything,</text>
-    <text x="696" y="220" font-size="11.5" fill="#5f6368">re-check each cycle.</text>
-    <text x="696" y="238" font-size="10.5" fill="#8a8a8a">Reads queue depth and KV cache,</text><text x="696" y="251" font-size="10.5" fill="#8a8a8a">or in-flight request count.</text>
+    <text x="696" y="186" font-size="11.5" fill="#5f6368">Saturation is a gradient, 0 → 1+.</text>
+    <text x="696" y="203" font-size="11.5" fill="#5f6368">Under the ceiling → dispatch.</text>
+    <text x="696" y="220" font-size="11.5" fill="#5f6368">At or over → the cycle halts.</text>
+    <text x="696" y="238" font-size="10.5" fill="#8a8a8a">Re-measured every cycle from queue</text><text x="696" y="252" font-size="10.5" fill="#8a8a8a">depth and KV cache, or in-flight count.</text>
     <!-- 5 scheduler -->
     <rect x="680" y="276" width="226" height="100" rx="12" fill="#fbfbfb" stroke="#d7d7d7"/>
     <text x="696" y="300" font-size="11" font-weight="900" fill="#ee0000" letter-spacing="1.4">5 · LATE BINDING</text>
@@ -182,6 +196,8 @@
     <text x="14" y="322" font-size="11.5" fill="#8a8a8a">gateway injects them from identity.</text>
   </svg>
   </div>
+  <div class="note"><code>x-llm-d-inference-objective</code> and <code>x-llm-d-inference-fairness-id</code> are the canonical header names. The older <code>x-gateway-inference-objective</code> and <code>x-gateway-inference-fairness-id</code> forms are accepted as deprecated aliases.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/director.go">requestcontrol/director.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/admission.go">requestcontrol/admission.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/controller.go">flowcontrol/controller/controller.go</a></div>
 </section>
 
 <section>
@@ -233,10 +249,119 @@
     <tbody>
       <tr><td style="white-space:nowrap"><strong>1 · Priority</strong></td><td>Which band goes first?</td><td>Fixed. Highest band with work always wins</td><td>Bands come from <code>InferenceObjective</code>, negative values mark sheddable work</td></tr>
       <tr><td style="white-space:nowrap"><strong>2 · Fairness</strong></td><td>Which tenant inside the band?</td><td>Fairness policy plugin</td><td>Round-robin across tenants, or global strict ordering</td></tr>
-      <tr><td style="white-space:nowrap"><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or SLO-deadline</td></tr>
+      <tr><td style="white-space:nowrap"><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or a deadline from a service-level-objective (SLO) header</td></tr>
     </tbody>
   </table>
   <div class="note">Priority is absolute by design. When the pool is saturated, every premium request dispatches before any standard request, and fairness only referees between equals.<br><br>If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness">plugins/flowcontrol/fairness</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a></div>
+</section>
+
+<section>
+  <h2>Fairness policies under the same burst</h2>
+  <p>Round-robin's unit of fairness is the dispatch turn. Global-strict has no unit at all; it melts the band into one arrival-ordered queue.</p>
+  <div class="figure">
+  <svg viewBox="0 0 920 220" role="img" aria-label="Round-robin fairness: a bursting tenant's queue grows long, but a rotating cursor gives each of three tenants equal dispatch turns">
+    <text x="18" y="24" font-size="14" font-weight="700" fill="#151515">Round-robin · turns rotate across tenants</text>
+    <rect x="18" y="42" width="270" height="48" rx="10" fill="#fff6f6" stroke="#e4bcbc"/>
+    <text x="32" y="62" font-size="11.5" font-weight="700" fill="#151515">tenant-a · bursting</text>
+    <circle cx="38" cy="76" r="4" fill="#e4837f"/><circle cx="52" cy="76" r="4" fill="#e4837f"/><circle cx="66" cy="76" r="4" fill="#e4837f"/><circle cx="80" cy="76" r="4" fill="#e4837f"/><circle cx="94" cy="76" r="4" fill="#e4837f"/><circle cx="108" cy="76" r="4" fill="#e4837f"/><circle cx="122" cy="76" r="4" fill="#e4837f"/><circle cx="136" cy="76" r="4" fill="#e4837f"/><circle cx="150" cy="76" r="4" fill="#e4837f"/>
+    <rect x="18" y="100" width="270" height="48" rx="10" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="32" y="120" font-size="11.5" font-weight="700" fill="#151515">tenant-b · steady</text>
+    <circle cx="38" cy="134" r="4" fill="#9a9a9a"/><circle cx="52" cy="134" r="4" fill="#9a9a9a"/>
+    <rect x="18" y="158" width="270" height="40" rx="10" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="32" y="182" font-size="11.5" font-weight="700" fill="#151515">tenant-c · steady</text>
+    <path d="M316 66 C360 66 360 122 316 122 M316 128 C360 128 360 180 316 180 M320 180 C382 180 382 66 320 66" fill="none" stroke="#ee0000" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <text x="392" y="128" font-size="11" fill="#ee0000">cursor rotates</text>
+    <rect x="500" y="52" width="400" height="32" rx="9" fill="#f6f6f6"/>
+    <text x="514" y="72" font-size="11" fill="#4a4a4a">turns: a · b · c · a · b · c · a · b · c …</text>
+    <rect x="500" y="98" width="400" height="32" rx="9" fill="#f2faf6" stroke="#9fceb8"/>
+    <text x="514" y="118" font-size="11" font-weight="700" fill="#151515">served share: equal per active tenant</text>
+    <rect x="500" y="144" width="400" height="32" rx="9" fill="#fff6f6" stroke="#e4bcbc"/>
+    <text x="514" y="164" font-size="11" fill="#151515">a's excess waits in a's own queue</text>
+  </svg>
+  </div>
+  <div class="figure">
+  <svg viewBox="0 0 920 155" role="img" aria-label="Global-strict fairness: the same burst becomes one merged first-come-first-served queue and the bursting tenant takes share proportional to volume">
+    <text x="18" y="26" font-size="13" font-weight="700" fill="#151515">Global-strict · the default</text>
+    <rect x="18" y="40" width="560" height="38" rx="10" fill="#f6f6f6" stroke="#d7d7d7"/>
+    <circle cx="42" cy="59" r="5" fill="#e4837f"/><circle cx="60" cy="59" r="5" fill="#e4837f"/><circle cx="78" cy="59" r="5" fill="#e4837f"/><circle cx="96" cy="59" r="5" fill="#9a9a9a"/><circle cx="114" cy="59" r="5" fill="#e4837f"/><circle cx="132" cy="59" r="5" fill="#e4837f"/><circle cx="150" cy="59" r="5" fill="#9a9a9a"/><circle cx="168" cy="59" r="5" fill="#e4837f"/><circle cx="186" cy="59" r="5" fill="#e4837f"/><circle cx="204" cy="59" r="5" fill="#e4837f"/><circle cx="222" cy="59" r="5" fill="#9a9a9a"/><circle cx="240" cy="59" r="5" fill="#e4837f"/>
+    <text x="596" y="63" font-size="11" fill="#5f6368">one merged queue, pure arrival order</text>
+    <rect x="18" y="96" width="560" height="32" rx="9" fill="#fff6f6" stroke="#e4bcbc"/>
+    <text x="32" y="116" font-size="11" font-weight="700" fill="#151515">served share: proportional to volume — the burster wins</text>
+    <text x="596" y="116" font-size="11" fill="#5f6368">lowest overhead · no isolation</text>
+  </svg>
+  </div>
+  <div class="note">Same tenants, opposite outcome. Round-robin bounds the burster's share of dispatches; global-strict hands the band to it. To see fairness in data, measure per-tenant served share — latency alone hides it.<br><br>A third registered policy, <code>program-aware-fairness</code>, exists but is not covered here.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/roundrobin">plugins/flowcontrol/fairness/roundrobin</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/globalstrict">plugins/flowcontrol/fairness/globalstrict</a></div>
+</section>
+
+<section>
+  <h2>The three ordering policies, same queue</h2>
+  <p>The same four waiting requests can be served in three different orders, depending on which signal the policy reads.</p>
+  <div class="figure">
+  <svg viewBox="0 0 920 320" role="img" aria-label="The same four queued requests served in three different orders by fcfs, edf, and slodeadline">
+    <defs><marker id="op" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9a9a9a"/></marker></defs>
+    <text x="18" y="28" font-size="12.5" font-weight="700" fill="#151515"><tspan fill="#5f0000" font-family="ui-monospace, Menlo, monospace" font-size="11.5">fcfs</tspan> · first come, first served <tspan fill="#1f8a5f" font-size="10.5">· benchmarked</tspan></text>
+    <rect x="18" y="40" width="112" height="28" rx="8" fill="#f2faf6" stroke="#9fceb8"/><text x="74" y="58" font-size="10.5" fill="#151515" text-anchor="middle">A · arrived 1st</text>
+    <rect x="140" y="40" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="196" y="58" font-size="10.5" fill="#151515" text-anchor="middle">B · 2nd</text>
+    <rect x="262" y="40" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="318" y="58" font-size="10.5" fill="#151515" text-anchor="middle">C · 3rd</text>
+    <rect x="384" y="40" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="440" y="58" font-size="10.5" fill="#151515" text-anchor="middle">D · 4th</text>
+    <line x1="510" y1="54" x2="546" y2="54" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#op)"/>
+    <text x="558" y="51" font-size="11" fill="#4a4a4a">serves A B C D — arrival is the only signal</text>
+    <text x="558" y="67" font-size="10.5" fill="#8a8a8a">permits: predictability · ignores: urgency</text>
+
+    <text x="18" y="126" font-size="12.5" font-weight="700" fill="#151515"><tspan fill="#5f0000" font-family="ui-monospace, Menlo, monospace" font-size="11.5">edf</tspan> · earliest deadline first</text>
+    <rect x="18" y="138" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="74" y="156" font-size="10.5" fill="#151515" text-anchor="middle">A · no deadline</text>
+    <rect x="140" y="138" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="196" y="156" font-size="10.5" fill="#151515" text-anchor="middle">B · deadline 40s</text>
+    <rect x="262" y="138" width="112" height="28" rx="8" fill="#fdf6e6" stroke="#e0c98a"/><text x="318" y="156" font-size="10.5" fill="#151515" text-anchor="middle">C · deadline 2s</text>
+    <rect x="384" y="138" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="440" y="156" font-size="10.5" fill="#151515" text-anchor="middle">D · deadline 15s</text>
+    <line x1="510" y1="152" x2="546" y2="152" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#op)"/>
+    <text x="558" y="149" font-size="11" fill="#4a4a4a">serves C D B, then A — closest deadline wins</text>
+    <text x="558" y="165" font-size="10.5" fill="#8a8a8a">permits: rescuing expiring work · deadline-less requests yield</text>
+
+    <text x="18" y="224" font-size="12.5" font-weight="700" fill="#151515"><tspan fill="#5f0000" font-family="ui-monospace, Menlo, monospace" font-size="11.5">slodeadline</tspan> · deadline from an SLO header</text>
+    <rect x="18" y="236" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="74" y="254" font-size="10.5" fill="#151515" text-anchor="middle">A · no header</text>
+    <rect x="140" y="236" width="112" height="28" rx="8" fill="#eef5fc" stroke="#a9cdef"/><text x="196" y="254" font-size="10.5" fill="#151515" text-anchor="middle">B · ttft 500ms</text>
+    <rect x="262" y="236" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="318" y="254" font-size="10.5" fill="#151515" text-anchor="middle">C · ttft 2s</text>
+    <rect x="384" y="236" width="112" height="28" rx="8" fill="#f6f6f6" stroke="#d7d7d7"/><text x="440" y="254" font-size="10.5" fill="#151515" text-anchor="middle">D · ttft 1s</text>
+    <line x1="510" y1="250" x2="546" y2="250" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#op)"/>
+    <text x="558" y="247" font-size="11" fill="#4a4a4a">serves B D C, then A — the client states its urgency</text>
+    <text x="558" y="263" font-size="10.5" fill="#8a8a8a">permits: per-request targets · requires: header discipline</text>
+    <text x="18" y="305" font-size="11" fill="#8a8a8a">ttft = time to first token, the deadline the SLO header expresses</text>
+  </svg>
+  </div>
+  <div class="note">Ordering acts inside one tenant's queue. Fairness decides between tenants; ordering decides within one.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a> · fcfs · edf · slodeadline</div>
+</section>
+
+<section>
+  <h2>Tenants inside a band</h2>
+  <p>A tenant's queue is born on its first request, held open by a lease, and collected when idle. There is no tenant registry to maintain.</p>
+  <div class="figure">
+  <svg viewBox="0 0 920 200" role="img" aria-label="Flow lifecycle: created on first request, leased while active, idle starts a garbage-collection timer, collected after the timeout; a new request re-pins an idle flow">
+    <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9a9a9a"/></marker></defs>
+    <text x="460" y="26" font-size="11" fill="#5f6368" text-anchor="middle">each queue tracks its own length and byte size the whole time</text>
+    <rect x="18" y="52" width="200" height="64" rx="11" fill="#f2faf6" stroke="#9fceb8"/>
+    <text x="118" y="78" font-size="12" font-weight="700" fill="#151515" text-anchor="middle">created</text>
+    <text x="118" y="96" font-size="11" fill="#5f6368" text-anchor="middle">first request arrives</text>
+    <line x1="218" y1="84" x2="260" y2="84" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#fl)"/>
+    <rect x="262" y="52" width="200" height="64" rx="11" fill="#fbfbfb" stroke="#d7d7d7"/>
+    <text x="362" y="78" font-size="12" font-weight="700" fill="#151515" text-anchor="middle">active · leased</text>
+    <text x="362" y="96" font-size="11" fill="#5f6368" text-anchor="middle">requests hold the lease</text>
+    <line x1="462" y1="84" x2="504" y2="84" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#fl)"/>
+    <rect x="506" y="52" width="200" height="64" rx="11" fill="#fdf6e6" stroke="#e0c98a"/>
+    <text x="606" y="78" font-size="12" font-weight="700" fill="#151515" text-anchor="middle">idle · timer running</text>
+    <text x="606" y="96" font-size="11" fill="#5f6368" text-anchor="middle">flowGCTimeout counts down</text>
+    <line x1="706" y1="84" x2="748" y2="84" stroke="#9a9a9a" stroke-width="1.5" marker-end="url(#fl)"/>
+    <rect x="750" y="52" width="152" height="64" rx="11" fill="#f6f6f6" stroke="#d7d7d7"/>
+    <text x="826" y="78" font-size="12" font-weight="700" fill="#151515" text-anchor="middle">collected</text>
+    <text x="826" y="96" font-size="11" fill="#5f6368" text-anchor="middle">queue removed</text>
+    <path d="M606 116 C606 164 362 164 362 118" fill="none" stroke="#1f8a5f" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#fl)"/>
+    <text x="484" y="176" font-size="11" fill="#1f8a5f" text-anchor="middle">a new request re-pins the tenant's queue</text>
+  </svg>
+  </div>
+  <div class="note">Tenants appear, serve, and vanish on their own. Idle bands are collected the same way, on their own timeout.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/leasing.go">flowcontrol/registry/leasing.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a></div>
 </section>
 
 <section>
@@ -257,7 +382,7 @@
     <text x="488" y="111" font-size="11.5" fill="#4a4a4a">A full batch produces first tokens more slowly for every request</text>
     <text x="488" y="128" font-size="11.5" fill="#4a4a4a">in it, whoever sent them. No scheduler reaches inside.</text>
     <text x="488" y="156" font-size="11" fill="#8a8a8a">vllm:num_requests_running, vllm:num_requests_waiting</text>
-    <text x="18" y="216" font-size="12.5" fill="#4a4a4a">Tuning the saturation gate moves the wait between these two places. That is the dial. Let the batch fill for maximum</text><text x="18" y="234" font-size="12.5" fill="#4a4a4a">utilization, or hold work upstream for maximum isolation, and choose per pool.</text>
+    <text x="18" y="216" font-size="12.5" fill="#4a4a4a">Tuning the saturation thresholds moves the wait between these two places. That is the dial. Let the batch fill for maximum</text><text x="18" y="234" font-size="12.5" fill="#4a4a4a">utilization, or hold work upstream for maximum isolation, and choose per pool.</text>
   </svg>
   </div></section>
 
@@ -286,6 +411,78 @@
     </tbody>
   </table>
   <div class="note">Queues are in-memory. If the EPP itself dies, the default llm-d configuration fails open, Envoy routes directly to the servers, and requests keep flowing without protection until the EPP returns.</div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/types/outcomes.go">flowcontrol/types/outcomes.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/admission.go">requestcontrol/admission.go</a></div>
+</section>
+
+<section>
+  <h2>The configuration surface</h2>
+  <p>Default is what runs when you set nothing; benchmarked is what the measured configuration set. The cap that actually binds is the per-band 1&nbsp;GB, never the 10&nbsp;GiB global.</p>
+  <table>
+    <thead><tr><th>Setting</th><th>Default</th><th>Benchmarked</th></tr></thead>
+    <tbody>
+      <tr><td><code>priorityBands[].priority</code></td><td>—</td><td>100 / 0 / −10</td></tr>
+      <tr><td><code>fairnessPolicyRef</code> (per band)</td><td><code>global-strict</code></td><td><code>round-robin</code></td></tr>
+      <tr><td><code>orderingPolicyRef</code> (per band)</td><td><code>fcfs</code></td><td><code>fcfs</code></td></tr>
+      <tr><td><code>maxBytes</code> (per band)</td><td>1 GB each — the cap that binds</td><td>unset → 1 GB × 3 bands</td></tr>
+      <tr><td><code>maxBytes</code> (global)</td><td>—</td><td>10 GiB · never binds</td></tr>
+      <tr><td><code>maxRequests</code></td><td>unlimited</td><td>unset</td></tr>
+      <tr><td><code>defaultRequestTTL</code></td><td>0 · client context only</td><td>60s</td></tr>
+      <tr><td><code>expiryCleanupInterval</code></td><td>1s</td><td>1s</td></tr>
+      <tr><td><code>saturationDetector.queueDepthThreshold</code></td><td>—</td><td>4</td></tr>
+      <tr><td><code>saturationDetector.kvCacheUtilThreshold</code></td><td>—</td><td>0.80</td></tr>
+      <tr><td><code>usageLimitPolicy</code> threshold</td><td>1.0 · no gating</td><td>1.0</td></tr>
+      <tr><td><code>flowGCTimeout</code> · <code>priorityBandGCTimeout</code></td><td>idle flows and bands collected</td><td>defaults</td></tr>
+    </tbody>
+  </table>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/config.go">flowcontrol/controller/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/config.go">flowcontrol/registry/config.go</a></div>
+</section>
+
+<section>
+  <h2>Choosing knobs together</h2>
+  <p>No knob acts alone. You choose a posture, and the posture implies the stack.</p>
+  <div class="grid2" style="margin-top:12px">
+    <div class="card">
+      <h3>Multi-tenant isolation <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">bands</span><span class="val">round-robin + fcfs</span></div>
+        <div class="chip det"><span class="lab">detector</span><span class="val">utilization · 4 / 0.80</span></div>
+        <div class="chip cap"><span class="lab">queue</span><span class="val">TTL 60s · ~1 GB per band</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> per-tenant turns in every band, floods absorbed with zero rejections.</p>
+      <p class="costs"><strong>Costs</strong> no latency help among equals; memory held while work waits.</p>
+    </div>
+    <div class="card">
+      <h3>SLO-driven interactive</h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">bands</span><span class="val">global-strict + slodeadline</span></div>
+        <div class="chip det"><span class="lab">detector</span><span class="val">concurrency · maxConcurrency</span></div>
+        <div class="chip cap"><span class="lab">queue</span><span class="val">short TTL</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> the only in-flight cap — the latency lever — plus per-request time-to-first-token targets from headers.</p>
+      <p class="costs"><strong>Costs</strong> throughput sacrificed to the cap; clients must set the SLO header.</p>
+    </div>
+    <div class="card">
+      <h3>Batch-heavy consolidation</h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">bands</span><span class="val">per-band maxBytes / maxRequests</span></div>
+        <div class="chip det"><span class="lab">detector</span><span class="val">utilization</span></div>
+        <div class="chip cap"><span class="lab">queue</span><span class="val">long TTL on the batch band</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> a bounded appetite — batch cannot eat the shared queue budget.</p>
+      <p class="costs"><strong>Costs</strong> the capped band rejects earlier, by design.</p>
+    </div>
+    <div class="card">
+      <h3>Max throughput, minimum machinery</h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">bands</span><span class="val">global-strict + fcfs · defaults</span></div>
+        <div class="chip det"><span class="lab">detector</span><span class="val">utilization · defaults</span></div>
+        <div class="chip cap"><span class="lab">ceiling</span><span class="val">usage-limit 1.0 · no gating</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> strict arrival order at the lowest overhead.</p>
+      <p class="costs"><strong>Costs</strong> a burster wins share by volume; no isolation anywhere.</p>
+    </div>
+  </div>
+  <div class="note">Policies compose per band — a premium band can run <code>slodeadline</code> while batch runs <code>fcfs</code>. A usage-limit threshold below 1.0 reserves headroom in any posture.</div>
 </section>
 
 <section>
@@ -297,7 +494,7 @@
     </div>
     <div class="card">
       <h3>What to watch</h3>
-      <p><code>pool_saturation</code> tells you when the gate is active.</p><p style="margin-top:8px"><code>queue_size</code> and <code>queue_duration</code> per tenant and band tell you who is waiting and for how long. The same depth is a true-demand signal an autoscaler can act on.</p><p style="margin-top:8px">On the server side, <code>num_requests_running</code> against <code>num_requests_waiting</code> tells you where the pressure actually sits.</p>
+      <p><code>pool_saturation</code> is the detector's gradient; dispatch halts when it reaches the ceiling.</p><p style="margin-top:8px"><code>queue_size</code> and <code>queue_duration</code> per tenant and band tell you who is waiting and for how long. The same depth is a true-demand signal an autoscaler can act on.</p><p style="margin-top:8px">On the server side, <code>num_requests_running</code> against <code>num_requests_waiting</code> tells you where the pressure actually sits.</p>
     </div>
   </div>
   <p style="margin-top:12px">One sweep per hardware and model pair finds the knee, the point where queueing begins. Size latency-sensitive pools below it, and let flow control govern everything that arrives past it.</p>
