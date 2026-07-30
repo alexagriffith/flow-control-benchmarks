@@ -499,10 +499,11 @@ footer a{color:var(--txt2)}
   <p class="lead">All runs follow the same basic setup.</p>
   <div class="tblwrap compact">
     <table class="kv">
-      <thead><tr><th>Arg</th><th>Value</th><th>Where set / verified</th></tr></thead>
-      <tbody><tr><td class="wrap">Model</td><td class="mono wrap">openai/gpt-oss-20b</td><td class="wrap">serving pod spec</td></tr><tr><td class="wrap">Hardware</td><td class="wrap">one H100, TP 1</td><td class="wrap">serving pod spec</td></tr><tr><td class="mono wrap">max-num-seqs</td><td class="mono">128</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">max-num-batched-tokens</td><td class="mono">8192</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">max-model-len</td><td class="mono">32768</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">gpu-memory-utilization</td><td class="mono">0.90</td><td class="wrap">pod startup log</td></tr><tr><td class="mono wrap">enable_prefix_caching</td><td class="mono">False</td><td class="wrap">startup log; vllm:prefix_cache_queries_total stays flat</td></tr><tr><td class="wrap">input / output tokens</td><td class="mono">512 in / 64,128,512 out</td><td class="wrap">client request config; input fixed, output swept, 128 is the headline</td></tr></tbody>
+      <thead><tr><th>Arg</th><th>Value</th></tr></thead>
+      <tbody><tr><td class="wrap">Model</td><td class="mono wrap">openai/gpt-oss-20b</td></tr><tr><td class="wrap">Hardware</td><td class="wrap">one H100, TP 1</td></tr><tr><td class="mono wrap">max-num-seqs</td><td class="mono">128</td></tr><tr><td class="mono wrap">max-num-batched-tokens</td><td class="mono">8192</td></tr><tr><td class="mono wrap">max-model-len</td><td class="mono">32768</td></tr><tr><td class="mono wrap">gpu-memory-utilization</td><td class="mono">0.90</td></tr><tr><td class="mono wrap">enable_prefix_caching</td><td class="mono">False</td></tr><tr><td class="wrap">input / output tokens</td><td class="mono">512 in / 64,128,512 out</td></tr></tbody>
     </table>
   </div>
+  <p style="font-size:12.5px;color:var(--txt3);max-width:700px;margin:8px auto 0;text-align:center">Engine args are set in the serving pod spec and verified in the pod startup log. Prefix caching is additionally confirmed by <code>vllm:prefix_cache_queries_total</code> staying flat, and the request shape comes from the client config — input fixed, output swept, with 128 output tokens as the headline.</p>
 
   <h3>Prefix caching off</h3>
   <p>Prefix caching is off, so latencies reflect scheduling and not a warm cache. Disabling Automatic Prefix Caching (APC) ensures no cache is used even if one exists.</p>
