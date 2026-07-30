@@ -440,7 +440,8 @@ footer a{color:var(--txt2)}
 
 <section class="chapter" id="knee-choice">
   <h2>The knee is a choice</h2>
-  <p>The knee sits at 128 concurrent requests because that is the engine's <code>max-num-seqs</code> admission cap — a value we set, not a property we discovered. What the sweep discovers is the price of each place you could put it.</p>
+  <p>Two knees live in this chart. The <b>admission knee</b> follows the <code>max-num-seqs</code> cap wherever we set it — a config value looking back at you — while the <b>hardware knee</b> is where added batch stops buying throughput, and our curve was still climbing when it reached the cap.</p>
+  <p>So the knee is chosen, and the sweep prices the choice: cap at 64 and the pool queues sooner at roughly 37 requests per second with a lighter, faster-stepping batch; cap at 128 and it earns the measured 52.</p>
   <div class="fig">
     <figure class="assetcard">
       <svg viewBox="0 0 760 320" role="img" aria-label="Throughput versus running batch size: the measured curve climbs from 24 to 52 requests per second between 32 and 128 concurrent; vertical cap lines at 64 and 128 show that the admission cap chooses the operating point on the curve">
