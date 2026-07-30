@@ -120,10 +120,10 @@ const COLORS={premium:'var(--brand)',standard:'var(--amber)',batch:'var(--teal)'
 const ACTS=[
   {name:'Why',pages:[1,2]},
   {name:'Where',pages:[3]},
-  {name:'How',pages:[4,5,6,7,8]},
-  {name:'Proof',pages:[9,10,11,12]},
-  {name:'The trade',pages:[13]},
-  {name:'Play',pages:[14]},
+  {name:'How',pages:[4,5,6,7,8,9]},
+  {name:'Proof',pages:[10,11,12,13]},
+  {name:'The trade',pages:[14]},
+  {name:'Play',pages:[15]},
 ];
 
 const PAGES=[
@@ -131,7 +131,6 @@ const PAGES=[
 {sub:'',dwell:5000,build:p=>{p.innerHTML=`
   <div style="flex:1;display:grid;place-items:center;text-align:center">
     <div>
-      <div class="eyebrow">llm-d · Endpoint Picker</div>
       <div style="font-size:clamp(30px,5vw,44px);font-weight:650;letter-spacing:-.03em;line-height:1.1">
         Flow control makes shared<br>inference predictable.</div>
       <p class="point" style="margin:16px auto 22px">Six stops, playing now. Pause or jump any time.</p>
@@ -451,10 +450,12 @@ const PAGES=[
       <rect x="700" y="60" width="120" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
       <text x="760" y="100" font-size="12" fill="var(--txt)" text-anchor="middle">engine</text>
       <text x="760" y="118" font-size="10" fill="var(--txt3)" text-anchor="middle">one slot free</text>
-      <text id="p5serve" x="660" y="24" font-size="11" fill="var(--txt2)" text-anchor="end"></text>
+      <text id="p5serve" x="620" y="10" font-size="11" fill="var(--txt2)" text-anchor="end"></text>
+      <text id="p5steps" x="760" y="170" font-size="9.5" text-anchor="middle"><tspan id="p5st0" fill="var(--txt3)">1 priority</tspan><tspan dx="4" fill="var(--txt3)">·</tspan><tspan id="p5st1" dx="4" fill="var(--txt3)">2 fairness</tspan><tspan dx="4" fill="var(--txt3)">·</tspan><tspan id="p5st2" dx="4" fill="var(--txt3)">3 ordering</tspan></text>
+      <g id="p5cursor"></g><g id="p5fly"></g>
       <!-- rules -->
       <text x="150" y="205" font-size="10.5" fill="var(--txt2)">across bands: strict priority, premium drains before standard before batch</text>
-      <text x="620" y="205" font-size="10.5" fill="var(--txt3)">within a band: round-robin across tenants, so no one flow starves its peers</text>
+      <text x="620" y="205" font-size="10.5" fill="var(--txt3)">within a band: round-robin across tenants</text>
     </svg>
    </div>
   </div>`);},
@@ -474,21 +475,49 @@ const PAGES=[
   /* progressive depth: reveal the multi-band detail a beat later */
   const detail=p.querySelector('#p5detail');
   setTimeout(()=>{if(detail)detail.style.opacity='1';},2600);
-  // populate each band with per-tenant queued requests (small circles grouped by tenant)
-  const bands=[['var(--brand)',['a','b']],['var(--amber)',['a','b','c']],['var(--teal)',['a']]];
-  const tenantShade={a:'',b:.62,c:.4};
-  bands.forEach(([c,tenants],i)=>{const bg=p.querySelector('#p5band'+i);if(!bg)return;
-    const y=14+i*62;let s='',x=170;
-    tenants.forEach((tn,ti)=>{s+=`<text x="${x}" y="${y+14}" font-size="8" fill="var(--txt3)">tenant ${tn}</text>`;
-      for(let k=0;k<4;k++){s+=`<circle cx="${x+8+k*15}" cy="${y+34}" r="5" fill="${c}" opacity="${ti===0?.9:(ti===1?.62:.4)}"/>`;}
-      x+=4*15+26;});
-    bg.innerHTML=s;});
-  // serve pointer: strict priority across bands, round-robin within
-  const serve=p.querySelector('#p5serve');
-  const order=['premium a','premium b','standard a','standard b','standard c','batch a'];
-  let si=0;let st0=performance.now();
-  animLoop(p,now=>{if((now-st0)>900){si=(si+1)%order.length;st0=now;}
-    if(serve)serve.textContent='next to dispatch → '+order[si];});},
+  // three-step selection ladder: 1 priority picks the band, 2 fairness picks the flow, 3 ordering picks the head
+  const bands=[{name:'premium',c:'var(--brand)',flows:[{n:'a',q:2},{n:'b',q:1}]},
+               {name:'standard',c:'var(--amber)',flows:[{n:'a',q:4},{n:'b',q:3},{n:'c',q:2}]},
+               {name:'batch',c:'var(--teal)',flows:[{n:'a',q:5}]}];
+  const serve=p.querySelector('#p5serve'),cursorG=p.querySelector('#p5cursor'),flyG=p.querySelector('#p5fly');
+  const stepEls=[p.querySelector('#p5st0'),p.querySelector('#p5st1'),p.querySelector('#p5st2')];
+  const rr=[0,0,0];let flights=[];
+  const cyc=950;let tickStart=performance.now(),lastArr=tickStart,pick=null,popped=true;
+  const smooth=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  animLoop(p,now=>{
+    if(now-lastArr>480){lastArr=now;const r=Math.random();
+      const [bi,fi]=r<0.10?[0,0]:r<0.18?[0,1]:r<0.40?[1,0]:r<0.58?[1,1]:r<0.72?[1,2]:[2,0];
+      if(bands[bi].flows[fi].q<7)bands[bi].flows[fi].q++;}
+    let ph=(now-tickStart)/cyc;
+    if(ph>=1){tickStart=now;ph=0;
+      const bi=bands.findIndex(b=>b.flows.some(f=>f.q>0));
+      let fi=-1;const n=bands[bi].flows.length;
+      for(let s=0;s<n;s++){const c=(rr[bi]+s)%n;if(bands[bi].flows[c].q>0){fi=c;break;}}
+      rr[bi]=(fi+1)%n;pick={bi,fi};popped=false;}
+    if(pick&&!popped&&ph>=0.6){popped=true;bands[pick.bi].flows[pick.fi].q--;
+      flights.push({bi:pick.bi,fi:pick.fi,c:bands[pick.bi].c,t0:now});}
+    const step=ph<0.3?0:ph<0.6?1:2;
+    stepEls.forEach((e,i)=>e&&e.setAttribute('fill',i===step?'var(--brand)':'var(--txt3)'));
+    let cs='';
+    bands.forEach((b,i)=>{const bg=p.querySelector('#p5band'+i);if(!bg)return;
+      const y=14+i*62;let s='';
+      if(pick&&pick.bi===i)s+=`<rect x="150" y="${y}" width="470" height="52" rx="8" fill="var(--brand-soft)" stroke="${b.c}" stroke-width="2.5"/>`;
+      b.flows.forEach((f,ti)=>{const x=170+ti*150;
+        const isPick=pick&&pick.bi===i&&pick.fi===ti;
+        s+=`<text x="${x}" y="${y+14}" font-size="8" fill="${isPick&&step>=1?b.c:'var(--txt3)'}">tenant ${f.n}${f.q===0?' · empty':''}</text>`;
+        for(let k=0;k<f.q;k++)s+=`<circle cx="${x+8+k*15}" cy="${y+34}" r="5" fill="${b.c}" opacity="${k===0?.95:.5}"/>`;
+        if(isPick&&step>=1)cs+=`<path d="M${x+52} ${y+4} l5 8 l5 -8 z" fill="var(--brand)"/>`;});
+      bg.innerHTML=s;});
+    cursorG.innerHTML=cs;
+    flights=flights.filter(f=>(now-f.t0)<420);
+    flyG.innerHTML=flights.map(f=>{const k=smooth((now-f.t0)/420);
+      const x0=178+f.fi*150,y0=14+f.bi*62+34;
+      return `<circle cx="${x0+(706-x0)*k}" cy="${y0+(105-y0)*k}" r="5" fill="${f.c}"/>`;}).join('');
+    if(serve&&pick){const b=bands[pick.bi];
+      serve.textContent = step===0?`1 priority → ${b.name} band`:
+        step===1?`2 fairness → tenant ${b.flows[pick.fi].n}`:
+        `3 ordering → head of queue, first come first served`;}
+  });},
  exit:p=>{}},
 
 /* ---- PAGE 6 (was 5) · ONE REQUEST'S JOURNEY ---- */
@@ -525,7 +554,7 @@ const PAGES=[
     cap.textContent=a[2];});}},
 
 /* ---- PAGE 7 (was 6) · THE GATE ---- */
-{sub:'How',title:'The gate',point:'A saturation score computed from live telemetry decides open or closed. The detector reads queue depth and KV cache utilization back from the model servers.',
+{sub:'How',title:'The gate',point:'A saturation score computed from live telemetry is checked against a ceiling on every dispatch cycle. The detector reads queue depth and KV cache utilization back from the model servers.',
  provenance:'utilization detector',dwell:16000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;height:100%;gap:22px;align-items:center">
@@ -564,8 +593,83 @@ const PAGES=[
     drops.forEach(d=>{d.ph+= (closed?0.0015:0.011);
       d.el.style.top=((d.ph%1)*110)+'px';d.el.style.opacity=closed?.35:1;});});}},
 
-/* ---- PAGE 8 · HOW PRIORITY RESOLVES ---- */
-{sub:'How',title:'The gate can only act on priority it can see',point:'A request carries an objective name in a header. The Endpoint Picker resolves that name to an InferenceObjective bound to the pool, which supplies the integer priority the gate sorts by. Resolve it and premium jumps the queue. Miss the binding and every request defaults to 0, the gate runs but has nothing to order.',
+/* ---- PAGE 8 · THE DISPATCH CYCLE ---- */
+{sub:'How',title:'The dispatch cycle',point:'Dispatch is a loop that moves one request per cycle, always from the highest-priority band that has work waiting. When saturation reaches the ceiling the whole loop halts, so lower-priority work never worsens the pressure on higher-priority work.',
+ provenance:'controller/internal/processor.go',dwell:19000,
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 900 340" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <text x="30" y="30" font-size="11" fill="var(--txt3)">each cycle first measures saturation, a gradient</text>
+    <rect x="30" y="42" width="300" height="18" rx="9" fill="var(--inset)" stroke="var(--b1)"/>
+    <rect id="dcFill" x="30" y="42" width="0" height="18" rx="9" fill="var(--ok)"/>
+    <line id="dcCeil" x1="261" y1="34" x2="261" y2="68" stroke="var(--danger)" stroke-dasharray="4 3"/>
+    <text x="261" y="82" font-size="10" fill="var(--danger)" text-anchor="middle">ceiling · 1.0</text>
+    <text id="dcVal" x="342" y="56" font-size="12" class="mono-t" fill="var(--txt)">0.00</text>
+    <text id="dcState" x="30" y="110" font-size="11.5" fill="var(--txt2)"></text>
+    <text x="380" y="30" font-size="10.5" fill="var(--txt3)">then walk the bands, highest priority first · fairness picks the flow · ordering picks the head</text>
+    <g id="dcLive">
+      <g id="dcBands"></g>
+      <rect x="770" y="122" width="104" height="96" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+      <text x="822" y="162" font-size="12" fill="var(--txt)" text-anchor="middle">engine</text>
+      <text x="822" y="182" font-size="10" fill="var(--txt3)" text-anchor="middle">one dispatch</text>
+      <text x="822" y="196" font-size="10" fill="var(--txt3)" text-anchor="middle">per cycle</text>
+      <g id="dcFly"></g>
+    </g>
+    <text id="dcHalt" x="450" y="332" font-size="12" fill="var(--danger)" text-anchor="middle" opacity="0">the whole cycle halts and every band waits, so lower work never worsens a blocked high band</text>
+  </svg>`);},
+ enter:p=>{
+  const fill=p.querySelector('#dcFill'),val=p.querySelector('#dcVal'),state=p.querySelector('#dcState');
+  const bandsG=p.querySelector('#dcBands'),flyG=p.querySelector('#dcFly'),live=p.querySelector('#dcLive'),haltCap=p.querySelector('#dcHalt');
+  const cfg=[{lab:'priority 100',c:'var(--brand)'},{lab:'priority 0',c:'var(--amber)'},{lab:'priority −10',c:'var(--teal)'}];
+  const q=[2,4,6];
+  let flights=[];
+  const T0=performance.now();
+  let tickStart=T0,chosen=-1,dispatched=true,lastArr=T0;
+  const smooth=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  const satAt=t=>{const s=t%16;
+    const w=0.6+0.2*Math.sin(t*1.3)+0.06*Math.sin(t*3.7);
+    const bump=0.72*(s<9?0:s<10?smooth(s-9):s<13?1:s<14?smooth(14-s):0);
+    return Math.min(1.27,w+bump);};
+  const tickDur=680;
+  animLoop(p,now=>{
+    const t=(now-T0)/1000;
+    const sat=satAt(t);
+    const halted=sat>=1.0;
+    fill.setAttribute('width',Math.min(300,sat/1.3*300));
+    fill.setAttribute('fill',sat<0.7?'var(--ok)':sat<1.0?'var(--amber)':'var(--danger)');
+    val.textContent=sat.toFixed(2);
+    state.textContent=halted?'saturation at the ceiling · the cycle halts':'saturation under the ceiling · the loop runs';
+    state.setAttribute('fill',halted?'var(--danger)':'var(--txt2)');
+    live.setAttribute('opacity',halted?0.35:1);
+    haltCap.setAttribute('opacity',halted?1:0);
+    /* arrivals keep coming, queues grow while the loop is halted */
+    if(now-lastArr>520){lastArr=now;const r=Math.random();const i=r<0.18?0:r<0.5?1:2;if(q[i]<9)q[i]++;}
+    /* cycle tick: pick the highest non-empty band, dispatch exactly one */
+    let phase=(now-tickStart)/tickDur;
+    if(!halted&&phase>=1){tickStart=now;phase=0;chosen=q.findIndex(v=>v>0);dispatched=false;}
+    if(halted){tickStart=now;phase=0;}
+    const scanIdx=chosen<0?-1:Math.min(chosen,Math.floor(phase/0.13));
+    if(!halted&&!dispatched&&chosen>=0&&phase>0.13*(chosen+1)){
+      q[chosen]--;flights.push({i:chosen,t0:now});dispatched=true;}
+    /* draw the bands */
+    let s='';
+    cfg.forEach((b,i)=>{const y=50+i*84;
+      const hl=!halted&&scanIdx===i;
+      s+=`<rect x="380" y="${y}" width="310" height="60" rx="9" fill="${hl?'var(--brand-soft)':'var(--inset)'}" stroke="${b.c}" stroke-width="${hl?2.5:1}" opacity=".95"/>
+        <text x="372" y="${y+30}" font-size="11" fill="${b.c}" text-anchor="end">${b.lab}</text>
+        <text x="372" y="${y+44}" font-size="9" fill="var(--txt3)" text-anchor="end">band</text>`;
+      if(!halted&&chosen>i&&scanIdx>=i)s+=`<text x="678" y="${y+18}" font-size="9" fill="var(--txt3)" text-anchor="end">empty · skip</text>`;
+      for(let k=0;k<q[i];k++)s+=`<circle cx="${672-k*19}" cy="${y+36}" r="6" fill="${b.c}" opacity="${k===0?1:.6}"/>`;
+      if(q[i]===0)s+=`<text x="392" y="${y+40}" font-size="9.5" fill="var(--txt3)">no work waiting</text>`;});
+    bandsG.innerHTML=s;
+    /* flying dispatch dots */
+    flights=flights.filter(f=>(now-f.t0)<500);
+    flyG.innerHTML=flights.map(f=>{const k=smooth((now-f.t0)/500);
+      const y0=50+f.i*84+36;
+      return `<circle cx="${676+(806-676)*k}" cy="${y0+(170-y0)*k}" r="6" fill="${cfg[f.i].c}"/>`;}).join('');
+  });}},
+
+/* ---- PAGE 9 · HOW PRIORITY RESOLVES ---- */
+{sub:'How',title:'Priority gate',point:'A request carries an objective name in a header. The Endpoint Picker resolves that name to an InferenceObjective bound to the pool, which supplies the integer priority the gate sorts by. Resolve it and premium jumps the queue. Miss the binding and every request defaults to 0, the gate runs but has nothing to order.',
  provenance:'InferenceObjective resolution',dwell:20000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;height:100%;gap:20px;align-items:stretch">
@@ -603,17 +707,17 @@ const PAGES=[
   </div>`);}},
 
 /* ---- PAGE 9 · PRIORITY HOLDS (real numbers) ---- */
-{sub:'Proof',title:'Premium keeps its turn under load',point:'Standard surges past capacity. Premium keeps its dispatch turn, so p95 time to first token stays inside a 300 ms interactive objective while standard absorbs the wait. Premium still shares the engine, so its own generation speed moves with the batch. Queue time is assigned by priority; engine time is shared.',
+{sub:'Proof',title:'Premium keeps its turn under load',point:'Standard surges past capacity. Premium keeps its dispatch turn, so its p95 time to first token stays below standard’s while standard absorbs the wait. Premium still shares the engine, so its own generation speed moves with the batch. Queue time is assigned by priority; engine time is shared.',
  provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
  build:p=>{vizHTML(p,scenarioSVG('p7'));},
  enter:p=>{scenarioAnim(p,'p7',{
-   lines:[{c:'var(--brand)',base:150,peak:251,label:'premium p95 TTFT, gate on'},{c:'var(--amber)',base:160,peak:1840,label:'standard p95 TTFT'}],
-   ymax:2200,window:[0.3,0.75],
-   bars:[['premium p95 TTFT',251,'var(--brand)'],['standard p50 TTFT',155,'var(--amber)']],barMax:300,barTitle:'with flow control, ms',
-   note:'Premium p95 TTFT held at 251 ms, inside the 300 ms objective, while standard took the wait. Without the gate premium p95 was 1778 ms. The next slide draws that tail collapse.'});}},
+   lines:[{c:'var(--brand)',base:380,peak:1117,label:'premium p95 TTFT, flow control on'},{c:'var(--amber)',base:420,peak:1406,label:'standard p95 TTFT'}],
+   ymax:1600,window:[0.3,0.75],
+   bars:[['premium p95 TTFT',1117,'var(--brand)'],['standard p95 TTFT',1406,'var(--amber)']],barMax:1500,barTitle:'flow control on, ms',
+   note:'Backfilled run, pool saturated: premium p95 TTFT 1117 ms (range 1056\u20131211 across repeats) against standard 1406 ms, about 1.25x. Queue time lands by priority; engine time is shared.'});}},
 
 /* ---- PAGE 10 · GATE OFF VS ON (headline proof) ---- */
-{sub:'Proof',title:'Turning the gate on collapses premium’s tail',point:'The same saturated pool, benchmarked with the gate off and on. Premium p95 time to first token drops from 1778 ms to 251 ms, about 7x. At 512-token output it drops from 5259 ms to 145 ms, about 36x, because a long generation holds a GPU slot longer, so getting to the front of the queue matters more.',
+{sub:'Proof',title:'Tuning the gate',point:'The same saturated pool with flow control on, restated with per-repeat percentiles. Priority separates the tiers: premium p95 time to first token lands at 1117 ms against standard at 1406 ms, about 1.25x. Longer output lengths are being restated with the same method and will follow.',
  provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
@@ -629,26 +733,69 @@ const PAGES=[
         <div class="p10f" data-w="${v/max*100}" style="height:100%;width:0;border-radius:6px;background:${c};transition:width 1.3s var(--ease)"></div></div>
       <span class="mono" style="font-size:12px;width:74px;text-align:right">${v.toLocaleString()} ms</span></div>`;
     return `<div>
-      <div class="lab" style="margin-bottom:9px;color:var(--txt2)">${title} &nbsp;·&nbsp; <span style="color:var(--ok)">${mult} faster with the gate</span></div>
-      ${bar(off,'var(--danger)','gate off, p95')}
-      ${bar(on,'var(--brand)','gate on, p95')}
+      <div class="lab" style="margin-bottom:9px;color:var(--txt2)">${title} &nbsp;·&nbsp; <span style="color:var(--ok)">${mult} separation with priority</span></div>
+      ${bar(off,'var(--amber)','standard, p95')}
+      ${bar(on,'var(--brand)','premium, p95')}
     </div>`;};
-  p.querySelector('#p10a').innerHTML=rows('Premium p95 TTFT, 128-token output',1778,251,'~7x');
-  p.querySelector('#p10b').innerHTML=rows('Premium p95 TTFT, 512-token output',5259,145,'~36x');},
+  p.querySelector('#p10a').innerHTML=rows('p95 TTFT, 128-token output, flow control on',1406,1117,'~1.25x');
+  p.querySelector('#p10b').innerHTML='<div class="lab" style="color:var(--txt3)">512-token output is being restated with per-repeat percentiles and will follow.</div>';},
  enter:p=>{requestAnimationFrame(()=>p.querySelectorAll('.p10f').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.w+'%',80);}));}},
 
 /* ---- PAGE 11 · FAIRNESS HOLDS ---- */
-{sub:'Proof',title:'Fairness bounds a tenant’s share, not a peer’s latency',point:'One tenant in the premium band spikes to double its peers. Round-robin splits the dispatch turns evenly, so the spiker takes its own share of the queue instead of taking the pool. Same-priority peers are not insulated, they still share the full engine, but no single tenant can starve the others.',
- provenance:'measured · one H100, GPT-OSS 20B',dwell:17000,
- build:p=>{vizHTML(p,scenarioSVG('p8'));},
- enter:p=>{scenarioAnim(p,'p8',{
-   lines:[{c:'var(--brand)',base:340,peak:1960,label:'tenant a p95, spiking'},{c:'var(--teal)',base:330,peak:1540,label:'tenant b p95'},{c:'var(--amber)',base:330,peak:1530,label:'tenant c p95'}],
-   ymax:2400,window:[0.3,0.75],jitter:12,
-   bars:[['tenant a, spiking',275,'var(--brand)'],['tenant b',170,'var(--teal)'],['tenant c',169,'var(--amber)']],barMax:310,barTitle:'mean queue duration, ms',
-   note:'The spiker accrued 1.6x the queue duration of its peers, so its own share of the wait grew. All three lines rise together because they share the engine, which is why same-tier fairness bounds share, not latency.'});}},
+{sub:'Proof',title:'Fairness behavior',point:'Three tenants share one priority band, tenant a bursts while b and c stay steady, and the round-robin policy rotates dispatch turns across the flows, skipping only the queues that are empty. A burst cannot buy extra turns, so the served counts stay level while the burster’s excess waits in its own queue — and peer latency under saturation still barely moves, because every dispatched request shares the same engine.',
+ provenance:'fairness/roundrobin',dwell:18000,
+ build:p=>{vizHTML(p,`
+  <svg viewBox="0 0 900 320" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    <text x="20" y="26" font-size="11" fill="var(--txt3)">one priority band · the round-robin cursor hands each flow one dispatch turn</text>
+    <text x="770" y="26" font-size="11" fill="var(--txt3)" text-anchor="start">served turns</text>
+    <g id="fzRows"></g>
+    <rect x="646" y="88" width="98" height="124" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+    <text x="695" y="146" font-size="12" fill="var(--txt)" text-anchor="middle">engine</text>
+    <text x="695" y="166" font-size="10" fill="var(--txt3)" text-anchor="middle">one dispatch</text>
+    <text x="695" y="180" font-size="10" fill="var(--txt3)" text-anchor="middle">per turn</text>
+    <g id="fzFly"></g>
+    <text id="fzTurns" x="20" y="278" font-size="11" class="mono-t" fill="var(--txt2)"></text>
+    <text x="20" y="298" font-size="11" fill="var(--txt2)">fairness bounds a flow’s share of dispatch turns; tenant a’s excess waits in tenant a’s own queue</text>
+    <text x="20" y="316" font-size="10.5" fill="var(--txt3)">peer latency under saturation barely moves, because the engine is still shared</text>
+  </svg>`);},
+ enter:p=>{
+  const rowsG=p.querySelector('#fzRows'),flyG=p.querySelector('#fzFly'),turnsT=p.querySelector('#fzTurns');
+  const flows=[{n:'tenant-a · bursting',c:'var(--danger)',q:4,arr:240,served:0},
+               {n:'tenant-b · steady',c:'var(--teal)',q:2,arr:850,served:0},
+               {n:'tenant-c · steady',c:'var(--amber)',q:2,arr:960,served:0}];
+  const rowY=i=>56+i*66;
+  let cursor=0,flights=[],recent=[];
+  const T0=performance.now();
+  let lastTurn=T0;const lastArr=[T0,T0,T0];
+  const smooth=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  animLoop(p,now=>{
+    flows.forEach((f,i)=>{if(now-lastArr[i]>f.arr){lastArr[i]=now;if(f.q<34)f.q++;}});
+    if(now-lastTurn>520){lastTurn=now;
+      for(let step=1;step<=3;step++){const i=(cursor+step)%3;
+        if(flows[i].q>0){cursor=i;flows[i].q--;flows[i].served++;
+          flights.push({i,c:flows[i].c,t0:now});
+          recent.push('abc'[i]);if(recent.length>9)recent.shift();break;}}}
+    let s='';
+    flows.forEach((f,i)=>{const y=rowY(i);const on=i===cursor;
+      s+=`<rect x="120" y="${y}" width="480" height="54" rx="9" fill="${on?'var(--brand-soft)':'var(--inset)'}" stroke="${on?'var(--brand)':'var(--b2)'}" stroke-width="${on?2:1}"/>
+        <text x="112" y="${y+25}" font-size="11" fill="${f.c}" text-anchor="end">${f.n.split(' · ')[0]}</text>
+        <text x="112" y="${y+40}" font-size="9" fill="var(--txt3)" text-anchor="end">${f.n.split(' · ')[1]}</text>`;
+      const show=Math.min(f.q,24);
+      for(let k=0;k<show;k++)s+=`<circle cx="${582-k*19}" cy="${y+27}" r="5.5" fill="${f.c}" opacity="${k===0?1:.55}"/>`;
+      if(f.q>24)s+=`<text x="${582-24*19}" y="${y+31}" font-size="10" class="mono-t" fill="${f.c}" text-anchor="end">+${f.q-24}</text>`;
+      if(on)s+=`<path d="M604 ${y+19} L618 ${y+27} L604 ${y+35} z" fill="var(--brand)"/>`;
+      const bw=Math.min(112,f.served*3);
+      s+=`<rect x="762" y="${y+16}" width="${bw}" height="12" rx="6" fill="${f.c}" opacity=".8"/>
+        <text x="${766+bw+6}" y="${y+26}" font-size="10.5" class="mono-t" fill="var(--txt)">${f.served}</text>`;});
+    rowsG.innerHTML=s;
+    flights=flights.filter(f=>(now-f.t0)<420);
+    flyG.innerHTML=flights.map(f=>{const k=smooth((now-f.t0)/420);const y0=rowY(f.i)+27;
+      return `<circle cx="${590+(672-590)*k}" cy="${y0+(150-y0)*k}" r="5.5" fill="${f.c}"/>`;}).join('');
+    turnsT.textContent='turns: '+(recent.length?recent.join(' · ')+' …':'');
+  });}},
 
 /* ---- PAGE 12 · BATCH ISOLATION (real numbers) ---- */
-{sub:'Proof',title:'Batch gets queued, not shed',point:'A batch flood absorbs its own waiting instead of taking down the pool. In the same overload, the gate turned 48,224 rejected requests into zero, because batch work was held in its own queue and released by priority rather than dropped on the floor. Past the band cap, refusals still carry a named reason on the wire.',
+{sub:'Proof',title:'Low-priority queuing',point:'A batch flood absorbs its own waiting instead of taking down the pool. In the same overload, the gate turned 48,224 rejected requests into zero, because batch work was held in its own queue and released by priority rather than dropped on the floor. Past the band cap, refusals still carry a named reason on the wire.',
  provenance:'measured · one H100, GPT-OSS 20B',dwell:18000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;gap:22px;height:100%;align-items:center">
@@ -701,7 +848,7 @@ const PAGES=[
  enter:p=>{p.querySelectorAll('.p9f').forEach(b=>b.style.width=b.dataset.w+'%');}},
 
 /* ---- PAGE 13 · THE TRADE ---- */
-{sub:'The trade',title:'What it buys, and where it stops',point:'Flow control lets you run the pool hot and still protect the tier that needs it, by moving the wait to where policy decides who pays it and giving you a dial per pool. Its reach ends at the engine. Once requests are dispatched they share the same batch, so a calm pool or a set of equal-priority tenants sees little effect. The gate reorders who waits, it does not add capacity.',
+{sub:'The trade',title:'Key takeaways',point:'Flow control lets you run the pool hot and still protect the tier that needs it, by moving the wait to where policy decides who pays it and giving you a dial per pool. Its reach ends at the engine. Once requests are dispatched they share the same batch, so a calm pool or a set of equal-priority tenants sees little effect. The gate reorders who waits, it does not add capacity.',
  dwell:20000,
  build:p=>{vizHTML(p,`
   <div style="display:flex;flex-direction:column;height:100%;justify-content:center;gap:26px">
@@ -738,8 +885,7 @@ const PAGES=[
 /* ---------- shared builders ---------- */
 function vizHTML(p,inner){
   const d=PAGES[cur];
-  p.innerHTML=`<div class="eyebrow">${d.sub||''}</div>
-    ${d.title?`<h2>${d.title}</h2>`:''}
+  p.innerHTML=`    ${d.title?`<h2>${d.title}</h2>`:''}
     ${d.point?`<p class="point">${d.point}</p>`:''}
     <div class="viz">${d.provenance?`<span class="provenance">${d.provenance}</span>`:''}${inner}</div>`;
 }
@@ -813,7 +959,7 @@ const PG={running:false,load:{premium:12,standard:24,batch:8},mode:4,shape:0,fc:
   ]};
 function buildPlayground(p){
   p.innerHTML=`
-  <div class="eyebrow">Play</div><h2>Your turn</h2>
+  <h2>Your turn</h2>
   <p class="point">Drive the load, then flip flow control off and on. With it on, premium stays low and flat while standard and batch climb. Turn it off and premium’s line jumps up to join the crowd. Numbers here are illustrative, generated by a small model of the mechanism, but the shape matches the measured runs.</p>
   <div class="chips" id="pgchips"></div>
   <div class="pg-grid">
