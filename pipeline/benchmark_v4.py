@@ -147,6 +147,10 @@ def labels_to_dict(labels: tuple[tuple[str, str], ...]) -> dict[str, str]:
     return dict(labels)
 
 
+def metric_label_suffix(labels: tuple[tuple[str, str], ...]) -> str:
+    return "|".join(f"{key}={value}" for key, value in labels)
+
+
 def scrape_url(url: str, token: str | None = None, attempts: int = 4, delay_s: float = 2.0) -> str:
     allow_failures = os.environ.get("ALLOW_METRIC_SCRAPE_FAILURES") == "1"
     max_attempts = 1 if allow_failures else attempts
@@ -396,11 +400,12 @@ async def tenant_driver(
     samples: list[RequestSample],
     concurrency_log: list[dict[str, Any]],
     traffic_seed: int = 42,
+    sample_interval_s: float = 0.5,
 ):
     inflight: set[asyncio.Task] = set()
     prompt_idx = 0
     rng = random.Random(traffic_seed + hash(tenant.fairness_id))
-    last_log_s = 0.0
+    next_log_s = 0.0
     try:
         while now_s() - start_zero < duration_s:
             elapsed = now_s() - start_zero
@@ -408,15 +413,15 @@ async def tenant_driver(
             inflight = {task for task in inflight if not task.done()}
             actual = len(inflight)
 
-            # Record concurrency sample once per second
-            if elapsed - last_log_s >= 1.0:
+            if elapsed >= next_log_s:
                 concurrency_log.append({
                     "elapsed_s": round(elapsed, 3),
                     "tenant": tenant.fairness_id,
                     "target_concurrency": target,
                     "actual_inflight": actual,
                 })
-                last_log_s = elapsed
+                while next_log_s <= elapsed:
+                    next_log_s += sample_interval_s
 
             while len(inflight) < target:
                 prompt = prompts[prompt_idx % len(prompts)]["prompt"]
@@ -438,36 +443,86 @@ async def tenant_driver(
                 await asyncio.gather(*done, return_exceptions=True)
 
 
-async def metric_sampler(run_id: str, scenario: str, duration_s: int, start_zero: float, token: str | None, out_rows: list[dict[str, Any]]):
+async def metric_sampler(
+    run_id: str,
+    scenario: str,
+    duration_s: int,
+    start_zero: float,
+    token: str | None,
+    out_rows: list[dict[str, Any]],
+    sample_interval_s: float = 0.5,
+):
     loop = asyncio.get_event_loop()
+    next_sample_at = start_zero
     while now_s() - start_zero < duration_s:
-        elapsed = now_s() - start_zero
-        row = {"run_id": run_id, "scenario": scenario, "elapsed_s": round(elapsed, 3)}
-        try:
-            vllm_text = await loop.run_in_executor(None, scrape_url, VLLM_METRICS_URL)
-            vllm = parse_prometheus(vllm_text)
+        wait_s = next_sample_at - now_s()
+        if wait_s > 0:
+            await asyncio.sleep(wait_s)
+        sample_started = now_s()
+        if sample_started - start_zero >= duration_s:
+            break
+
+        row = {
+            "run_id": run_id,
+            "scenario": scenario,
+            "elapsed_s": round(sample_started - start_zero, 3),
+            "sample_interval_s": sample_interval_s,
+            "sample_lag_s": round(max(0.0, sample_started - next_sample_at), 4),
+        }
+        vllm_result, epp_result = await asyncio.gather(
+            loop.run_in_executor(None, scrape_url, VLLM_METRICS_URL),
+            loop.run_in_executor(None, scrape_url, EPP_METRICS_URL, token),
+            return_exceptions=True,
+        )
+
+        if isinstance(vllm_result, Exception):
+            row["vllm_scrape_error"] = type(vllm_result).__name__
+        else:
+            vllm = parse_prometheus(vllm_result)
+            vllm_totals: dict[str, float] = defaultdict(float)
+            vllm_cache_values: list[float] = []
             for (name, labels), value in vllm.items():
-                if name in {"vllm:num_requests_running", "vllm:num_requests_waiting", "vllm:gpu_cache_usage_perc"}:
-                    row[name] = value
-        except Exception as exc:
-            row["vllm_scrape_error"] = type(exc).__name__
-        try:
-            epp_text = await loop.run_in_executor(None, scrape_url, EPP_METRICS_URL, token)
-            epp = parse_prometheus(epp_text)
+                if name in {
+                    "vllm:num_requests_running",
+                    "vllm:num_requests_waiting",
+                    "vllm:gpu_cache_usage_perc",
+                    "vllm:num_preemptions_total",
+                }:
+                    suffix = metric_label_suffix(labels)
+                    if suffix:
+                        row[f"{name}|{suffix}"] = value
+                    if name == "vllm:gpu_cache_usage_perc":
+                        vllm_cache_values.append(value)
+                    else:
+                        vllm_totals[name] += value
+            row.update(vllm_totals)
+            if vllm_cache_values:
+                row["vllm:gpu_cache_usage_perc"] = max(vllm_cache_values)
+
+        if isinstance(epp_result, Exception):
+            row["epp_scrape_error"] = type(epp_result).__name__
+        else:
+            epp = parse_prometheus(epp_result)
             for (name, labels), value in epp.items():
                 if name in {"inference_extension_flow_control_queue_size", "inference_extension_flow_control_queue_bytes"}:
                     label_dict = labels_to_dict(labels)
                     fid = label_dict.get("fairness_id", "unknown")
-                    row[f"{name}|{fid}"] = value
+                    priority = label_dict.get("priority", "unknown")
+                    suffix = metric_label_suffix(labels) or f"fairness_id={fid}|priority={priority}"
+                    row[f"{name}|{suffix}"] = value
                 # v4: also log the gate's live saturation signal + pool queue, so the
                 # timeseries shows exactly when the gate closes and the queue forms.
                 elif name in {"inference_extension_flow_control_pool_saturation",
                               "inference_pool_average_queue_size"}:
                     row[name] = value
-        except Exception as exc:
-            row["epp_scrape_error"] = type(exc).__name__
+
+        row["scrape_duration_s"] = round(now_s() - sample_started, 4)
         out_rows.append(row)
-        await asyncio.sleep(1)
+        next_sample_at += sample_interval_s
+        # Preserve a fixed cadence without issuing a burst of catch-up scrapes when
+        # one scrape takes longer than the configured interval.
+        while next_sample_at <= now_s():
+            next_sample_at += sample_interval_s
 
 
 def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], duration_s: int, trim_s: float = 0.0) -> list[dict[str, Any]]:
@@ -624,6 +679,7 @@ async def run_workload(
     out_dir: Path,
     traffic_seed: int = 42,
     trim_s: float = 0.0,
+    metric_sample_interval_s: float = 0.5,
 ) -> dict[str, Any]:
     print(json.dumps({"event": "run_start", "run_id": run_id, "scenario": scenario, "duration_s": duration_s, "drain_timeout_s": drain_timeout_s, "trim_s": trim_s}), flush=True)
     run_dir = out_dir / run_id
@@ -644,11 +700,19 @@ async def run_workload(
             asyncio.create_task(tenant_driver(
                 session, run_id, scenario, tenant, prompts, output_tokens,
                 duration_s, drain_timeout_s, start_zero, samples,
-                concurrency_log, traffic_seed,
+                concurrency_log, traffic_seed, metric_sample_interval_s,
             ))
             for tenant in tenants
         ]
-        sampler_task = asyncio.create_task(metric_sampler(run_id, scenario, duration_s + drain_timeout_s, start_zero, token, metric_rows))
+        sampler_task = asyncio.create_task(metric_sampler(
+            run_id,
+            scenario,
+            duration_s + drain_timeout_s,
+            start_zero,
+            token,
+            metric_rows,
+            metric_sample_interval_s,
+        ))
         while now_s() - start_zero < duration_s:
             elapsed = int(now_s() - start_zero)
             if elapsed % 30 == 0:
@@ -688,6 +752,7 @@ async def run_workload(
         "scenario": scenario,
         "duration_s": duration_s,
         "drain_timeout_s": drain_timeout_s,
+        "metric_sample_interval_s": metric_sample_interval_s,
         "tenants": [asdict(t) for t in tenants],
         "client_summary": summarize_samples(run_id, scenario, samples, duration_s, trim_s),
         "metric_delta": metric_delta(pre_epp + "\n" + pre_vllm, post_epp + "\n" + post_vllm, tenants_set),
@@ -708,6 +773,24 @@ def summarize_metric_samples(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "mean": statistics.mean(vals),
                 "p95": percentile(vals, 0.95),
             }
+    preemptions = [float(row["vllm:num_preemptions_total"]) for row in rows
+                   if row.get("vllm:num_preemptions_total") not in ("", None)]
+    if preemptions:
+        result["vllm:num_preemptions_total"] = {
+            "start": preemptions[0],
+            "end": preemptions[-1],
+            "delta": max(0.0, preemptions[-1] - preemptions[0]),
+        }
+    scrape_durations = [float(row["scrape_duration_s"]) for row in rows
+                        if row.get("scrape_duration_s") not in ("", None)]
+    sample_lags = [float(row["sample_lag_s"]) for row in rows
+                   if row.get("sample_lag_s") not in ("", None)]
+    if scrape_durations:
+        result["capture_timing"] = {
+            "samples": len(rows),
+            "scrape_duration_p95_s": percentile(scrape_durations, 0.95),
+            "sample_lag_p95_s": percentile(sample_lags, 0.95) if sample_lags else None,
+        }
     return result
 
 
@@ -1462,7 +1545,12 @@ async def main():
     parser.add_argument("--traffic-scale", type=float, default=1.0,
                         help="Uniform multiplier on every scenario's target concurrency. 1.0 = as authored "
                              "(hot, peaks past the 128 knee). ~0.82 lands peaks at the knee for the clean spine.")
+    parser.add_argument("--metric-sample-interval-s", type=float, default=0.5,
+                        help="EPP, vLLM, and client-concurrency sample cadence in seconds (default 0.5; "
+                             "minimum 0.1). Lower values increase metrics-endpoint and harness overhead.")
     args = parser.parse_args()
+    if args.metric_sample_interval_s < 0.1:
+        parser.error("--metric-sample-interval-s must be at least 0.1 seconds")
 
     global TRAFFIC_SCALE
     TRAFFIC_SCALE = args.traffic_scale
@@ -1493,6 +1581,7 @@ async def main():
         "steady_state_trim_s": args.steady_state_trim_s,
         "vllm_prefix_caching_declared": args.vllm_prefix_caching,
         "traffic_scale": args.traffic_scale,
+        "metric_sample_interval_s": args.metric_sample_interval_s,
         "harness_version": "v4",
         "peer_center": args.peer_center,
         "a_center": args.a_center,
@@ -1524,6 +1613,7 @@ async def main():
             token,
             out_dir,
             args.traffic_seed,
+            metric_sample_interval_s=args.metric_sample_interval_s,
         )
         (out_dir / "warmup_summary.json").write_text(json.dumps(warmup_summary, indent=2))
         await asyncio.sleep(5)
@@ -1635,7 +1725,11 @@ async def main():
         for scenario_idx, (scenario, tenants, duration) in enumerate(all_defs, start=1):
             for repeat in range(1, args.stabilization_repeats + 1):
                 run_id = f"stabilization-{scenario_idx:02d}-{scenario}-s{repeat:02d}"
-                summary = await run_workload(run_id, scenario, tenants, duration, args.drain_timeout, prompts, args.output_tokens, token, out_dir, args.traffic_seed, args.steady_state_trim_s)
+                summary = await run_workload(
+                    run_id, scenario, tenants, duration, args.drain_timeout, prompts,
+                    args.output_tokens, token, out_dir, args.traffic_seed,
+                    args.steady_state_trim_s, args.metric_sample_interval_s,
+                )
                 summary["stabilization_repeat"] = repeat
                 stabilization_summaries.append(summary)
                 await asyncio.sleep(5)
@@ -1650,7 +1744,11 @@ async def main():
     for idx, (scenario, tenants, duration, repeat) in enumerate(expanded_defs, start=1):
         repeat_suffix = f"-r{repeat:02d}" if args.repeats > 1 else ""
         run_id = f"{idx:02d}-{scenario}{repeat_suffix}"
-        summary = await run_workload(run_id, scenario, tenants, duration, args.drain_timeout, prompts, args.output_tokens, token, out_dir, args.traffic_seed, args.steady_state_trim_s)
+        summary = await run_workload(
+            run_id, scenario, tenants, duration, args.drain_timeout, prompts,
+            args.output_tokens, token, out_dir, args.traffic_seed,
+            args.steady_state_trim_s, args.metric_sample_interval_s,
+        )
         summary["repeat"] = repeat
         summaries.append(summary)
         await asyncio.sleep(5)
