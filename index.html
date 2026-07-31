@@ -4,19 +4,42 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Flow control benchmarks for llm-d</title>
 <style>
-:root{--bg:#08090B;--card:#0e1014;--b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.16);
+:root{--bg:#08090B;--card:#0e1014;--menu:#14171e;--b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.16);
 --txt:#e8eaf0;--txt2:#9aa0ad;--txt3:#5f6673;--brand:#5B6CF0}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 main{max-width:760px;margin:0 auto;padding:64px 24px 80px}
 h1{font-size:30px;font-weight:650;letter-spacing:-.02em;margin:0 0 12px}
 p.lede{color:var(--txt2);margin:0 0 40px}
-a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--b1);
-  border-radius:12px;padding:20px 22px;margin-bottom:14px;transition:border-color .18s,transform .18s}
-a.card:hover{border-color:var(--brand);transform:translateY(-1px)}
-a.card .t{font-size:16px;font-weight:600;margin-bottom:5px}
-a.card .d{font-size:13.5px;color:var(--txt2)}
-.eyebrow{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
+.card{display:flex;align-items:stretch;background:var(--card);border:1px solid var(--b1);
+  border-radius:12px;margin-bottom:14px;overflow:visible;transition:border-color .18s}
+.card:hover{border-color:var(--brand)}
+.card-main{flex:1;min-width:0;display:block;text-decoration:none;color:inherit;padding:20px 22px}
+.card-main .t{font-size:16px;font-weight:600;margin-bottom:5px}
+.card-main .d{font-size:13.5px;color:var(--txt2)}
+.card-aside{display:flex;align-items:center;padding:0 14px 0 0;position:relative}
+.export{position:relative}
+.export > button{
+  appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;
+  letter-spacing:.02em;color:var(--txt2);background:transparent;
+  border:1px solid var(--b1);border-radius:8px;padding:7px 12px;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:color .15s,border-color .15s,background .15s}
+.export > button:hover,.export.open > button{
+  color:var(--txt);border-color:var(--b2);background:rgba(255,255,255,.04)}
+.export > button svg{opacity:.7;transition:transform .15s}
+.export.open > button svg{transform:rotate(180deg)}
+.menu{
+  display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:20;
+  min-width:168px;padding:6px;background:var(--menu);border:1px solid var(--b2);
+  border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+.export.open .menu{display:block}
+.menu a{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  text-decoration:none;color:var(--txt);font-size:13px;font-weight:500;
+  padding:9px 10px;border-radius:7px}
+.menu a:hover{background:rgba(91,108,240,.16)}
+.menu a .fmt{color:var(--txt3);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 p.subtext{margin:20px 2px 0;font-size:13px;line-height:1.7;color:var(--txt3)}
 p.subtext a{color:var(--txt2);text-decoration:none;border-bottom:1px solid var(--b2)}
 p.subtext a:hover{color:var(--txt);border-color:var(--brand)}
@@ -28,18 +51,62 @@ footer a{color:var(--txt3)}
 <main>
   <h1>Flow control benchmarks</h1>
 
-  <a class="card" href="learn/flow-control-journey.html">
-    <div class="t">Interactive explainer</div>
-    <div class="d">Watch how the mechanism works.</div>
-  </a>
-  <a class="card" href="learn/flow-control.html">
-    <div class="t">Written explainer</div>
-    <div class="d">Read it through instead.</div>
-  </a>
-  <a class="card" href="walkthrough.html">
-    <div class="t">Benchmark</div>
-    <div class="d">The evidence, chart by chart.</div>
-  </a>
+  <div class="card">
+    <a class="card-main" href="learn/flow-control-journey.html">
+      <div class="t">Interactive explainer</div>
+      <div class="d">Watch how the mechanism works.</div>
+    </a>
+    <div class="card-aside">
+      <div class="export">
+        <button type="button" aria-haspopup="menu" aria-expanded="false">
+          Export
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="menu" role="menu">
+          <a role="menuitem" href="exports/interactive-explainer.pptx"><span>PowerPoint</span><span class="fmt">pptx</span></a>
+          <a role="menuitem" href="exports/interactive-explainer.pdf"><span>PDF</span><span class="fmt">pdf</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <a class="card-main" href="learn/flow-control.html">
+      <div class="t">Written explainer</div>
+      <div class="d">Read it through instead.</div>
+    </a>
+    <div class="card-aside">
+      <div class="export">
+        <button type="button" aria-haspopup="menu" aria-expanded="false">
+          Export
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="menu" role="menu">
+          <a role="menuitem" href="exports/written-explainer.pptx"><span>PowerPoint</span><span class="fmt">pptx</span></a>
+          <a role="menuitem" href="exports/written-explainer.pdf"><span>PDF</span><span class="fmt">pdf</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <a class="card-main" href="walkthrough.html">
+      <div class="t">Benchmark</div>
+      <div class="d">The evidence, chart by chart.</div>
+    </a>
+    <div class="card-aside">
+      <div class="export">
+        <button type="button" aria-haspopup="menu" aria-expanded="false">
+          Export
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="menu" role="menu">
+          <a role="menuitem" href="exports/walkthrough.pptx"><span>PowerPoint</span><span class="fmt">pptx</span></a>
+          <a role="menuitem" href="exports/walkthrough.pdf"><span>PDF</span><span class="fmt">pdf</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <p class="subtext">
     See the <a href="https://github.com/alexagriffith/flow-control-benchmarks">full GitHub repo</a> for data, runner, and charts.<br>
@@ -48,5 +115,27 @@ footer a{color:var(--txt3)}
 
   <footer>Built against the upstream <a href="https://github.com/llm-d/llm-d">llm-d</a> Endpoint Picker documentation.</footer>
 </main>
+<script>
+document.querySelectorAll('.export').forEach(el => {
+  const btn = el.querySelector('button');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = el.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.querySelectorAll('.export').forEach(other => {
+      if (other !== el) {
+        other.classList.remove('open');
+        other.querySelector('button').setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.export.open').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('button').setAttribute('aria-expanded', 'false');
+  });
+});
+</script>
 </body>
 </html>
