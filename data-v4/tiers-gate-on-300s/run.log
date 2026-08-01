@@ -1,0 +1,47 @@
+{"event": "benchmark_start", "model_name": "openai/gpt-oss-20b", "base_url": "http://<inference-gateway>/<namespace>/<endpoint>", "input_tokens_target": 512, "output_tokens": 128, "prompt_pool_size": 384, "sweep_duration_s": 30, "scenario_duration_s": 300, "drain_timeout_s": 120, "repeats": 3, "warmup_duration_s": 0, "warmup_concurrency": 16, "stabilization_repeats": 0, "warmup_included_in_summaries": false, "traffic_seed": 42, "headers": ["x-gateway-inference-objective", "x-gateway-inference-fairness-id"], "objectives": {"100": "gpt-oss-premium", "0": "gpt-oss-standard", "-10": "gpt-oss-batch"}, "flow_control_mode": "on", "queue_depth_threshold": "4", "steady_state_trim_s": 40.0, "vllm_prefix_caching_declared": "off", "traffic_scale": 1.0, "harness_version": "v4", "peer_center": 11, "a_center": 120, "a_amplitude": 20, "peer_flat": false, "matched_pair_one_band": false, "matched_pair_two_band": false}
+{"event": "prompt_pool_progress", "built": 1, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 51, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 101, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 151, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 201, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 251, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 301, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 351, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_complete", "token_counts": {"512": 383, "511": 1}}
+{"event": "run_start", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 30, "samples": 895}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 60, "samples": 2070}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 90, "samples": 3144}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 120, "samples": 4369}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 150, "samples": 5743}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 180, "samples": 7157}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 210, "samples": 8496}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 240, "samples": 9785}
+{"event": "run_progress", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "elapsed_s": 270, "samples": 11025}
+{"event": "run_complete", "run_id": "01-test2_tiers_tuned-r01", "scenario": "test2_tiers_tuned", "samples": 12372}
+{"event": "run_start", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 30, "samples": 1275}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 60, "samples": 2552}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 90, "samples": 3843}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 120, "samples": 5333}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 150, "samples": 6703}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 180, "samples": 8073}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 210, "samples": 9481}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 240, "samples": 10898}
+{"event": "run_progress", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "elapsed_s": 270, "samples": 12148}
+{"event": "run_complete", "run_id": "02-test2_tiers_tuned-r02", "scenario": "test2_tiers_tuned", "samples": 13569}
+{"event": "run_start", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 30, "samples": 1278}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 60, "samples": 2658}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 90, "samples": 4013}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 120, "samples": 5400}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 150, "samples": 6893}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 180, "samples": 8316}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 210, "samples": 9754}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 240, "samples": 11166}
+{"event": "run_progress", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "elapsed_s": 270, "samples": 12494}
+{"event": "run_complete", "run_id": "03-test2_tiers_tuned-r03", "scenario": "test2_tiers_tuned", "samples": 14028}
+{"event": "benchmark_complete", "runs": 3, "output_dir": "/tmp/tiers128-backfill-20260730T033000"}

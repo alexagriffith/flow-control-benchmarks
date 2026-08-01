@@ -8,13 +8,13 @@ This repo holds the measured evidence, the charts drawn from it, the per-request
 
 Same traffic, same GPU, the only change is whether flow control is on. Premium is the interactive tier, standard is normal traffic, batch is deferrable background work.
 
-<img src="assets/results-at-a-glance.svg" width="100%" alt="Premium p95 TTFT drops from 1778 ms without flow control to 251 ms with it under a service-tier surge; batch isolation turns 48,224 rejected requests into zero">
+<img src="assets/results-at-a-glance.svg" width="100%" alt="With flow control on under a saturated service-tier surge, premium p95 TTFT is 1117 ms versus 1406 ms for standard; batch isolation turns 48,224 rejected requests into zero">
 
-- **A surge that isn't yours no longer sets your latency.** Under a standard surge, the premium p95 time to first token went from 1778 ms without flow control to 251 ms with it, roughly 7 times faster, and inside the 300 ms interactive objective. Standard absorbed the wait it created.
+- **A surge that isn't yours no longer gets equal priority.** Under a saturated standard surge, flow control on held premium p95 time to first token at 1117 ms versus 1406 ms for standard, with a 1056-1211 ms range across three 300 s repeats. Standard absorbed more of the wait it created.
 - **Overload is queued, not rejected.** When batch traffic flooded the pool, the run without flow control returned 48,224 HTTP 429 rejections. With flow control on, zero. The platform held the deferrable work until capacity existed instead of pushing retries back to the application.
 - **It costs nothing when the pool is calm.** When the GPU has headroom, gate-on and gate-off match. Flow control is the insurance that only charges under pressure.
 
-**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware and tuning. The pattern is the finding: premium held its objective through a surge it did not cause, and deferrable work waited instead of failing. On different hardware the numbers move and the behavior stays.
+**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware, model shape, and offered load. The measured finding is priority admission: premium is served ahead of standard under saturation, and deferrable work waits instead of failing. A hard SLO claim needs a named objective and tests that report TTFT, end-to-end latency, TPOT, and success rate under the target load; see [SLO proof tests](docs/slo-proof-tests.md) and the [execution plan](docs/slo-proof-execution-plan.md).
 
 ## How we chose the operating point and configuration
 
@@ -29,7 +29,7 @@ The rest of the configuration follows from making the measurement honest rather 
 | Request shape | 512 in / 128 out | A single fixed shape so every number is comparable; the output ladder (64, 128, 512) is varied separately |
 | `max-num-seqs` | 128 | The GPU's running-batch limit; saturation means offered load beyond this, not that the H100 was exhausted |
 | Prefix caching | off | So the latencies reflect scheduling, not a warm cache. Each prompt has a unique head and body |
-| Repeats | 3 counted, 120 s each | Repeats capture run-to-run variance; the sweep showed 120 s already gives stable percentiles |
+| Repeats | 3 counted; 300 s for corrected SLO-sensitive runs | Repeats capture run-to-run variance; SLO-sensitive claims use per-repeat p95 with a min-max range, never pooled repeats |
 | Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |
 
 The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`data-v4/operating-point-sweep`](data-v4/operating-point-sweep).
@@ -38,33 +38,31 @@ The sweep was run at 180 s per point over two passes in randomized order, and th
 
 ## Service tiers under mixed load
 
-**What it proves.** When the pool saturates, priority decides who waits. Premium stays ahead while standard absorbs the queue.
+**What it proves.** When the pool saturates, priority decides who waits. Premium stays ahead while standard absorbs more of the queue.
 
-**What we saw.** Standard traffic surged past what the GPU could absorb, so vLLM ran a full batch of 128 with requests waiting behind it. Without flow control, premium and standard degraded together, and the premium p95 TTFT reached 1778 ms. With flow control on, the premium p95 TTFT held at 251 ms while standard rose to 691 ms. Priority moved the wait from the tier that had an objective to the tier that could absorb it.
+**What we saw.** Standard traffic surged past what the GPU could absorb, so vLLM ran a full batch of 128 with requests waiting behind it. The corrected 300 s gate-on rerun held premium p95 TTFT at 1117 ms, with a 1056-1211 ms range across repeats, while standard landed at 1406 ms. Priority moved more of the wait from the tier with the tighter objective to the tier that could absorb it.
 
-<img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation, premium p95 TTFT holds near 251 ms with flow control while standard rises to about 691 ms; without flow control both climb past 1700 ms">
+<img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation with flow control on, premium p95 TTFT is 1117 ms while standard is 1406 ms, with premium stable across three repeats">
 
 <img src="assets/traffic-tiers.svg" width="100%" alt="Offered concurrency over the run: standard surges to about 96 in-flight requests mid-run while premium holds steady and low. The arrivals are noisy, not a flat synthetic load.">
 
 The arrivals are noisy sinusoidal, so the load looks like production rather than a flat synthetic ramp. Standard surges past the GPU batch limit mid-run; premium holds a low steady rate throughout.
 
-<img src="assets/pct-tiers.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on. Premium's tall gate-off bars collapse to short gate-on bars at every percentile; standard stays elevated.">
-
-| tier | p50 off | p90 off | p95 off | p50 on | p90 on | p95 on |
-|---|---|---|---|---|---|---|
-| premium | 176 ms | 1493 ms | 1778 ms | 82 ms | 173 ms | 251 ms |
-| standard | 589 ms | 1903 ms | 2054 ms | 155 ms | 555 ms | 691 ms |
+| tier | p50 on | p90 on | p95 on | p95 range |
+|---|---|---|---|---|
+| premium | 374 ms | 914 ms | 1117 ms | 1056-1211 ms |
+| standard | 593 ms | 1240 ms | 1406 ms | 1250-1488 ms |
 
 
-The protection grows with output length, because a longer generation holds its GPU slot longer, so a request that misses the batch waits longer for the next opening. At 64 output tokens the premium p95 TTFT improved from 1136 ms to 442 ms; at 128, from 1778 ms to 251 ms; at 512, from 5259 ms to 145 ms. The gate does the most for the longest work.
+An earlier cut pooled all repeats into one percentile and produced a 251 ms tiers headline. That number is withdrawn. The corrected method computes p95 per repeat and reports the median with the min-max range, so run-to-run variance cannot disappear inside a pooled percentile.
 
-<img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT gate off versus on at 64, 128, and 512 output tokens: the gap widens with output length, from 1136 to 442 ms at 64 up to 5259 to 145 ms at 512">
+<img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT for the corrected 128-token service-tier run is 1117 ms with flow control on; earlier output-length cells are being restated with the same per-repeat method">
 
-Data in [`data-v4/tiers-512-gate-on`](data-v4/tiers-512-gate-on) and [`data-v4/tiers-512-gate-off`](data-v4/tiers-512-gate-off).
+Corrected 300 s gate-on data is in [`data-v4/tiers-gate-on-300s`](data-v4/tiers-gate-on-300s). The older 64- and 512-output cells remain in `data-v4/` for provenance, but their pooled output-length ratios are not used as headline SLO evidence until restated with the same per-repeat method.
 
-**Why it matters.** A latency-sensitive product keeps its experience through a surge it did not cause. That is what makes tiering and SLA commitments enforceable on shared capacity.
+**Why it matters.** A latency-sensitive product gets preferential admission through a surge it did not cause. That is a necessary part of enforcing tiered service objectives on shared capacity, but not the whole SLO proof by itself.
 
-*Noisy priority run, 512 input / 128 output tokens, three counted 120 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`data-v4/tiers-gate-on`](data-v4/tiers-gate-on) and [`data-v4/tiers-gate-off`](data-v4/tiers-gate-off).*
+*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`data-v4/tiers-gate-on-300s`](data-v4/tiers-gate-on-300s).*
 
 ## Batch isolation under surge
 
@@ -145,6 +143,16 @@ What the sweep tells a platform team:
 - **A concurrency cap is a separation control, not a latency-SLO control.** No setting reached premium p95 under 300 ms at this offered load, because a 300 ms objective needs a lower load, not only a tighter cap. Holding an absolute SLO is a load decision, shown next.
 
 *Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`data-v4/upstream-sweep`](data-v4/upstream-sweep).*
+
+## SLO proof tests
+
+The results above show priority admission and batch deferral. To claim that a deployment keeps a specific SLO, the benchmark has to define that SLO and pass it on all required axes: TTFT, end-to-end latency, TPOT, and success rate. The test plan is in [`docs/slo-proof-tests.md`](docs/slo-proof-tests.md), with the ordered cluster execution plan in [`docs/slo-proof-execution-plan.md`](docs/slo-proof-execution-plan.md). The short version:
+
+- **Closed-loop priority admission test:** confirms the gate puts premium ahead of standard under saturation.
+- **Open-loop SLO test:** drives a named request rate with Poisson arrivals and checks whether premium meets the target at p95/p99.
+- **Success-rate test:** treats 429, 503, and timeout as SLO failures, not just latency exclusions.
+- **Decode and memory test:** reports TPOT and KV/preemption metrics so a fast first token cannot hide slow generation.
+- **Detector comparison:** compares utilization gating with concurrency caps at the same offered load, because admission caps are the mechanism for absolute latency objectives.
 
 ## Scope
 

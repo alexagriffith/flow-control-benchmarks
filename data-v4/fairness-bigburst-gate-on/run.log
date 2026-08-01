@@ -1,0 +1,47 @@
+{"event": "benchmark_start", "model_name": "openai/gpt-oss-20b", "base_url": "http://<inference-gateway>/<namespace>/<endpoint>", "input_tokens_target": 512, "output_tokens": 128, "prompt_pool_size": 384, "sweep_duration_s": 30, "scenario_duration_s": 300, "drain_timeout_s": 120, "repeats": 3, "warmup_duration_s": 0, "warmup_concurrency": 16, "stabilization_repeats": 0, "warmup_included_in_summaries": false, "traffic_seed": 42, "headers": ["x-gateway-inference-objective", "x-gateway-inference-fairness-id"], "objectives": {"100": "gpt-oss-premium", "0": "gpt-oss-standard", "-10": "gpt-oss-batch"}, "flow_control_mode": "", "queue_depth_threshold": "", "steady_state_trim_s": 40.0, "vllm_prefix_caching_declared": "off", "traffic_scale": 1.0, "harness_version": "v4", "peer_center": 11, "a_center": 120, "a_amplitude": 20, "peer_flat": false, "matched_pair_one_band": false, "matched_pair_two_band": false}
+{"event": "prompt_pool_progress", "built": 1, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 51, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 101, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 151, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 201, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 251, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 301, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_progress", "built": 351, "pool_size": 384, "tokens": 512}
+{"event": "prompt_pool_complete", "token_counts": {"512": 382, "511": 2}}
+{"event": "run_start", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 30, "samples": 792}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 60, "samples": 1590}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 90, "samples": 2349}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 120, "samples": 3426}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 150, "samples": 4874}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 180, "samples": 6330}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 210, "samples": 7710}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 240, "samples": 9139}
+{"event": "run_progress", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 270, "samples": 10555}
+{"event": "run_complete", "run_id": "01-test3_fairness_saturated_clean-r01", "scenario": "test3_fairness_saturated_clean", "samples": 12186}
+{"event": "run_start", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 30, "samples": 783}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 60, "samples": 1595}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 90, "samples": 2409}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 120, "samples": 3511}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 150, "samples": 4866}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 180, "samples": 6320}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 210, "samples": 7792}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 240, "samples": 9208}
+{"event": "run_progress", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 270, "samples": 10651}
+{"event": "run_complete", "run_id": "02-test3_fairness_saturated_clean-r02", "scenario": "test3_fairness_saturated_clean", "samples": 12190}
+{"event": "run_start", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "duration_s": 300, "drain_timeout_s": 120, "trim_s": 40.0}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 0, "samples": 0}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 30, "samples": 784}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 60, "samples": 1574}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 90, "samples": 2338}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 120, "samples": 3413}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 150, "samples": 4860}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 180, "samples": 6321}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 210, "samples": 7776}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 240, "samples": 9235}
+{"event": "run_progress", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "elapsed_s": 270, "samples": 10645}
+{"event": "run_complete", "run_id": "03-test3_fairness_saturated_clean-r03", "scenario": "test3_fairness_saturated_clean", "samples": 12152}
+{"event": "benchmark_complete", "runs": 3, "output_dir": "/tmp/fairness-rerun-051107"}
