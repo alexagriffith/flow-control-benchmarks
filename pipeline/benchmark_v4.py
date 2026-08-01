@@ -33,7 +33,7 @@ import time
 import urllib.request
 import uuid
 from collections import Counter, defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from pathlib import Path
 from typing import Any
 
@@ -365,6 +365,69 @@ def completion_tokens_from_usage(event: dict[str, Any] | None) -> int | None:
     return int(value) if isinstance(value, (int, float)) else None
 
 
+def compute_tpot_s(
+    latency_s: float,
+    ttft_s: float | None,
+    completion_tokens: int | None,
+) -> float | None:
+    """Decode-only time-per-output-token.
+
+    Deliberately takes completion_tokens (from server usage), never a stream
+    chunk count: SSE chunk boundaries do not map 1:1 to decoded tokens, so
+    stream_chunks must never reach this computation. Returns None unless both
+    the first-token latency and a real completion-token count are available.
+    """
+    if completion_tokens is None or ttft_s is None:
+        return None
+    return (latency_s - ttft_s) / max(1, completion_tokens - 1)
+
+
+def compute_slo_proof_valid(
+    arrival_mode: str,
+    safety_state: dict[str, Any] | None,
+    metric_rows_present: bool,
+    samples: list["RequestSample"],
+) -> bool:
+    """Honest SLO-proof gate.
+
+    An SLO proof is only meaningful for an open-loop (poisson) run that stayed
+    under its outstanding safety ceiling, produced server metric samples and
+    client samples, and where every recorded request completed cleanly (no
+    timeouts and no error_class). Closed-loop runs describe an offered
+    concurrency shape, not a proof, so they are never marked valid here.
+    """
+    if arrival_mode != "poisson":
+        return False
+    if safety_state:
+        return False
+    if not metric_rows_present or not samples:
+        return False
+    for sample in samples:
+        if sample.timeout or sample.error_class is not None:
+            return False
+    return True
+
+
+def slo_proof_reason(
+    arrival_mode: str,
+    safety_state: dict[str, Any] | None,
+    metric_rows_present: bool,
+    samples: list["RequestSample"],
+) -> str:
+    """Human-readable justification mirroring compute_slo_proof_valid()."""
+    if arrival_mode != "poisson":
+        return "closed_loop_offered_concurrency_shape_not_a_proof"
+    if safety_state:
+        return "outstanding_safety_ceiling_hit"
+    if not metric_rows_present:
+        return "no_metric_samples"
+    if not samples:
+        return "no_client_samples"
+    if any(s.timeout or s.error_class is not None for s in samples):
+        return "request_errors_or_timeouts_present"
+    return "valid"
+
+
 async def send_one(
     session: aiohttp.ClientSession,
     run_id: str,
@@ -437,9 +500,7 @@ async def send_one(
         status = f"Error:{error_class}"
     finally:
         latency_s = now_s() - start
-        tpot_s = None
-        if completion_tokens is not None and ttft is not None:
-            tpot_s = (latency_s - ttft) / max(1, completion_tokens - 1)
+        tpot_s = compute_tpot_s(latency_s, ttft, completion_tokens)
         samples.append(
             RequestSample(
                 run_id=run_id,
@@ -907,7 +968,7 @@ async def run_workload(
     with (run_dir / "client_samples.csv").open("w", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=list(asdict(samples[0]).keys()) if samples else list(RequestSample("", "", "", "", 0, "", "", None, 0, 0, None, 0, 0, None, None, None, False, None, 0, None).__dict__.keys()),
+            fieldnames=[f.name for f in fields(RequestSample)],
         )
         writer.writeheader()
         for sample in samples:
@@ -951,7 +1012,8 @@ async def run_workload(
         "prompt_tokens": "present_from_prompt_pool",
         "completion_tokens": "stream_usage_when_available",
         "tpot": "computed_only_when_completion_tokens_available",
-        "slo_proof_valid": not safety_state and bool(metric_rows) and bool(samples),
+        "slo_proof_valid": compute_slo_proof_valid(arrival_mode, safety_state, bool(metric_rows), samples),
+        "slo_proof_reason": slo_proof_reason(arrival_mode, safety_state, bool(metric_rows), samples),
     }
     (run_dir / "preconditions.json").write_text(json.dumps(preconditions, indent=2))
 
