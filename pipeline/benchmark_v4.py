@@ -2,7 +2,8 @@
 """
 multi-tenant flow-control Benchmark v3.
 
-Runs inside the llm-test cluster from the existing guidellm runner pod.
+Runs from a benchmark client that can reach the OpenAI-compatible inference
+gateway and the EPP/vLLM metrics endpoints.
 Captures:
   - deterministic measured-token prompts
   - client-side request metrics per tenant
@@ -39,21 +40,12 @@ import aiohttp
 
 
 ENDPOINT_NAME = os.environ.get("ENDPOINT_NAME", "gpt-oss-20b-fc")
-MODEL_NAME = "openai/gpt-oss-20b"
-BASE_URL = os.environ.get(
-    "BASE_URL",
-    f"http://inference-gateway-istio.redhat-ods-applications.svc.cluster.local/llm-test/{ENDPOINT_NAME}",
-)
+MODEL_NAME = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 COMPLETIONS_URL = BASE_URL + "/v1/completions"
 TOKENIZE_URL = BASE_URL + "/tokenize"
-EPP_METRICS_URL = os.environ.get(
-    "EPP_METRICS_URL",
-    f"http://{ENDPOINT_NAME}-epp-service.llm-test.svc.cluster.local:9090/metrics",
-)
-VLLM_METRICS_URL = os.environ.get(
-    "VLLM_METRICS_URL",
-    f"https://{ENDPOINT_NAME}-kserve-workload-svc.llm-test.svc.cluster.local:8000/metrics",
-)
+EPP_METRICS_URL = os.environ.get("EPP_METRICS_URL", "http://localhost:9090/metrics")
+VLLM_METRICS_URL = os.environ.get("VLLM_METRICS_URL", "http://localhost:8001/metrics")
 
 # Objective (priority-tier) names sent in the x-gateway-inference-objective header.
 # These MUST match the InferenceObjective resources bound to the target pool, or

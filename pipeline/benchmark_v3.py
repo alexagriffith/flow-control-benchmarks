@@ -2,7 +2,8 @@
 """
 Flow-control Benchmark v3.
 
-Runs inside the llm-test cluster from the existing guidellm runner pod.
+Runs from a benchmark client that can reach the OpenAI-compatible inference
+gateway and the EPP/vLLM metrics endpoints.
 Captures:
   - deterministic measured-token prompts
   - client-side request metrics per tenant
@@ -38,12 +39,12 @@ from typing import Any
 import aiohttp
 
 
-MODEL_NAME = "openai/gpt-oss-20b"
-BASE_URL = "http://inference-gateway-istio.redhat-ods-applications.svc.cluster.local/llm-test/gpt-oss-20b-fc"
+MODEL_NAME = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000")
 COMPLETIONS_URL = BASE_URL + "/v1/completions"
 TOKENIZE_URL = BASE_URL + "/tokenize"
-EPP_METRICS_URL = "http://gpt-oss-20b-fc-epp-service.llm-test.svc.cluster.local:9090/metrics"
-VLLM_METRICS_URL = "https://gpt-oss-20b-fc-kserve-workload-svc.llm-test.svc.cluster.local:8000/metrics"
+EPP_METRICS_URL = os.environ.get("EPP_METRICS_URL", "http://localhost:9090/metrics")
+VLLM_METRICS_URL = os.environ.get("VLLM_METRICS_URL", "http://localhost:8001/metrics")
 
 OBJECTIVES = {
     100: "gpt-oss-premium",
