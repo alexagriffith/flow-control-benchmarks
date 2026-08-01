@@ -1,9 +1,9 @@
 # SLO proof test
 
-This file is the singular entrypoint for the SLO proof plan.
+This file is the singular entrypoint for the SLO proof evidence standard.
 
 - Detailed test design: [`slo-proof-tests.md`](slo-proof-tests.md)
-- Ordered execution plan: [`slo-proof-execution-plan.md`](slo-proof-execution-plan.md)
+- Public evidence protocol: [`slo-proof-execution-plan.md`](slo-proof-execution-plan.md)
 
 Use the strong claim only after the relevant test passes:
 
