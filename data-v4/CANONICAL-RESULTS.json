@@ -14,22 +14,34 @@
             "p90": 1493,
             "p95": 1778
           }
-        }
+        },
+        "source": "data-v4/tiers-gate-off",
+        "method": "legacy 120s gate-off control; keep for provenance, do not compare as SLO proof until rerun with 300s/open-loop protocol"
       },
       "on": {
         "n429": 0,
         "tiers": {
           "100": {
-            "p50": 82,
-            "p90": 173,
-            "p95": 251
+            "p50": 374,
+            "p90": 914,
+            "p95": 1117,
+            "p95_range": [
+              1056,
+              1211
+            ]
           },
           "0": {
-            "p50": 155,
-            "p90": 555,
-            "p95": 691
+            "p50": 593,
+            "p90": 1240,
+            "p95": 1406,
+            "p95_range": [
+              1250,
+              1488
+            ]
           }
-        }
+        },
+        "source": "data-v4/tiers-gate-on-300s",
+        "method": "median of per-repeat percentiles, trim_s=40, 3x300s; replaces pooled 251 ms result"
       }
     },
     "64": {
@@ -278,6 +290,22 @@
             "p50": 290,
             "p90": 752,
             "p95": 882
+          }
+        },
+        "source": "data-v4/fairness-bigburst-gate-on",
+        "method": "median of per-tenant per-repeat percentiles, 3x300s; modest same-band effect, not SLO proof",
+        "tenants": {
+          "premium-tenant-a": {
+            "p50": 347,
+            "p95": 943
+          },
+          "premium-tenant-b": {
+            "p50": 191,
+            "p95": 877
+          },
+          "premium-tenant-c": {
+            "p50": 203,
+            "p95": 893
           }
         }
       }
