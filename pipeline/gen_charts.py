@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Generate real-data SVG charts from the data-v4 benchmark CSVs.
 
-Reads the gate-on / gate-off run pairs, computes percentiles the same way the
-canonical summary does (p95 = value at the 95th percentile of ttft_s*1000 over
-status==200 rows with start_s >= 20, aggregated across the counted repeats),
-and writes the headline charts to assets/.
+Reads the gate-on / gate-off run pairs and writes the headline charts to assets/.
+The corrected SLO-sensitive service-tier result uses per-repeat percentiles from
+the 300 s backfill, not pooled repeats.
 
 Verified against data-v4/CANONICAL-RESULTS.json. Lead with the principle
-(7x faster, zero rejections, premium protected), not the raw decimal.
+(priority admission, zero rejections, premium ahead of standard), not a fake
+absolute SLO.
 """
 import csv, glob, os
 from collections import defaultdict
@@ -24,6 +24,13 @@ GRID, AXIS, CARD, STROKE = "#eeeeee", "#c9c8c2", "#fbfbfb", "#d7d7d7"
 FONT = "-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"
 
 WARMUP_START = 20.0  # seconds; skip warm-up phase, matches canonical
+
+# Corrected 2026-07-30 service-tier backfill. The older data-v4/tiers-gate-on
+# directory is kept for provenance, but its pooled 251 ms p95 is retired.
+TIERS_128_CORRECTED = {
+    "premium": {"p50": 374, "p90": 914, "p95": 1117, "range": (1056, 1211)},
+    "standard": {"p50": 593, "p90": 1240, "p95": 1406, "range": (1250, 1488)},
+}
 
 
 # ---------------------------------------------------------------- data layer
@@ -96,16 +103,14 @@ def legend_dot(x, y, color, label):
 
 
 # ================================================================ CHART 1
-# Hero: premium p95 TTFT gate-off vs gate-on, per scenario, with the
-# principle called out (7x, zero rejections, protected).
+# Hero: premium p95 TTFT, batch rejections, and the boundary of what is proven.
 def chart_hero():
-    tiers, _ = gather("tiers-gate-off")
-    tiers_on, _ = gather("tiers-gate-on")
     _, batch_off_429 = gather("batch-gate-off")
     cons_off, _ = gather("consolidation-gate-off")
     cons_on, _ = gather("consolidation-gate-on")
 
-    t_off, t_on = p95(tiers, "100"), p95(tiers_on, "100")
+    t_on = TIERS_128_CORRECTED["premium"]["p95"]
+    t_std = TIERS_128_CORRECTED["standard"]["p95"]
     c_off, c_on = p95(cons_off, "100"), p95(cons_on, "100")
 
     W, H = 1200, 470
@@ -118,10 +123,10 @@ def chart_hero():
     # four cards
     cards = [
         dict(tag="SERVICE TIERS", color=GREEN,
-             big=f"{t_off / t_on:.0f}x faster",
-             sub="premium p95 TTFT, gate on",
-             off=t_off, on=t_on, unit="ms",
-             note=f"{t_off:.0f} ms -> {t_on:.0f} ms. Now inside the 300 ms target."),
+             big="Priority admission",
+             sub="premium ahead of standard",
+             off=t_std, on=t_on, unit="ms",
+             note=f"Premium {t_on:.0f} ms vs standard {t_std:.0f} ms under saturated load."),
         dict(tag="BATCH ISOLATION", color=RED,
              big="Zero rejections",
              sub="429s eliminated, gate on",
@@ -196,11 +201,16 @@ def chart_hero():
 # Per-scenario TTFT: premium vs standard, gate off vs on. Grouped bars.
 def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
                         target=300, ymax=2200):
-    off, _ = gather(scenario_base + "-gate-off")
-    on, _ = gather(scenario_base + "-gate-on")
-
-    prem_off, prem_on = p95(off, "100"), p95(on, "100")
-    std_off, std_on = p95(off, "0"), p95(on, "0")
+    if scenario_base == "tiers":
+        prem_off = None
+        prem_on = TIERS_128_CORRECTED["premium"]["p95"]
+        std_off = None
+        std_on = TIERS_128_CORRECTED["standard"]["p95"]
+    else:
+        off, _ = gather(scenario_base + "-gate-off")
+        on, _ = gather(scenario_base + "-gate-on")
+        prem_off, prem_on = p95(off, "100"), p95(on, "100")
+        std_off, std_on = p95(off, "0"), p95(on, "0")
 
     W, H = 1200, 340
     s = svg_open(W, H, title_line)
@@ -222,11 +232,11 @@ def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
         s += txt(x_left - 8, y + 4, f"{v:.0f}", 11, 400, FAINT, "end")
         v += step
 
-    # target line
+    # Reference line. It is a target only when a run is designed to prove it.
     ty = sy(target)
     s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
-          f'stroke="{INK}" stroke-dasharray="5 4" opacity=".45"/>')
-    s += txt(x_left + 6, ty - 8, f"{target} ms interactive target", 11, 600, "#4a4a4a", "start")
+          f'stroke="{INK}" stroke-dasharray="5 4" opacity=".35"/>')
+    s += txt(x_left + 6, ty - 8, f"{target} ms reference", 11, 600, "#4a4a4a", "start")
 
     # two groups: Premium, Standard. Two bars each (off, on).
     groups = [("Premium", GREEN, prem_off, prem_on),
@@ -249,8 +259,12 @@ def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
             x += bw + 30
         s += txt(gcx, plot_bot + 40, gname, 13, 700, INK, "middle")
 
-    # callout: the fold factor for premium
-    if prem_off and prem_on:
+    # callout
+    if scenario_base == "tiers":
+        s += txt(x_left, H - 14, "Corrected 300 s run: premium p95 1117 ms "
+                                 "(range 1056-1211) vs standard 1406 ms.",
+                 12, 600, "#383838")
+    elif prem_off and prem_on:
         fold = prem_off / prem_on
         s += txt(x_left, H - 14, f"Premium p95 improves {fold:.0f}x with the gate on. "
                                  f"Standard absorbs the wait it was previously spreading everywhere.",
@@ -308,27 +322,21 @@ def chart_batch_429():
 
 
 # ================================================================ CHART 4
-# Tiers across output lengths: the 7x / 36x story at 64 / 128 / 512 tokens.
+# Tiers across output lengths. The old pooled 64/512 ratios are kept out of the
+# headline until restated with per-repeat percentiles.
 def chart_tiers_output_lengths():
-    # These come straight from CANONICAL-RESULTS.json premium (pri 100) p95.
-    # (Per-output-length raw CSVs are folded into the canonical summary; the
-    #  default 128 pair is reproduced live above to prove the pipeline.)
-    tiers, _ = gather("tiers-gate-off")
-    tiers_on, _ = gather("tiers-gate-on")
-    live_off, live_on = p95(tiers, "100"), p95(tiers_on, "100")
-
     lengths = [
-        ("64 tokens", 1136, 442),
-        ("128 tokens", round(live_off), round(live_on)),
-        ("512 tokens", 5259, 145),
+        ("64 tokens", None, None, "restating"),
+        ("128 tokens", TIERS_128_CORRECTED["standard"]["p95"], TIERS_128_CORRECTED["premium"]["p95"], "1.25x"),
+        ("512 tokens", None, None, "restating"),
     ]
 
     W, H = 1200, 340
     s = svg_open(W, H, "Premium p95 TTFT gate off versus on across output lengths, "
-                       "improving from 3x up to 36x")
-    s += txt(20, 30, "Premium p95 TTFT, gate off vs on, by output length", 16, 800, INK)
-    s += txt(20, 50, "The longer the generation, the more a saturated pool hurts premium, and the "
-                     "more the gate wins back. Log scale.", 12, 400, MUTED)
+                       "with the 128-token arm restated using per-repeat percentiles")
+    s += txt(20, 30, "Service-tier TTFT by output length", 16, 800, INK)
+    s += txt(20, 50, "Only the 128-token arm is restated as a headline here. The older "
+                     "64/512 pooled cells remain provenance until rechecked.", 12, 400, MUTED)
 
     import math
     plot_top, plot_bot = 78, 262
@@ -346,28 +354,31 @@ def chart_tiers_output_lengths():
     ty = sy(300)
     s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
           f'stroke="{INK}" stroke-dasharray="5 4" opacity=".45"/>')
-    s += txt(x_right - 4, ty - 8, "300 ms interactive target", 11, 600, "#4a4a4a", "end")
+    s += txt(x_right - 4, ty - 8, "300 ms reference", 11, 600, "#4a4a4a", "end")
 
     span = x_right - x_left
     bw = 96
-    for gi, (gname, voff, von) in enumerate(lengths):
+    for gi, (gname, voff, von, label) in enumerate(lengths):
         gcx = x_left + span * (gi + 0.5) / len(lengths)
         pair_w = bw * 2 + 26
         x = gcx - pair_w / 2
-        for val, lbl, fill in [(voff, "gate off", "#9aa0a6"), (von, "gate on", GREEN)]:
-            y = sy(val)
-            h = plot_bot - y
-            s += rbar(x, y, bw, h, fill, 6)
-            unit = " ms" if val < 1000 else " ms"
-            s += txt(x + bw / 2, y - 8, f"{val:,}{unit}", 12, 800, INK, "middle")
-            s += txt(x + bw / 2, plot_bot + 18, lbl, 11.5, 600, "#4a4a4a", "middle")
-            x += bw + 26
-        fold = voff / von
-        s += txt(gcx, plot_bot + 42, f"{gname}   ({fold:.0f}x)", 13, 700, INK, "middle")
+        if voff is None:
+            s += f'<rect x="{gcx - 98}" y="{plot_top + 44}" width="196" height="112" rx="9" fill="{CARD}" stroke="{STROKE}"/>'
+            s += txt(gcx, plot_top + 90, "pending", 20, 800, MUTED, "middle")
+            s += txt(gcx, plot_top + 116, "per-repeat restatement", 11.5, 600, "#4a4a4a", "middle")
+        else:
+            for val, lbl, fill in [(voff, "standard", GOLD), (von, "premium", GREEN)]:
+                y = sy(val)
+                h = plot_bot - y
+                s += rbar(x, y, bw, h, fill, 6)
+                s += txt(x + bw / 2, y - 8, f"{val:,} ms", 12, 800, INK, "middle")
+                s += txt(x + bw / 2, plot_bot + 18, lbl, 11.5, 600, "#4a4a4a", "middle")
+                x += bw + 26
+        s += txt(gcx, plot_bot + 42, f"{gname}   ({label})", 13, 700, INK, "middle")
 
     s += f'<line x1="{x_left}" y1="{plot_bot}" x2="{x_right}" y2="{plot_bot}" stroke="{AXIS}"/>'
-    s += legend_dot(x_right - 240, 40, "#9aa0a6", "gate off")
-    s += legend_dot(x_right - 140, 40, GREEN, "gate on")
+    s += legend_dot(x_right - 260, 40, GOLD, "standard")
+    s += legend_dot(x_right - 150, 40, GREEN, "premium")
     save("tiers-output-lengths", s)
 
 
@@ -375,7 +386,7 @@ if __name__ == "__main__":
     chart_hero()  # -> results-at-a-glance.svg (existing hero name)
     chart_scenario_ttft("tiers", "Service tiers, premium vs standard p95 TTFT",
                         "Standard surges past capacity. The gate lets priority decide who waits. "
-                        "Aggregated across the counted repeats.",
+                        "Corrected run uses per-repeat p95, never pooled repeats.",
                         "tiers-p95-gate", target=300, ymax=2200)
     chart_scenario_ttft("consolidation", "Consolidation, premium vs standard p95 TTFT",
                         "Three tenants share one GPU. Premium stays protected when standard floods "
