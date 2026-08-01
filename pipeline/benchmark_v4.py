@@ -745,7 +745,7 @@ async def metric_sampler(
             next_sample_at += sample_interval_s
 
 
-def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], duration_s: int, trim_s: float = 0.0) -> list[dict[str, Any]]:
+def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], duration_s: int, trim_s: float = 0.0, arrival_mode: str = "closed_loop") -> list[dict[str, Any]]:
     # v4: steady-state trim. Requests that STARTED within the first `trim_s`
     # seconds are excluded from percentiles so the KV/APC warmup transient and
     # the closed-loop ramp-in do not pollute steady-state latency. Counts and
@@ -767,6 +767,7 @@ def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], 
         rows.append({
             "run_id": run_id,
             "scenario": scenario,
+            "arrival_mode": arrival_mode,
             "tenant": tenant,
             "priority": tenant_samples[0].priority if tenant_samples else None,
             "objective": tenant_samples[0].objective if tenant_samples else None,
@@ -1028,7 +1029,7 @@ async def run_workload(
         "safety_ceiling": safety_state or {"state": "ok"},
         "metric_sample_interval_s": metric_sample_interval_s,
         "tenants": [asdict(t) for t in tenants],
-        "client_summary": summarize_samples(run_id, scenario, samples, duration_s, trim_s),
+        "client_summary": summarize_samples(run_id, scenario, samples, duration_s, trim_s, arrival_mode),
         "metric_delta": metric_delta(pre_epp + "\n" + pre_vllm, post_epp + "\n" + post_vllm, tenants_set),
         "metric_sample_summary": summarize_metric_samples(metric_rows),
     }
@@ -1769,7 +1770,10 @@ async def main():
     parser.add_argument("--test1-consol-sat", action="store_true",
                         help="Consolidation SATURATED (standard floods 2 premiums so the gate works)")
     parser.add_argument("--test2-slo", action="store_true",
-                        help="Test 2 SLO: premium light so premium p95<300ms while standard floods")
+                        help="Test 2 SLO shape: premium light so premium p95<300ms while standard floods. "
+                             "Under the default closed-loop mode this is an offered-concurrency shape, NOT an "
+                             "SLO proof; re-run with --arrival-mode poisson (preconditions.json slo_proof_valid) "
+                             "for open-loop evidence.")
     parser.add_argument("--test2-tuned", action="store_true",
                         help="Test 2 tiers with RAISED baseline (pool holds queue-forming point; premium heavier)")
     parser.add_argument("--test2-noisy", action="store_true",
@@ -2045,7 +2049,7 @@ async def main():
 
     with (out_dir / "summary.csv").open("w", newline="") as f:
         fieldnames = [
-            "run_id", "repeat", "scenario", "tenant", "priority", "objective", "duration_s", "trim_s",
+            "run_id", "repeat", "scenario", "arrival_mode", "tenant", "priority", "objective", "duration_s", "trim_s",
             "total", "n_steady_ttft", "low_n_use_p90", "http_200",
             "http_429", "http_503", "timeouts", "errors", "throughput_rps",
             "ttft_p50_s", "ttft_p90_s", "ttft_p95_s", "ttft_p99_s",

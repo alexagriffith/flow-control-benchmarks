@@ -81,6 +81,19 @@ class BenchmarkV4HelperTests(unittest.TestCase):
         self.assertAlmostEqual(rows[0]["tpot_p50_s"], 0.01)
         self.assertAlmostEqual(rows[0]["tpot_p95_s"], 0.011)
 
+    def test_summary_rows_carry_arrival_mode(self) -> None:
+        # summary.csv is the artifact most likely to be shared out; each row
+        # must state which arrival process produced the percentiles so a
+        # closed-loop shape is never mistaken for an SLO proof.
+        samples = [_ok_sample()]
+        default_rows = bench.summarize_samples("run", "scenario", samples, duration_s=10)
+        self.assertEqual(default_rows[0]["arrival_mode"], "closed_loop")
+
+        poisson_rows = bench.summarize_samples(
+            "run", "scenario", samples, duration_s=10, arrival_mode="poisson"
+        )
+        self.assertEqual(poisson_rows[0]["arrival_mode"], "poisson")
+
     def test_compute_tpot_uses_completion_tokens_not_chunks(self) -> None:
         # 101 completion tokens over a 0.9 s decode window => 0.9 / 100 = 0.009 s.
         self.assertAlmostEqual(
