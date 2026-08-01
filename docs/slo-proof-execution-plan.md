@@ -1,243 +1,216 @@
-# SLO proof execution plan
+# SLO proof protocol
 
-This is the execution plan for proving whether llm-d flow control can keep a
-named workload inside a named SLO under production-like traffic.
+This protocol defines the evidence required before this benchmark can support a
+customer-facing claim that llm-d flow control keeps a named workload inside a
+named SLO under production-like traffic.
 
-Current evidence proves priority admission and batch deferral. It does not yet
-prove an unconditional SLO claim because the accepted runs are closed-loop,
-single-replica, and TTFT-heavy.
+The current published results demonstrate priority admission and batch deferral:
+when a shared inference pool saturates, higher-priority work is served ahead of
+lower-priority work, and deferrable work can be queued instead of rejected. A
+stronger SLO claim requires the additional gates below.
 
-## Current Cluster Snapshot
+## Evidence Requirements
 
-Checked with `kubectl` on the current test cluster before planning.
+Every SLO proof run must publish the workload, load, objective, scope, and
+provenance needed to reproduce the result.
 
-| Resource | Current state |
+| Field | Required evidence |
 |---|---|
-| GPU nodes | 2 x `p5.48xlarge` |
-| GPU type | H100 |
-| Allocatable GPUs | 16 total, 8 per GPU node |
-| Requested GPUs | 8 total |
-| Apparent free GPUs | 8 total |
-| Existing GPU pods | Two existing benchmark pods, 4 GPUs each |
+| Workload | Model, tokenizer, input-token distribution, output-token distribution, prompt corpus, streaming mode |
+| Load | Arrival process, offered request rate by tenant, tenant mix, burst shape, warmup, counted window |
+| Objective | TTFT, end-to-end latency, TPOT, and success-rate targets |
+| Scope | Replica count, GPU type, tensor parallelism, prefix-caching state, detector mode |
+| Runtime limits | `max-num-seqs`, `max-num-batched-tokens`, `max-model-len`, queue/deadline settings |
+| Provenance | Runner git SHA, manifests or Helm values, benchmark config, raw artifacts, validator output |
 
-Rule: do not touch existing GPU workloads. Run flow-control tests on the
-remaining allocatable GPUs, with explicit node and GPU accounting before every run.
+Targets must be declared before the run starts. The protocol intentionally
+allows different workloads to name different SLOs, but the chosen target cannot
+be relaxed after seeing the result. If the run misses the target, lower the
+offered load in a new run or restate the claim; do not massage the result.
 
-## Phase 0: Make The Harness SLO-Capable
+The default proof target for an interactive premium tier is p95 TTFT <= 300 ms,
+premium success rate >= 99%, plus named end-to-end latency and TPOT targets for
+the selected output shape.
 
-These changes are blocking before any customer-grade SLO run.
+## Required Runner Signals
 
-1. **Add open-loop Poisson arrivals.**
-   - Keep current closed-loop concurrency for mechanism tests.
-   - Add `--arrival closed|poisson`.
-   - For Poisson, each tenant phase specifies `rate_rps`, not concurrency.
-   - Inter-arrival time: `rng.expovariate(rate_rps)`.
-   - Add a high safety ceiling for outstanding requests and record if it is hit.
-   - If the safety ceiling is hit, mark the run invalid for SLO proof.
+The runner must emit request-level, traffic-level, and system-level artifacts
+with a shared `run_id`, `repeat_id`, `scenario`, and elapsed-time clock.
 
-2. **Capture per-request TPOT.**
-   - Record actual generated token count, not just requested `max_tokens`.
-   - Preferred: use streaming usage metadata when available.
-   - Compute `tpot_s = (latency_s - ttft_s) / max(1, completion_tokens - 1)`.
-   - Add p50/p95/p99 TPOT per tenant and repeat.
+### Request samples
 
-3. **Add hard preconditions.**
-   - Gate-on run must observe premium priority `100` in EPP flow-control metrics.
-   - APC must be off or measured and reported.
-   - Saturation must be real: `num_requests_running` near `max-num-seqs` and
-     `num_requests_waiting > 0` for the counted window.
-   - Required metrics must be present under accepted aliases.
-   - Write `preconditions.json` next to every repeat.
+Each request row must include:
 
-4. **Add `pipeline/validate_slo.py`.**
-   - Reads run directories, `preconditions.json`, and `summary.csv`.
-   - Computes per-repeat percentiles, then reports median plus min-max range.
-   - Never pools repeats.
-   - Fails if any required precondition fails.
-   - Fails if premium TTFT, E2E, TPOT, or success rate misses the named target.
-   - Counts 429, 503, timeout, and client errors as SLO failures.
+- Request ID.
+- Tenant and resolved priority.
+- Objective class.
+- Planned arrival time and actual send time.
+- Status, error class, and retry count if any.
+- TTFT.
+- End-to-end latency.
+- Prompt token count.
+- Completion token count.
+- TPOT, calculated as `(latency_s - ttft_s) / max(1, completion_tokens - 1)`.
+- Timeout flag.
 
-5. **Harden config provenance.**
-   - Record actual GPU type, replica count, TP, max-num-seqs, max-model-len,
-     max-num-batched-tokens, detector type, queue-depth threshold or
-     maxConcurrency, prefix-caching state, and measured APC hit rate.
-   - Fail gate-on runs if flow-control mode is empty or objectives are unresolved.
+### Traffic samples
 
-## Phase 1: Mechanism Baseline
+Each traffic row must include:
 
-Purpose: prove priority admission and validate the new precondition machinery.
+- Target arrival rate or target concurrency by tenant.
+- Actual issued requests per interval.
+- Actual completions per interval.
+- Outstanding requests.
+- Open-loop safety-ceiling state.
+- Driver-side queueing or send delay.
 
-Traffic:
+### Metric samples
 
-- Closed-loop, because this is a mechanism test.
-- Model shape: 512 input / 128 output.
-- Tenants: premium steady, standard surge, batch flood.
-- Gate off and gate on arms.
-- 3 repeats, 300 s counted per repeat.
+Each metric row must preserve labels for EPP and vLLM series, including pod or
+engine identity when exposed. Required series include:
+
+- EPP queue size and queue bytes by priority and fairness ID.
+- EPP queue duration or wait-time histogram when exposed.
+- EPP pool saturation and priority resolution.
+- vLLM running requests.
+- vLLM waiting requests.
+- vLLM KV-cache usage.
+- vLLM preemption or swap counters.
+- vLLM TTFT, end-to-end latency, and TPOT histograms when exposed.
+- Request success, timeout, and rejection counters.
+
+If a metric is unavailable in a build, the run must mark it unavailable rather
+than silently substituting a different signal.
+
+TTFT claims require streaming responses to be verified in the request path.
+Client-measured TTFT and end-to-end latency also require the client-to-gateway
+network path to be characterized, or the result must be labeled as including
+that client network component.
+
+## Test Matrix
+
+### 1. Priority Admission Baseline
+
+Purpose: prove the mechanism before claiming an SLO.
+
+Protocol:
+
+- Closed-loop concurrency is acceptable for this mechanism test.
+- Use the same model shape across gate-off and gate-on arms.
+- Run premium, standard, and batch tenants together.
+- Drive enough load to saturate the pool.
+- Run at least three counted repeats.
 
 Pass criteria:
 
-- Premium priority resolves to `100`.
-- Pool is saturated.
-- Premium p95 TTFT is lower than standard p95 TTFT with gate on.
-- Batch 429s drop to zero or near zero.
-- `validate_slo.py --mode mechanism` passes.
+- Premium resolves to the intended high-priority band.
+- The pool is saturated during the counted window.
+- Premium p95 TTFT is below standard p95 TTFT with flow control on.
+- Batch rejections drop materially with flow control on.
+- Lower-priority tradeoffs are reported, not hidden.
 
-Publication wording allowed:
+### 2. Open-Loop SLO Attainment
 
-> Flow control provides priority admission under saturation: higher-priority work
-> is served ahead of lower-priority work, and deferrable work can be queued
-> instead of rejected.
+Purpose: prove a named premium SLO under production-like arrivals.
 
-## Phase 2: Open-Loop SLO Attainment
+Protocol:
 
-Purpose: prove a named SLO under production-like arrivals.
-
-Traffic:
-
-- Open-loop Poisson arrivals.
-- Premium held at target RPS.
-- Standard and batch load swept until saturation.
-- Same offered rates for gate-off and gate-on arms.
-- 5 repeats, 900 s counted per repeat for p99; 5 repeats, 300 s minimum for p95.
-
-Default target to test:
-
-| Axis | Premium target |
-|---|---|
-| TTFT | p95 <= 300 ms, unless another target is named |
-| E2E | p95 <= output-shape target |
-| TPOT | p95 <= target ms/token |
-| Success | >= 99%; 429/503/timeout/error count as failures |
+- Use open-loop Poisson arrivals.
+- Hold premium at the target offered RPS.
+- Sweep standard and batch offered load until the pool reaches the stated
+  saturation condition.
+- Run gate-off and gate-on arms at the same offered rates.
+- Use at least five counted repeats.
+- Use at least 900 seconds per counted repeat for p99 claims, and at least 300
+  seconds for p95-only claims.
 
 Pass criteria:
 
-- Every repeat meets the named target, or the miss is reported explicitly.
+- Every repeat meets the named premium TTFT, end-to-end latency, TPOT, and
+  success-rate targets, or the miss is reported explicitly.
+- 429, 503, timeout, and client errors count as SLO failures.
+- Report median plus min-max range across repeats; do not pool repeats.
+
+### 3. Queue Stability And Survivor Bias
+
+Purpose: prove the result is not only the latency of successful survivors.
+
+Protocol:
+
+- Use the same open-loop mix as the SLO attainment test.
+- Increase standard and batch load until the gate must defer work.
+- Keep the run long enough to observe whether queues plateau or diverge.
+
+Pass criteria:
+
 - Premium success rate meets target.
-- Standard and batch tradeoffs are reported, not hidden.
+- Rejections and timeouts are reported by tenant.
+- EPP and vLLM queues plateau during the counted window.
+- Any unbounded queue growth invalidates the SLO claim for that load.
 
-Publication wording allowed only after pass:
+### 4. Decode And Memory Pressure
+
+Purpose: ensure fast first tokens are not hiding slow generation or KV pressure.
+
+Protocol:
+
+- Run the baseline 512-input / 128-output shape.
+- Add at least one larger-context or longer-output shape.
+- Keep premium steady while lower-priority work creates sustained pressure.
+- Compare utilization-based gating with an admission-cap detector when both are
+  available.
+
+Pass criteria:
+
+- Premium TPOT and end-to-end latency meet target.
+- KV and preemption/swap metrics are present and non-dead.
+- If decode or memory-pressure metrics are unavailable, the run cannot support a
+  full SLO claim.
+
+### 5. Detector And Scale-Out Reproduction
+
+Purpose: show that the winning configuration is not a single-replica accident.
+
+Protocol:
+
+- Keep model, prompt pool, tenant mix, offered rates, and objective constant.
+- Compare detector settings at one replica.
+- Re-run the winning detector at additional replica counts.
+- Preserve per-pod metrics; do not rely only on aggregate scrapes.
+
+Pass criteria:
+
+- Premium SLO holds at the stated replica count.
+- Throughput scales in the expected direction.
+- No single replica is overloaded while others are idle.
+- Cross-pod behavior is visible in the published metrics.
+
+## Replay Data Contract
+
+The canonical run directory should contain:
+
+- `client_samples.csv` for request-level timing, token, status, and TPOT data.
+- `traffic_samples.csv` for offered load and driver state.
+- `metric_samples.csv` for EPP and vLLM time series with labels preserved.
+- `summary.json` for per-tenant percentiles and success rates.
+- `preconditions.json` for gate, objective, saturation, and metric availability.
+- `validator.json` for pass/fail results and failure reasons.
+- `benchmark_config.json` for runtime and deployment provenance.
+
+These artifacts are sufficient for both statistical validation and visual
+replay. A replay tool may animate only the signals that exist in the artifacts;
+exact request routing and exact vLLM iteration membership require trace IDs that
+are present in client, router, and model-server events.
+
+## Publication Rule
+
+Use this wording only after the relevant test passes:
 
 > Under `<load>`, on `<hardware/model/scope>`, flow control kept premium within
 > `<SLO>` while preserving `<success-rate>` success.
 
-## Phase 3: Success-Rate And Queue-Stability Test
+Until then, use the narrower wording:
 
-Purpose: avoid "latency of survivors" bias.
-
-Traffic:
-
-- Same as Phase 2.
-- Increase standard/batch offered load until the gate has to defer work.
-- Keep the run long enough to see whether queues plateau or diverge.
-
-Pass criteria:
-
-- Premium success rate stays above target.
-- Batch rejection rate improves without unbounded EPP queue growth.
-- Queue size trends plateau during the counted window.
-
-## Phase 4: Decode And KV Pressure Test
-
-Purpose: make sure fast TTFT is not hiding slow generation or memory pressure.
-
-Traffic:
-
-- Premium steady, latency-sensitive traffic.
-- Batch high-context traffic with longer outputs.
-- Include at least 512/128 and one larger-context shape.
-- Run both utilization detector and concurrency detector arms.
-
-Required metrics:
-
-- TTFT p95/p99.
-- E2E p95/p99.
-- TPOT p95/p99.
-- `vllm:num_requests_running`.
-- `vllm:num_requests_waiting`.
-- KV cache usage metric, using the metric name emitted by the build.
-- Swap/preemption counters, using the metric name emitted by the build.
-- EPP queue size and queue duration by priority and fairness ID.
-
-Pass criteria:
-
-- Premium TPOT and E2E meet target.
-- KV/preemption metrics are present and non-dead.
-- If the build cannot expose KV/swap pressure, the run cannot support a full
-  SLO claim.
-
-## Phase 5: Detector Comparison
-
-Purpose: identify whether queue-depth gating or concurrency capping is the right
-tool for the SLO.
-
-Arms:
-
-- Utilization detector / queue-depth gating.
-- Concurrency detector with `maxConcurrency` sweep: 32, 48, 64, 96, 128.
-
-Same for all arms:
-
-- Model.
-- GPU type.
-- Replica count.
-- Prefix caching state.
-- Prompt pool.
-- Arrival rates.
-- Tenant mix.
-
-Report:
-
-- Premium TTFT p95/p99.
-- Premium E2E p95/p99.
-- Premium TPOT p95/p99.
-- Premium success rate.
-- Standard latency.
-- Batch rejection rate.
-- Throughput.
-
-Pass criteria:
-
-- The winning detector meets the stated premium SLO without violating success
-  target.
-- Lower-priority cost is visible.
-
-## Phase 6: Scale-Out Reproduction
-
-Purpose: prove the behavior survives more than one replica.
-
-Traffic:
-
-- Repeat Phase 2 at 2 replicas, then 4 replicas.
-- Use per-pod metrics, not a single aggregate vLLM scrape.
-- Keep the same arrival mix and scale offered load with replica count.
-
-Pass criteria:
-
-- Premium SLO holds.
-- Throughput scales with replicas.
-- No single replica is overloaded while others are idle.
-- EPP cross-pod behavior is visible in per-pod metrics.
-
-## Cleanup
-
-After every run:
-
-1. Scale serving replicas back to baseline.
-2. Restore detector config to the shipped default.
-3. Delete transient benchmark jobs and scratch ConfigMaps.
-4. Save raw run data under `data-v4/<test-name>/`.
-5. Save `preconditions.json`, `validator.json`, and a README beside the raw data.
-6. Update `data-v4/CANONICAL-RESULTS.json` only for runs that pass.
-7. Archive invalid runs; do not delete them.
-
-## Run Order
-
-1. Implement harness changes: open-loop, TPOT, preconditions, validator.
-2. Run Phase 1 to validate the mechanism and the validator.
-3. Run Phase 2 at one conservative premium RPS.
-4. If Phase 2 fails the 300 ms target, lower offered load or restate the target;
-   do not massage the result.
-5. Run Phase 3 and Phase 4.
-6. Run Phase 5 detector comparison.
-7. Run Phase 6 scale-out only after the single-replica proof is clean.
+> Flow control provides priority admission under saturation: higher-priority work
+> is served ahead of lower-priority work, and deferrable work can be queued
+> instead of rejected.

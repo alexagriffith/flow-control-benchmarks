@@ -57,7 +57,7 @@ Purpose: prove a named premium SLO under realistic arrivals.
 
 Protocol:
 
-- Add an open-loop Poisson arrival driver to the harness.
+- Use an open-loop Poisson arrival driver.
 - Hold premium at the target offered RPS.
 - Sweep standard/batch load until the pool reaches saturation.
 - Run gate off and gate on arms at the same offered rates.

@@ -146,7 +146,7 @@ What the sweep tells a platform team:
 
 ## SLO proof tests
 
-The results above show priority admission and batch deferral. To claim that a deployment keeps a specific SLO, the benchmark has to define that SLO and pass it on all required axes: TTFT, end-to-end latency, TPOT, and success rate. The test plan is in [`docs/slo-proof-tests.md`](docs/slo-proof-tests.md), with the ordered cluster execution plan in [`docs/slo-proof-execution-plan.md`](docs/slo-proof-execution-plan.md). The short version:
+The results above show priority admission and batch deferral. To claim that a deployment keeps a specific SLO, the benchmark has to define that SLO and pass it on all required axes: TTFT, end-to-end latency, TPOT, and success rate. The test design is in [`docs/slo-proof-tests.md`](docs/slo-proof-tests.md), with the public evidence protocol in [`docs/slo-proof-execution-plan.md`](docs/slo-proof-execution-plan.md). The short version:
 
 - **Closed-loop priority admission test:** confirms the gate puts premium ahead of standard under saturation.
 - **Open-loop SLO test:** drives a named request rate with Poisson arrivals and checks whether premium meets the target at p95/p99.
