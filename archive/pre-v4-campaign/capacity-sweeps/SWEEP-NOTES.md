@@ -21,7 +21,7 @@ earlier or later.
 ## Run shape
 
 - Model: `openai/gpt-oss-20b`
-- Service: `LLMInferenceService/llm-test/gpt-oss-20b-fc`
+- Service: `LLMInferenceService/<namespace>/<endpoint>`
 - Flow-control config: normal benchmark config, not rejection-probe config
 - Sweep only: `--skip-scenarios`
 - Sweep points: 8, 16, 24, 32, 48, 64, 96, 128, 160
