@@ -161,7 +161,16 @@ class BenchmarkV4HelperTests(unittest.TestCase):
         self.assertFalse(bench.compute_slo_proof_valid("poisson", None, True, [bad]))
         self.assertEqual(
             bench.slo_proof_reason("poisson", None, True, [bad]),
-            "request_errors_or_timeouts_present",
+            "non_200_responses_or_request_errors_present",
+        )
+
+    def test_slo_proof_invalid_when_non_200_responses_present(self) -> None:
+        bad = _ok_sample()
+        bad.status = "429"
+        self.assertFalse(bench.compute_slo_proof_valid("poisson", None, True, [bad]))
+        self.assertEqual(
+            bench.slo_proof_reason("poisson", None, True, [bad]),
+            "non_200_responses_or_request_errors_present",
         )
 
     def test_slo_proof_invalid_without_metrics_or_samples(self) -> None:
