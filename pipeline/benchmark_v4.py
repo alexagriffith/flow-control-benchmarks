@@ -48,7 +48,7 @@ TOKENIZE_URL = BASE_URL + "/tokenize"
 EPP_METRICS_URL = os.environ.get("EPP_METRICS_URL", "http://localhost:9090/metrics")
 VLLM_METRICS_URL = os.environ.get("VLLM_METRICS_URL", "http://localhost:8001/metrics")
 
-# Objective (priority-tier) names sent in the x-gateway-inference-objective header.
+# Objective (priority-tier) names sent in the inference objective headers.
 # These MUST match the InferenceObjective resources bound to the target pool, or
 # the gate defaults every request to priority 0 (no prioritization). The upstream
 # endpoint uses a different name prefix, so make it overridable per endpoint.
@@ -392,8 +392,8 @@ def compute_slo_proof_valid(
 
     An SLO proof is only meaningful for an open-loop (poisson) run that stayed
     under its outstanding safety ceiling, produced server metric samples and
-    client samples, and where every recorded request completed cleanly (no
-    timeouts and no error_class). Closed-loop runs describe an offered
+    client samples, and where every recorded request completed cleanly (HTTP
+    200, no timeouts, and no error_class). Closed-loop runs describe an offered
     concurrency shape, not a proof, so they are never marked valid here.
     """
     if arrival_mode != "poisson":
@@ -403,7 +403,7 @@ def compute_slo_proof_valid(
     if not metric_rows_present or not samples:
         return False
     for sample in samples:
-        if sample.timeout or sample.error_class is not None:
+        if sample.status != "200" or sample.timeout or sample.error_class is not None:
             return False
     return True
 
@@ -423,8 +423,8 @@ def slo_proof_reason(
         return "no_metric_samples"
     if not samples:
         return "no_client_samples"
-    if any(s.timeout or s.error_class is not None for s in samples):
-        return "request_errors_or_timeouts_present"
+    if any(s.status != "200" or s.timeout or s.error_class is not None for s in samples):
+        return "non_200_responses_or_request_errors_present"
     return "valid"
 
 
@@ -459,6 +459,8 @@ async def send_one(
         "ignore_eos": True,
     }
     headers = {
+        "x-llm-d-inference-fairness-id": tenant.fairness_id,
+        "x-llm-d-inference-objective": tenant.inference_objective,
         "x-gateway-inference-fairness-id": tenant.fairness_id,
         "x-gateway-inference-objective": tenant.inference_objective,
     }
@@ -1860,7 +1862,12 @@ async def main():
         "stabilization_repeats": args.stabilization_repeats,
         "warmup_included_in_summaries": False,
         "traffic_seed": args.traffic_seed,
-        "headers": ["x-gateway-inference-objective", "x-gateway-inference-fairness-id"],
+        "headers": [
+            "x-llm-d-inference-objective",
+            "x-llm-d-inference-fairness-id",
+            "x-gateway-inference-objective",
+            "x-gateway-inference-fairness-id",
+        ],
         "objectives": OBJECTIVES,
         "flow_control_mode": os.environ.get("FLOW_CONTROL_MODE", ""),
         "queue_depth_threshold": os.environ.get("QUEUE_DEPTH_THRESHOLD", ""),
