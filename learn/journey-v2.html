@@ -454,7 +454,15 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
           <text id="policyTag" x="520" y="502" font-size="14" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
         </g>
 
-        <!-- page-3 overlay: business promise board -->
+        <!-- page-4 overlay: fairness zoom -->
+        <g id="ov-fair" class="cel" style="display:none">
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <text x="86" y="78" font-size="26" font-weight="760" fill="var(--txt)">Fair turns inside premium</text>
+          <text x="86" y="108" font-size="12" fill="var(--txt3)">same priority; rotate by fairness id</text>
+          <g id="fairViz"></g>
+        </g>
+
+        <!-- page-5 overlay: business promise board -->
         <g id="ov-promise" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
           <g id="promiseScene" transform="translate(-180 -52) scale(1.35)">
@@ -1111,6 +1119,75 @@ function policyRun(mode){
       .forEach((s,i)=>after(i*620,()=>{$('#pol-turn-cursor').setAttribute('cx',String(s[0]));$('#pol-turn-text').textContent=s[1];}));
   }
 }
+function fairEnsure(){
+  const viz=$('#fairViz');
+  if(viz.children.length)return;
+  const band=svgEl('g',{id:'fair-band'});
+  band.appendChild(svgEl('rect',{x:86,y:148,width:828,height:314,rx:22,fill:'var(--raised)',stroke:'var(--brand)','stroke-width':2,'stroke-opacity':.78}));
+  let t=svgEl('text',{x:132,y:194,'font-size':16,'font-weight':800,fill:'var(--brand)'});
+  t.textContent='premium priority band';band.appendChild(t);
+  t=svgEl('text',{x:132,y:220,'font-size':11,fill:'var(--txt3)'});
+  t.textContent='requests are equal priority here; fairness id chooses the next tenant turn';band.appendChild(t);
+  viz.appendChild(band);
+
+  const tenants=[
+    {id:'A',y:270,label:'tenant A'},
+    {id:'B',y:328,label:'tenant B'},
+    {id:'C',y:386,label:'tenant C'}
+  ];
+  tenants.forEach((r,ri)=>{
+    const lane=svgEl('g',{id:`fair-lane-${r.id}`});
+    lane.appendChild(svgEl('rect',{x:132,y:r.y-24,width:342,height:42,rx:12,fill:'var(--base)',stroke:'var(--b2)'}));
+    const lab=svgEl('text',{x:158,y:r.y+3,'font-size':13,'font-weight':760,fill:'var(--txt)'});
+    lab.textContent=r.label;lane.appendChild(lab);
+    for(let i=0;i<6;i++)lane.appendChild(svgEl('circle',{cx:258+i*27,cy:r.y,r:8,fill:'var(--brand)',opacity:i<5-ri?'.94':'.18'}));
+    viz.appendChild(lane);
+  });
+
+  const picker=svgEl('g',{id:'fair-picker'});
+  picker.appendChild(svgEl('rect',{x:520,y:238,width:166,height:182,rx:18,fill:'var(--base)',stroke:'var(--b2)'}));
+  t=svgEl('text',{x:603,y:272,'font-size':13,'font-weight':800,fill:'var(--txt)','text-anchor':'middle'});
+  t.textContent='turn picker';picker.appendChild(t);
+  ['A','B','C'].forEach((id,i)=>{
+    const y=310+i*38;
+    picker.appendChild(svgEl('circle',{cx:572,cy:y,r:14,fill:'var(--raised)',stroke:'var(--brand)','stroke-opacity':.72}));
+    const txt=svgEl('text',{x:572,y:y+5,'font-size':13,'font-weight':800,fill:'var(--brand)','text-anchor':'middle'});
+    txt.textContent=id;picker.appendChild(txt);
+  });
+  picker.appendChild(svgEl('circle',{id:'fair-cursor',cx:572,cy:310,r:22,fill:'none',stroke:'var(--ok)','stroke-width':3}));
+  t=svgEl('text',{id:'fair-turn-label',x:603,y:404,'font-size':12,'font-weight':780,fill:'var(--ok)','text-anchor':'middle'});
+  t.textContent='tenant A turn';picker.appendChild(t);
+  viz.appendChild(picker);
+
+  viz.appendChild(svgEl('path',{d:'M 474 270 C 500 270 500 310 546 310',fill:'none',stroke:'var(--brand)','stroke-width':1.4,'stroke-opacity':.5,'marker-end':'url(#arr)'}));
+  viz.appendChild(svgEl('path',{d:'M 474 328 C 500 328 500 348 546 348',fill:'none',stroke:'var(--brand)','stroke-width':1.4,'stroke-opacity':.5,'marker-end':'url(#arr)'}));
+  viz.appendChild(svgEl('path',{d:'M 474 386 C 500 386 500 386 546 386',fill:'none',stroke:'var(--brand)','stroke-width':1.4,'stroke-opacity':.5,'marker-end':'url(#arr)'}));
+  viz.appendChild(svgEl('path',{d:'M 690 330 L 760 330',fill:'none',stroke:'var(--b2)','stroke-width':1.6,'marker-end':'url(#arr)'}));
+
+  const out=svgEl('g',{id:'fair-out'});
+  out.appendChild(svgEl('rect',{x:772,y:252,width:96,height:156,rx:16,fill:'var(--base)',stroke:'var(--ok)','stroke-width':2}));
+  t=svgEl('text',{x:820,y:282,'font-size':13,'font-weight':800,fill:'var(--txt)','text-anchor':'middle'});
+  t.textContent='dispatch';out.appendChild(t);
+  for(let i=0;i<3;i++){
+    out.appendChild(svgEl('circle',{id:`fair-out-${i}`,cx:796+i*24,cy:330,r:8,fill:'var(--brand)',opacity:.18}));
+  }
+  viz.appendChild(out);
+}
+function fairRun(){
+  $('#ov-fair').style.display='';
+  fairEnsure();
+  $('#fair-cursor').setAttribute('cy','310');
+  $('#fair-turn-label').textContent='tenant A turn';
+  [0,1,2].forEach(i=>$(`#fair-out-${i}`).setAttribute('opacity','.18'));
+  const turns=[['A',310,0],['B',348,1],['C',386,2],['A',310,0]];
+  turns.forEach((turn,i)=>after(i*620,()=>{
+    $('#fair-cursor').setAttribute('cy',String(turn[1]));
+    $('#fair-turn-label').textContent=`tenant ${turn[0]} turn`;
+    const dot=$(`#fair-out-${turn[2]}`);
+    dot.setAttribute('opacity','.95');
+    pop(`#fair-out-${turn[2]}`,0);
+  }));
+}
 function promiseEnsure(){
   const viz=$('#promiseViz');
   if(viz.children.length)return;
@@ -1166,6 +1243,7 @@ function resetCanvas(){
   $('#ov-burst').style.display='none';
   $('#ov-knee').style.display='none';
   $('#ov-policy').style.display='none';
+  $('#ov-fair').style.display='none';
   $('#ov-promise').style.display='none';
   dedResetVisual();
   burstSet(0);
@@ -1270,18 +1348,21 @@ const PAGES=[
   run(){policyRun('crowd');}},
  {lit:['ov-policy'],
   n:'Priority bands decide which class of work goes first when the pool is under pressure.',
-  run(){policyRun('priority');}},
- {lit:['ov-policy'],
-  n:'Within a band, fairness ids take turns so one tenant cannot monopolize dispatch.',
-  run(){policyRun('fair');}}
+  run(){policyRun('priority');}}
 ]},
-/* ---- 4 · WHY: business summary ---- */
+/* ---- 4 · WHY: fairness within a band ---- */
+{title:'Fair turns in premium',group:0,rail:'Turns',steps:[
+ {lit:['ov-fair'],dwell:1.2,
+  n:'Inside one priority band, fairness ids rotate turns so one premium tenant cannot monopolize dispatch.',
+  run(){fairRun();}}
+]},
+/* ---- 5 · WHY: business summary ---- */
 {title:'Why flow control',group:0,rail:'Summary',steps:[
  {lit:['ov-promise'],dwell:1.15,
   n:'Utilize capacity, control bursts, and protect service tiers under pressure.',
   run(){promiseRun();}}
 ]},
-/* ---- 5 · MACHINE: tag and resolve ---- */
+/* ---- 6 · MACHINE: tag and resolve ---- */
 {title:'Tag and resolve',group:1,rail:'Tag',steps:[
  {lit:['g-tprem'],
   n:'Each request carries two headers: <code>x-llm-d-inference-objective</code> names its service tier and <code>x-llm-d-inference-fairness-id</code> names its tenant.',
@@ -1495,10 +1576,10 @@ const PAGES=[
 
 /* =================== groups / rail =================== */
 const GROUPS=[
-  {name:'The why',color:'var(--amber)',pages:[0,1,2,3,4]},
-  {name:'Mechanism',color:'var(--brand)',pages:[5,6,7,8,9]},
-  {name:'Results',color:'var(--teal)',pages:[10,11,12]},
-  {name:'Replay',color:'var(--ok)',pages:[13]}
+  {name:'The why',color:'var(--amber)',pages:[0,1,2,3,4,5]},
+  {name:'Mechanism',color:'var(--brand)',pages:[6,7,8,9,10]},
+  {name:'Results',color:'var(--teal)',pages:[11,12,13]},
+  {name:'Replay',color:'var(--ok)',pages:[14]}
 ];
 function buildRail(){
   const r=$('#rail');r.innerHTML='';
