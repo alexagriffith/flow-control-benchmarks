@@ -457,8 +457,8 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
         <!-- page-4 overlay: fairness zoom -->
         <g id="ov-fair" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
-          <text x="86" y="78" font-size="26" font-weight="760" fill="var(--txt)">Premium tenants take turns</text>
-          <text x="86" y="108" font-size="12" fill="var(--txt3)">same priority; one lane moves at a time</text>
+          <text x="86" y="78" font-size="26" font-weight="760" fill="var(--txt)">Fairness configurations in a priority band</text>
+          <text x="86" y="108" font-size="12" fill="var(--txt3)">Round-robin fairness</text>
           <g id="fairViz"></g>
         </g>
 
@@ -1383,9 +1383,9 @@ const PAGES=[
   run(){policyRun('priority');}}
 ]},
 /* ---- 4 · WHY: fairness within a band ---- */
-{title:'Premium tenants take turns',group:0,rail:'Turns',steps:[
+{title:'Fairness configurations',group:0,rail:'Turns',steps:[
  {lit:['ov-fair'],dwell:1.2,
-  n:'Inside one priority band, traffic rotates one lane at a time.',
+  n:'Round-robin fairness cycles through active flows within one priority band.',
   run(){fairRun();}}
 ]},
 /* ---- 5 · WHY: business summary ---- */
