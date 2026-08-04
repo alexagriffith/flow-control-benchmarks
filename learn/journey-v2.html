@@ -1084,8 +1084,8 @@ function policyRun(mode){
     ]);
   }else if(mode==='crowd'){
     $('#policyHead').textContent='A burst crowds the pool';
-    $('#policySub').textContent='the pool needs a rule before it fills';
-    $('#policyTag').textContent='the wait needs policy';
+    $('#policySub').textContent='the pool needs an ordering rule before it fills';
+    $('#policyTag').textContent='policy chooses what moves next';
     policyStreams({p:3,s:12,b:2},true);
     policyPoolFill([
       'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
@@ -1329,8 +1329,8 @@ const PAGES=[
   n:'Average load can look safe; one burst peak creates waiting.',
   run(){burstRun(true);}},
  {lit:['ov-burst'],dwell:1.45,
-  n:'That waiting lane is the reason the shared pool needs policy.',
-  run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Waiting needs policy';$('#burstSub').textContent='burst capacity fills before the work is gone';});}}
+  n:'That waiting lane is the reason shared traffic needs an ordering policy.',
+  run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Shared traffic needs policy';$('#burstSub').textContent='policy chooses what moves next';});}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
 {title:'Where control starts',group:0,rail:'Threshold',steps:[
@@ -1339,12 +1339,12 @@ const PAGES=[
   run(){kneeRun();}}
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
-{title:'Sharing needs policy',group:0,rail:'Policy',steps:[
+{title:'Shared traffic needs policy',group:0,rail:'Policy',steps:[
  {lit:['ov-policy'],
   n:'Once capacity is shared, the traffic streams meet in the same pool.',
   run(){policyRun('meet');}},
  {lit:['ov-policy'],
-  n:'A burst can crowd that pool unless the wait has rules.',
+  n:'A burst can crowd that pool unless traffic has an ordering rule.',
   run(){policyRun('crowd');}},
  {lit:['ov-policy'],
   n:'Priority bands decide which class of work goes first when the pool is under pressure.',
