@@ -1,0 +1,1558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08090b">
+<title>llm-d flow control — the machine, re-lit</title>
+<style>
+/* ============ tokens: dark default, light via media query, data-theme wins ============ */
+:root{
+  --canvas:#08090b;--base:#0e1014;--raised:#14171d;--inset:#05060a;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
+  --txt:#e8eaf0;--txt2:#a2a8b5;--txt3:#767d8a;
+  --brand:#5B6CF0;--brand-soft:rgba(91,108,240,.16);
+  --teal:#2fb8b8;--amber:#e0a63a;--danger:#ff6a5e;--ok:#3fbb85;
+  --spring:cubic-bezier(.34,1.56,.64,1);--ease:cubic-bezier(.16,1,.3,1);
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --canvas:#f7f8fa;--base:#ffffff;--raised:#f1f2f6;--inset:#e9ebf0;
+    --b1:rgba(10,12,20,.09);--b2:rgba(10,12,20,.15);--b3:rgba(10,12,20,.25);
+    --txt:#14161c;--txt2:#494f5c;--txt3:#7d8290;
+    --brand:#4353d8;--brand-soft:rgba(67,83,216,.11);
+    --teal:#0e7f7f;--amber:#9a6a00;--danger:#c43d36;--ok:#22794c;
+  }
+}
+:root[data-theme="dark"]{
+  --canvas:#08090b;--base:#0e1014;--raised:#14171d;--inset:#05060a;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--b3:rgba(255,255,255,.2);
+  --txt:#e8eaf0;--txt2:#a2a8b5;--txt3:#767d8a;
+  --brand:#5B6CF0;--brand-soft:rgba(91,108,240,.16);
+  --teal:#2fb8b8;--amber:#e0a63a;--danger:#ff6a5e;--ok:#3fbb85;
+}
+:root[data-theme="light"]{
+  --canvas:#f7f8fa;--base:#ffffff;--raised:#f1f2f6;--inset:#e9ebf0;
+  --b1:rgba(10,12,20,.09);--b2:rgba(10,12,20,.15);--b3:rgba(10,12,20,.25);
+  --txt:#14161c;--txt2:#494f5c;--txt3:#7d8290;
+  --brand:#4353d8;--brand-soft:rgba(67,83,216,.11);
+  --teal:#0e7f7f;--amber:#9a6a00;--danger:#c43d36;--ok:#22794c;
+}
+*{box-sizing:border-box}
+html,body{height:100%;color-scheme:dark light}
+body{margin:0;background:var(--canvas);color:var(--txt);font-size:14px;overflow:hidden;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  transition:background-color .3s,color .3s}
+button,select,input{font:inherit}
+button,.pill,.rstep,.sbtn,.seg button,input,select{touch-action:manipulation}
+button:focus-visible,select:focus-visible,input:focus-visible,.rstep:focus-visible{
+  outline:2px solid var(--brand);outline-offset:2px}
+.skip{position:absolute;left:18px;top:8px;z-index:100;transform:translateY(-140%);
+  background:var(--base);color:var(--txt);border:1px solid var(--brand);border-radius:8px;
+  padding:7px 10px;text-decoration:none;transition:transform .18s var(--ease)}
+.skip:focus-visible{transform:none;outline:2px solid var(--brand);outline-offset:2px}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+#app{height:100vh;display:flex;flex-direction:column;padding:0 18px 12px;max-width:1560px;margin:0 auto}
+
+/* ---------- topbar ---------- */
+#topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:10px 2px 8px;border-bottom:1px solid var(--b1);flex:none}
+#topbar .t{font-size:14.5px;font-weight:650;letter-spacing:0;white-space:nowrap}
+#topbar .t span{font-weight:400;color:var(--txt3);font-size:12px;margin-left:9px}
+.ctl{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.pill{border:1px solid var(--b2);border-radius:999px;background:var(--base);color:var(--txt2);
+  font-size:11.5px;padding:5px 12px;cursor:pointer;
+  transition:border-color .18s var(--ease),color .18s var(--ease),background-color .18s var(--ease)}
+.pill:hover{border-color:var(--b3);color:var(--txt)}
+.pill.on{border-color:var(--brand);color:var(--txt);background:var(--brand-soft)}
+select.pill{appearance:none;-webkit-appearance:none;padding-right:16px}
+
+/* ---------- rail ---------- */
+#rail{display:flex;align-items:stretch;gap:8px;padding:9px 2px 10px;border-bottom:1px solid var(--b1);
+  flex:none;overflow-x:auto;scrollbar-width:none}
+#rail::-webkit-scrollbar{display:none}
+.rgroup{display:flex;flex:0 0 auto;flex-direction:column;gap:6px;border:1px solid var(--b1);border-top:2px solid var(--gc,var(--b2));
+  border-radius:10px;background:var(--base);padding:6px 8px 7px;box-shadow:0 8px 20px rgba(0,0,0,.04)}
+.rgroup .glab{font-size:9.5px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;padding-left:2px}
+.rsteps{display:flex;gap:4px;flex-wrap:nowrap}
+.rstep{display:flex;flex:0 0 auto;align-items:center;gap:5px;font-size:10.5px;line-height:1;color:var(--txt3);cursor:pointer;background:transparent;
+  border:1px solid transparent;border-radius:999px;padding:3px 9px 3px 4px;white-space:nowrap;
+  transition:border-color .2s var(--ease),color .2s var(--ease),background-color .2s var(--ease)}
+.rstep:hover{color:var(--txt);border-color:var(--b2)}
+.rstep .n{width:17px;height:17px;flex:0 0 17px;border-radius:99px;border:1px solid var(--b2);display:grid;
+  place-items:center;font-size:9px;transition:border-color .25s var(--ease),background-color .25s var(--ease),color .25s var(--ease)}
+.rstep.done .n{background:var(--gc,var(--brand));border-color:var(--gc,var(--brand));color:var(--canvas)}
+.rstep.done{color:var(--txt2)}
+.rstep.act{color:var(--txt);border-color:var(--gc,var(--brand));background:var(--base)}
+.rstep.act .n{border-color:var(--gc,var(--brand));color:var(--gc,var(--brand))}
+.rgap{width:12px;flex:none;align-self:stretch;position:relative}
+.rgap:before{content:'›';position:absolute;left:1px;top:29px;color:var(--txt3);font-size:18px;line-height:1}
+@media (max-width:980px){
+  #rail{gap:5px;overflow-x:hidden}
+  .rgroup{padding:6px 6px 7px}
+  .rsteps{gap:3px}
+  .rstep{justify-content:center;gap:0;min-width:25px;padding:3px}
+  .rstep .rlab{display:none}
+  .rstep.act{gap:5px;min-width:max-content;padding-right:8px}
+  .rstep.act .rlab{display:inline}
+  .rgap{width:8px}
+  .rgap:before{left:-1px}
+}
+@media (max-width:520px){
+  #app{padding-left:6px;padding-right:6px}
+  #rail{gap:1px}
+  .rgroup{padding:5px 4px 6px}
+  .rgroup .glab{font-size:8.5px}
+  .rstep{min-width:20px;padding:2px}
+  .rstep .n{width:14px;height:14px;flex-basis:14px;font-size:8px}
+  .rstep.act{gap:0;min-width:20px;padding-right:2px}
+  .rstep.act .rlab{display:none}
+  .rgap{width:2px}
+}
+
+/* ---------- main ---------- */
+#main{flex:1;display:flex;gap:14px;min-height:0;padding-top:12px}
+#canvasWrap{flex:1;min-width:0;position:relative;background:var(--base);border:1px solid var(--b1);
+  border-radius:14px;padding:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  transition:filter .5s var(--ease)}
+#sysCanvas{width:100%;height:100%;max-height:100%}
+.halted #canvasWrap{filter:saturate(.35) brightness(.82)}
+#haltBanner{position:absolute;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);opacity:0;
+  background:var(--raised);border:1px solid var(--danger);color:var(--danger);border-radius:999px;
+  padding:7px 16px;font-size:12px;pointer-events:none;
+  transition:opacity .45s var(--spring),transform .45s var(--spring);white-space:nowrap}
+.halted #haltBanner{opacity:1;transform:translateX(-50%)}
+
+/* canvas re-lighting */
+.cel{transition:opacity .45s var(--ease)}
+.cel.dim{opacity:.28}
+.cel.lit{opacity:1}
+.cel .frame{transition:stroke .4s,filter .4s}
+.cel.lit .frame{stroke:var(--hl,var(--brand));filter:drop-shadow(0 0 7px var(--brand-soft))}
+#cycleSpin{transform-origin:769px 484px;animation:spin 3.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.halted #cycleSpin{animation-play-state:paused}
+svg text{font-family:inherit;user-select:none}
+svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+#meterFill{transition:width 1s var(--ease)}
+.pbar{transition:width .9s var(--ease)}
+.callout rect{fill:var(--raised);stroke:var(--co,var(--brand));stroke-opacity:.72}
+.callout text{fill:var(--txt);font-size:10.5px;font-weight:650}
+.callout .sub{fill:var(--txt2);font-size:9.5px;font-weight:500}
+
+/* evidence overlay */
+#evidence{position:absolute;left:16px;bottom:16px;max-width:430px;background:var(--raised);
+  border:1px solid var(--b2);border-radius:12px;padding:13px 15px;opacity:0;pointer-events:none;
+  transform:translateY(10px);transition:opacity .5s var(--spring),transform .5s var(--spring)}
+#evidence.show{opacity:1;transform:none}
+#evidence .et{font-size:12px;font-weight:650;margin-bottom:9px}
+.ebar{display:flex;align-items:center;gap:9px;margin-bottom:7px;font-size:11px}
+.ebar .el{width:112px;color:var(--txt2);flex:none}
+.ebar .etrack{flex:1;height:15px;border-radius:6px;background:var(--inset);overflow:hidden;min-width:90px}
+.ebar .efill{height:100%;width:0;border-radius:6px;transition:width 1.1s var(--ease) .15s}
+.ebar .ev{width:78px;text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:11px;flex:none}
+.echips{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.echip{border:1px solid var(--b2);background:var(--inset);border-radius:7px;padding:5px 9px;
+  font-size:10.5px;color:var(--txt2)}
+.echip b{color:var(--txt);font-weight:650}
+.ebadge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--ok);color:var(--ok);
+  background:rgba(63,187,133,.08);border-radius:999px;padding:3px 8px;font-size:9.5px;font-weight:750;
+  letter-spacing:.04em;text-transform:uppercase;margin-right:7px}
+.ebadge.sim{border-color:var(--amber);color:var(--amber);background:rgba(224,166,58,.08)}
+.eaxis{height:1px;background:var(--b2);margin:3px 87px 8px 121px;position:relative}
+.eaxis span{position:absolute;right:0;top:5px;color:var(--txt3);font-size:9.5px}
+.esource{margin-top:9px;border-top:1px solid var(--b1);padding-top:8px;font-size:10px;color:var(--txt3);line-height:1.45}
+.esource b{color:var(--txt2);font-weight:650}
+.simnote{border:1px solid var(--amber);background:rgba(224,166,58,.08);color:var(--amber);
+  border-radius:8px;padding:7px 9px;font-size:10.5px;font-weight:650;line-height:1.35;margin-bottom:9px}
+
+/* playground controls */
+#playCtl{position:absolute;left:16px;bottom:16px;width:250px;background:var(--raised);
+  border:1px solid var(--b2);border-radius:12px;padding:12px 14px;opacity:0;pointer-events:none;
+  transform:translateY(10px);transition:opacity .5s var(--spring),transform .5s var(--spring)}
+#playCtl.show{opacity:1;pointer-events:auto;transform:none}
+#playCtl .kk{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3);margin:2px 0 7px}
+.krow{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:7px}
+.krow .kd{width:8px;height:8px;border-radius:99px;flex:none}
+.krow input[type=range]{flex:1;accent-color:var(--brand);height:3px;min-width:0}
+.krow .kv{width:22px;text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:10.5px}
+.seg{display:flex;border:1px solid var(--b2);border-radius:8px;overflow:hidden;font-size:11px;margin-bottom:8px}
+.seg button{flex:1;text-align:center;padding:5px 4px;cursor:pointer;color:var(--txt2);border:0;background:transparent;
+  transition:background-color .18s var(--ease),color .18s var(--ease)}
+.seg button.on{background:var(--brand-soft);color:var(--txt)}
+#pgStats{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--txt2)}
+#pgStats .st{background:var(--inset);border:1px solid var(--b1);border-radius:6px;padding:4px 7px;
+  font-family:ui-monospace,Menlo,monospace}
+
+/* ---------- sidebar ---------- */
+#side{flex:0 0 320px;display:flex;flex-direction:column;gap:10px;min-height:0}
+#card{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:18px 19px;
+  display:flex;flex-direction:column;gap:10px}
+#card h2{font-size:19px;font-weight:650;letter-spacing:0;margin:0;line-height:1.15;text-wrap:balance}
+#stepMeta{display:flex;align-items:center;gap:9px}
+#stepLab{font-size:10.5px;color:var(--txt3)}
+#stepPips{display:flex;gap:5px}
+.pip{width:16px;height:4px;border-radius:2px;background:var(--b2);transition:background-color .3s var(--ease)}
+.pip.on{background:var(--brand)}
+#narr{font-size:13px;line-height:1.62;color:var(--txt2);min-height:84px;margin:0}
+#narr b,#narr .hl{color:var(--txt);font-weight:600}
+#narr code{font-family:ui-monospace,Menlo,monospace;font-size:.88em;background:var(--raised);
+  border:1px solid var(--b1);border-radius:5px;padding:1px 5px;color:var(--txt)}
+#stepNav{display:flex;gap:8px}
+.sbtn{flex:1;border:1px solid var(--b2);border-radius:9px;background:var(--raised);color:var(--txt);
+  font-size:12px;padding:8px 10px;cursor:pointer;
+  transition:border-color .18s var(--ease),background-color .18s var(--ease),color .18s var(--ease)}
+.sbtn:hover{border-color:var(--brand)}
+.sbtn[disabled]{opacity:.35;cursor:default}
+.sbtn.pri{border-color:var(--brand);background:var(--brand-soft)}
+#hints{font-size:10.5px;color:var(--txt3);line-height:1.7;padding:0 4px}
+#hints kbd{border:1px solid var(--b2);border-radius:4px;padding:0 4px;font-size:9.5px;
+  font-family:ui-monospace,Menlo,monospace;color:var(--txt2)}
+#pgno{font-size:10.5px;color:var(--txt3);text-align:right;padding-right:4px}
+.mt,.kv,.ev,.st,#pgno{font-variant-numeric:tabular-nums}
+#apToast{position:fixed;top:54px;right:18px;z-index:99;font:600 12px Inter,sans-serif;padding:6px 12px;
+  border-radius:999px;background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand);
+  opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    scroll-behavior:auto!important;transition-duration:.001ms!important}
+}
+
+@media (max-width:1020px){
+  #main{flex-direction:column}
+  #side{flex:none;flex-direction:row;align-items:stretch}
+  #card{flex:1}
+  #hints{display:none}
+  #evidence{max-width:min(430px,calc(100% - 32px))}
+}
+@media (max-width:700px){
+  #apToast{top:226px;right:18px;bottom:auto;left:18px;text-align:center}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div id="app">
+  <div id="topbar">
+    <div class="t">llm-d flow control<span>Interactive</span></div>
+    <div class="ctl">
+      <button class="pill" id="autoBtn" aria-pressed="false">▶ autoplay off</button>
+      <select class="pill" id="autoSel" aria-label="autoplay interval">
+        <option value="4500" selected>4.5s / step</option><option value="6000">6s / step</option><option value="10000">10s / step</option>
+      </select>
+      <button class="pill" id="themeBtn">theme · auto</button>
+      <button class="pill" id="fsBtn">fullscreen</button>
+    </div>
+  </div>
+  <div id="rail"></div>
+  <main id="main" tabindex="-1">
+    <div id="canvasWrap">
+      <svg id="sysCanvas" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet" aria-label="flow control system diagram">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="var(--b3)"/></marker>
+          <pattern id="unusedHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="7" height="7" fill="var(--danger)" opacity=".11"/>
+            <line x1="0" y1="0" x2="0" y2="7" stroke="var(--danger)" stroke-width="2" opacity=".18"/>
+          </pattern>
+        </defs>
+
+        <!-- tenants -->
+        <g id="g-tprem" class="cel" style="--hl:var(--brand)">
+          <rect class="frame" x="20" y="92" width="128" height="54" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="84" y="115" font-size="12" font-weight="600" fill="var(--txt)" text-anchor="middle">premium</text>
+          <text x="84" y="133" font-size="9.5" fill="var(--txt3)" text-anchor="middle">interactive clients</text>
+        </g>
+        <g id="g-tstd" class="cel" style="--hl:var(--amber)">
+          <rect class="frame" x="20" y="198" width="128" height="54" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="84" y="221" font-size="12" font-weight="600" fill="var(--txt)" text-anchor="middle">standard</text>
+          <text x="84" y="239" font-size="9.5" fill="var(--txt3)" text-anchor="middle">bursty app traffic</text>
+        </g>
+        <g id="g-tbatch" class="cel" style="--hl:var(--teal)">
+          <rect class="frame" x="20" y="304" width="128" height="54" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="84" y="327" font-size="12" font-weight="600" fill="var(--txt)" text-anchor="middle">batch</text>
+          <text x="84" y="345" font-size="9.5" fill="var(--txt3)" text-anchor="middle">offline jobs</text>
+        </g>
+
+        <!-- tenant → gateway arrows -->
+        <g id="a-t1" class="cel"><line class="frame" x1="148" y1="119" x2="206" y2="202" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-t2" class="cel"><line class="frame" x1="148" y1="225" x2="206" y2="222" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-t3" class="cel"><line class="frame" x1="148" y1="331" x2="206" y2="242" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+
+        <!-- gateway -->
+        <g id="g-gw" class="cel">
+          <rect class="frame" x="210" y="186" width="122" height="70" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="271" y="211" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Inference gateway</text>
+          <text x="271" y="228" font-size="9.5" fill="var(--txt3)" text-anchor="middle">Envoy proxy</text>
+          <text x="271" y="243" font-size="8.5" class="mt" fill="var(--txt3)" text-anchor="middle">ext_proc gRPC</text>
+        </g>
+        <!-- header chips -->
+        <g id="g-hdr" class="cel">
+          <rect class="frame" x="176" y="270" width="196" height="20" rx="6" fill="var(--brand-soft)" stroke="var(--b2)"/>
+          <text x="184" y="284" font-size="8.5" class="mt" fill="var(--txt)">x-llm-d-inference-objective</text>
+          <rect class="frame" x="176" y="296" width="196" height="20" rx="6" fill="var(--brand-soft)" stroke="var(--b2)"/>
+          <text x="184" y="310" font-size="8.5" class="mt" fill="var(--txt)">x-llm-d-inference-fairness-id</text>
+        </g>
+        <g id="a-gw" class="cel"><line class="frame" x1="332" y1="221" x2="360" y2="221" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+
+        <!-- EPP -->
+        <g id="g-epp" class="cel">
+          <rect class="frame" x="362" y="36" width="448" height="510" rx="14" fill="none" stroke="var(--b2)"/>
+          <text x="378" y="58" font-size="10.5" fill="var(--txt3)">Endpoint Picker (EPP)</text>
+        </g>
+
+        <!-- objective lookup + fork -->
+        <g id="g-dir" class="cel">
+          <rect class="frame" x="382" y="70" width="176" height="58" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="470" y="93" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Objective lookup</text>
+          <text x="470" y="111" font-size="9" fill="var(--txt3)" text-anchor="middle">InferenceObjective → priority</text>
+        </g>
+        <g id="g-forkA" class="cel" style="--hl:var(--ok)">
+          <line class="frame" x1="558" y1="88" x2="596" y2="82" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
+          <rect class="frame" x="600" y="68" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="610" y="84" font-size="9.5" fill="var(--txt)">objective found → priority <tspan class="mt" font-weight="700">100</tspan></text>
+        </g>
+        <g id="g-forkB" class="cel" style="--hl:var(--danger)">
+          <line class="frame" x1="558" y1="110" x2="596" y2="116" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
+          <rect class="frame" x="600" y="104" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="610" y="120" font-size="9.5" fill="var(--txt2)">missing or unbound → <tspan class="mt" font-weight="700" fill="var(--txt)">0</tspan>, silently</text>
+        </g>
+
+        <!-- Admission -->
+        <g id="g-adm" class="cel">
+          <rect class="frame" x="382" y="146" width="176" height="52" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="470" y="167" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Admission</text>
+          <text x="470" y="185" font-size="9" class="mt" fill="var(--txt3)" text-anchor="middle">FlowKey = tenant × priority</text>
+        </g>
+        <g id="a-adm" class="cel"><line class="frame" x1="470" y1="128" x2="470" y2="144" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
+        <g id="a-band" class="cel"><line class="frame" x1="470" y1="198" x2="470" y2="212" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
+
+        <!-- bands -->
+        <g id="g-b100" class="cel" style="--hl:var(--brand)">
+          <rect class="frame" x="382" y="216" width="416" height="66" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
+          <rect x="382" y="216" width="4" height="66" rx="2" fill="var(--brand)"/>
+          <text x="394" y="232" font-size="9.5" fill="var(--brand)">priority 100</text>
+          <g id="qs-b100"></g>
+        </g>
+        <g id="g-b0" class="cel" style="--hl:var(--amber)">
+          <rect class="frame" x="382" y="292" width="416" height="66" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
+          <rect x="382" y="292" width="4" height="66" rx="2" fill="var(--amber)"/>
+          <text x="394" y="308" font-size="9.5" fill="var(--amber)">priority 0</text>
+          <g id="qs-b0"></g>
+        </g>
+        <g id="g-bm10" class="cel" style="--hl:var(--teal)">
+          <rect class="frame" x="382" y="368" width="416" height="66" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
+          <rect x="382" y="368" width="4" height="66" rx="2" fill="var(--teal)"/>
+          <text x="394" y="384" font-size="9.5" fill="var(--teal)">priority −10</text>
+          <g id="qs-bm10"></g>
+        </g>
+
+        <!-- saturation meter -->
+        <g id="g-meter" class="cel">
+          <text x="382" y="468" font-size="9.5" fill="var(--txt3)">pool saturation · max(waiting ÷ 4, KV used ÷ 0.80), averaged</text>
+          <rect x="382" y="476" width="320" height="16" rx="8" fill="var(--inset)" stroke="var(--b1)"/>
+          <rect id="meterFill" x="382" y="476" width="90" height="16" rx="8" fill="var(--ok)"/>
+          <line x1="638" y1="468" x2="638" y2="500" stroke="var(--danger)" stroke-dasharray="4 3" stroke-width="1.4"/>
+          <text x="638" y="514" font-size="8.5" fill="var(--danger)" text-anchor="middle">ceiling · 1.0</text>
+          <text id="meterVal" x="712" y="489" font-size="11.5" class="mt" fill="var(--txt)">0.35</text>
+        </g>
+
+        <!-- dispatch cycle -->
+        <g id="g-cycle" class="cel">
+          <circle cx="769" cy="484" r="19" fill="none" stroke="var(--b2)" stroke-width="2"/>
+          <path id="cycleSpin" d="M769 465 A19 19 0 0 1 788 484" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round"/>
+          <text x="769" y="518" font-size="9" fill="var(--txt2)" text-anchor="middle">dispatch cycle</text>
+          <text x="769" y="530" font-size="8" fill="var(--txt3)" text-anchor="middle">one dispatch each</text>
+        </g>
+
+        <!-- dispatch arrows + pods -->
+        <g id="a-d1" class="cel"><line class="frame" x1="800" y1="272" x2="846" y2="204" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-d2" class="cel"><line class="frame" x1="800" y1="352" x2="846" y2="368" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="g-pod1" class="cel" style="--hl:var(--ok)">
+          <rect class="frame" x="848" y="152" width="132" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="914" y="174" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">vLLM pod A</text>
+          <text x="862" y="196" font-size="8.5" fill="var(--txt3)">waiting</text>
+          <rect x="862" y="201" width="104" height="6" rx="3" fill="var(--inset)"/>
+          <rect id="p1w" class="pbar" x="862" y="201" width="30" height="6" rx="3" fill="var(--brand)"/>
+          <text x="862" y="221" font-size="8.5" fill="var(--txt3)">KV cache</text>
+          <rect x="862" y="226" width="104" height="6" rx="3" fill="var(--inset)"/>
+          <rect id="p1k" class="pbar" x="862" y="226" width="46" height="6" rx="3" fill="var(--teal)"/>
+        </g>
+        <g id="g-pod2" class="cel" style="--hl:var(--ok)">
+          <rect class="frame" x="848" y="316" width="132" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text x="914" y="338" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">vLLM pod B</text>
+          <text x="862" y="360" font-size="8.5" fill="var(--txt3)">waiting</text>
+          <rect x="862" y="365" width="104" height="6" rx="3" fill="var(--inset)"/>
+          <rect id="p2w" class="pbar" x="862" y="365" width="24" height="6" rx="3" fill="var(--brand)"/>
+          <text x="862" y="385" font-size="8.5" fill="var(--txt3)">KV cache</text>
+          <rect x="862" y="390" width="104" height="6" rx="3" fill="var(--inset)"/>
+          <rect id="p2k" class="pbar" x="862" y="390" width="52" height="6" rx="3" fill="var(--teal)"/>
+        </g>
+
+        <!-- page-0 overlay: dedicated vs shared GPU capacity -->
+        <g id="ov-ded" class="cel" style="display:none">
+          <rect x="110" y="44" width="820" height="410" rx="18" fill="var(--base)" fill-opacity="1" stroke="var(--b1)"/>
+          <text id="ded-head" x="150" y="82" font-size="21" font-weight="750" fill="var(--txt)">Capacity utilization</text>
+          <text id="ded-sub" x="150" y="106" font-size="11" fill="var(--txt3)">same traffic, shared pool</text>
+          <g id="ded-guide" opacity="0"></g>
+          <g id="ded-boards"></g>
+          <g id="ded-pool" opacity="0"></g>
+          <text id="ded-stat" x="520" y="418" font-size="16" font-weight="720" fill="var(--txt)" text-anchor="middle"></text>
+        </g>
+
+        <!-- page-1 overlay: burst pressure -->
+        <g id="ov-burst" class="cel" style="display:none">
+          <rect x="322" y="52" width="566" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <text id="burstHead" x="352" y="84" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity meets burst traffic</text>
+          <text id="burstSub" x="352" y="108" font-size="11" fill="var(--txt3)">the average fits; the peak decides the wait</text>
+          <line x1="404" y1="262" x2="790" y2="262" stroke="var(--b2)"/>
+          <line id="burstCapLine" x1="404" y1="178" x2="790" y2="178" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 5"/>
+          <text x="790" y="169" font-size="10.5" font-weight="720" fill="var(--danger)" text-anchor="end">capacity limit</text>
+          <path id="burstFill" fill="var(--danger)" opacity=".16"/>
+          <path id="burstWave" fill="none" stroke="var(--brand)" stroke-width="2.6" stroke-linejoin="round"/>
+          <circle id="burstNeedle" r="0" fill="var(--danger)"/>
+          <text id="burstNeedleTxt" font-size="9.5" fill="var(--danger)" text-anchor="middle" opacity="0">burst</text>
+          <text x="404" y="286" font-size="9.5" fill="var(--txt3)">time</text>
+
+          <text id="burstSlotLabel" x="398" y="322" font-size="11" font-weight="740" fill="var(--txt)">Shared pool capacity</text>
+          <text id="burstPoolTxt" x="524" y="322" font-size="9.5" fill="var(--txt3)">available capacity</text>
+          <g id="burstSlots"></g>
+          <g id="burstOverflow">
+            <text id="burstWaitLabel" x="398" y="401" font-size="10" font-weight="720" fill="var(--txt3)">waiting outside pool</text>
+            <rect id="burstWaitRail" x="398" y="408" width="264" height="14" rx="7" fill="var(--inset)" stroke="var(--b1)"/>
+            <g id="burstWaitCells"></g>
+          </g>
+          <rect id="burstMsgBox" x="678" y="394" width="156" height="28" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
+          <text id="burstMsg" x="756" y="413" font-size="11" font-weight="720" fill="var(--txt)" text-anchor="middle">inside capacity</text>
+        </g>
+
+        <!-- page-2 overlay: shared capacity needs policy -->
+        <g id="ov-policy" class="cel" style="display:none">
+          <rect x="150" y="52" width="742" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <text id="policyHead" x="184" y="86" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity needs policy</text>
+          <text id="policySub" x="184" y="110" font-size="11" fill="var(--txt3)">traffic meets in one pool; the wait needs order</text>
+          <g id="policyViz"></g>
+          <text id="policyTag" x="522" y="398" font-size="13" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
+        </g>
+
+        <!-- page-3 overlay: business promise board -->
+        <g id="ov-promise" class="cel" style="display:none">
+          <rect x="126" y="52" width="790" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <text x="164" y="86" font-size="21" font-weight="750" fill="var(--txt)">Why flow control</text>
+          <text x="164" y="110" font-size="11" fill="var(--txt3)">shared hardware, protected tiers, fewer bad surprises</text>
+          <g id="promiseViz"></g>
+        </g>
+
+        <!-- fx layer -->
+        <g id="fx"></g>
+      </svg>
+      <div id="haltBanner">saturation at the ceiling — the whole cycle halts</div>
+      <div id="evidence" aria-live="polite"></div>
+      <div id="playCtl">
+        <div class="simnote">Playground uses simulated dynamics. Evidence pages use measured data-v4 results.</div>
+        <div class="kk">Per-tenant load</div>
+        <div class="krow"><span class="kd" style="background:var(--brand)"></span>
+          <input type="range" min="0" max="100" value="20" data-k="p" name="premium-load" aria-label="premium load"><span class="kv" id="kv_p">20</span></div>
+        <div class="krow"><span class="kd" style="background:var(--amber)"></span>
+          <input type="range" min="0" max="100" value="30" data-k="s" name="standard-load" aria-label="standard load"><span class="kv" id="kv_s">30</span></div>
+        <div class="krow"><span class="kd" style="background:var(--teal)"></span>
+          <input type="range" min="0" max="100" value="20" data-k="b" name="batch-load" aria-label="batch load"><span class="kv" id="kv_b">20</span></div>
+        <div class="kk">Flow control</div>
+        <div class="seg" id="pgFc" role="group" aria-label="flow control">
+          <button type="button" data-f="1" class="on" aria-pressed="true">on</button>
+          <button type="button" data-f="0" aria-pressed="false">off</button>
+        </div>
+        <button class="sbtn" id="pgBurst" style="width:100%;margin-bottom:8px">send a standard burst</button>
+        <div id="pgStats" aria-live="polite"></div>
+      </div>
+    </div>
+    <div id="side">
+      <div id="card">
+        <h2 id="pTitle"></h2>
+        <div id="stepMeta"><span id="stepLab"></span><span id="stepPips"></span></div>
+        <p id="narr"></p>
+        <div id="stepNav">
+          <button class="sbtn" id="backBtn">← Back</button>
+          <button class="sbtn pri" id="nextBtn">Next →</button>
+        </div>
+      </div>
+      <div id="hints">
+        <kbd>Space</kbd> / <kbd>→</kbd> next step · <kbd>←</kbd> back ·
+        <kbd>↓</kbd> <kbd>PgDn</kbd> next page · <kbd>↑</kbd> <kbd>PgUp</kbd> previous ·
+        scroll to change pages · click a rail step to jump
+      </div>
+      <div id="pgno"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const SPRING='cubic-bezier(.34,1.56,.64,1)';
+
+/* =================== canvas state + helpers =================== */
+const BANDS={b100:{y:216,c:'var(--brand)'},b0:{y:292,c:'var(--amber)'},bm10:{y:368,c:'var(--teal)'}};
+const FLOWX=[470,585,700];
+const CS={q:{},labels:{},anims:[],raf:null};
+
+function buildQueues(){
+  for(const b of Object.keys(BANDS)){
+    const g=$('#qs-'+b),y=BANDS[b].y;let s='';
+    for(let j=0;j<3;j++){
+      s+=`<g id="fl-${b}-${j}" style="opacity:0;transition:opacity .5s var(--ease)">
+        <text id="fll-${b}-${j}" x="${FLOWX[j]}" y="${y+24}" font-size="8.5" fill="var(--txt3)"></text>
+        <g id="fld-${b}-${j}">`;
+      for(let k=0;k<7;k++)
+        s+=`<circle cx="${FLOWX[j]+6+k*14}" cy="${y+42}" r="5" fill="${BANDS[b].c}" opacity="0"/>`;
+      s+=`</g><text id="flx-${b}-${j}" x="${FLOWX[j]+6+7*14}" y="${y+46}" font-size="8.5" class="mt" fill="${BANDS[b].c}"></text>
+        <path id="flc-${b}-${j}" d="M${FLOWX[j]+18} ${y+8} l5 9 l5 -9 z" fill="var(--txt)" opacity="0"/></g>`;
+    }
+    g.innerHTML=s;
+  }
+}
+function setFlow(b,j,label,count,extra){
+  const fl=$(`#fl-${b}-${j}`),lab=$(`#fll-${b}-${j}`),xt=$(`#flx-${b}-${j}`);
+  if(label===null){fl.style.opacity='0';return;}
+  fl.style.opacity='1';lab.textContent=label;
+  const dots=$(`#fld-${b}-${j}`).children;
+  for(let k=0;k<7;k++)dots[k].setAttribute('opacity',k<Math.min(7,count)?(k===0?'1':'.6'):'0');
+  xt.textContent=count>7?('+'+(count-7)):(extra||'');
+}
+function cursorAt(b,j){
+  $$('[id^="flc-"]').forEach(e=>e.setAttribute('opacity','0'));
+  if(b)$(`#flc-${b}-${j}`).setAttribute('opacity','1');
+}
+function setMeter(v){
+  const w=Math.max(6,Math.min(320,v/1.25*320));
+  const f=$('#meterFill');
+  f.style.width=w+'px';
+  f.setAttribute('fill',v<0.7?'var(--ok)':v<1?'var(--amber)':'var(--danger)');
+  $('#meterVal').textContent=v.toFixed(2);
+}
+function setPods(w1,k1,w2,k2){
+  $('#p1w').style.width=(w1*104)+'px';$('#p1k').style.width=(k1*104)+'px';
+  $('#p2w').style.width=(w2*104)+'px';$('#p2k').style.width=(k2*104)+'px';
+}
+function fly(points,color,dur,delay){
+  const ns='http://www.w3.org/2000/svg';
+  const c=document.createElementNS(ns,'circle');
+  c.setAttribute('r','6');c.setAttribute('fill',color);
+  c.setAttribute('stroke','var(--base)');c.setAttribute('stroke-width','1.5');
+  c.setAttribute('cx',points[0][0]);c.setAttribute('cy',points[0][1]);c.style.opacity='0';
+  $('#fx').appendChild(c);
+  const kf=points.map((p,i)=>({transform:`translate(${p[0]-points[0][0]}px,${p[1]-points[0][1]}px)`,
+    opacity:i===points.length-1?0:1,offset:i/(points.length-1)}));
+  kf[0].opacity=1;
+  const a=c.animate(kf,{duration:dur,delay:delay||0,easing:'cubic-bezier(.45,.05,.35,1)',fill:'forwards'});
+  a.onfinish=()=>c.remove();CS.anims.push(a);
+  c.animate([{opacity:0},{opacity:1}],{duration:200,delay:delay||0,fill:'forwards'});
+  return a;
+}
+function pop(sel,delay){
+  const el=$(sel);if(!el)return;
+  const a=el.animate([
+    {transform:'scale(1)'},{transform:'scale(1.035)'},{transform:'scale(1)'}
+  ],{duration:520,delay:delay||0,easing:SPRING});
+  el.style.transformOrigin='center';el.style.transformBox='fill-box';
+  CS.anims.push(a);
+}
+function focus(ids,delay){after(delay||0,()=>applyLit(ids));}
+function callout(lines,x,y,color,delay){
+  after(delay||0,()=>{
+    const ns='http://www.w3.org/2000/svg';
+    const text=Array.isArray(lines)?lines:String(lines).split('|');
+    const w=Math.max(...text.map(s=>s.length))*6.1+22;
+    const h=text.length*14+16;
+    const g=document.createElementNS(ns,'g');
+    g.setAttribute('class','callout');
+    g.setAttribute('transform',`translate(${x} ${y})`);
+    g.style.setProperty('--co',color||'var(--brand)');
+    g.style.opacity='0';
+    const r=document.createElementNS(ns,'rect');
+    r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx','8');
+    g.appendChild(r);
+    text.forEach((line,i)=>{
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x','11');t.setAttribute('y',String(19+i*14));
+      if(i>0)t.setAttribute('class','sub');
+      t.textContent=line;
+      g.appendChild(t);
+    });
+    $('#fx').appendChild(g);
+    const a=g.animate([{opacity:0},{opacity:1}],{duration:360,easing:SPRING,fill:'forwards'});
+    CS.anims.push(a);
+  });
+}
+function svgEl(tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const [k,v] of Object.entries(attrs||{}))el.setAttribute(k,String(v));
+  return el;
+}
+const DED_PANEL={leftX:142,rightX:566,y:132,w:352,h:238};
+const DED_CARD={w:82,h:136,y:188,gap:22};
+function dedCardX(panelX,i){return panelX+32+i*(DED_CARD.w+DED_CARD.gap);}
+function dedCellAttrs(x,y,col,r){
+  return {x:x+7+col*12,y:y+42+r*18,width:8.5,height:13,rx:2.5,fill:'var(--base)',stroke:'var(--b1)'};
+}
+const DED_BOARDS=[
+  {x:dedCardX(DED_PANEL.leftX,0),y:DED_CARD.y,c:'var(--brand)',name:'A'},
+  {x:dedCardX(DED_PANEL.leftX,1),y:DED_CARD.y,c:'var(--amber)',name:'B'},
+  {x:dedCardX(DED_PANEL.leftX,2),y:DED_CARD.y,c:'var(--teal)',name:'C'}
+];
+const RIGHT_BOARDS=[
+  {x:dedCardX(DED_PANEL.rightX,0),y:DED_CARD.y,c:'var(--ok)',name:'A'},
+  {x:dedCardX(DED_PANEL.rightX,1),y:DED_CARD.y,c:'var(--txt3)',name:'B'},
+  {x:dedCardX(DED_PANEL.rightX,2),y:DED_CARD.y,c:'var(--txt3)',name:'C'}
+];
+function dedEnsure(){
+  const boards=$('#ded-boards'),pool=$('#ded-pool');
+  if(!boards.children.length){
+    const left=svgEl('g',{id:'ded-left-panel'});
+    left.appendChild(svgEl('rect',{x:DED_PANEL.leftX,y:DED_PANEL.y,width:DED_PANEL.w,height:DED_PANEL.h,rx:15,fill:'var(--raised)',stroke:'var(--b2)'}));
+    const lt=svgEl('text',{x:DED_PANEL.leftX+24,y:162,'font-size':14,'font-weight':760,fill:'var(--txt)'});
+    lt.textContent='Dedicated reservations';left.appendChild(lt);
+    const ls=svgEl('text',{x:DED_PANEL.leftX+24,y:181,'font-size':10,fill:'var(--txt3)'});
+    ls.textContent='traffic lands inside separate reservations';left.appendChild(ls);
+    const lstat=svgEl('text',{id:'ded-left-stat',x:DED_PANEL.leftX+DED_PANEL.w/2,y:346,'font-size':11,'font-weight':720,fill:'var(--txt3)','text-anchor':'middle'});
+    lstat.textContent='';left.appendChild(lstat);
+    boards.appendChild(left);
+
+    DED_BOARDS.forEach((b,i)=>{
+      const g=svgEl('g',{id:`ded-board-${i}`});
+      g.appendChild(svgEl('rect',{x:b.x,y:b.y,width:DED_CARD.w,height:DED_CARD.h,rx:11,fill:'var(--base)',stroke:b.c,'stroke-opacity':.72}));
+      const name=svgEl('text',{x:b.x+DED_CARD.w/2,y:b.y+23,'font-size':11,'font-weight':750,fill:b.c,'text-anchor':'middle'});
+      name.textContent='GPU '+b.name;g.appendChild(name);
+      const cells=svgEl('g',{id:`ded-cells-${i}`});
+      for(let r=0;r<4;r++)for(let col=0;col<6;col++){
+        cells.appendChild(svgEl('rect',dedCellAttrs(b.x,b.y,col,r)));
+      }
+      g.appendChild(cells);
+      const note=svgEl('text',{id:`ded-unused-${i}`,x:b.x+DED_CARD.w/2,y:b.y+116,'font-size':9,'font-weight':720,fill:'var(--danger)','text-anchor':'middle',opacity:0});
+      note.textContent='';g.appendChild(note);
+      boards.appendChild(g);
+    });
+  }
+  if(!pool.children.length){
+    pool.appendChild(svgEl('rect',{x:DED_PANEL.rightX,y:DED_PANEL.y,width:DED_PANEL.w,height:DED_PANEL.h,rx:15,fill:'var(--raised)',stroke:'var(--ok)','stroke-width':2}));
+    const h=svgEl('text',{x:DED_PANEL.rightX+24,y:162,'font-size':14,'font-weight':760,fill:'var(--txt)'});
+    h.textContent='Shared pool';pool.appendChild(h);
+    const hs=svgEl('text',{x:DED_PANEL.rightX+24,y:181,'font-size':10,fill:'var(--txt3)'});
+    hs.textContent='traffic consolidated into one GPU';pool.appendChild(hs);
+    RIGHT_BOARDS.forEach((b,i)=>{
+      const g=svgEl('g',{id:`ded-right-board-${i}`});
+      g.appendChild(svgEl('rect',{x:b.x,y:b.y,width:DED_CARD.w,height:DED_CARD.h,rx:11,fill:'var(--base)',stroke:b.c,'stroke-opacity':i===0 ? .85 : .24}));
+      const name=svgEl('text',{id:`ded-right-name-${i}`,x:b.x+DED_CARD.w/2,y:b.y+23,'font-size':11,'font-weight':750,fill:b.c,'text-anchor':'middle'});
+      name.textContent='GPU '+b.name;g.appendChild(name);
+      const cells=svgEl('g',{id:`ded-right-cells-${i}`});
+      for(let r=0;r<4;r++)for(let col=0;col<6;col++){
+        cells.appendChild(svgEl('rect',dedCellAttrs(b.x,b.y,col,r)));
+      }
+      g.appendChild(cells);
+      pool.appendChild(g);
+    });
+    const rstat=svgEl('text',{id:'ded-right-stat',x:DED_PANEL.rightX+DED_PANEL.w/2,y:350,'font-size':11,'font-weight':720,fill:'var(--ok)','text-anchor':'middle'});
+    rstat.textContent='utilization improved';pool.appendChild(rstat);
+  }
+}
+function dedSetBoard(i,used,showIdle){
+  dedEnsure();
+  const b=DED_BOARDS[i],cells=Array.from($(`#ded-cells-${i}`).children);
+  cells.forEach((cell,k)=>{
+    cell.setAttribute('fill',k<used?b.c:'var(--base)');
+    cell.setAttribute('stroke','var(--b1)');
+    cell.setAttribute('stroke-opacity','1');
+    cell.setAttribute('opacity',k<used?'.88':'1');
+  });
+  $(`#ded-unused-${i}`).setAttribute('opacity','0');
+}
+function dedSetRightBoard(i,used,active){
+  dedEnsure();
+  const b=RIGHT_BOARDS[i],cells=Array.from($(`#ded-right-cells-${i}`).children);
+  const frame=$(`#ded-right-board-${i} rect`);
+  const name=$(`#ded-right-name-${i}`);
+  frame.setAttribute('stroke',active?'var(--ok)':'var(--txt3)');
+  frame.setAttribute('stroke-opacity',active?'.85':'.24');
+  frame.setAttribute('fill',active?'var(--base)':'var(--inset)');
+  name.setAttribute('fill',active?'var(--ok)':'var(--txt3)');
+  name.setAttribute('opacity',active?'1':'.58');
+  cells.forEach((cell,k)=>{
+    cell.setAttribute('fill',active&&k<used?'var(--ok)':'var(--base)');
+    cell.setAttribute('stroke',active&&k<used?'var(--ok)':'var(--b1)');
+    cell.setAttribute('opacity',active?(k<used?'.9':'1'):'.35');
+  });
+}
+function dedSetPool(used){
+  dedSetRightBoard(0,used,true);
+  dedSetRightBoard(1,0,false);
+  dedSetRightBoard(2,0,false);
+}
+function dedPulse(){
+  const frames=[
+    {l:[7,8,7],r:18},
+    {l:[8,7,8],r:19},
+    {l:[7,9,8],r:20},
+    {l:[8,8,7],r:19},
+    {l:[7,8,9],r:20},
+    {l:[9,7,8],r:19},
+    {l:[8,8,8],r:20}
+  ];
+  frames.forEach((f,idx)=>after(idx*620,()=>{
+    f.l.forEach((n,i)=>dedSetBoard(i,n,true));
+    dedSetPool(f.r);
+  }));
+}
+function dedResetVisual(){
+  dedEnsure();
+  $('#ded-boards').style.opacity='1';
+  $('#ded-boards').style.transform='';
+  $('#ded-pool').setAttribute('opacity','1');
+  $('#ded-guide').setAttribute('opacity','0');
+  [0,1,2].forEach(i=>dedSetBoard(i,0,false));
+  dedSetPool(0);
+}
+function dedIdleMoney(){
+  dedResetVisual();
+  $('#ded-head').textContent='Capacity utilization';
+  $('#ded-sub').textContent='same traffic, shared pool';
+  $('#ded-stat').textContent='';
+  $('#ded-guide').setAttribute('opacity','0');
+  [7,8,7].forEach((n,i)=>dedSetBoard(i,n,true));
+  dedSetPool(18);
+  dedPulse();
+}
+function dedBurstTour(){
+  dedIdleMoney();
+  $('#ded-stat').textContent='';
+  [[16,4,4,18],[5,17,4,19],[4,5,17,20],[8,8,8,19]].forEach((vals,idx)=>{
+    after(idx*760,()=>{vals.slice(0,3).forEach((n,i)=>dedSetBoard(i,n,true));dedSetPool(vals[3]);});
+  });
+}
+function dedMerge(){
+  dedEnsure();
+  const boards=$('#ded-boards'),pool=$('#ded-pool');
+  $('#ded-guide').setAttribute('opacity','0');
+  const a=boards.animate([{opacity:1},{opacity:.45}],
+    {duration:520,easing:SPRING,fill:'forwards'});
+  CS.anims.push(a);
+  after(260,()=>{
+    pool.setAttribute('opacity','1');
+    dedSetPool(18);
+    $('#ded-head').textContent='Capacity utilization';
+    $('#ded-sub').textContent='same traffic, shared pool';
+    $('#ded-stat').textContent='';
+  });
+}
+function burstEnsure(){
+  const slots=$('#burstSlots'),wait=$('#burstWaitCells');
+  if(!slots.children.length){
+    for(let r=0;r<3;r++)for(let c=0;c<16;c++){
+      slots.appendChild(svgEl('rect',{x:398+c*24,y:334+r*16,width:17,height:11,rx:3,fill:'var(--base)',stroke:'var(--b1)'}));
+    }
+  }
+  if(!wait.children.length){
+    for(let i=0;i<12;i++)wait.appendChild(svgEl('rect',{x:405+i*20,y:411,width:13,height:8,rx:4,fill:'var(--danger)',opacity:0}));
+  }
+}
+function burstSet(level,waitOverride,labelMode){
+  burstEnsure();
+  const cells=Array.from($('#burstSlots').children),wait=Array.from($('#burstWaitCells').children);
+  const full=Math.min(cells.length,Math.round(level*cells.length));
+  cells.forEach((c,i)=>{c.setAttribute('fill',i<full?'var(--brand)':'var(--base)');c.setAttribute('opacity',i<full?'.84':'1');});
+  const over=waitOverride==null?Math.max(0,Math.min(wait.length,Math.round((level-1)*20))):waitOverride;
+  wait.forEach((c,i)=>c.setAttribute('opacity',i<over?'.9':'0'));
+  const burstMode=labelMode==='burst-capacity';
+  $('#burstSlotLabel').textContent=burstMode?'Burst capacity':'Shared pool capacity';
+  $('#burstWaitLabel').setAttribute('fill',over?'var(--danger)':'var(--txt3)');
+  $('#burstWaitRail').setAttribute('stroke',over?'var(--danger)':'var(--b1)');
+  $('#burstPoolTxt').textContent=over?(burstMode?'full at burst peak':'pool full at peak'):'available capacity';
+  $('#burstMsg').textContent=over?(burstMode?'overflow waits':'excess waits'):'inside capacity';
+  $('#burstMsg').setAttribute('fill',over?'var(--danger)':'var(--txt)');
+  $('#burstMsgBox').setAttribute('stroke',over?'var(--danger)':'var(--b2)');
+}
+function burstWave(progress,hot,labelMode){
+  const w=386,cap=178,base=246;
+  const p=Math.max(0,Math.min(1,progress));
+  const drawP=labelMode==='burst-capacity'?Math.min(p,.62):p;
+  const center=hot?Math.min(.83,.18+drawP*.78):.2+drawP*.6;
+  const envelope=hot?Math.sin(Math.PI*Math.min(1,drawP/.92)):0;
+  const amp=hot?24+82*envelope:30+10*Math.sin(Math.PI*drawP);
+  let d='',f='',peakX=0,peakY=999,over=false;
+  for(let x=0;x<=w;x+=8){
+    const u=x/w;
+    const ripple=7*Math.sin(u*11+p*2.2);
+    const bump=Math.exp(-Math.pow((u-center)/.095,2))*amp;
+    const y=base-ripple-bump;
+    if(y<peakY){peakY=y;peakX=x;}
+    over=over||y<cap;
+    d+=(x?'L':'M')+(404+x)+' '+y+' ';
+    f+=(x?'L':'M')+(404+x)+' '+Math.min(y,cap)+' ';
+  }
+  for(let x=w;x>=0;x-=8)f+='L'+(404+x)+' '+cap+' ';
+  $('#burstWave').setAttribute('d',d);
+  $('#burstFill').setAttribute('d',f+'Z');
+  const showDot=hot&&drawP>.18&&drawP<.86;
+  $('#burstNeedle').setAttribute('cx',String(404+peakX));
+  $('#burstNeedle').setAttribute('cy',String(peakY));
+  $('#burstNeedle').setAttribute('r',showDot?(over?'6':'4'):'0');
+  $('#burstNeedleTxt').setAttribute('x',String(404+peakX));
+  $('#burstNeedleTxt').setAttribute('y',String(peakY-12));
+  $('#burstNeedleTxt').textContent=over?'peak':'burst';
+  $('#burstNeedleTxt').setAttribute('opacity',showDot?'1':'0');
+  const pressure=hot?(.54+Math.max(0,(cap-peakY)/86)*.62):.42+.18*Math.sin(Math.PI*drawP);
+  const waitLevel=hot&&drawP>.46?Math.max(5,Math.min(9,Math.round(Math.max(0,(cap-peakY)/12)))):null;
+  const held=labelMode==='burst-capacity'&&p>.58;
+  burstSet(held?Math.max(pressure,1.04):pressure,held?Math.max(waitLevel||0,8):waitLevel,labelMode);
+  return over;
+}
+function burstCross(){
+  /* one-shot emphasis when the wave first breaks the capacity line */
+  const line=$('#burstCapLine'),fill=$('#burstFill');
+  CS.anims.push(line.animate(
+    [{strokeWidth:1.5,opacity:.7},{strokeWidth:4,opacity:1},{strokeWidth:1.5,opacity:1}],
+    {duration:520,easing:'ease-out'}));
+  CS.anims.push(fill.animate(
+    [{opacity:.16},{opacity:.42},{opacity:.24}],{duration:520,easing:'ease-out'}));
+}
+function burstRun(hot,opts={}){
+  $('#ov-burst').style.display='';
+  burstEnsure();
+  $('#burstHead').textContent=hot?'Peak load creates waiting':'Shared pool under load';
+  $('#burstSub').textContent=hot?'average load fits; the burst peak does not':'the average fits inside the pool';
+  const start=performance.now(),dur=opts.dur||(hot?3000:2200);
+  const labelMode=opts.labelMode;
+  let crossed=false;
+  const frame=now=>{
+    if($('#ov-burst').style.display==='none')return;
+    const p=Math.min(1,(now-start)/dur);
+    const over=burstWave(p,hot,labelMode);
+    if(hot&&over&&!crossed){crossed=true;burstCross();}
+    if(p<1)CS.raf=requestAnimationFrame(frame);
+  };
+  burstWave(0,hot,labelMode);
+  CS.raf=requestAnimationFrame(frame);
+}
+const POLICY_ROWS=[
+  {key:'p',y:170,c:'var(--brand)',label:'premium'},
+  {key:'s',y:246,c:'var(--amber)',label:'standard'},
+  {key:'b',y:322,c:'var(--teal)',label:'batch'}
+];
+function policyEnsure(){
+  const viz=$('#policyViz');
+  if(viz.children.length)return;
+  POLICY_ROWS.forEach((r,i)=>{
+    const card=svgEl('g',{id:`pol-card-${r.key}`});
+    card.appendChild(svgEl('rect',{x:196,y:r.y-24,width:126,height:46,rx:10,fill:'var(--raised)',stroke:r.c,'stroke-opacity':.62}));
+    const label=svgEl('text',{x:259,y:r.y+4,'font-size':12,'font-weight':740,fill:r.c,'text-anchor':'middle'});
+    label.textContent=r.label;card.appendChild(label);
+    viz.appendChild(card);
+    const stream=svgEl('g',{id:`pol-stream-${r.key}`});
+    stream.appendChild(svgEl('path',{d:`M 326 ${r.y} C 400 ${r.y}, 458 246, 564 246`,fill:'none',stroke:r.c,'stroke-width':1.3,'stroke-opacity':.22}));
+    for(let k=0;k<12;k++){
+      const t=k/11;
+      stream.appendChild(svgEl('circle',{cx:344+t*198,cy:r.y+(246-r.y)*t,r:5,fill:r.c,opacity:0}));
+    }
+    viz.appendChild(stream);
+  });
+  const pool=svgEl('g',{id:'pol-pool'});
+  pool.appendChild(svgEl('rect',{x:604,y:138,width:166,height:216,rx:16,fill:'var(--raised)',stroke:'var(--ok)','stroke-width':2}));
+  const pt=svgEl('text',{x:687,y:168,'font-size':14,'font-weight':760,fill:'var(--txt)','text-anchor':'middle'});
+  pt.textContent='shared pool';pool.appendChild(pt);
+  const cells=svgEl('g',{id:'pol-pool-cells'});
+  for(let row=0;row<5;row++)for(let col=0;col<7;col++){
+    cells.appendChild(svgEl('rect',{x:638+col*14,y:194+row*19,width:9,height:13,rx:3,fill:'var(--base)',stroke:'var(--b1)'}));
+  }
+  pool.appendChild(cells);
+  viz.appendChild(pool);
+  const lanes=svgEl('g',{id:'pol-lanes',opacity:0});
+  lanes.appendChild(svgEl('path',{d:'M 336 246 L 374 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
+  lanes.appendChild(svgEl('path',{d:'M 570 246 L 598 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
+  lanes.appendChild(svgEl('rect',{x:382,y:136,width:178,height:220,rx:14,fill:'var(--base)',stroke:'var(--b2)'}));
+  let t=svgEl('text',{x:471,y:162,'font-size':12,'font-weight':780,fill:'var(--txt)','text-anchor':'middle'});
+  t.textContent='policy gate';lanes.appendChild(t);
+  t=svgEl('text',{x:404,y:188,'font-size':9.5,'font-weight':760,fill:'var(--txt3)'});
+  t.textContent='priority value';lanes.appendChild(t);
+  [{v:'100',c:'var(--brand)'},{v:'0',c:'var(--amber)'},{v:'-10',c:'var(--teal)'}].forEach((b,i)=>{
+    const x=402+i*47;
+    lanes.appendChild(svgEl('rect',{x,y:198,width:38,height:28,rx:8,fill:'var(--raised)',stroke:b.c,'stroke-opacity':.68}));
+    const bt=svgEl('text',{x:x+19,y:216,'font-size':10.5,'font-weight':780,fill:b.c,'text-anchor':'middle'});
+    bt.textContent=b.v;lanes.appendChild(bt);
+  });
+  const bandCursor=svgEl('rect',{id:'pol-band-cursor',x:396,y:192,width:50,height:40,rx:11,fill:'none',stroke:'var(--ok)','stroke-width':2});
+  lanes.appendChild(bandCursor);
+  t=svgEl('text',{id:'pol-rule-text',x:471,y:244,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
+  t.textContent='highest non-empty band';lanes.appendChild(t);
+  t=svgEl('text',{x:404,y:274,'font-size':9.5,'font-weight':760,fill:'var(--txt3)'});
+  t.textContent='fairness id';lanes.appendChild(t);
+  ['A','B','C'].forEach((name,i)=>{
+    const x=410+i*41;
+    lanes.appendChild(svgEl('circle',{cx:x,cy:304,r:15,fill:'var(--raised)',stroke:'var(--amber)','stroke-opacity':.7}));
+    const nt=svgEl('text',{x,y:309,'font-size':11,'font-weight':780,fill:'var(--amber)','text-anchor':'middle'});
+    nt.textContent=name;lanes.appendChild(nt);
+    if(i<2)lanes.appendChild(svgEl('path',{d:`M ${x+18} 304 L ${x+33} 304`,fill:'none',stroke:'var(--amber)','stroke-width':1.2,'marker-end':'url(#arr)','stroke-opacity':.65}));
+  });
+  const turnCursor=svgEl('circle',{id:'pol-turn-cursor',cx:410,cy:304,r:21,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0});
+  lanes.appendChild(turnCursor);
+  t=svgEl('text',{id:'pol-turn-text',x:471,y:336,'font-size':10.5,'font-weight':740,fill:'var(--amber)','text-anchor':'middle'});
+  t.textContent='round robin within priority 0';lanes.appendChild(t);
+  viz.appendChild(lanes);
+}
+function policyStreams(counts,dim){
+  policyEnsure();
+  POLICY_ROWS.forEach(r=>{
+    const dots=Array.from($(`#pol-stream-${r.key}`).querySelectorAll('circle'));
+    dots.forEach((d,i)=>{
+      d.setAttribute('opacity',i<counts[r.key]?(dim&&r.key!=='s'?'.28':'.9'):'0');
+      d.setAttribute('r',String(r.key==='s'&&counts.s>8?6:5));
+    });
+  });
+}
+function policyPoolFill(colors){
+  policyEnsure();
+  const cells=Array.from($('#pol-pool-cells').children);
+  cells.forEach((c,i)=>{
+    const color=colors[i]||null;
+    c.setAttribute('fill',color||'var(--base)');
+    c.setAttribute('stroke',color||'var(--b1)');
+    c.setAttribute('opacity',color?'.9':'1');
+  });
+}
+function policyRun(mode){
+  $('#ov-policy').style.display='';
+  policyEnsure();
+  $('#pol-lanes').setAttribute('opacity',mode==='order'?'1':'0');
+  $('#pol-turn-cursor').setAttribute('opacity',mode==='order'?'1':'0');
+  if(mode==='meet'){
+    $('#policyHead').textContent='Traffic meets in one pool';
+    $('#policySub').textContent='sharing improves utilization; now work waits together';
+    $('#policyTag').textContent='';
+    policyStreams({p:5,s:5,b:5},false);
+    policyPoolFill([
+      'var(--brand)','var(--amber)','var(--teal)','var(--brand)','var(--amber)',
+      'var(--teal)','var(--brand)','var(--amber)','var(--teal)','var(--brand)',
+      'var(--amber)','var(--teal)'
+    ]);
+  }else if(mode==='crowd'){
+    $('#policyHead').textContent='A burst crowds the pool';
+    $('#policySub').textContent='the pool needs a rule before it fills';
+    $('#policyTag').textContent='the wait needs policy';
+    policyStreams({p:3,s:12,b:2},true);
+    policyPoolFill([
+      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
+      'var(--amber)','var(--amber)','var(--brand)','var(--amber)','var(--teal)',
+      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--brand)',
+      'var(--amber)','var(--teal)','var(--amber)','var(--amber)','var(--amber)',
+      'var(--amber)','var(--amber)'
+    ]);
+  }else{
+    $('#policyHead').textContent='Flow control decides the wait';
+    $('#policySub').textContent='priority value picks the band; fairness id picks the turn';
+    $('#policyTag').textContent='';
+    policyStreams({p:2,s:5,b:1},true);
+    policyPoolFill([
+      'var(--brand)','var(--brand)','var(--amber)','var(--amber)','var(--teal)',
+      'var(--amber)','var(--brand)','var(--amber)','var(--teal)','var(--amber)',
+      'var(--brand)','var(--amber)','var(--teal)'
+    ]);
+    [{x:396,txt:'priority first'}, {x:443,txt:'next eligible band'}, {x:396,txt:'priority first'}]
+      .forEach((s,i)=>after(i*760,()=>{$('#pol-band-cursor').setAttribute('x',String(s.x));$('#pol-rule-text').textContent=s.txt;}));
+    [410,451,492,410].forEach((x,i)=>after(900+i*520,()=>$('#pol-turn-cursor').setAttribute('cx',String(x))));
+  }
+}
+function promiseEnsure(){
+  const viz=$('#promiseViz');
+  if(viz.children.length)return;
+  const panels=[
+    {x:164,c:'var(--ok)',title:'Utilize capacity',mode:'capacity'},
+    {x:406,c:'var(--danger)',title:'Control bursts',mode:'burst'},
+    {x:648,c:'var(--brand)',title:'Protect tiers',mode:'tiers'}
+  ];
+  panels.forEach(p=>{
+    const g=svgEl('g',{id:`promise-${p.mode}`});
+    g.appendChild(svgEl('rect',{x:p.x,y:142,width:188,height:214,rx:14,fill:'var(--raised)',stroke:p.c,'stroke-opacity':.72}));
+    const title=svgEl('text',{x:p.x+94,y:174,'font-size':14,'font-weight':780,fill:'var(--txt)','text-anchor':'middle'});
+    title.textContent=p.title;g.appendChild(title);
+    if(p.mode==='capacity'){
+      for(let col=0;col<3;col++){
+        const gx=p.x+34+col*42;
+        g.appendChild(svgEl('rect',{x:gx,y:208,width:30,height:88,rx:8,fill:'var(--base)',stroke:col===0?'var(--ok)':'var(--b2)'}));
+        for(let r=0;r<5;r++)g.appendChild(svgEl('rect',{x:gx+7,y:220+r*12,width:16,height:8,rx:2,fill:col===0&&r<4?'var(--ok)':'var(--base)',stroke:'var(--b1)',opacity:col===0?'.9':'.55'}));
+      }
+      g.appendChild(svgEl('path',{d:`M ${p.x+54} 318 L ${p.x+132} 318`,stroke:'var(--ok)','stroke-width':4,'stroke-linecap':'round'}));
+    }else if(p.mode==='burst'){
+      g.appendChild(svgEl('line',{x1:p.x+30,y1:270,x2:p.x+158,y2:270,stroke:'var(--b2)'}));
+      g.appendChild(svgEl('line',{x1:p.x+30,y1:224,x2:p.x+158,y2:224,stroke:'var(--danger)','stroke-dasharray':'4 4'}));
+      g.appendChild(svgEl('path',{d:`M ${p.x+30} 262 C ${p.x+62} 258 ${p.x+82} 202 ${p.x+102} 204 C ${p.x+124} 206 ${p.x+130} 257 ${p.x+158} 260`,fill:'none',stroke:'var(--brand)','stroke-width':2.4}));
+      for(let i=0;i<7;i++)g.appendChild(svgEl('rect',{x:p.x+32+i*17,y:310,width:12,height:8,rx:4,fill:'var(--danger)',opacity:.9}));
+    }else{
+      const rows=[['premium','var(--brand)',5],['standard','var(--amber)',3],['batch','var(--teal)',1]];
+      rows.forEach((r,i)=>{
+        const y=214+i*36;
+        const t=svgEl('text',{x:p.x+34,y:y+4,'font-size':10,'font-weight':740,fill:r[1]});
+        t.textContent=r[0];g.appendChild(t);
+        for(let k=0;k<5;k++)g.appendChild(svgEl('rect',{x:p.x+94+k*12,y:y-6,width:8,height:12,rx:2,fill:k<r[2]?r[1]:'var(--base)',stroke:'var(--b1)',opacity:k<r[2]?'.9':'.55'}));
+      });
+      g.appendChild(svgEl('rect',{x:p.x+32,y:316,width:124,height:10,rx:5,fill:'var(--brand-soft)',stroke:'var(--brand)'}));
+    }
+    viz.appendChild(g);
+  });
+}
+function promiseRun(){
+  $('#ov-promise').style.display='';
+  promiseEnsure();
+  ['#promise-capacity','#promise-burst','#promise-tiers'].forEach((sel,i)=>after(i*420,()=>pop(sel,0)));
+}
+let stepTimers=[];
+function after(ms,fn){stepTimers.push(setTimeout(fn,ms));}
+function resetCanvas(){
+  stepTimers.forEach(clearTimeout);stepTimers=[];
+  if(CS.raf)cancelAnimationFrame(CS.raf);CS.raf=null;
+  CS.anims.forEach(a=>{try{a.cancel()}catch(e){}});CS.anims=[];
+  $('#fx').innerHTML='';
+  document.body.classList.remove('halted');
+  $('#ov-ded').style.display='none';
+  $('#ov-burst').style.display='none';
+  $('#ov-policy').style.display='none';
+  $('#ov-promise').style.display='none';
+  dedResetVisual();
+  burstSet(0);
+  $('#burstWave').setAttribute('d','');
+  $('#burstFill').setAttribute('d','');
+  $('#burstNeedle').setAttribute('r','0');
+  $('#burstNeedleTxt').setAttribute('opacity','0');
+  $('#ded-stat').setAttribute('opacity','0');
+  $('#evidence').classList.remove('show');
+  $('#playCtl').classList.remove('show');
+  /* baseline queues */
+  setFlow('b100',0,'premium',2);setFlow('b100',1,null);setFlow('b100',2,null);
+  setFlow('b0',0,'tenant-a',2);setFlow('b0',1,'tenant-b',1);setFlow('b0',2,'tenant-c',1);
+  setFlow('bm10',0,'batch',3);setFlow('bm10',1,null);setFlow('bm10',2,null);
+  cursorAt(null);
+  setMeter(0.35);setPods(.3,.45,.22,.5);
+}
+function applyLit(ids){
+  const set=new Set(ids);
+  $$('.cel').forEach(el=>{
+    const on=set.has(el.id);
+    el.classList.toggle('lit',on);el.classList.toggle('dim',!on);
+  });
+}
+const PATH_IN={ /* tenant → gateway → EPP entry */
+  prem:[[84,119],[271,206],[271,221],[366,221]],
+  std:[[84,225],[271,221],[366,221]],
+  batch:[[84,331],[271,236],[271,221],[366,221]]
+};
+
+/* =================== evidence overlay =================== */
+function evidence(html){const e=$('#evidence');e.innerHTML=html;e.classList.add('show');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>
+    e.querySelectorAll('.efill').forEach(f=>f.style.width=f.dataset.w+'%')));}
+function ebar(label,val,pct,color){
+  return `<div class="ebar"><span class="el">${label}</span>
+    <div class="etrack"><div class="efill" data-w="${pct}" style="background:${color}"></div></div>
+    <span class="ev">${val}</span></div>`;
+}
+const CANON={
+  source:'data-v4/CANONICAL-RESULTS.json',
+  tiers128:{source:'data-v4/tiers-gate-on-300s',
+    method:'median of per-repeat percentiles, trim_s=40, 3x300s',
+    premium:{p95:1117,range:[1056,1211]},standard:{p95:1406,range:[1250,1488]}},
+  batch128:{source:'data-v4/batch-gate-off + batch-gate-on',
+    off:{n429:48224},on:{n429:0}},
+  fairness128:{source:'data-v4/fairness-bigburst-gate-on',
+    method:'median of per-tenant per-repeat percentiles, 3x300s; modest same-band effect, not SLO proof',
+    tenants:{'tenant a':943,'tenant b':877,'tenant c':893}}
+};
+function fmt(n){return Number(n).toLocaleString();}
+function measuredTitle(t,sim){return `<div class="et"><span class="ebadge${sim?' sim':''}">${sim?'Simulation':'Measured'}</span>${t}</div>`;}
+function sourceLine(source,method){
+  return `<div class="esource"><b>Source</b> ${source}<br><b>Method</b> ${method||'canonical result in data-v4'}</div>`;
+}
+function rangeChip(name,r){
+  return `<span class="echip">${name} p95 range <b>${fmt(r[0])}-${fmt(r[1])} ms</b></span>`;
+}
+function msBar(label,ms,max,color){
+  return ebar(label,fmt(ms)+' ms',Math.max(2,ms/max*100),color);
+}
+
+/* =================== pages =================== */
+const MACHINE=['g-tprem','g-tstd','g-tbatch','a-t1','a-t2','a-t3','g-gw','a-gw','g-epp',
+  'g-dir','g-adm','a-adm','a-band','g-b100','g-b0','g-bm10','g-meter','g-cycle',
+  'a-d1','a-d2','g-pod1','g-pod2'];
+
+const PAGES=[
+/* ---- 0 · WHY: capacity utilization ---- */
+{title:'Capacity utilization',group:0,rail:'Capacity',steps:[
+ {lit:['ov-ded'],
+  n:'Same traffic. A shared pool can improve utilization before the mechanism gets involved.',
+  run(){$('#ov-ded').style.display='';
+    dedIdleMoney();
+    $('#ded-stat').setAttribute('opacity','1');}}
+]},
+/* ---- 1 · WHY: the burst problem ---- */
+{title:'Burst pressure',group:0,rail:'Bursts',steps:[
+ {lit:['ov-burst'],dwell:.72,
+  n:'A shared pool improves utilization. Burst traffic now meets in one place.',
+  run(){burstRun(false);}},
+ {lit:['ov-burst'],dwell:1.35,
+  n:'Average load can look safe; one burst peak creates waiting.',
+  run(){burstRun(true);}},
+ {lit:['ov-burst'],dwell:1.45,
+  n:'That waiting lane is the reason the shared pool needs policy.',
+  run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Waiting needs policy';$('#burstSub').textContent='burst capacity fills before the work is gone';});}}
+]},
+/* ---- 2 · WHY: shared capacity needs policy ---- */
+{title:'Sharing needs policy',group:0,rail:'Policy',steps:[
+ {lit:['ov-policy'],
+  n:'Once capacity is shared, the traffic streams meet in the same pool.',
+  run(){policyRun('meet');}},
+ {lit:['ov-policy'],
+  n:'A burst can crowd that pool unless the wait has rules.',
+  run(){policyRun('crowd');}},
+ {lit:['ov-policy'],
+  n:'Flow control turns the wait into policy: priority first, then fair turns within a tier.',
+  run(){policyRun('order');}}
+]},
+/* ---- 3 · WHY: business promise ---- */
+{title:'Why flow control',group:0,rail:'Summary',steps:[
+ {lit:['ov-promise'],dwell:1.15,
+  n:'Use more of the hardware you have, keep bursts from choosing winners, and protect service tiers under pressure.',
+  run(){promiseRun();}}
+]},
+/* ---- 4 · MACHINE: tag and resolve ---- */
+{title:'Tag and resolve',group:1,rail:'Tag',steps:[
+ {lit:['g-tprem'],
+  n:'Each request carries two headers: <code>x-llm-d-inference-objective</code> names its service tier and <code>x-llm-d-inference-fairness-id</code> names its tenant.',
+  run(){fly([[84,119],[271,206]],'var(--brand)',1100,0);
+    focus(['g-tprem','a-t1','g-gw'],350);
+    focus(['g-tprem','a-t1','g-gw','g-hdr'],900);
+    pop('#g-hdr',930);
+    callout(['headers attach before EPP','objective + fairness id'],178,322,'var(--brand)',980);}},
+ {lit:['g-gw'],
+  n:'The EPP looks up the objective header as an InferenceObjective bound to the pool. Found, the request takes that objective’s priority — here <b>100</b>.',
+  run(){fly([[271,221],[400,221],[400,99],[470,99],[600,80]],'var(--brand)',1700,0);
+    focus(['g-gw','a-gw','g-dir'],450);
+    callout(['objective found','premium → priority 100'],430,132,'var(--ok)',900);
+    focus(['g-dir','g-forkA'],1400);
+    pop('#g-forkA',1500);}},
+ {lit:['g-dir'],
+  n:'Missing header, or an objective not bound to the pool, and priority falls back to <b>0 — silently</b>. Nothing errors; the request just loses its tier.',
+  run(){fly([[271,221],[400,221],[400,99],[470,99],[600,116]],'var(--txt3)',1700,0);
+    callout(['no bound objective','fallback priority 0'],430,132,'var(--danger)',850);
+    focus(['g-dir','g-forkB'],1400);
+    pop('#g-forkB',1500);}}
+]},
+/* ---- 3 · MACHINE: FlowKey ---- */
+{title:'The FlowKey and its queue',group:1,rail:'FlowKey',steps:[
+ {lit:['g-dir'],
+  n:'Admission builds a <b>FlowKey</b> — tenant × priority — and that key names exactly one queue in the priority band it belongs to.',
+  run(){fly([[470,128],[470,172]],'var(--brand)',900,100);
+    focus(['g-dir','a-adm','g-adm'],420);
+    callout(['FlowKey','tenant × priority'],392,205,'var(--brand)',650);
+    pop('#g-adm',700);}},
+ {lit:['g-adm'],
+  n:'A flow <b>appears on its first request</b>: the moment a new tenant sends work at priority 100, its queue materializes in that band.',
+  run(){setFlow('b100',1,null);
+    focus(['g-adm','a-band','g-b100'],450);
+    after(500,()=>{setFlow('b100',1,'tenant-new × 100',1);pop('#g-b100',100);});
+    callout(['new flow appears','tenant-new × 100'],568,236,'var(--brand)',720);
+    fly([[470,198],[470,240],[540,240],[540,258]],'var(--brand)',1200,0);}},
+ {lit:['g-b100'],
+  n:'Go idle and the flow is <b>garbage-collected</b> — the registry keeps queues only for tenants that are actually sending.',
+  run(){setFlow('b100',1,'tenant-new × 100',1);
+    callout(['idle flow','removed from the registry'],568,236,'var(--txt3)',680);
+    after(900,()=>setFlow('b100',1,null));}}
+]},
+/* ---- 4 · MACHINE: gradient + ceiling ---- */
+{title:'The gradient and the ceiling',group:1,rail:'Ceiling',steps:[
+ {lit:['g-pod1','g-pod2'],
+  n:'Each endpoint scores <code>max(waiting ÷ 4, KV used ÷ 0.80)</code> — a roofline over queue depth and key-value (KV) cache use. The more constrained axis wins.',
+  run(){setPods(.5,.75,.4,.82);
+    callout(['endpoint score','max(waiting, KV cache)'],826,244,'var(--teal)',420);
+    focus(['g-pod1','g-pod2','g-meter'],720);
+    pop('#g-meter',760);}},
+ {lit:['g-pod1','g-pod2'],
+  n:'Pool saturation is the plain <b>average</b> of endpoint scores — a gradient the meter tracks continuously, never an on/off switch.',
+  run(){setPods(.7,.85,.65,.9);
+    focus(['g-pod1','g-pod2','g-meter'],450);
+    callout(['pool score','average endpoint pressure'],424,502,'var(--amber)',580);
+    after(650,()=>setMeter(0.88));}},
+ {lit:['g-meter'],
+  n:'At <b>1.0 the entire dispatch cycle halts</b> — even lower bands stop, so no dispatch can worsen the pressure on the highest band.',
+  run(){setPods(.95,.95,.9,.97);
+    callout(['ceiling crossed','dispatch stops at 1.0'],548,502,'var(--danger)',460);
+    after(500,()=>setMeter(1.08));
+    focus(['g-meter','g-cycle'],820);
+    after(900,()=>document.body.classList.add('halted'));}},
+ {lit:['g-meter'],
+  n:'When the score falls back under the ceiling, the cycle <b>resumes</b> exactly where the bands stand — nothing queued was lost.',
+  run(){document.body.classList.remove('halted');setPods(.45,.6,.4,.62);
+    after(450,()=>setMeter(0.66));
+    focus(['g-meter','g-cycle','g-b100','g-b0','g-bm10'],760);
+    callout(['below ceiling','cycle resumes'],696,502,'var(--ok)',900);
+    pop('#g-cycle',900);}}
+]},
+/* ---- 5 · MACHINE: dispatch cycle ---- */
+{title:'The dispatch cycle',group:1,rail:'Dispatch',steps:[
+ {lit:['g-cycle','g-b100'],
+  n:'Each cycle dispatches <b>exactly one request</b>, taken from the highest-priority band that has work — here priority 100.',
+  run(){cursorAt('b100',0);
+    callout(['highest band wins','one request this cycle'],650,236,'var(--brand)',350);
+    focus(['g-cycle','g-b100','a-d1','g-pod1'],650);
+    after(700,()=>{setFlow('b100',0,'premium',1);fly([[765,258],[846,196]],'var(--brand)',800,0);setPods(.4,.5,.3,.52);});}},
+ {lit:['g-cycle','g-b100'],
+  n:'An <b>empty band is skipped</b> in the same pass: the cursor walks down the bands until it finds waiting work.',
+  run(){setFlow('b100',0,'premium',0,'empty');cursorAt('b100',0);
+    callout(['priority 100 empty','skip down'],514,236,'var(--txt3)',420);
+    focus(['g-cycle','g-b100','g-b0'],700);
+    after(750,()=>{cursorAt('b0',0);});
+    callout(['priority 0 has work','dispatch from here'],514,312,'var(--amber)',1080);
+    focus(['g-cycle','g-b0','a-d1','g-pod1'],1280);
+    after(1350,()=>{setFlow('b0',0,'tenant-a',1);fly([[765,334],[846,214]],'var(--amber)',800,0);});}},
+ {lit:['g-cycle','g-b100','g-b0'],
+  n:'Batch drains <b>only when both higher bands are empty</b>. Priority here is traversal order plus one dispatch per cycle — never a reserved share of the GPU.',
+  run(){setFlow('b100',0,'premium',0,'empty');setFlow('b0',0,'tenant-a',0,'empty');
+    setFlow('b0',1,'tenant-b',0,'empty');setFlow('b0',2,'tenant-c',0,'empty');
+    cursorAt('bm10',0);
+    callout(['higher bands empty','batch can drain'],514,388,'var(--teal)',420);
+    focus(['g-cycle','g-bm10','a-d2','g-pod2'],680);
+    after(740,()=>{setFlow('bm10',0,'batch',2);fly([[765,410],[846,372]],'var(--teal)',800,0);});
+    after(1500,()=>{setFlow('bm10',0,'batch',1);fly([[765,410],[846,372]],'var(--teal)',800,0);});}}
+]},
+/* ---- 6 · MACHINE: fairness as turns ---- */
+{title:'Fairness as turns',group:1,rail:'Turns',steps:[
+ {lit:['g-b0','g-cycle','a-d1','g-pod1'],
+  n:'Three tenants share the priority-0 band. Round-robin hands each flow <b>one dispatch turn</b> in rotation — a, then b, then c.',
+  run(){setFlow('b0',0,'tenant-a · 0',3);setFlow('b0',1,'tenant-b · 0',2);setFlow('b0',2,'tenant-c · 0',2);
+    const seq=[0,1,2];seq.forEach((j,i)=>{
+      after(400+i*900,()=>{cursorAt('b0',j);fly([[FLOWX[j]+10,334],[846,214]],'var(--amber)',700,150);});});}},
+ {lit:['g-b0','g-cycle'],
+  n:'Tenant-a <b>bursts</b>. Its own queue grows and grows — but the cursor still grants it one turn per rotation, the same as everyone.',
+  run(){let qa=3;setFlow('b0',0,'tenant-a · served 1',qa);setFlow('b0',1,'tenant-b · served 1',2);setFlow('b0',2,'tenant-c · served 1',2);
+    for(let i=0;i<5;i++)after(300+i*420,()=>{qa+=2;setFlow('b0',0,'tenant-a · bursting',Math.min(20,qa));});
+    const seq=[1,2,0,1];seq.forEach((j,i)=>after(500+i*820,()=>cursorAt('b0',j)));}},
+ {lit:['g-b0','g-cycle'],
+  n:'Served tallies stay <b>level</b> across the three tenants; the burster’s excess waits in its own queue, not in its neighbors’.',
+  run(){setFlow('b0',0,'tenant-a · served 4',14);setFlow('b0',1,'tenant-b · served 4',1);setFlow('b0',2,'tenant-c · served 4',1);
+    cursorAt('b0',1);pop('#g-b0',300);}}
+]},
+/* ---- 7 · EVIDENCE: service tiers ---- */
+{title:'Evidence — service tiers',group:2,rail:'Tiers',steps:[
+ {lit:['g-b100','g-b0','g-meter','g-pod1','g-pod2'],
+  n:'The priority band did its job under saturation: premium p95 time to first token (TTFT) held <b>1117 ms</b> — the median across repeats, range 1056–1211.',
+  run(){setMeter(1.0);setPods(.9,.9,.85,.92);
+    const d=CANON.tiers128,max=Math.max(d.premium.p95,d.standard.p95);
+    evidence(`${measuredTitle('p95 time to first token · concurrency 128')}
+      <div class="eaxis"><span>${fmt(max)} ms max</span></div>
+      ${msBar('premium',d.premium.p95,max,'var(--brand)')}
+      <div class="echips">${rangeChip('premium',d.premium.range)}</div>
+      ${sourceLine(d.source,d.method)}`);}},
+ {lit:['g-b100','g-b0','g-meter'],
+  n:'Standard held <b>1406 ms</b> at the same load — about <b>1.25x</b> separation, held by queue ordering alone on a shared engine.',
+  run(){setMeter(1.0);
+    const d=CANON.tiers128,max=Math.max(d.premium.p95,d.standard.p95);
+    evidence(`${measuredTitle('p95 time to first token · same saturated pool')}
+      <div class="eaxis"><span>${fmt(max)} ms max</span></div>
+      ${msBar('premium',d.premium.p95,max,'var(--brand)')}
+      ${msBar('standard',d.standard.p95,max,'var(--amber)')}
+      <div class="echips"><span class="echip">separation <b>~${(d.standard.p95/d.premium.p95).toFixed(2)}x</b></span>
+      ${rangeChip('premium',d.premium.range)}${rangeChip('standard',d.standard.range)}</div>
+      ${sourceLine(d.source,d.method)}`);}},
+ {lit:['g-pod1','g-pod2'],
+  n:'Time per output token (TPOT) held <b>19–21 ms</b> for both tiers throughout. Queue time moved between tiers; decode speed did not.',
+  run(){evidence(`<div class="et">time per output token, held through saturation</div>
+      <div class="echips"><span class="echip">premium <b>19–21 ms</b> / token</span>
+      <span class="echip">standard <b>19–21 ms</b> / token</span>
+      <span class="echip">the queue absorbs the wait, the engine keeps its pace</span></div>`);
+    pop('#g-pod1',100);pop('#g-pod2',250);}}
+]},
+/* ---- 8 · EVIDENCE: batch isolation ---- */
+{title:'Evidence — batch isolation',group:2,rail:'Batch',steps:[
+ {lit:['g-tbatch','a-t3','g-gw','g-pod1','g-pod2'],
+  n:'The batch band protects the shared service by absorbing low-priority flood traffic. Without flow control, the run produced <b>48,224 rejections</b>.',
+  run(){setMeter(1.1);setPods(.95,.95,.95,.95);
+    for(let i=0;i<4;i++)fly(PATH_IN.batch,'var(--teal)',1100,i*240);
+    const d=CANON.batch128,max=d.off.n429;
+    evidence(`${measuredTitle('HTTP 429 rejections · batch flood')}
+      <div class="eaxis"><span>${fmt(max)} events</span></div>
+      ${ebar('flow control off',fmt(d.off.n429),100,'var(--danger)')}
+      ${sourceLine(d.source,'event totals from canonical data-v4 results')}`);}},
+ {lit:['g-tbatch','a-t3','g-bm10','g-meter'],
+  n:'With flow control on, the <b>same offered load</b> produced <b>0 rejections</b>: batch waited in its own band and drained as the pool allowed.',
+  run(){setMeter(0.98);setFlow('bm10',0,'batch',18);
+    const d=CANON.batch128,max=d.off.n429;
+    evidence(`${measuredTitle('HTTP 429 rejections · same offered load')}
+      <div class="eaxis"><span>${fmt(max)} events</span></div>
+      ${ebar('flow control off',fmt(d.off.n429),100,'var(--danger)')}
+      ${ebar('flow control on',fmt(d.on.n429),2,'var(--ok)')}
+      <div class="echips"><span class="echip">delta <b>${fmt(d.off.n429)} fewer rejections</b></span>
+      <span class="echip">same offered load</span></div>
+      ${sourceLine(d.source,'event totals from canonical data-v4 results')}`);}},
+ {lit:['g-bm10'],
+  n:'The capacity behind that: each band holds about <b>1 GB</b> of queued requests, and anything queued past the <b>60 s</b> time-to-live (TTL) is released with an error instead of going stale.',
+  run(){setFlow('bm10',0,'batch',18);
+    evidence(`<div class="et">why the queue absorbs a flood</div>
+      <div class="echips"><span class="echip">queue capacity <b>~1 GB per band</b></span>
+      <span class="echip">request time-to-live <b>60 s</b></span>
+      <span class="echip">held in EPP memory, upstream of the GPU</span></div>`);}}
+]},
+/* ---- 9 · EVIDENCE: fairness big-burst ---- */
+{title:'Evidence — the big burst',group:2,rail:'Burst',steps:[
+ {lit:['g-b0','g-cycle'],
+  n:'The fairness rule is tested inside one band: one tenant burst to <b>14x</b> its neighbors — <b>82 versus 6</b> requests per second.',
+  run(){setFlow('b0',0,'burster · 82 req/s',20);setFlow('b0',1,'peer · 6 req/s',1);setFlow('b0',2,'peer · 6 req/s',1);
+    evidence(`<div class="et">arrival rate through the burst window</div>
+      ${ebar('burster','82 req/s',95,'var(--danger)')}
+      ${ebar('each peer','6 req/s',7,'var(--ok)')}`);}},
+ {lit:['g-b0','g-cycle'],
+  n:'Round-robin bounded the burster to about <b>2.6x</b> the queue time of its peers — and <b>no tenant starved</b>; every flow kept its turn.',
+  run(){setFlow('b0',0,'burster · 82 req/s',20);setFlow('b0',1,'peer · 6 req/s',1);setFlow('b0',2,'peer · 6 req/s',1);
+    const seq=[1,2,0,1,2];seq.forEach((j,i)=>after(300+i*600,()=>cursorAt('b0',j)));
+    const d=CANON.fairness128,vals=Object.entries(d.tenants),max=Math.max(...vals.map(x=>x[1]));
+    evidence(`${measuredTitle('same-band p95 TTFT · big-burst run')}
+      <div class="eaxis"><span>${fmt(max)} ms max</span></div>
+      ${vals.map(([name,v],i)=>msBar(name,v,max,i===0?'var(--danger)':'var(--ok)')).join('')}
+      <div class="echips"><span class="echip"><b>modest effect</b>, not SLO proof</span>
+      <span class="echip">no tenant starved in this run</span></div>
+      ${sourceLine(d.source,d.method)}`);}},
+ {lit:['g-b0','g-bm10'],
+  n:'Demoting the burster to a lower band changed dispatch <b>ordering, not outcome</b> — round-robin turns were already bounding its share.',
+  run(){setFlow('b0',0,null);setFlow('b0',1,'peer',1);setFlow('b0',2,'peer',1);
+    setFlow('bm10',1,'burster · demoted',20);
+    evidence(`<div class="et">the demotion test</div>
+      <div class="echips"><span class="echip">burster moved to a lower band</span>
+      <span class="echip">peers’ numbers held — <b>ordering changed, outcome did not</b></span></div>`);}}
+]},
+/* ---- 10 · REPLAY ---- */
+{title:'Scenario replay',group:3,rail:'Replay',steps:[
+ {lit:MACHINE,
+  n:'The playground uses simulated dynamics. The evidence pages use measured canonical runs from data-v4.',
+  run(){$('#playCtl').classList.add('show');startPlay();}}
+]}
+];
+
+/* =================== groups / rail =================== */
+const GROUPS=[
+  {name:'The why',color:'var(--amber)',pages:[0,1,2,3]},
+  {name:'Mechanism',color:'var(--brand)',pages:[4,5,6,7,8]},
+  {name:'Results',color:'var(--teal)',pages:[9,10,11]},
+  {name:'Replay',color:'var(--ok)',pages:[12]}
+];
+function buildRail(){
+  const r=$('#rail');r.innerHTML='';
+  GROUPS.forEach((g,gi)=>{
+    const grp=document.createElement('div');grp.className='rgroup';
+    grp.style.setProperty('--gc',g.color);
+    grp.innerHTML=`<div class="glab" style="color:${g.color}">${g.name}</div>`;
+    const steps=document.createElement('div');steps.className='rsteps';
+    g.pages.forEach(pi=>{
+      const s=document.createElement('button');
+      s.type='button';
+      s.className='rstep'+(pi<state.page?' done':'')+(pi===state.page?' act':'');
+      s.style.setProperty('--gc',g.color);
+      s.setAttribute('aria-label',`Go to page ${pi}: ${PAGES[pi].rail}`);
+      if(pi===state.page)s.setAttribute('aria-current','step');
+      s.innerHTML=`<span class="n">${pi<state.page?'✓':pi}</span><span class="rlab">${PAGES[pi].rail}</span>`;
+      s.onclick=()=>{userInput();go(pi,0);};
+      steps.appendChild(s);
+    });
+    grp.appendChild(steps);r.appendChild(grp);
+    if(gi<GROUPS.length-1){const gap=document.createElement('div');gap.className='rgap';r.appendChild(gap);}
+  });
+}
+
+/* =================== navigation =================== */
+const state={page:-1,step:0};
+let hashLock=false;
+function applyStep(){
+  const pg=PAGES[state.page],st=pg.steps[state.step];
+  resetCanvas();
+  applyLit(st.lit);
+  if(st.run)st.run();
+  /* sidebar */
+  $('#pTitle').textContent=pg.title;
+  $('#stepLab').textContent=`Step ${state.step+1} of ${pg.steps.length}`;
+  $('#stepPips').innerHTML=pg.steps.map((_,i)=>`<span class="pip${i<=state.step?' on':''}"></span>`).join('');
+  $('#narr').innerHTML=st.n;
+  const card=$('#card');
+  card.animate([{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'none'}],
+    {duration:480,easing:SPRING});
+  $('#backBtn').disabled=state.page===0&&state.step===0;
+  $('#nextBtn').disabled=state.page===PAGES.length-1&&state.step===pg.steps.length-1;
+  $('#nextBtn').textContent=state.step===pg.steps.length-1?'Next page →':'Next →';
+  $('#pgno').textContent=`page ${state.page} of ${PAGES.length-1}`;
+  if(pg.title!=='Scenario replay')stopPlay();
+}
+function go(page,step){
+  page=Math.max(0,Math.min(PAGES.length-1,page));
+  const changed=page!==state.page;
+  state.page=page;
+  state.step=Math.max(0,Math.min(PAGES[page].steps.length-1,step===-1?PAGES[page].steps.length-1:(step||0)));
+  if(changed){hashLock=true;location.hash='page-'+page;setTimeout(()=>hashLock=false,50);buildRail();}
+  applyStep();
+}
+function nextStep(){
+  const pg=PAGES[state.page];
+  if(state.step<pg.steps.length-1)go(state.page,state.step+1);
+  else if(state.page<PAGES.length-1)go(state.page+1,0);
+}
+function prevStep(){
+  if(state.step>0)go(state.page,state.step-1);
+  else if(state.page>0)go(state.page-1,-1);
+}
+$('#nextBtn').onclick=()=>{userInput();nextStep();};
+$('#backBtn').onclick=()=>{userInput();prevStep();};
+$('#canvasWrap').addEventListener('click',e=>{
+  if(e.target.closest('#playCtl'))return;
+  userInput();nextStep();});
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  const k=e.key;
+  if(k===' '||k==='ArrowRight'){e.preventDefault();userInput();nextStep();}
+  else if(k==='ArrowLeft'){e.preventDefault();userInput();prevStep();}
+  else if(k==='ArrowDown'||k==='PageDown'){e.preventDefault();userInput();go(state.page+1,0);}
+  else if(k==='ArrowUp'||k==='PageUp'){e.preventDefault();userInput();go(state.page-1,0);}
+});
+let wheelT=0;
+window.addEventListener('wheel',e=>{
+  const now=performance.now();if(now-wheelT<650)return;
+  if(Math.abs(e.deltaY)<12)return;
+  wheelT=now;userInput();
+  if(e.deltaY>0)go(state.page+1,0);else go(state.page-1,0);
+},{passive:true});
+window.addEventListener('hashchange',()=>{
+  if(hashLock)return;
+  const m=location.hash.match(/page-(\d+)/);
+  const n=m?+m[1]:0;
+  if(n!==state.page)go(n,0);
+});
+
+/* =================== autoplay =================== */
+let auto=false,autoT0=0;
+const autoBtn=$('#autoBtn'),autoSel=$('#autoSel');
+function autoToast(msg){let t=document.getElementById('apToast');
+  if(!t){t=document.createElement('div');t.id='apToast';t.setAttribute('role','status');t.setAttribute('aria-live','polite');
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity='0',1600);}
+function setAuto(v,quiet){const was=auto;auto=v;autoT0=performance.now();
+  if(!quiet&&was&&!v)autoToast('autoplay paused — you took over');
+  if(!quiet&&!was&&v)autoToast('autoplay on — advancing each interval');
+  if(!v)autoBtn.style.backgroundImage='';
+  autoBtn.classList.toggle('on',v);
+  autoBtn.setAttribute('aria-pressed',String(v));
+  autoBtn.textContent=v?'❚❚ autoplay on':'▶ autoplay off';}
+autoBtn.onclick=e=>{e.stopPropagation();setAuto(!auto);};
+autoSel.addEventListener('change',()=>{autoT0=performance.now();});
+autoSel.addEventListener('click',e=>e.stopPropagation());
+setInterval(()=>{
+  if(!auto){autoBtn.style.backgroundImage='';return;}
+  const dwell=+autoSel.value*(PAGES[state.page].steps[state.step].dwell||1);
+  const f=Math.min(1,(performance.now()-autoT0)/dwell);
+  autoBtn.style.backgroundImage='linear-gradient(to right, var(--brand-soft, rgba(91,108,240,.25)) '+(f*100).toFixed(0)+'%, transparent '+(f*100).toFixed(0)+'%)';
+  if(performance.now()-autoT0>=dwell){
+    autoT0=performance.now();
+    if(state.page===PAGES.length-1&&state.step===PAGES[state.page].steps.length-1)setAuto(false);
+    else nextStep();
+  }
+},120);
+function userInput(){if(auto)setAuto(false);autoT0=performance.now();}
+
+/* =================== theme =================== */
+const themes=['auto','dark','light'];
+let themeIdx=Math.max(0,themes.indexOf(localStorage.getItem('jv2-theme')||'auto'));
+function applyTheme(){
+  const t=themes[themeIdx];
+  if(t==='auto')document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme',t);
+  $('#themeBtn').textContent='theme · '+t;
+  localStorage.setItem('jv2-theme',t);
+}
+$('#themeBtn').onclick=e=>{e.stopPropagation();themeIdx=(themeIdx+1)%3;applyTheme();};
+applyTheme();
+
+/* =================== fullscreen =================== */
+$('#fsBtn').onclick=e=>{e.stopPropagation();
+  if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});};
+
+/* =================== playground =================== */
+const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},served:{p:0,s:0,b:0},rej:0,ttl:0,timer:null,burst:0};
+$$('#playCtl input[type=range]').forEach(r=>{
+  r.addEventListener('input',()=>{PG.load[r.dataset.k]=+r.value;$('#kv_'+r.dataset.k).textContent=r.value;});
+  r.addEventListener('pointerdown',e=>e.stopPropagation());
+});
+$('#pgFc').addEventListener('click',e=>{e.stopPropagation();
+  const d=e.target.closest('[data-f]');if(!d)return;
+  PG.fc=d.dataset.f==='1';
+  $$('#pgFc button').forEach(x=>{
+    const on=x===d;
+    x.classList.toggle('on',on);
+    x.setAttribute('aria-pressed',String(on));
+  });});
+$('#pgBurst').addEventListener('click',e=>{e.stopPropagation();PG.burst=24;});
+function startPlay(){
+  stopPlay();
+  PG.q={p:2,s:2,b:3};PG.served={p:0,s:0,b:0};PG.rej=0;PG.ttl=0;PG.burst=0;
+  PG.timer=setInterval(playTick,340);
+  playTick();
+}
+function stopPlay(){if(PG.timer){clearInterval(PG.timer);PG.timer=null;}}
+function playTick(){
+  const L=PG.load;
+  /* arrivals */
+  const arr=k=>{const base=L[k]/28;let n=Math.floor(base)+(Math.random()<base%1?1:0);return n;};
+  let aP=arr('p'),aS=arr('s')+(PG.burst>0?3:0),aB=arr('b');
+  if(PG.burst>0)PG.burst--;
+  const totalQ=()=>PG.q.p+PG.q.s+PG.q.b;
+  const demand=(L.p+L.s+L.b)/160+(PG.burst>0?0.25:0);
+  if(PG.fc){
+    PG.q.p=Math.min(40,PG.q.p+aP);PG.q.s=Math.min(40,PG.q.s+aS);PG.q.b=Math.min(40,PG.q.b+aB);
+    const sat=Math.min(1.25,demand*0.75+totalQ()/70);
+    setMeter(sat);
+    document.body.classList.toggle('halted',sat>=1);
+    if(sat<1){
+      /* a few cycles per tick, one dispatch each, highest band first */
+      let cycles=3;
+      while(cycles-->0){
+        if(PG.q.p>0){PG.q.p--;PG.served.p++;if(cycles===0)fly([[765,258],[846,196]],'var(--brand)',600,0);}
+        else if(PG.q.s>0){PG.q.s--;PG.served.s++;if(cycles===0)fly([[765,334],[846,214]],'var(--amber)',600,0);}
+        else if(PG.q.b>0){PG.q.b--;PG.served.b++;if(cycles===0)fly([[765,410],[846,372]],'var(--teal)',600,0);}
+      }
+    }
+    /* TTL pressure on very deep queues */
+    ['p','s','b'].forEach(k=>{if(PG.q[k]>=38&&Math.random()<.4){PG.q[k]--;PG.ttl++;}});
+    setPods(Math.min(1,demand*.9),Math.min(1,demand*.95),Math.min(1,demand*.85),Math.min(1,demand));
+  }else{
+    /* no flow control: straight through, overflow rejected */
+    const cap=6,total=aP+aS+aB;
+    const over=Math.max(0,total-cap+(demand>0.8?1:0));
+    PG.rej+=over;
+    PG.served.p+=aP;PG.served.s+=Math.max(0,aS-over);PG.served.b+=aB;
+    PG.q={p:0,s:0,b:0};
+    const sat=Math.min(1.25,demand*1.15+(PG.burst>0?0.2:0));
+    setMeter(sat);document.body.classList.remove('halted');
+    setPods(Math.min(1,sat),Math.min(1,sat*.95),Math.min(1,sat*.9),Math.min(1,sat));
+    if(Math.random()<.6)fly(PATH_IN.std,'var(--amber)',900,0);
+  }
+  setFlow('b100',0,'premium',PG.q.p);
+  setFlow('b0',0,'standard',PG.q.s);
+  setFlow('b0',1,null);setFlow('b0',2,null);
+  setFlow('bm10',0,'batch',PG.q.b);
+  $('#pgStats').innerHTML=
+    `<span class="st">served p ${PG.served.p}</span><span class="st">s ${PG.served.s}</span>`+
+    `<span class="st">b ${PG.served.b}</span>`+
+    `<span class="st"${PG.rej?' style="color:var(--danger)"':''}>rejected ${PG.rej}</span>`+
+    `<span class="st"${PG.ttl?' style="color:var(--danger)"':''}>TTL ${PG.ttl}</span>`;
+}
+
+/* =================== boot =================== */
+buildQueues();
+const m=location.hash.match(/page-(\d+)/);
+go(m?Math.min(PAGES.length-1,+m[1]):0,0);
+setAuto(true,true);
+autoT0=performance.now()-(+autoSel.value-1100)*(PAGES[state.page].steps[state.step].dwell||1);
+</script>
+</body>
+</html>
