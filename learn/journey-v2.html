@@ -430,8 +430,8 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
         <!-- page-2 overlay: measured knee -->
         <g id="ov-knee" class="cel" style="display:none">
           <rect x="92" y="52" width="856" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
-          <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Find the knee</text>
-          <text x="130" y="110" font-size="11" fill="var(--txt3)">past the knee, more concurrency mostly buys queueing</text>
+          <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Where control starts</text>
+          <text x="130" y="110" font-size="11" fill="var(--txt3)">below the knee there is headroom; past it, policy decides the wait</text>
           <g id="kneeViz"></g>
         </g>
 
@@ -908,7 +908,7 @@ function kneeEnsure(){
   viz.appendChild(svgEl('path',{id:'kneeFlat',d:kneePath(rp1),fill:'none',stroke:'var(--ok)','stroke-width':2.8,'stroke-linejoin':'round'}));
   viz.appendChild(svgEl('path',{id:'kneeQueue',d:kneePath(rp2),fill:'none',stroke:'var(--danger)','stroke-width':2.8,'stroke-linejoin':'round'}));
   const k2=svgEl('text',{x:rk,y:right.y+38,'font-size':10.5,'font-weight':760,fill:'var(--brand)','text-anchor':'middle'});
-  k2.textContent='control starts here';viz.appendChild(k2);
+  k2.textContent='policy starts here';viz.appendChild(k2);
   const flat=svgEl('text',{x:rx(.78),y:ry(.76)-10,'font-size':10,'font-weight':720,fill:'var(--ok)','text-anchor':'middle'});
   flat.textContent='throughput flattens';viz.appendChild(flat);
   const wait=svgEl('text',{x:rx(.78),y:ry(.45)+8,'font-size':10,'font-weight':720,fill:'var(--danger)','text-anchor':'middle'});
@@ -973,22 +973,19 @@ function policyEnsure(){
 
   const priority=svgEl('g',{id:'pol-priority-panel',opacity:0});
   t=svgEl('text',{x:473,y:185,'font-size':10,'font-weight':760,fill:'var(--txt3)','text-anchor':'middle'});
-  t.textContent='choose priority band';priority.appendChild(t);
+  t.textContent='ordered bands';priority.appendChild(t);
   [
-    {y:206,label:'100',name:'premium',c:'var(--brand)',dots:3},
-    {y:254,label:'0',name:'standard',c:'var(--amber)',dots:5},
-    {y:302,label:'−10',name:'batch',c:'var(--teal)',dots:2}
+    {y:208,label:'100',c:'var(--brand)'},
+    {y:254,label:'0',c:'var(--amber)'},
+    {y:300,label:'−10',c:'var(--teal)'}
   ].forEach((r,i)=>{
-    priority.appendChild(svgEl('rect',{x:406,y:r.y-18,width:134,height:34,rx:9,fill:'var(--raised)',stroke:r.c,'stroke-opacity':.55}));
-    const lab=svgEl('text',{x:420,y:r.y+4,'font-size':10.5,'font-weight':780,fill:r.c});
+    priority.appendChild(svgEl('rect',{x:410,y:r.y-16,width:126,height:32,rx:9,fill:'var(--raised)',stroke:r.c,'stroke-opacity':.62}));
+    const lab=svgEl('text',{x:473,y:r.y+4,'font-size':13,'font-weight':800,fill:r.c,'text-anchor':'middle'});
     lab.textContent=r.label;priority.appendChild(lab);
-    const nm=svgEl('text',{x:455,y:r.y+4,'font-size':9.5,'font-weight':650,fill:'var(--txt2)'});
-    nm.textContent=r.name;priority.appendChild(nm);
-    for(let k=0;k<r.dots;k++)priority.appendChild(svgEl('circle',{cx:512+k*8,cy:r.y,r:3.2,fill:r.c,opacity:.9}));
   });
-  priority.appendChild(svgEl('rect',{id:'pol-band-cursor',x:398,y:184,width:150,height:42,rx:12,fill:'none',stroke:'var(--ok)','stroke-width':2}));
+  priority.appendChild(svgEl('rect',{id:'pol-band-cursor',x:404,y:186,width:138,height:44,rx:12,fill:'none',stroke:'var(--ok)','stroke-width':2}));
   t=svgEl('text',{id:'pol-rule-text',x:473,y:338,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
-  t.textContent='highest non-empty band goes first';priority.appendChild(t);
+  t.textContent='highest non-empty band dispatches';priority.appendChild(t);
   gate.appendChild(priority);
 
   const fair=svgEl('g',{id:'pol-fair-panel',opacity:0});
@@ -1060,14 +1057,13 @@ function policyRun(mode){
     ]);
   }else if(mode==='priority'){
     $('#policyHead').textContent='Priority bands choose first';
-    $('#policySub').textContent='higher priority waits ahead of lower priority';
+    $('#policySub').textContent='the highest non-empty band gets the next dispatch';
     $('#policyTag').textContent='';
-    policyStreams({p:3,s:5,b:2},true);
+    policyStreams({p:0,s:0,b:0},false);
     policyPoolFill([
-      'var(--brand)','var(--brand)','var(--brand)','var(--amber)','var(--amber)',
-      'var(--amber)','var(--amber)','var(--teal)','var(--teal)'
+      'var(--brand)','var(--brand)','var(--brand)'
     ]);
-    [{y:184,txt:'serve priority 100'}, {y:232,txt:'then priority 0'}, {y:280,txt:'batch waits behind them'}]
+    [{y:186,txt:'priority 100 dispatches'}, {y:232,txt:'then priority 0'}, {y:278,txt:'then priority −10'}]
       .forEach((s,i)=>after(i*760,()=>{$('#pol-band-cursor').setAttribute('y',String(s.y));$('#pol-rule-text').textContent=s.txt;}));
   }else{
     $('#policyHead').textContent='Fair turns inside a band';
@@ -1226,9 +1222,9 @@ const PAGES=[
   run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Waiting needs policy';$('#burstSub').textContent='burst capacity fills before the work is gone';});}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
-{title:'Find the knee',group:0,rail:'Knee',steps:[
+{title:'Where control starts',group:0,rail:'Threshold',steps:[
  {lit:['ov-knee'],dwell:1.15,
-  n:'The knee is where added concurrency stops buying useful throughput and starts buying queueing.',
+  n:'This is why the mechanism matters: once the pool crosses the knee, flow control decides whose work waits.',
   run(){kneeRun();}}
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
@@ -1609,7 +1605,7 @@ $('#fsBtn').onclick=e=>{e.stopPropagation();
   else document.documentElement.requestFullscreen().catch(()=>{});};
 
 /* =================== playground =================== */
-const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},served:{p:0,s:0,b:0},rej:0,ttl:0,timer:null,burst:0};
+const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},served:{p:0,s:0,b:0},rej:0,ttl:0,timer:null,burst:0,tick:0};
 $$('#playCtl input[type=range]').forEach(r=>{
   r.addEventListener('input',()=>{PG.load[r.dataset.k]=+r.value;$('#kv_'+r.dataset.k).textContent=r.value;});
   r.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1625,15 +1621,22 @@ $('#pgFc').addEventListener('click',e=>{e.stopPropagation();
 $('#pgBurst').addEventListener('click',e=>{e.stopPropagation();PG.burst=24;});
 function startPlay(){
   stopPlay();
-  PG.q={p:2,s:2,b:3};PG.served={p:0,s:0,b:0};PG.rej=0;PG.ttl=0;PG.burst=0;
-  PG.timer=setInterval(playTick,340);
+  PG.q={p:2,s:2,b:3};PG.served={p:0,s:0,b:0};PG.rej=0;PG.ttl=0;PG.burst=0;PG.tick=0;
+  PG.timer=setInterval(playTick,520);
   playTick();
 }
 function stopPlay(){if(PG.timer){clearInterval(PG.timer);PG.timer=null;}}
 function playTick(){
+  PG.tick++;
   const L=PG.load;
   /* arrivals */
-  const arr=k=>{const base=L[k]/28;let n=Math.floor(base)+(Math.random()<base%1?1:0);return n;};
+  const offsets={p:0,s:1,b:2};
+  const arr=k=>{
+    const base=L[k]/34;
+    const whole=Math.floor(base);
+    const extra=(PG.tick+offsets[k])%3===0?1:0;
+    return Math.max(0,whole+extra);
+  };
   let aP=arr('p'),aS=arr('s')+(PG.burst>0?3:0),aB=arr('b');
   if(PG.burst>0)PG.burst--;
   const totalQ=()=>PG.q.p+PG.q.s+PG.q.b;
@@ -1644,16 +1647,16 @@ function playTick(){
     setMeter(sat);
     document.body.classList.toggle('halted',sat>=1);
     if(sat<1){
-      /* a few cycles per tick, one dispatch each, highest band first */
-      let cycles=3;
+      /* one visible dispatch per replay tick */
+      let cycles=1;
       while(cycles-->0){
-        if(PG.q.p>0){PG.q.p--;PG.served.p++;if(cycles===0)fly([[765,258],[846,196]],'var(--brand)',600,0);}
-        else if(PG.q.s>0){PG.q.s--;PG.served.s++;if(cycles===0)fly([[765,334],[846,214]],'var(--amber)',600,0);}
-        else if(PG.q.b>0){PG.q.b--;PG.served.b++;if(cycles===0)fly([[765,410],[846,372]],'var(--teal)',600,0);}
+        if(PG.q.p>0){PG.q.p--;PG.served.p++;if(cycles===0&&PG.tick%2===0)fly([[765,258],[846,196]],'var(--brand)',760,0);}
+        else if(PG.q.s>0){PG.q.s--;PG.served.s++;if(cycles===0&&PG.tick%2===0)fly([[765,334],[846,214]],'var(--amber)',760,0);}
+        else if(PG.q.b>0){PG.q.b--;PG.served.b++;if(cycles===0&&PG.tick%2===0)fly([[765,410],[846,372]],'var(--teal)',760,0);}
       }
     }
     /* TTL pressure on very deep queues */
-    ['p','s','b'].forEach(k=>{if(PG.q[k]>=38&&Math.random()<.4){PG.q[k]--;PG.ttl++;}});
+    ['p','s','b'].forEach(k=>{if(PG.q[k]>=38&&(PG.tick+offsets[k])%3===0){PG.q[k]--;PG.ttl++;}});
     setPods(Math.min(1,demand*.9),Math.min(1,demand*.95),Math.min(1,demand*.85),Math.min(1,demand));
   }else{
     /* no flow control: straight through, overflow rejected */
@@ -1665,7 +1668,7 @@ function playTick(){
     const sat=Math.min(1.25,demand*1.15+(PG.burst>0?0.2:0));
     setMeter(sat);document.body.classList.remove('halted');
     setPods(Math.min(1,sat),Math.min(1,sat*.95),Math.min(1,sat*.9),Math.min(1,sat));
-    if(Math.random()<.6)fly(PATH_IN.std,'var(--amber)',900,0);
+    if(PG.tick%3===0)fly(PATH_IN.std,'var(--amber)',980,0);
   }
   setFlow('b100',0,'premium',PG.q.p);
   setFlow('b0',0,'standard',PG.q.s);
