@@ -467,7 +467,6 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
           <g id="promiseScene" transform="translate(-180 -52) scale(1.35)">
           <text x="164" y="86" font-size="21" font-weight="750" fill="var(--txt)">Why flow control</text>
-          <text x="164" y="110" font-size="11" fill="var(--txt3)">shared hardware, protected tiers, fewer bad surprises</text>
           <g id="promiseViz"></g>
           </g>
         </g>
@@ -577,6 +576,18 @@ function fly(points,color,dur,delay){
   const a=c.animate(kf,{duration:dur,delay:delay||0,easing:'cubic-bezier(.45,.05,.35,1)',fill:'forwards'});
   a.onfinish=()=>c.remove();CS.anims.push(a);
   c.animate([{opacity:0},{opacity:1}],{duration:200,delay:delay||0,fill:'forwards'});
+  return a;
+}
+function localFly(parent,points,color,dur,delay){
+  const c=svgEl('circle',{r:6,fill:color,stroke:'var(--base)','stroke-width':1.4,cx:points[0][0],cy:points[0][1]});
+  c.style.opacity='0';
+  parent.appendChild(c);
+  const kf=points.map((p,i)=>({transform:`translate(${p[0]-points[0][0]}px,${p[1]-points[0][1]}px)`,
+    opacity:i===points.length-1?0:1,offset:i/(points.length-1)}));
+  kf[0].opacity=1;
+  const a=c.animate(kf,{duration:dur,delay:delay||0,easing:'cubic-bezier(.45,.05,.35,1)',fill:'forwards'});
+  a.onfinish=()=>c.remove();
+  CS.anims.push(a);
   return a;
 }
 function pop(sel,delay){
@@ -803,7 +814,7 @@ function burstSet(level,waitOverride,labelMode){
 function burstWave(progress,hot,labelMode){
   const w=386,cap=178,base=246;
   const p=Math.max(0,Math.min(1,progress));
-  const drawP=labelMode==='burst-capacity'?Math.min(p,.62):p;
+  const drawP=p;
   const center=hot?Math.min(.83,.18+drawP*.78):.2+drawP*.6;
   const envelope=hot?Math.sin(Math.PI*Math.min(1,drawP/.92)):0;
   const amp=hot?24+82*envelope:30+10*Math.sin(Math.PI*drawP);
@@ -851,13 +862,16 @@ function burstRun(hot,opts={}){
   $('#burstSub').textContent=hot?'average load fits; the burst peak does not':'the average fits inside the pool';
   const start=performance.now(),dur=opts.dur||(hot?3000:2200);
   const labelMode=opts.labelMode;
-  let crossed=false;
+  let crossed=false,lastCycle=-1;
   const frame=now=>{
     if($('#ov-burst').style.display==='none')return;
-    const p=Math.min(1,(now-start)/dur);
+    const elapsed=now-start;
+    const cycle=Math.floor(elapsed/dur);
+    const p=(elapsed%dur)/dur;
+    if(cycle!==lastCycle){crossed=false;lastCycle=cycle;}
     const over=burstWave(p,hot,labelMode);
     if(hot&&over&&!crossed){crossed=true;burstCross();}
-    if(p<1)CS.raf=requestAnimationFrame(frame);
+    CS.raf=requestAnimationFrame(frame);
   };
   burstWave(0,hot,labelMode);
   CS.raf=requestAnimationFrame(frame);
@@ -1078,6 +1092,29 @@ function policyDispatch(color){
     CS.anims.push(a);
   });
 }
+function policyFlowLoop(mode,idx=0){
+  if($('#ov-policy').style.display==='none')return;
+  const simple=$('#pol-simple-priority');
+  if(mode==='priority'){
+    const parent=simple;
+    localFly(parent,[[390,166],[558,166],[670,246],[724,246]],'var(--brand)',1100,0);
+    after(720,()=>pop(`#pol-simple-out-${idx%3}`,0));
+    after(620,()=>policyFlowLoop(mode,idx+1));
+    return;
+  }
+  const parent=$('#policyViz');
+  const routes=mode==='crowd'
+    ? [
+        {y:246,c:'var(--amber)'},{y:246,c:'var(--amber)'},{y:170,c:'var(--brand)'},
+        {y:246,c:'var(--amber)'},{y:322,c:'var(--teal)'},{y:246,c:'var(--amber)'}
+      ]
+    : [
+        {y:170,c:'var(--brand)'},{y:246,c:'var(--amber)'},{y:322,c:'var(--teal)'}
+      ];
+  const r=routes[idx%routes.length];
+  localFly(parent,[[344,r.y],[450,r.y+(246-r.y)*.55],[564,246],[642,246]],r.c,1150,0);
+  after(mode==='crowd'?260:420,()=>policyFlowLoop(mode,idx+1));
+}
 function policyPoolFill(colors){
   policyEnsure();
   const cells=Array.from($('#pol-pool-cells').children);
@@ -1108,6 +1145,7 @@ function policyRun(mode){
       'var(--teal)','var(--brand)','var(--amber)','var(--teal)','var(--brand)',
       'var(--amber)','var(--teal)'
     ]);
+    policyFlowLoop('meet');
   }else if(mode==='crowd'){
     policyDefaultVisible(true);
     $('#policyHead').textContent='A burst crowds the pool';
@@ -1121,12 +1159,13 @@ function policyRun(mode){
       'var(--amber)','var(--teal)','var(--amber)','var(--amber)','var(--amber)',
       'var(--amber)','var(--amber)'
     ]);
+    policyFlowLoop('crowd');
   }else if(mode==='priority'){
     policyDefaultVisible(false);
     $('#policyHead').textContent='Highest priority moves first';
     $('#policySub').textContent='when several bands wait, premium traffic moves next';
     $('#policyTag').textContent='';
-    [0,1,2].forEach(i=>after(i*220,()=>pop(`#pol-simple-out-${i}`,0)));
+    policyFlowLoop('priority');
   }else{
     policyDefaultVisible(true);
     $('#policyHead').textContent='Fair turns inside a band';
@@ -1170,11 +1209,16 @@ function fairRun(){
   $('#fair-lane-cursor').setAttribute('y','237');
   [0,1,2].forEach(i=>$(`#fair-out-${i}`).setAttribute('opacity','.18'));
   const turns=[[262,237,0],[326,301,1],[390,365,2],[262,237,0]];
-  turns.forEach((turn,i)=>after(i*620,()=>{
+  const tick=i=>{
+    if($('#ov-fair').style.display==='none')return;
+    if(i%3===0)[0,1,2].forEach(j=>$(`#fair-out-${j}`).setAttribute('opacity','.18'));
+    const turn=turns[i%turns.length];
     $('#fair-lane-cursor').setAttribute('y',String(turn[1]));
     fly([[420,turn[0]],[610,turn[0]],[752,326]],'var(--brand)',920,0);
     after(650,()=>{$(`#fair-out-${turn[2]}`).setAttribute('opacity','.95');pop(`#fair-out-${turn[2]}`,0);});
-  }));
+    after(680,()=>tick(i+1));
+  };
+  tick(0);
 }
 function promiseEnsure(){
   const viz=$('#promiseViz');
