@@ -160,8 +160,8 @@
 
 <div class="hero">
   <h1>Flow control makes shared inference predictable.</h1>
-  <p class="lede">Flow control is the Endpoint Picker's policy layer for multi-tenant inference. While the pool has capacity, requests move through without being held. When the pool is under pressure, flow control activates. New work waits in policy-aware queues in front of the model servers, so priority, fairness, and tenant rules decide what runs next.</p>
-  <p class="lede">This page explains the mechanism end to end. What breaks without it, how a request travels through it, what it guarantees, what it costs, and how to operate it.</p>
+  <p class="lede">Flow control is the Endpoint Picker's policy layer for multi-tenant inference. When workers are saturated, flow control utilizes queues to enforce priority, fairness, and tenant policies.</p>
+  <p class="lede">This page explains the mechanism end to end. What breaks without it, how a request travels through it, what the scheduling pattern guarantees, what it costs, and how to operate it.</p>
 </div>
 
 <section>
@@ -182,12 +182,12 @@
   </svg>
   </div>
   <div class="grid4" style="margin-top:12px">
-    <div class="card"><h3>Noisy neighbor</h3><p>One tenant with heavy prompts monopolizes key-value (KV) cache and queue space, starving the rest.</p></div>
+    <div class="card"><h3>Noisy neighbor</h3><p>There is a risk that a single tenant or request with large prompts can occupy the prefill stage, consume key-value (KV) cache, fill queue space, and increase waits for others.</p></div>
     <div class="card"><h3>Scheduling regret</h3><p>Once a request enters a server's local queue it cannot move, even when a better endpoint frees up.</p></div>
     <div class="card"><h3>Priority inversion</h3><p>Model servers batch by arrival, not business priority. Real-time work gets stuck behind offline batches.</p></div>
     <div class="card"><h3>Resource asymmetry</h3><p>One huge-context request can outweigh hundreds of small ones. Request counts miss it.</p></div>
   </div>
-  <p style="margin-top:12px">Flow control answers by governing physical capacity, KV cache and queue saturation, instead of request counts, and by holding the queue where policy can still act on it.</p>
+  <p style="margin-top:12px">Flow control provides tunable queue-depth and KV-cache settings for a given traffic pattern and operating goal.</p>
 </section>
 
 <section>
@@ -349,7 +349,7 @@
 
 <section>
   <h2>The architecture, one level up</h2>
-  <p>The journey above happens inside one Endpoint Picker serving a pool of model servers. Late binding is why the queue lives centrally. The endpoint is chosen at dispatch, when the picker knows which server just freed capacity or already holds the request's prefix cache.</p>
+  <p>The Endpoint Picker layer manages the queues and routing to each pod, which is scored at dispatch time.</p>
   <div class="figure">
   <svg viewBox="0 0 920 300" role="img" aria-label="Architecture: clients through the gateway to the Endpoint Picker, whose scheduler routes each dispatched request to the best of several model servers">
     <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
@@ -394,12 +394,12 @@
   <table>
     <thead><tr><th>Tier</th><th>Question</th><th>Who decides</th><th>Options</th></tr></thead>
     <tbody>
-      <tr><td style="white-space:nowrap"><strong>1 · Priority</strong></td><td>Which band goes first?</td><td>Fixed. Highest band with work always wins</td><td>Bands come from <code>InferenceObjective</code>, negative values mark sheddable work</td></tr>
+      <tr><td style="white-space:nowrap"><strong>1 · Priority</strong></td><td>Which band goes first?</td><td>Fixed. The highest-priority band with queued work is checked first</td><td>Bands come from <code>InferenceObjective</code>, negative values mark sheddable work</td></tr>
       <tr><td style="white-space:nowrap"><strong>2 · Fairness</strong></td><td>Which tenant inside the band?</td><td>Fairness policy plugin</td><td>Round-robin across tenants, or global strict ordering</td></tr>
       <tr><td style="white-space:nowrap"><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or a deadline from a service-level-objective (SLO) header</td></tr>
     </tbody>
   </table>
-  <div class="note">Priority is absolute by design. When the pool is saturated, every premium request dispatches before any standard request, and fairness only referees between equals.<br><br>If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
+  <div class="note">When the pool of workers is saturated, requests are dispatched in order of priority, with lower-priority bands absorbing the wait.<br><br>If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness">plugins/flowcontrol/fairness</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a></div>
   <h3 style="margin-top:22px">The dispatch cycle</h3>
   <p>The three tiers run inside a loop that moves exactly one request per pass. The ceiling check comes first, and it can stop everything.</p>
@@ -571,12 +571,12 @@
   <h2>What the policy guarantees</h2>
   <p>Each tier leaves a fingerprint you can measure on your own pool.</p>
   <div class="tiles">
-    <div class="tile"><div class="k">Priority</div><div class="why" style="margin-top:2px;font-size:12.5px">A latency-sensitive class stays fast through a surge it did not cause. The lower class absorbs the queue.</div></div>
+    <div class="tile"><div class="k">Priority</div><div class="why" style="margin-top:2px;font-size:12.5px">When the pool of workers is saturated, requests are dispatched in order of priority, with lower-priority bands absorbing the wait.</div></div>
     <div class="tile"><div class="k">Fairness</div><div class="why" style="margin-top:2px;font-size:12.5px">Tenants at equal load within a band are treated identically, without anyone tuning per-tenant rate limits.</div></div>
     <div class="tile"><div class="k">Cost assignment</div><div class="why" style="margin-top:2px;font-size:12.5px">The tenant that creates the pressure carries the most queue time. The wait is assigned, not ambient.</div></div>
     <div class="tile"><div class="k">Sheddable isolation</div><div class="why" style="margin-top:2px;font-size:12.5px">Batch traffic can dominate arrivals and still absorb the waiting instead of causing it, inside a bounded queue.</div></div>
   </div>
-  <div class="note">Absolute latencies always track your hardware, model, and tuning. The pattern is the guarantee.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
+  <div class="note">Absolute latencies always track your hardware, model, and tuning. The guarantee is the scheduling pattern, not a fixed latency number.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
 </section>
 
 <section>
@@ -731,6 +731,7 @@
     <tbody>
       <tr><td>Priority routing</td><td>Endpoint Picker <code>/metrics</code></td><td><code>queue_duration</code> with <code>priority="100"</code> is present, so premium requests really carry their band</td></tr>
       <tr><td>Queues active</td><td>vLLM pod <code>/metrics</code></td><td><code>num_requests_running</code> sits at the cap and <code>num_requests_waiting</code> is above zero</td></tr>
+      <tr><td>Memory pressure</td><td>vLLM pod <code>/metrics</code></td><td>KV and preemption metrics show whether memory pressure affected the run</td></tr>
     </tbody>
   </table>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/metrics/metrics.go">metrics/metrics.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/internal/processor.go">flowcontrol/controller/internal/processor.go</a></div>
