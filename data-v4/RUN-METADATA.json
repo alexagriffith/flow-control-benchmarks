@@ -1,0 +1,161 @@
+{
+  "schema": "flow-control-run-metadata-v1",
+  "purpose": "Public-safe display labels and claim boundaries for data-v4 runs. Use these labels in visualizers instead of raw folder names or internal run ids.",
+  "units": {
+    "ttft": "milliseconds",
+    "latency": "milliseconds",
+    "tpot": "milliseconds"
+  },
+  "collections": {
+    "tiers-gate-on-300s": {
+      "display_name": "Service tiers, flow control on",
+      "short_name": "tiers gate on",
+      "scenario": "priority tiers",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "noisy standard surge with steady premium",
+      "evidence_label": "priority protection under saturation",
+      "claim_boundary": "Shows priority separation under saturated load; not a full SLO proof without a named latency objective and matched detector comparison."
+    },
+    "tiers-gate-off": {
+      "display_name": "Service tiers, flow control off",
+      "short_name": "tiers gate off",
+      "scenario": "priority tiers",
+      "flow_control": "off",
+      "detector": "none",
+      "traffic_shape": "noisy standard surge with steady premium",
+      "evidence_label": "gate-off control",
+      "claim_boundary": "Historical control kept for comparison/provenance."
+    },
+    "batch-gate-on": {
+      "display_name": "Batch surge, flow control on",
+      "short_name": "batch gate on",
+      "scenario": "batch isolation",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "batch surge with foreground traffic present",
+      "evidence_label": "batch isolation",
+      "claim_boundary": "Shows deferrable work is queued behind interactive tiers instead of being rejected."
+    },
+    "batch-gate-off": {
+      "display_name": "Batch surge, flow control off",
+      "short_name": "batch gate off",
+      "scenario": "batch isolation",
+      "flow_control": "off",
+      "detector": "none",
+      "traffic_shape": "batch surge with foreground traffic present",
+      "evidence_label": "batch control",
+      "claim_boundary": "Shows rejection behavior without the gate."
+    },
+    "consolidation-gate-on": {
+      "display_name": "Consolidated tenants, flow control on",
+      "short_name": "consolidation gate on",
+      "scenario": "consolidation",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "two premium tenants steady while standard floods the shared pool",
+      "evidence_label": "shared-pool protection",
+      "claim_boundary": "Shows premium tenants stay ahead of standard traffic on a single shared GPU."
+    },
+    "consolidation-gate-off": {
+      "display_name": "Consolidated tenants, flow control off",
+      "short_name": "consolidation gate off",
+      "scenario": "consolidation",
+      "flow_control": "off",
+      "detector": "none",
+      "traffic_shape": "two premium tenants steady while standard floods the shared pool",
+      "evidence_label": "consolidation control",
+      "claim_boundary": "Shows the same consolidated traffic shape without flow-control ordering."
+    },
+    "fairness-bigburst-gate-on": {
+      "display_name": "Same-priority burst fairness, flow control on",
+      "short_name": "fairness big burst",
+      "scenario": "same-priority fairness",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "one same-priority tenant bursts while peers share the band",
+      "evidence_label": "same-band fairness signal",
+      "claim_boundary": "Shows bounded same-band dispatch behavior; it does not prove a separate latency tier among equal-priority tenants."
+    },
+    "fairness-gate-on": {
+      "display_name": "Same-priority fairness, flow control on",
+      "short_name": "fairness gate on",
+      "scenario": "same-priority fairness",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "same-priority premium tenants with one higher-volume tenant",
+      "evidence_label": "same-band fairness",
+      "claim_boundary": "Older fairness evidence; use the big-burst run for the current headline."
+    },
+    "fairness-gate-off": {
+      "display_name": "Same-priority fairness, flow control off",
+      "short_name": "fairness gate off",
+      "scenario": "same-priority fairness",
+      "flow_control": "off",
+      "detector": "none",
+      "traffic_shape": "same-priority premium tenants with one higher-volume tenant",
+      "evidence_label": "fairness control",
+      "claim_boundary": "Control for same-band behavior."
+    },
+    "multi-replica-tiers": {
+      "display_name": "Multi-replica service tiers",
+      "short_name": "multi-replica tiers",
+      "scenario": "multi-replica priority tiers",
+      "flow_control": "on",
+      "detector": "downstream queue-depth detector",
+      "traffic_shape": "service-tier traffic across multiple replicas",
+      "evidence_label": "scale-out signal",
+      "claim_boundary": "Shows multi-replica behavior for the prior detector; upstream concurrency-detector scale-out still needs a matched run."
+    },
+    "upstream-sweep": {
+      "display_name": "Upstream maxConcurrency sweep",
+      "short_name": "upstream sweep",
+      "scenario": "operating-point sweep",
+      "flow_control": "on",
+      "detector": "upstream concurrency detector",
+      "traffic_shape": "single tuning scenario across maxConcurrency values",
+      "evidence_label": "upstream detector tuning curve",
+      "claim_boundary": "Finds the upstream maxConcurrency knee; not a four-scenario detector comparison."
+    },
+    "operating-point-sweep": {
+      "display_name": "Single-GPU operating-point sweep",
+      "short_name": "operating-point sweep",
+      "scenario": "capacity knee",
+      "flow_control": "not the tested variable",
+      "detector": "capacity exploration",
+      "traffic_shape": "single-tenant concurrency sweep",
+      "evidence_label": "capacity knee",
+      "claim_boundary": "Finds the operating region where queueing policy has work to do."
+    }
+  },
+  "run_id_patterns": {
+    "test1_consolidation_saturated": "Consolidation saturated repeat",
+    "test2_priority_noisy": "Priority tiers noisy repeat",
+    "test2_tiers_tuned": "Priority tiers tuned repeat",
+    "test3_fairness_saturated_clean": "Same-priority fairness repeat",
+    "test4_batch_noisy": "Batch surge repeat",
+    "warmup_standard": "Warmup, not counted",
+    "saturation_concurrency_32": "Concurrency sweep, 32",
+    "saturation_concurrency_64": "Concurrency sweep, 64",
+    "saturation_concurrency_96": "Concurrency sweep, 96",
+    "saturation_concurrency_128": "Concurrency sweep, 128",
+    "saturation_concurrency_160": "Concurrency sweep, 160",
+    "saturation_concurrency_200": "Concurrency sweep, 200",
+    "us_sweep_maxc32": "Upstream sweep, maxConcurrency 32",
+    "us_sweep_maxc48": "Upstream sweep, maxConcurrency 48",
+    "us_sweep_maxc64": "Upstream sweep, maxConcurrency 64",
+    "us_sweep_maxc96": "Upstream sweep, maxConcurrency 96",
+    "us_sweep_maxc128": "Upstream sweep, maxConcurrency 128"
+  },
+  "future_naming": {
+    "pattern": "<scenario>-<detector>-<config>-<traffic>-rNN",
+    "examples": [
+      "tiers-upstream-seq96-mc48-rps16-clean-r01",
+      "fairness-a-burst-upstream-seq96-mc48-r01",
+      "batch-surge-upstream-seq96-mc48-r01",
+      "consolidation-upstream-seq96-mc48-r01",
+      "tiers-downstream-matched-rps16-r01",
+      "scaleout-upstream-seq96-mc48-2rep-r01"
+    ]
+  }
+}
