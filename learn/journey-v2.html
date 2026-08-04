@@ -208,7 +208,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #hints{font-size:10.5px;color:var(--txt3);line-height:1.7;padding:0 4px}
 #hints kbd{border:1px solid var(--b2);border-radius:4px;padding:0 4px;font-size:9.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--txt2)}
-#pgno{font-size:10.5px;color:var(--txt3);text-align:right;padding-right:4px}
+#pgno{display:none;font-size:10.5px;color:var(--txt3);text-align:right;padding-right:4px}
 .mt,.kv,.ev,.st,#pgno{font-variant-numeric:tabular-nums}
 #apToast{position:fixed;top:54px;right:18px;z-index:99;font:600 12px Inter,sans-serif;padding:6px 12px;
   border-radius:999px;background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand);
@@ -223,7 +223,10 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
   #main{flex-direction:column}
   #canvasWrap{flex:none;aspect-ratio:1000/580}
   #side{flex:none;flex-direction:row;align-items:stretch}
-  #card{flex:1}
+  #card{flex:1;padding:13px 18px;gap:7px}
+  #card h2{font-size:18px}
+  #narr{min-height:0;line-height:1.45}
+  #stepNav{margin-top:4px}
   #hints{display:none}
   #evidence{max-width:min(430px,calc(100% - 32px))}
 }
@@ -407,7 +410,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
         <!-- page-1 overlay: burst pressure -->
         <g id="ov-burst" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
-          <g id="burstScene" transform="translate(-460 -70) scale(1.5)">
+          <g id="burstScene" transform="translate(-392 -70) scale(1.5)">
           <text id="burstHead" x="352" y="84" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity meets burst traffic</text>
           <text id="burstSub" x="352" y="108" font-size="11" fill="var(--txt3)">the average fits; the peak decides the wait</text>
           <line x1="404" y1="262" x2="790" y2="262" stroke="var(--b2)"/>
@@ -976,6 +979,9 @@ function policyEnsure(){
   const gate=svgEl('g',{id:'pol-gate',opacity:0});
   gate.appendChild(svgEl('path',{d:'M 336 246 L 376 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
   gate.appendChild(svgEl('path',{d:'M 572 246 L 598 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
+  const dispatch=svgEl('g',{id:'pol-dispatch',opacity:0});
+  [0,1,2].forEach(i=>dispatch.appendChild(svgEl('circle',{cx:346+i*116,cy:246,r:6,fill:'var(--brand)',opacity:.95})));
+  gate.appendChild(dispatch);
   gate.appendChild(svgEl('rect',{x:382,y:136,width:182,height:220,rx:14,fill:'var(--base)',stroke:'var(--b2)'}));
   let t=svgEl('text',{x:473,y:162,'font-size':12,'font-weight':780,fill:'var(--txt)','text-anchor':'middle'});
   t.textContent='policy gate';gate.appendChild(t);
@@ -1016,14 +1022,27 @@ function policyEnsure(){
   gate.appendChild(fair);
   viz.appendChild(gate);
 }
-function policyStreams(counts,dim){
+function policyStreams(counts,dim,focus='s'){
   policyEnsure();
   POLICY_ROWS.forEach(r=>{
     const dots=Array.from($(`#pol-stream-${r.key}`).querySelectorAll('circle'));
     dots.forEach((d,i)=>{
-      d.setAttribute('opacity',i<counts[r.key]?(dim&&r.key!=='s'?'.28':'.9'):'0');
+      d.setAttribute('opacity',i<counts[r.key]?(dim&&r.key!==focus?'.28':'.9'):'0');
       d.setAttribute('r',String(r.key==='s'&&counts.s>8?6:5));
     });
+  });
+}
+function policyDispatch(color){
+  policyEnsure();
+  const dispatch=$('#pol-dispatch');
+  dispatch.setAttribute('opacity','1');
+  Array.from(dispatch.children).forEach((dot,i)=>{
+    dot.setAttribute('fill',color);
+    const x=346+i*116;
+    dot.setAttribute('cx',String(x));
+    const a=dot.animate([{transform:'translateX(-34px)',opacity:.25},{transform:'translateX(0)',opacity:.95}],
+      {duration:720,delay:i*150,easing:'ease-out',fill:'both'});
+    CS.anims.push(a);
   });
 }
 function policyPoolFill(colors){
@@ -1044,6 +1063,7 @@ function policyRun(mode){
   $('#pol-priority-panel').setAttribute('opacity',mode==='priority'?'1':'0');
   $('#pol-fair-panel').setAttribute('opacity',mode==='fair'?'1':'0');
   $('#pol-turn-cursor').setAttribute('opacity',mode==='fair'?'1':'0');
+  $('#pol-dispatch').setAttribute('opacity','0');
   if(mode==='meet'){
     $('#policyHead').textContent='Traffic meets in one pool';
     $('#policySub').textContent='sharing improves utilization; now work waits together';
@@ -1070,17 +1090,19 @@ function policyRun(mode){
     $('#policyHead').textContent='Priority bands choose first';
     $('#policySub').textContent='the highest non-empty band gets the next dispatch';
     $('#policyTag').textContent='';
-    policyStreams({p:0,s:0,b:0},false);
+    policyStreams({p:5,s:5,b:3},true,'p');
     policyPoolFill([
       'var(--brand)','var(--brand)','var(--brand)'
     ]);
-    [{y:186,txt:'priority 100 dispatches'}, {y:232,txt:'then priority 0'}, {y:278,txt:'then priority −10'}]
-      .forEach((s,i)=>after(i*760,()=>{$('#pol-band-cursor').setAttribute('y',String(s.y));$('#pol-rule-text').textContent=s.txt;}));
+    $('#pol-band-cursor').setAttribute('y','186');
+    $('#pol-rule-text').textContent='priority 100 dispatches first';
+    policyDispatch('var(--brand)');
   }else{
     $('#policyHead').textContent='Fair turns inside a band';
     $('#policySub').textContent='same priority rotates by fairness id';
     $('#policyTag').textContent='';
     policyStreams({p:0,s:8,b:0},false);
+    policyDispatch('var(--amber)');
     policyPoolFill([
       'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
       'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)'
