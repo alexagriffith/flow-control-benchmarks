@@ -457,7 +457,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
         <!-- page-4 overlay: fairness zoom -->
         <g id="ov-fair" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
-          <text x="86" y="78" font-size="26" font-weight="760" fill="var(--txt)">Fairness configurations in a priority band</text>
+          <text x="86" y="78" font-size="26" font-weight="760" fill="var(--txt)">Fairness within a priority band</text>
           <text x="86" y="108" font-size="12" fill="var(--txt3)">Round-robin fairness</text>
           <g id="fairViz"></g>
         </g>
@@ -855,15 +855,20 @@ function burstCross(){
   CS.anims.push(fill.animate(
     [{opacity:.16},{opacity:.42},{opacity:.24}],{duration:520,easing:'ease-out'}));
 }
+let burstSeq=0;
 function burstRun(hot,opts={}){
   $('#ov-burst').style.display='';
   burstEnsure();
+  const seq=++burstSeq;
+  if(CS.raf)cancelAnimationFrame(CS.raf);
+  CS.raf=null;
   $('#burstHead').textContent=hot?'Peak load creates waiting':'Shared pool under load';
   $('#burstSub').textContent=hot?'average load fits; the burst peak does not':'the average fits inside the pool';
   const start=performance.now(),dur=opts.dur||(hot?3000:2200);
   const labelMode=opts.labelMode;
   let crossed=false,lastCycle=-1;
   const frame=now=>{
+    if(seq!==burstSeq)return;
     if($('#ov-burst').style.display==='none')return;
     const elapsed=now-start;
     const cycle=Math.floor(elapsed/dur);
@@ -875,6 +880,17 @@ function burstRun(hot,opts={}){
   };
   burstWave(0,hot,labelMode);
   CS.raf=requestAnimationFrame(frame);
+}
+function burstAutoRun(){
+  burstRun(false,{dur:2400});
+  after(2300,()=>burstRun(true,{dur:3300}));
+  after(5600,()=>{
+    burstRun(true,{dur:3900,labelMode:'burst-capacity'});
+    after(1600,()=>{
+      $('#burstHead').textContent='Shared traffic needs policy';
+      $('#burstSub').textContent='policy chooses what moves next';
+    });
+  });
 }
 const KNEE_DATA=[
   {c:32,r:24.1,ttft:261},{c:64,r:37.1,ttft:744},{c:96,r:45.5,ttft:948},
@@ -1092,7 +1108,9 @@ function policyDispatch(color){
     CS.anims.push(a);
   });
 }
+let policyMode='';
 function policyFlowLoop(mode,idx=0){
+  if(mode!==policyMode)return;
   if($('#ov-policy').style.display==='none')return;
   const simple=$('#pol-simple-priority');
   if(mode==='priority'){
@@ -1128,6 +1146,7 @@ function policyPoolFill(colors){
 function policyRun(mode){
   $('#ov-policy').style.display='';
   policyEnsure();
+  policyMode=mode;
   const showGate=mode==='priority'||mode==='fair';
   $('#pol-gate').setAttribute('opacity',showGate?'1':'0');
   $('#pol-priority-panel').setAttribute('opacity',mode==='priority'?'1':'0');
@@ -1180,6 +1199,11 @@ function policyRun(mode){
     [[424,'tenant A turn'],[473,'tenant B turn'],[522,'tenant C turn'],[424,'tenant A again']]
       .forEach((s,i)=>after(i*620,()=>{$('#pol-turn-cursor').setAttribute('cx',String(s[0]));$('#pol-turn-text').textContent=s[1];}));
   }
+}
+function policyAutoRun(){
+  policyRun('meet');
+  after(2600,()=>policyRun('crowd'));
+  after(5600,()=>policyRun('priority'));
 }
 function fairEnsure(){
   const viz=$('#fairViz');
@@ -1267,6 +1291,8 @@ let stepTimers=[];
 function after(ms,fn){stepTimers.push(setTimeout(fn,ms));}
 function resetCanvas(){
   stepTimers.forEach(clearTimeout);stepTimers=[];
+  burstSeq++;
+  policyMode='';
   if(CS.raf)cancelAnimationFrame(CS.raf);CS.raf=null;
   CS.anims.forEach(a=>{try{a.cancel()}catch(e){}});CS.anims=[];
   $('#fx').innerHTML='';
@@ -1354,15 +1380,9 @@ const PAGES=[
 ]},
 /* ---- 1 · WHY: the burst problem ---- */
 {title:'Burst pressure',group:0,rail:'Bursts',steps:[
- {lit:['ov-burst'],dwell:.72,
-  n:'A shared pool improves utilization. Burst traffic now meets in one place.',
-  run(){burstRun(false);}},
- {lit:['ov-burst'],dwell:1.35,
-  n:'Average load can look safe; one burst peak creates waiting.',
-  run(){burstRun(true);}},
- {lit:['ov-burst'],dwell:1.45,
-  n:'That waiting lane is the reason shared traffic needs an ordering policy.',
-  run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Shared traffic needs policy';$('#burstSub').textContent='policy chooses what moves next';});}}
+ {lit:['ov-burst'],dwell:2.15,
+  n:'The same pool can look fine on average, then one burst peak creates waiting.',
+  run(){burstAutoRun();}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
 {title:'Where control starts',group:0,rail:'Threshold',steps:[
@@ -1372,18 +1392,12 @@ const PAGES=[
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
 {title:'Shared traffic needs policy',group:0,rail:'Policy',steps:[
- {lit:['ov-policy'],
-  n:'Once capacity is shared, the traffic streams meet in the same pool.',
-  run(){policyRun('meet');}},
- {lit:['ov-policy'],
-  n:'A burst can crowd that pool unless traffic has an ordering rule.',
-  run(){policyRun('crowd');}},
- {lit:['ov-policy'],
-  n:'When several classes wait, premium traffic moves first.',
-  run(){policyRun('priority');}}
+ {lit:['ov-policy'],dwell:2.05,
+  n:'Traffic meets in one pool; policy decides which waiting work moves next.',
+  run(){policyAutoRun();}}
 ]},
 /* ---- 4 · WHY: fairness within a band ---- */
-{title:'Fairness configurations',group:0,rail:'Turns',steps:[
+{title:'Fairness within a priority band',group:0,rail:'Turns',steps:[
  {lit:['ov-fair'],dwell:1.2,
   n:'Round-robin fairness cycles through active flows within one priority band.',
   run(){fairRun();}}
