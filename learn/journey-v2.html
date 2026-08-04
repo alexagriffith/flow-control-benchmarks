@@ -427,7 +427,15 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
           <text id="burstMsg" x="756" y="413" font-size="11" font-weight="720" fill="var(--txt)" text-anchor="middle">inside capacity</text>
         </g>
 
-        <!-- page-2 overlay: shared capacity needs policy -->
+        <!-- page-2 overlay: measured knee -->
+        <g id="ov-knee" class="cel" style="display:none">
+          <rect x="92" y="52" width="856" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Find the knee</text>
+          <text x="130" y="110" font-size="11" fill="var(--txt3)">past the knee, more concurrency mostly buys queueing</text>
+          <g id="kneeViz"></g>
+        </g>
+
+        <!-- page-3 overlay: shared capacity needs policy -->
         <g id="ov-policy" class="cel" style="display:none">
           <rect x="150" y="52" width="742" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
           <text id="policyHead" x="184" y="86" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity needs policy</text>
@@ -834,6 +842,96 @@ function burstRun(hot,opts={}){
   burstWave(0,hot,labelMode);
   CS.raf=requestAnimationFrame(frame);
 }
+const KNEE_DATA=[
+  {c:32,r:24.1,ttft:261},{c:64,r:37.1,ttft:744},{c:96,r:45.5,ttft:948},
+  {c:128,r:52.0,ttft:967},{c:160,r:47.1,ttft:1455},{c:200,r:50.6,ttft:1814}
+];
+function kneePath(points){return points.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');}
+function kneeEnsure(){
+  const viz=$('#kneeViz');
+  if(viz.children.length)return;
+  const left={x:130,y:142,w:372,h:220},right={x:546,y:142,w:332,h:220};
+  [
+    {x:left.x,y:left.y,w:left.w,h:left.h,title:'1 · sweep concurrency'},
+    {x:right.x,y:right.y,w:right.w,h:right.h,title:'2 · choose the operating point'}
+  ].forEach(p=>{
+    viz.appendChild(svgEl('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:13,fill:'var(--raised)',stroke:'var(--b1)'}));
+    const t=svgEl('text',{x:p.x+18,y:p.y+26,'font-size':11,'font-weight':720,fill:'var(--txt3)'});
+    t.textContent=p.title;viz.appendChild(t);
+  });
+  const sx=c=>left.x+42+(c-32)/(200-32)*(left.w-84);
+  const syT=v=>left.y+left.h-38-v/60*(left.h-78);
+  const syL=v=>left.y+left.h-38-v/2000*(left.h-78);
+  for(let i=0;i<4;i++){
+    const y=left.y+54+i*38;
+    viz.appendChild(svgEl('line',{x1:left.x+42,y1:y,x2:left.x+left.w-34,y2:y,stroke:'var(--b1)'}));
+  }
+  viz.appendChild(svgEl('line',{x1:left.x+42,y1:left.y+left.h-38,x2:left.x+left.w-34,y2:left.y+left.h-38,stroke:'var(--b2)'}));
+  const kneeX=sx(128);
+  viz.appendChild(svgEl('rect',{x:kneeX,y:left.y+48,width:left.x+left.w-34-kneeX,height:left.h-86,fill:'var(--danger)',opacity:.09}));
+  viz.appendChild(svgEl('line',{x1:kneeX,y1:left.y+46,x2:kneeX,y2:left.y+left.h-38,stroke:'var(--danger)','stroke-dasharray':'4 4'}));
+  const kt=svgEl('text',{x:kneeX,y:left.y+38,'font-size':10.5,'font-weight':760,fill:'var(--danger)','text-anchor':'middle'});
+  kt.textContent='the knee';viz.appendChild(kt);
+  const tp=KNEE_DATA.map(d=>[sx(d.c),syT(d.r)]);
+  const lp=KNEE_DATA.map(d=>[sx(d.c),syL(d.ttft)]);
+  const tpath=svgEl('path',{id:'kneeThroughput',d:kneePath(tp),fill:'none',stroke:'var(--ok)','stroke-width':2.4,'stroke-linejoin':'round'});
+  const lpath=svgEl('path',{id:'kneeLatency',d:kneePath(lp),fill:'none',stroke:'var(--danger)','stroke-width':2.4,'stroke-linejoin':'round'});
+  viz.appendChild(tpath);viz.appendChild(lpath);
+  KNEE_DATA.forEach(d=>{
+    viz.appendChild(svgEl('circle',{cx:sx(d.c),cy:syT(d.r),r:d.c===128?5:3.8,fill:'var(--ok)'}));
+    viz.appendChild(svgEl('circle',{cx:sx(d.c),cy:syL(d.ttft),r:d.c===128?5:3.8,fill:'var(--danger)'}));
+  });
+  [
+    {x:sx(32),txt:'32'},{x:sx(128),txt:'128'},{x:sx(200),txt:'200'}
+  ].forEach(d=>{const t=svgEl('text',{x:d.x,y:left.y+left.h-18,'font-size':9.5,fill:'var(--txt3)','text-anchor':'middle'});t.textContent=d.txt;viz.appendChild(t);});
+  const xl=svgEl('text',{x:left.x+left.w/2,y:left.y+left.h-2,'font-size':9.5,fill:'var(--txt3)','text-anchor':'middle'});
+  xl.textContent='concurrency';viz.appendChild(xl);
+  const gleg=svgEl('text',{x:left.x+60,y:left.y+62,'font-size':10,'font-weight':720,fill:'var(--ok)'});
+  gleg.textContent='throughput';viz.appendChild(gleg);
+  const rleg=svgEl('text',{x:left.x+left.w-56,y:left.y+62,'font-size':10,'font-weight':720,fill:'var(--danger)','text-anchor':'end'});
+  rleg.textContent='p95 TTFT';viz.appendChild(rleg);
+  const kdot=svgEl('circle',{id:'kneeDot',cx:kneeX,cy:syL(967),r:6,fill:'var(--amber)',stroke:'var(--base)','stroke-width':2});
+  viz.appendChild(kdot);
+  const label=svgEl('text',{x:kneeX+10,y:syL(967)-12,'font-size':10,'font-weight':760,fill:'var(--amber)'});
+  label.textContent='967 ms';viz.appendChild(label);
+
+  const rx=u=>right.x+42+u*(right.w-84),ry=u=>right.y+right.h-40-u*(right.h-84);
+  for(let i=0;i<3;i++){
+    const y=right.y+76+i*44;
+    viz.appendChild(svgEl('line',{x1:right.x+42,y1:y,x2:right.x+right.w-36,y2:y,stroke:'var(--b1)'}));
+  }
+  const rk=rx(.58);
+  viz.appendChild(svgEl('rect',{x:rk,y:right.y+54,width:right.x+right.w-36-rk,height:right.h-94,fill:'var(--danger)',opacity:.16}));
+  viz.appendChild(svgEl('line',{x1:rk,y1:right.y+46,x2:rk,y2:right.y+right.h-40,stroke:'var(--brand)','stroke-dasharray':'4 4'}));
+  const rp1=[[rx(.05),ry(.18)],[rx(.28),ry(.42)],[rx(.58),ry(.72)],[rx(.86),ry(.72)]];
+  const rp2=[[rx(.05),ry(.12)],[rx(.36),ry(.22)],[rx(.58),ry(.28)],[rx(.72),ry(.42)],[rx(.86),ry(.66)]];
+  viz.appendChild(svgEl('path',{id:'kneeFlat',d:kneePath(rp1),fill:'none',stroke:'var(--ok)','stroke-width':2.8,'stroke-linejoin':'round'}));
+  viz.appendChild(svgEl('path',{id:'kneeQueue',d:kneePath(rp2),fill:'none',stroke:'var(--danger)','stroke-width':2.8,'stroke-linejoin':'round'}));
+  const k2=svgEl('text',{x:rk,y:right.y+38,'font-size':10.5,'font-weight':760,fill:'var(--brand)','text-anchor':'middle'});
+  k2.textContent='control starts here';viz.appendChild(k2);
+  const flat=svgEl('text',{x:rx(.78),y:ry(.76)-10,'font-size':10,'font-weight':720,fill:'var(--ok)','text-anchor':'middle'});
+  flat.textContent='throughput flattens';viz.appendChild(flat);
+  const wait=svgEl('text',{x:rx(.78),y:ry(.45)+8,'font-size':10,'font-weight':720,fill:'var(--danger)','text-anchor':'middle'});
+  wait.textContent='latency keeps climbing';viz.appendChild(wait);
+  const source=svgEl('text',{x:right.x+right.w-20,y:right.y+right.h-18,'font-size':9.5,fill:'var(--txt3)','text-anchor':'end'});
+  source.textContent='measured · 512 in / 128 out';viz.appendChild(source);
+}
+function drawPath(sel,delay){
+  const p=$(sel);if(!p)return;
+  const len=p.getTotalLength();
+  p.style.strokeDasharray=len;
+  p.style.strokeDashoffset=len;
+  after(delay||0,()=>{
+    const a=p.animate([{strokeDashoffset:len},{strokeDashoffset:0}],{duration:850,easing:'ease-out',fill:'forwards'});
+    p.style.strokeDashoffset='0';CS.anims.push(a);
+  });
+}
+function kneeRun(){
+  $('#ov-knee').style.display='';
+  kneeEnsure();
+  ['#kneeThroughput','#kneeLatency','#kneeFlat','#kneeQueue'].forEach((s,i)=>drawPath(s,i*180));
+  after(700,()=>pop('#kneeDot',0));
+}
 const POLICY_ROWS=[
   {key:'p',y:170,c:'var(--brand)',label:'premium'},
   {key:'s',y:246,c:'var(--amber)',label:'standard'},
@@ -866,38 +964,49 @@ function policyEnsure(){
   }
   pool.appendChild(cells);
   viz.appendChild(pool);
-  const lanes=svgEl('g',{id:'pol-lanes',opacity:0});
-  lanes.appendChild(svgEl('path',{d:'M 336 246 L 374 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
-  lanes.appendChild(svgEl('path',{d:'M 570 246 L 598 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
-  lanes.appendChild(svgEl('rect',{x:382,y:136,width:178,height:220,rx:14,fill:'var(--base)',stroke:'var(--b2)'}));
-  let t=svgEl('text',{x:471,y:162,'font-size':12,'font-weight':780,fill:'var(--txt)','text-anchor':'middle'});
-  t.textContent='policy gate';lanes.appendChild(t);
-  t=svgEl('text',{x:404,y:188,'font-size':9.5,'font-weight':760,fill:'var(--txt3)'});
-  t.textContent='priority value';lanes.appendChild(t);
-  [{v:'100',c:'var(--brand)'},{v:'0',c:'var(--amber)'},{v:'-10',c:'var(--teal)'}].forEach((b,i)=>{
-    const x=402+i*47;
-    lanes.appendChild(svgEl('rect',{x,y:198,width:38,height:28,rx:8,fill:'var(--raised)',stroke:b.c,'stroke-opacity':.68}));
-    const bt=svgEl('text',{x:x+19,y:216,'font-size':10.5,'font-weight':780,fill:b.c,'text-anchor':'middle'});
-    bt.textContent=b.v;lanes.appendChild(bt);
+  const gate=svgEl('g',{id:'pol-gate',opacity:0});
+  gate.appendChild(svgEl('path',{d:'M 336 246 L 376 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
+  gate.appendChild(svgEl('path',{d:'M 572 246 L 598 246',fill:'none',stroke:'var(--b2)','stroke-width':1.4,'marker-end':'url(#arr)'}));
+  gate.appendChild(svgEl('rect',{x:382,y:136,width:182,height:220,rx:14,fill:'var(--base)',stroke:'var(--b2)'}));
+  let t=svgEl('text',{x:473,y:162,'font-size':12,'font-weight':780,fill:'var(--txt)','text-anchor':'middle'});
+  t.textContent='policy gate';gate.appendChild(t);
+
+  const priority=svgEl('g',{id:'pol-priority-panel',opacity:0});
+  t=svgEl('text',{x:473,y:185,'font-size':10,'font-weight':760,fill:'var(--txt3)','text-anchor':'middle'});
+  t.textContent='choose priority band';priority.appendChild(t);
+  [
+    {y:206,label:'100',name:'premium',c:'var(--brand)',dots:3},
+    {y:254,label:'0',name:'standard',c:'var(--amber)',dots:5},
+    {y:302,label:'−10',name:'batch',c:'var(--teal)',dots:2}
+  ].forEach((r,i)=>{
+    priority.appendChild(svgEl('rect',{x:406,y:r.y-18,width:134,height:34,rx:9,fill:'var(--raised)',stroke:r.c,'stroke-opacity':.55}));
+    const lab=svgEl('text',{x:420,y:r.y+4,'font-size':10.5,'font-weight':780,fill:r.c});
+    lab.textContent=r.label;priority.appendChild(lab);
+    const nm=svgEl('text',{x:455,y:r.y+4,'font-size':9.5,'font-weight':650,fill:'var(--txt2)'});
+    nm.textContent=r.name;priority.appendChild(nm);
+    for(let k=0;k<r.dots;k++)priority.appendChild(svgEl('circle',{cx:512+k*8,cy:r.y,r:3.2,fill:r.c,opacity:.9}));
   });
-  const bandCursor=svgEl('rect',{id:'pol-band-cursor',x:396,y:192,width:50,height:40,rx:11,fill:'none',stroke:'var(--ok)','stroke-width':2});
-  lanes.appendChild(bandCursor);
-  t=svgEl('text',{id:'pol-rule-text',x:471,y:244,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
-  t.textContent='highest non-empty band';lanes.appendChild(t);
-  t=svgEl('text',{x:404,y:274,'font-size':9.5,'font-weight':760,fill:'var(--txt3)'});
-  t.textContent='fairness id';lanes.appendChild(t);
-  ['A','B','C'].forEach((name,i)=>{
-    const x=410+i*41;
-    lanes.appendChild(svgEl('circle',{cx:x,cy:304,r:15,fill:'var(--raised)',stroke:'var(--amber)','stroke-opacity':.7}));
-    const nt=svgEl('text',{x,y:309,'font-size':11,'font-weight':780,fill:'var(--amber)','text-anchor':'middle'});
-    nt.textContent=name;lanes.appendChild(nt);
-    if(i<2)lanes.appendChild(svgEl('path',{d:`M ${x+18} 304 L ${x+33} 304`,fill:'none',stroke:'var(--amber)','stroke-width':1.2,'marker-end':'url(#arr)','stroke-opacity':.65}));
+  priority.appendChild(svgEl('rect',{id:'pol-band-cursor',x:398,y:184,width:150,height:42,rx:12,fill:'none',stroke:'var(--ok)','stroke-width':2}));
+  t=svgEl('text',{id:'pol-rule-text',x:473,y:338,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
+  t.textContent='highest non-empty band goes first';priority.appendChild(t);
+  gate.appendChild(priority);
+
+  const fair=svgEl('g',{id:'pol-fair-panel',opacity:0});
+  t=svgEl('text',{x:473,y:185,'font-size':10,'font-weight':760,fill:'var(--txt3)','text-anchor':'middle'});
+  t.textContent='then rotate within the band';fair.appendChild(t);
+  fair.appendChild(svgEl('rect',{x:402,y:204,width:142,height:90,rx:12,fill:'var(--raised)',stroke:'var(--amber)','stroke-opacity':.62}));
+  t=svgEl('text',{x:473,y:228,'font-size':10.5,'font-weight':760,fill:'var(--amber)','text-anchor':'middle'});
+  t.textContent='priority 0';fair.appendChild(t);
+  ['tenant A','tenant B','tenant C'].forEach((name,i)=>{
+    const y=250+i*18;
+    fair.appendChild(svgEl('text',{x:420,y:y+4,'font-size':9.5,'font-weight':650,fill:'var(--txt2)'})).textContent=name;
+    for(let k=0;k<3;k++)fair.appendChild(svgEl('circle',{cx:496+k*9,cy:y,r:3.2,fill:'var(--amber)',opacity:k<2||i===0?'.9':'.35'}));
   });
-  const turnCursor=svgEl('circle',{id:'pol-turn-cursor',cx:410,cy:304,r:21,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0});
-  lanes.appendChild(turnCursor);
-  t=svgEl('text',{id:'pol-turn-text',x:471,y:336,'font-size':10.5,'font-weight':740,fill:'var(--amber)','text-anchor':'middle'});
-  t.textContent='round robin within priority 0';lanes.appendChild(t);
-  viz.appendChild(lanes);
+  fair.appendChild(svgEl('circle',{id:'pol-turn-cursor',cx:432,cy:250,r:13,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0}));
+  t=svgEl('text',{id:'pol-turn-text',x:473,y:332,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
+  t.textContent='A → B → C → A';fair.appendChild(t);
+  gate.appendChild(fair);
+  viz.appendChild(gate);
 }
 function policyStreams(counts,dim){
   policyEnsure();
@@ -922,8 +1031,11 @@ function policyPoolFill(colors){
 function policyRun(mode){
   $('#ov-policy').style.display='';
   policyEnsure();
-  $('#pol-lanes').setAttribute('opacity',mode==='order'?'1':'0');
-  $('#pol-turn-cursor').setAttribute('opacity',mode==='order'?'1':'0');
+  const showGate=mode==='priority'||mode==='fair';
+  $('#pol-gate').setAttribute('opacity',showGate?'1':'0');
+  $('#pol-priority-panel').setAttribute('opacity',mode==='priority'?'1':'0');
+  $('#pol-fair-panel').setAttribute('opacity',mode==='fair'?'1':'0');
+  $('#pol-turn-cursor').setAttribute('opacity',mode==='fair'?'1':'0');
   if(mode==='meet'){
     $('#policyHead').textContent='Traffic meets in one pool';
     $('#policySub').textContent='sharing improves utilization; now work waits together';
@@ -946,19 +1058,28 @@ function policyRun(mode){
       'var(--amber)','var(--teal)','var(--amber)','var(--amber)','var(--amber)',
       'var(--amber)','var(--amber)'
     ]);
-  }else{
-    $('#policyHead').textContent='Flow control decides the wait';
-    $('#policySub').textContent='priority value picks the band; fairness id picks the turn';
+  }else if(mode==='priority'){
+    $('#policyHead').textContent='Priority bands choose first';
+    $('#policySub').textContent='higher priority waits ahead of lower priority';
     $('#policyTag').textContent='';
-    policyStreams({p:2,s:5,b:1},true);
+    policyStreams({p:3,s:5,b:2},true);
     policyPoolFill([
-      'var(--brand)','var(--brand)','var(--amber)','var(--amber)','var(--teal)',
-      'var(--amber)','var(--brand)','var(--amber)','var(--teal)','var(--amber)',
-      'var(--brand)','var(--amber)','var(--teal)'
+      'var(--brand)','var(--brand)','var(--brand)','var(--amber)','var(--amber)',
+      'var(--amber)','var(--amber)','var(--teal)','var(--teal)'
     ]);
-    [{x:396,txt:'priority first'}, {x:443,txt:'next eligible band'}, {x:396,txt:'priority first'}]
-      .forEach((s,i)=>after(i*760,()=>{$('#pol-band-cursor').setAttribute('x',String(s.x));$('#pol-rule-text').textContent=s.txt;}));
-    [410,451,492,410].forEach((x,i)=>after(900+i*520,()=>$('#pol-turn-cursor').setAttribute('cx',String(x))));
+    [{y:184,txt:'serve priority 100'}, {y:232,txt:'then priority 0'}, {y:280,txt:'batch waits behind them'}]
+      .forEach((s,i)=>after(i*760,()=>{$('#pol-band-cursor').setAttribute('y',String(s.y));$('#pol-rule-text').textContent=s.txt;}));
+  }else{
+    $('#policyHead').textContent='Fair turns inside a band';
+    $('#policySub').textContent='same priority rotates by fairness id';
+    $('#policyTag').textContent='';
+    policyStreams({p:0,s:8,b:0},false);
+    policyPoolFill([
+      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
+      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)'
+    ]);
+    [[432,250,'tenant A turn'],[432,268,'tenant B turn'],[432,286,'tenant C turn'],[432,250,'tenant A again']]
+      .forEach((s,i)=>after(i*620,()=>{$('#pol-turn-cursor').setAttribute('cy',String(s[1]));$('#pol-turn-text').textContent=s[2];}));
   }
 }
 function promiseEnsure(){
@@ -1014,6 +1135,7 @@ function resetCanvas(){
   document.body.classList.remove('halted');
   $('#ov-ded').style.display='none';
   $('#ov-burst').style.display='none';
+  $('#ov-knee').style.display='none';
   $('#ov-policy').style.display='none';
   $('#ov-promise').style.display='none';
   dedResetVisual();
@@ -1103,7 +1225,13 @@ const PAGES=[
   n:'That waiting lane is the reason the shared pool needs policy.',
   run(){burstRun(true,{dur:3900,labelMode:'burst-capacity'});after(1700,()=>{$('#burstHead').textContent='Waiting needs policy';$('#burstSub').textContent='burst capacity fills before the work is gone';});}}
 ]},
-/* ---- 2 · WHY: shared capacity needs policy ---- */
+/* ---- 2 · WHY: the operating point ---- */
+{title:'Find the knee',group:0,rail:'Knee',steps:[
+ {lit:['ov-knee'],dwell:1.15,
+  n:'The knee is where added concurrency stops buying useful throughput and starts buying queueing.',
+  run(){kneeRun();}}
+]},
+/* ---- 3 · WHY: shared capacity needs policy ---- */
 {title:'Sharing needs policy',group:0,rail:'Policy',steps:[
  {lit:['ov-policy'],
   n:'Once capacity is shared, the traffic streams meet in the same pool.',
@@ -1112,16 +1240,19 @@ const PAGES=[
   n:'A burst can crowd that pool unless the wait has rules.',
   run(){policyRun('crowd');}},
  {lit:['ov-policy'],
-  n:'Flow control turns the wait into policy: priority first, then fair turns within a tier.',
-  run(){policyRun('order');}}
+  n:'Priority bands decide which class of work goes first when the pool is under pressure.',
+  run(){policyRun('priority');}},
+ {lit:['ov-policy'],
+  n:'Within a band, fairness ids take turns so one tenant cannot monopolize dispatch.',
+  run(){policyRun('fair');}}
 ]},
-/* ---- 3 · WHY: business promise ---- */
+/* ---- 4 · WHY: business summary ---- */
 {title:'Why flow control',group:0,rail:'Summary',steps:[
  {lit:['ov-promise'],dwell:1.15,
-  n:'Use more of the hardware you have, keep bursts from choosing winners, and protect service tiers under pressure.',
+  n:'Utilize capacity, control bursts, and protect service tiers under pressure.',
   run(){promiseRun();}}
 ]},
-/* ---- 4 · MACHINE: tag and resolve ---- */
+/* ---- 5 · MACHINE: tag and resolve ---- */
 {title:'Tag and resolve',group:1,rail:'Tag',steps:[
  {lit:['g-tprem'],
   n:'Each request carries two headers: <code>x-llm-d-inference-objective</code> names its service tier and <code>x-llm-d-inference-fairness-id</code> names its tenant.',
@@ -1335,10 +1466,10 @@ const PAGES=[
 
 /* =================== groups / rail =================== */
 const GROUPS=[
-  {name:'The why',color:'var(--amber)',pages:[0,1,2,3]},
-  {name:'Mechanism',color:'var(--brand)',pages:[4,5,6,7,8]},
-  {name:'Results',color:'var(--teal)',pages:[9,10,11]},
-  {name:'Replay',color:'var(--ok)',pages:[12]}
+  {name:'The why',color:'var(--amber)',pages:[0,1,2,3,4]},
+  {name:'Mechanism',color:'var(--brand)',pages:[5,6,7,8,9]},
+  {name:'Results',color:'var(--teal)',pages:[10,11,12]},
+  {name:'Replay',color:'var(--ok)',pages:[13]}
 ];
 function buildRail(){
   const r=$('#rail');r.innerHTML='';
