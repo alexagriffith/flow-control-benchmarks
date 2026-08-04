@@ -437,11 +437,11 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 
         <!-- page-3 overlay: shared capacity needs policy -->
         <g id="ov-policy" class="cel" style="display:none">
-          <rect x="150" y="52" width="742" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
-          <text id="policyHead" x="184" y="86" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity needs policy</text>
-          <text id="policySub" x="184" y="110" font-size="11" fill="var(--txt3)">traffic meets in one pool; the wait needs order</text>
-          <g id="policyViz"></g>
-          <text id="policyTag" x="522" y="398" font-size="13" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
+          <rect x="72" y="52" width="896" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <text id="policyHead" x="112" y="86" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity needs policy</text>
+          <text id="policySub" x="112" y="110" font-size="11" fill="var(--txt3)">traffic meets in one pool; the wait needs order</text>
+          <g id="policyViz" transform="translate(-75 -30) scale(1.2)"></g>
+          <text id="policyTag" x="520" y="416" font-size="13" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
         </g>
 
         <!-- page-3 overlay: business promise board -->
@@ -991,16 +991,18 @@ function policyEnsure(){
   const fair=svgEl('g',{id:'pol-fair-panel',opacity:0});
   t=svgEl('text',{x:473,y:185,'font-size':10,'font-weight':760,fill:'var(--txt3)','text-anchor':'middle'});
   t.textContent='then rotate within the band';fair.appendChild(t);
-  fair.appendChild(svgEl('rect',{x:402,y:204,width:142,height:90,rx:12,fill:'var(--raised)',stroke:'var(--amber)','stroke-opacity':.62}));
+  fair.appendChild(svgEl('rect',{x:396,y:204,width:154,height:116,rx:12,fill:'var(--raised)',stroke:'var(--amber)','stroke-opacity':.62}));
   t=svgEl('text',{x:473,y:228,'font-size':10.5,'font-weight':760,fill:'var(--amber)','text-anchor':'middle'});
   t.textContent='priority 0';fair.appendChild(t);
-  ['tenant A','tenant B','tenant C'].forEach((name,i)=>{
-    const y=250+i*18;
-    fair.appendChild(svgEl('text',{x:420,y:y+4,'font-size':9.5,'font-weight':650,fill:'var(--txt2)'})).textContent=name;
-    for(let k=0;k<3;k++)fair.appendChild(svgEl('circle',{cx:496+k*9,cy:y,r:3.2,fill:'var(--amber)',opacity:k<2||i===0?'.9':'.35'}));
+  ['A','B','C'].forEach((name,i)=>{
+    const x=424+i*49;
+    fair.appendChild(svgEl('circle',{cx:x,cy:264,r:18,fill:'var(--base)',stroke:'var(--amber)','stroke-opacity':.76}));
+    const nt=svgEl('text',{x,y:269,'font-size':12,'font-weight':800,fill:'var(--amber)','text-anchor':'middle'});
+    nt.textContent=name;fair.appendChild(nt);
+    if(i<2)fair.appendChild(svgEl('path',{d:`M ${x+23} 264 L ${x+31} 264`,fill:'none',stroke:'var(--amber)','stroke-width':1.4,'marker-end':'url(#arr)','stroke-opacity':.7}));
   });
-  fair.appendChild(svgEl('circle',{id:'pol-turn-cursor',cx:432,cy:250,r:13,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0}));
-  t=svgEl('text',{id:'pol-turn-text',x:473,y:332,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
+  fair.appendChild(svgEl('circle',{id:'pol-turn-cursor',cx:424,cy:264,r:24,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0}));
+  t=svgEl('text',{id:'pol-turn-text',x:473,y:304,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
   t.textContent='A → B → C → A';fair.appendChild(t);
   gate.appendChild(fair);
   viz.appendChild(gate);
@@ -1074,8 +1076,8 @@ function policyRun(mode){
       'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
       'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)'
     ]);
-    [[432,250,'tenant A turn'],[432,268,'tenant B turn'],[432,286,'tenant C turn'],[432,250,'tenant A again']]
-      .forEach((s,i)=>after(i*620,()=>{$('#pol-turn-cursor').setAttribute('cy',String(s[1]));$('#pol-turn-text').textContent=s[2];}));
+    [[424,'tenant A turn'],[473,'tenant B turn'],[522,'tenant C turn'],[424,'tenant A again']]
+      .forEach((s,i)=>after(i*620,()=>{$('#pol-turn-cursor').setAttribute('cx',String(s[0]));$('#pol-turn-text').textContent=s[1];}));
   }
 }
 function promiseEnsure(){
