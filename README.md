@@ -4,6 +4,10 @@ Flow control is the Endpoint Picker's policy layer for multi-tenant inference. W
 
 This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. Everything ran on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, with automatic prefix caching off so the latencies reflect scheduling rather than a warm cache.
 
+Public display labels and claim boundaries for the run folders live in
+[`data-v4/RUN-METADATA.json`](data-v4/RUN-METADATA.json), so tools can show
+readable scenario names instead of raw repeat ids.
+
 ## What flow control does, in one screen
 
 Same traffic, same GPU, the only change is whether flow control is on. Premium is the interactive tier, standard is normal traffic, batch is deferrable background work.
