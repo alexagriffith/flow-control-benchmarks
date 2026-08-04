@@ -221,6 +221,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 
 @media (max-width:1020px){
   #main{flex-direction:column}
+  #canvasWrap{flex:none;aspect-ratio:1000/580}
   #side{flex:none;flex-direction:row;align-items:stretch}
   #card{flex:1}
   #hints{display:none}
@@ -392,18 +393,21 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 
         <!-- page-0 overlay: dedicated vs shared GPU capacity -->
         <g id="ov-ded" class="cel" style="display:none">
-          <rect x="110" y="44" width="820" height="410" rx="18" fill="var(--base)" fill-opacity="1" stroke="var(--b1)"/>
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <g id="dedScene" transform="translate(-144 -34) scale(1.24)">
           <text id="ded-head" x="150" y="82" font-size="21" font-weight="750" fill="var(--txt)">Capacity utilization</text>
           <text id="ded-sub" x="150" y="106" font-size="11" fill="var(--txt3)">same traffic, shared pool</text>
           <g id="ded-guide" opacity="0"></g>
           <g id="ded-boards"></g>
           <g id="ded-pool" opacity="0"></g>
           <text id="ded-stat" x="520" y="418" font-size="16" font-weight="720" fill="var(--txt)" text-anchor="middle"></text>
+          </g>
         </g>
 
         <!-- page-1 overlay: burst pressure -->
         <g id="ov-burst" class="cel" style="display:none">
-          <rect x="322" y="52" width="566" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <g id="burstScene" transform="translate(-460 -70) scale(1.5)">
           <text id="burstHead" x="352" y="84" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity meets burst traffic</text>
           <text id="burstSub" x="352" y="108" font-size="11" fill="var(--txt3)">the average fits; the peak decides the wait</text>
           <line x1="404" y1="262" x2="790" y2="262" stroke="var(--b2)"/>
@@ -425,31 +429,36 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
           </g>
           <rect id="burstMsgBox" x="678" y="394" width="156" height="28" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
           <text id="burstMsg" x="756" y="413" font-size="11" font-weight="720" fill="var(--txt)" text-anchor="middle">inside capacity</text>
+          </g>
         </g>
 
         <!-- page-2 overlay: measured knee -->
         <g id="ov-knee" class="cel" style="display:none">
-          <rect x="92" y="52" width="856" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <g id="kneeScene" transform="translate(-132 -42) scale(1.25)">
           <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Where control starts</text>
           <text x="130" y="110" font-size="11" fill="var(--txt3)">below the knee there is headroom; past it, policy decides the wait</text>
           <g id="kneeViz"></g>
+          </g>
         </g>
 
         <!-- page-3 overlay: shared capacity needs policy -->
         <g id="ov-policy" class="cel" style="display:none">
-          <rect x="72" y="52" width="896" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
-          <text id="policyHead" x="112" y="86" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity needs policy</text>
-          <text id="policySub" x="112" y="110" font-size="11" fill="var(--txt3)">traffic meets in one pool; the wait needs order</text>
-          <g id="policyViz" transform="translate(-75 -30) scale(1.2)"></g>
-          <text id="policyTag" x="520" y="416" font-size="13" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <text id="policyHead" x="70" y="76" font-size="24" font-weight="760" fill="var(--txt)">Shared capacity needs policy</text>
+          <text id="policySub" x="70" y="104" font-size="12" fill="var(--txt3)">traffic meets in one pool; the wait needs order</text>
+          <g id="policyViz" transform="translate(-230 -70) scale(1.52)"></g>
+          <text id="policyTag" x="520" y="502" font-size="14" font-weight="740" fill="var(--ok)" text-anchor="middle"></text>
         </g>
 
         <!-- page-3 overlay: business promise board -->
         <g id="ov-promise" class="cel" style="display:none">
-          <rect x="126" y="52" width="790" height="382" rx="16" fill="var(--base)" fill-opacity="1" stroke="var(--b2)"/>
+          <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
+          <g id="promiseScene" transform="translate(-180 -52) scale(1.35)">
           <text x="164" y="86" font-size="21" font-weight="750" fill="var(--txt)">Why flow control</text>
           <text x="164" y="110" font-size="11" fill="var(--txt3)">shared hardware, protected tiers, fewer bad surprises</text>
           <g id="promiseViz"></g>
+          </g>
         </g>
 
         <!-- fx layer -->
