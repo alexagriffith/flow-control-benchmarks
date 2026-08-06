@@ -566,6 +566,7 @@ function setPods(w1,k1,w2,k2){
 function fly(points,color,dur,delay){
   const ns='http://www.w3.org/2000/svg';
   const c=document.createElementNS(ns,'circle');
+  c.classList.add('fly-dot');
   c.setAttribute('r','6');c.setAttribute('fill',color);
   c.setAttribute('stroke','var(--base)');c.setAttribute('stroke-width','1.5');
   c.setAttribute('cx',points[0][0]);c.setAttribute('cy',points[0][1]);c.style.opacity='0';
@@ -578,8 +579,17 @@ function fly(points,color,dur,delay){
   c.animate([{opacity:0},{opacity:1}],{duration:200,delay:delay||0,fill:'forwards'});
   return a;
 }
+function dispatchFly(b,j,color,pod='a',delay=0){
+  const y=BANDS[b].y+42;
+  const start=[FLOWX[j]+10,y];
+  const route=pod==='b'
+    ? [start,[792,y],[800,352],[846,368]]
+    : [start,[792,y],[800,272],[846,204]];
+  return fly(route,color,980,delay);
+}
 function localFly(parent,points,color,dur,delay){
   const c=svgEl('circle',{r:6,fill:color,stroke:'var(--base)','stroke-width':1.4,cx:points[0][0],cy:points[0][1]});
+  c.classList.add('fly-dot');
   c.style.opacity='0';
   parent.appendChild(c);
   const kf=points.map((p,i)=>({transform:`translate(${p[0]-points[0][0]}px,${p[1]-points[0][1]}px)`,
@@ -795,13 +805,24 @@ function burstEnsure(){
     for(let i=0;i<12;i++)wait.appendChild(svgEl('rect',{x:405+i*20,y:411,width:13,height:8,rx:4,fill:'var(--danger)',opacity:0}));
   }
 }
+function clamp01(v){return Math.max(0,Math.min(1,v));}
+function smoothstep(a,b,v){
+  const t=clamp01((v-a)/(b-a));
+  return t*t*(3-2*t);
+}
 function burstSet(level,waitOverride,labelMode){
   burstEnsure();
   const cells=Array.from($('#burstSlots').children),wait=Array.from($('#burstWaitCells').children);
   const full=Math.min(cells.length,Math.round(level*cells.length));
   cells.forEach((c,i)=>{c.setAttribute('fill',i<full?'var(--brand)':'var(--base)');c.setAttribute('opacity',i<full?'.84':'1');});
-  const over=waitOverride==null?Math.max(0,Math.min(wait.length,Math.round((level-1)*20))):waitOverride;
-  wait.forEach((c,i)=>c.setAttribute('opacity',i<over?'.9':'0'));
+  const over=waitOverride==null?Math.max(0,Math.min(wait.length,(level-1)*20)):waitOverride;
+  wait.forEach((c,i)=>{
+    const fill=clamp01(over-i);
+    c.setAttribute('opacity',String(fill*.9));
+    c.style.transform=`scale(${.72+fill*.28})`;
+    c.style.transformOrigin='center';
+    c.style.transformBox='fill-box';
+  });
   const burstMode=labelMode==='burst-capacity';
   $('#burstSlotLabel').textContent=burstMode?'Burst capacity':'Shared pool capacity';
   $('#burstWaitLabel').setAttribute('fill',over?'var(--danger)':'var(--txt3)');
@@ -841,9 +862,11 @@ function burstWave(progress,hot,labelMode){
   $('#burstNeedleTxt').textContent=over?'peak':'burst';
   $('#burstNeedleTxt').setAttribute('opacity',showDot?'1':'0');
   const pressure=hot?(.54+Math.max(0,(cap-peakY)/86)*.62):.42+.18*Math.sin(Math.PI*drawP);
-  const waitLevel=hot&&drawP>.46?Math.max(5,Math.min(9,Math.round(Math.max(0,(cap-peakY)/12)))):null;
-  const held=labelMode==='burst-capacity'&&p>.58;
-  burstSet(held?Math.max(pressure,1.04):pressure,held?Math.max(waitLevel||0,8):waitLevel,labelMode);
+  const waitBase=hot?Math.min(9,Math.max(0,(cap-peakY)/12))*smoothstep(.38,.56,drawP):null;
+  const heldRamp=labelMode==='burst-capacity'?smoothstep(.14,.34,p):0;
+  const heldWait=Math.max(waitBase||0,8*heldRamp);
+  const heldPressure=Math.max(pressure,1.04*heldRamp);
+  burstSet(heldRamp?heldPressure:pressure,heldRamp?heldWait:waitBase,labelMode);
   return over;
 }
 function burstCross(){
@@ -885,7 +908,7 @@ function burstAutoRun(){
   burstRun(false,{dur:2400});
   after(2300,()=>burstRun(true,{dur:3300}));
   after(5600,()=>{
-    burstRun(true,{dur:3900,labelMode:'burst-capacity'});
+    burstRun(true,{dur:6200,labelMode:'burst-capacity'});
     after(1600,()=>{
       $('#burstHead').textContent='Shared traffic needs policy';
       $('#burstSub').textContent='policy chooses what moves next';
@@ -1072,11 +1095,10 @@ function policyEnsure(){
     for(let i=0;i<7;i++)simple.appendChild(svgEl('circle',{cx:318+i*25,cy:r.y,r:8,fill:r.c,opacity:r.active?'.95':'.3'}));
     if(r.active){
       simple.appendChild(svgEl('path',{d:`M 560 ${r.y} C 608 ${r.y} 624 246 670 246`,fill:'none',stroke:r.c,'stroke-width':2.2,'marker-end':'url(#arr)'}));
-      for(let i=0;i<3;i++)simple.appendChild(svgEl('circle',{id:`pol-simple-out-${i}`,cx:638+i*22,cy:246,r:8,fill:r.c,opacity:.18}));
     }
   });
   simple.appendChild(svgEl('rect',{x:688,y:190,width:86,height:112,rx:18,fill:'var(--raised)',stroke:'var(--ok)','stroke-width':2}));
-  for(let i=0;i<3;i++)simple.appendChild(svgEl('circle',{cx:716+i*17,cy:246,r:7,fill:'var(--brand)',opacity:.92}));
+  for(let i=0;i<3;i++)simple.appendChild(svgEl('circle',{id:`pol-simple-pool-${i}`,cx:716+i*17,cy:246,r:7,fill:'var(--base)',stroke:'var(--brand)','stroke-width':1.4,opacity:.72}));
   viz.appendChild(simple);
 }
 function policyDefaultVisible(on){
@@ -1109,15 +1131,53 @@ function policyDispatch(color){
   });
 }
 let policyMode='';
+let policyPoolCursor=0;
+function policyPoolReset(){
+  policyPoolCursor=0;
+  Array.from($('#pol-pool-cells').children).forEach(c=>{
+    c.setAttribute('fill','var(--base)');
+    c.setAttribute('stroke','var(--b1)');
+    c.setAttribute('opacity','1');
+    c.style.transform='scale(1)';
+  });
+}
+function policyPoolArrive(color,mode,count){
+  if(mode!==policyMode)return;
+  const cells=Array.from($('#pol-pool-cells').children);
+  for(let n=0;n<count&&policyPoolCursor<cells.length;n++,policyPoolCursor++){
+    const c=cells[policyPoolCursor];
+    c.setAttribute('fill',color);
+    c.setAttribute('stroke',color);
+    c.setAttribute('opacity','.9');
+    c.style.transformOrigin='center';
+    c.style.transformBox='fill-box';
+    const a=c.animate([
+      {transform:'scale(.62)',opacity:.25},
+      {transform:'scale(1.16)',opacity:1},
+      {transform:'scale(1)',opacity:.9}
+    ],{duration:360,easing:SPRING});
+    CS.anims.push(a);
+  }
+}
 function policyFlowLoop(mode,idx=0){
   if(mode!==policyMode)return;
   if($('#ov-policy').style.display==='none')return;
   const simple=$('#pol-simple-priority');
   if(mode==='priority'){
     const parent=simple;
-    localFly(parent,[[390,166],[558,166],[670,246],[724,246]],'var(--brand)',1100,0);
-    after(720,()=>pop(`#pol-simple-out-${idx%3}`,0));
-    after(620,()=>policyFlowLoop(mode,idx+1));
+    if(idx%3===0){
+      for(let i=0;i<3;i++){
+        const dot=$(`#pol-simple-pool-${i}`);
+        if(dot){dot.setAttribute('fill','var(--base)');dot.setAttribute('opacity','.72');}
+      }
+    }
+    localFly(parent,[[390,166],[558,166],[670,246],[724,246]],'var(--brand)',980,0);
+    after(930,()=>{
+      const dot=$(`#pol-simple-pool-${idx%3}`);
+      if(dot){dot.setAttribute('fill','var(--brand)');dot.setAttribute('opacity','.95');}
+      pop(`#pol-simple-pool-${idx%3}`,0);
+    });
+    after(1180,()=>policyFlowLoop(mode,idx+1));
     return;
   }
   const parent=$('#policyViz');
@@ -1131,6 +1191,7 @@ function policyFlowLoop(mode,idx=0){
       ];
   const r=routes[idx%routes.length];
   localFly(parent,[[344,r.y],[450,r.y+(246-r.y)*.55],[564,246],[642,246]],r.c,1150,0);
+  after(980,()=>policyPoolArrive(r.c,mode,mode==='crowd'?3:2));
   after(mode==='crowd'?260:420,()=>policyFlowLoop(mode,idx+1));
 }
 function policyPoolFill(colors){
@@ -1147,6 +1208,11 @@ function policyRun(mode){
   $('#ov-policy').style.display='';
   policyEnsure();
   policyMode=mode;
+  $$('.fly-dot').forEach(dot=>dot.remove());
+  for(let i=0;i<3;i++){
+    const dot=$(`#pol-simple-pool-${i}`);
+    if(dot){dot.setAttribute('fill','var(--base)');dot.setAttribute('opacity','.72');}
+  }
   const showGate=mode==='priority'||mode==='fair';
   $('#pol-gate').setAttribute('opacity',showGate?'1':'0');
   $('#pol-priority-panel').setAttribute('opacity',mode==='priority'?'1':'0');
@@ -1159,11 +1225,7 @@ function policyRun(mode){
     $('#policySub').textContent='sharing improves utilization; now work waits together';
     $('#policyTag').textContent='';
     policyStreams({p:5,s:5,b:5},false);
-    policyPoolFill([
-      'var(--brand)','var(--amber)','var(--teal)','var(--brand)','var(--amber)',
-      'var(--teal)','var(--brand)','var(--amber)','var(--teal)','var(--brand)',
-      'var(--amber)','var(--teal)'
-    ]);
+    policyPoolReset();
     policyFlowLoop('meet');
   }else if(mode==='crowd'){
     policyDefaultVisible(true);
@@ -1171,13 +1233,7 @@ function policyRun(mode){
     $('#policySub').textContent='the pool needs an ordering rule before it fills';
     $('#policyTag').textContent='policy chooses what moves next';
     policyStreams({p:3,s:12,b:2},true);
-    policyPoolFill([
-      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--amber)',
-      'var(--amber)','var(--amber)','var(--brand)','var(--amber)','var(--teal)',
-      'var(--amber)','var(--amber)','var(--amber)','var(--amber)','var(--brand)',
-      'var(--amber)','var(--teal)','var(--amber)','var(--amber)','var(--amber)',
-      'var(--amber)','var(--amber)'
-    ]);
+    policyPoolReset();
     policyFlowLoop('crowd');
   }else if(mode==='priority'){
     policyDefaultVisible(false);
@@ -1232,7 +1288,7 @@ function fairRun(){
   fairEnsure();
   $('#fair-lane-cursor').setAttribute('y','237');
   [0,1,2].forEach(i=>$(`#fair-out-${i}`).setAttribute('opacity','.18'));
-  const turns=[[262,237,0],[326,301,1],[390,365,2],[262,237,0]];
+  const turns=[[262,237,0],[326,301,1],[390,365,2]];
   const tick=i=>{
     if($('#ov-fair').style.display==='none')return;
     if(i%3===0)[0,1,2].forEach(j=>$(`#fair-out-${j}`).setAttribute('opacity','.18'));
@@ -1240,7 +1296,7 @@ function fairRun(){
     $('#fair-lane-cursor').setAttribute('y',String(turn[1]));
     fly([[420,turn[0]],[610,turn[0]],[752,326]],'var(--brand)',920,0);
     after(650,()=>{$(`#fair-out-${turn[2]}`).setAttribute('opacity','.95');pop(`#fair-out-${turn[2]}`,0);});
-    after(680,()=>tick(i+1));
+    after(980,()=>tick(i+1));
   };
   tick(0);
 }
@@ -1380,7 +1436,7 @@ const PAGES=[
 ]},
 /* ---- 1 · WHY: the burst problem ---- */
 {title:'Burst pressure',group:0,rail:'Bursts',steps:[
- {lit:['ov-burst'],dwell:2.15,
+ {lit:['ov-burst'],dwell:2.55,
   n:'The same pool can look fine on average, then one burst peak creates waiting.',
   run(){burstAutoRun();}}
 ]},
@@ -1488,7 +1544,7 @@ const PAGES=[
   run(){cursorAt('b100',0);
     callout(['highest band wins','one request this cycle'],650,236,'var(--brand)',350);
     focus(['g-cycle','g-b100','a-d1','g-pod1'],650);
-    after(700,()=>{setFlow('b100',0,'premium',1);fly([[765,258],[846,196]],'var(--brand)',800,0);setPods(.4,.5,.3,.52);});}},
+    after(700,()=>{setFlow('b100',0,'premium',1);dispatchFly('b100',0,'var(--brand)','a');setPods(.4,.5,.3,.52);});}},
  {lit:['g-cycle','g-b100'],
   n:'An <b>empty band is skipped</b> in the same pass: the cursor walks down the bands until it finds waiting work.',
   run(){setFlow('b100',0,'premium',0,'empty');cursorAt('b100',0);
@@ -1497,7 +1553,7 @@ const PAGES=[
     after(750,()=>{cursorAt('b0',0);});
     callout(['priority 0 has work','dispatch from here'],514,312,'var(--amber)',1080);
     focus(['g-cycle','g-b0','a-d1','g-pod1'],1280);
-    after(1350,()=>{setFlow('b0',0,'tenant-a',1);fly([[765,334],[846,214]],'var(--amber)',800,0);});}},
+    after(1350,()=>{setFlow('b0',0,'tenant-a',1);dispatchFly('b0',0,'var(--amber)','a');});}},
  {lit:['g-cycle','g-b100','g-b0'],
   n:'Batch drains <b>only when both higher bands are empty</b>. Priority here is traversal order plus one dispatch per cycle — never a reserved share of the GPU.',
   run(){setFlow('b100',0,'premium',0,'empty');setFlow('b0',0,'tenant-a',0,'empty');
@@ -1505,8 +1561,8 @@ const PAGES=[
     cursorAt('bm10',0);
     callout(['higher bands empty','batch can drain'],514,388,'var(--teal)',420);
     focus(['g-cycle','g-bm10','a-d2','g-pod2'],680);
-    after(740,()=>{setFlow('bm10',0,'batch',2);fly([[765,410],[846,372]],'var(--teal)',800,0);});
-    after(1500,()=>{setFlow('bm10',0,'batch',1);fly([[765,410],[846,372]],'var(--teal)',800,0);});}}
+    after(740,()=>{setFlow('bm10',0,'batch',2);dispatchFly('bm10',0,'var(--teal)','b');});
+    after(1500,()=>{setFlow('bm10',0,'batch',1);dispatchFly('bm10',0,'var(--teal)','b');});}}
 ]},
 /* ---- 6 · MACHINE: fairness as turns ---- */
 {title:'Fairness as turns',group:1,rail:'Turns',steps:[
@@ -1514,7 +1570,7 @@ const PAGES=[
   n:'Three tenants share the priority-0 band. Round-robin hands each flow <b>one dispatch turn</b> in rotation — a, then b, then c.',
   run(){setFlow('b0',0,'tenant-a · 0',3);setFlow('b0',1,'tenant-b · 0',2);setFlow('b0',2,'tenant-c · 0',2);
     const seq=[0,1,2];seq.forEach((j,i)=>{
-      after(400+i*900,()=>{cursorAt('b0',j);fly([[FLOWX[j]+10,334],[846,214]],'var(--amber)',700,150);});});}},
+      after(400+i*900,()=>{cursorAt('b0',j);dispatchFly('b0',j,'var(--amber)','a',150);});});}},
  {lit:['g-b0','g-cycle'],
   n:'Tenant-a <b>bursts</b>. Its own queue grows and grows — but the cursor still grants it one turn per rotation, the same as everyone.',
   run(){let qa=3;setFlow('b0',0,'tenant-a · served 1',qa);setFlow('b0',1,'tenant-b · served 1',2);setFlow('b0',2,'tenant-c · served 1',2);
