@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-multi-tenant flow-control Benchmark v3.
+multi-tenant flow-control Benchmark v4.
 
 Runs from a benchmark client that can reach the OpenAI-compatible inference
 gateway and the EPP/vLLM metrics endpoints.
