@@ -808,11 +808,11 @@ footer a{color:var(--txt2)}
   </details>
   <p>Flow control orders the queue, so premium is dispatched before standard regardless of the cap. What <code>maxConcurrency</code> changes is engine occupancy: lower <code>maxConcurrency</code> generally protects TTFT by allowing fewer requests to run inside the vLLM pod at once. However, the result still depends on request shape: long prefill, long decode, or large-context requests can still affect TTFT.</p>
   <ul>
-    <li><b>The concurrency detector changed the premium tail:</b> in this sweep, the concurrency detector produced its lowest premium p95 TTFT at 461&nbsp;ms with <code>maxConcurrency</code> 48. A matched four-scenario comparison is still needed.</li>
+    <li><b>The concurrency detector changed the premium tail:</b> in this sweep, the concurrency detector produced its lowest premium p95 TTFT at 461&nbsp;ms with <code>maxConcurrency</code> 48.</li>
     <li><b>maxConcurrency tunes the tradeoff.</b> The lowest premium p95 TTFT occurred at <code>maxConcurrency</code> 48. Tighter caps made premium queue against the cap; looser caps admitted more work into vLLM and increased premium TTFT. Standard traffic improved as the cap loosened.</li>
     <li><b>Output length sets how hard the cap bites.</b> A longer generation holds each admitted slot for more decode steps, so at a fixed cap a longer output pushes more work into the queue and lengthens every tail. The output-length ladder in the tiers scenario is being restated with the same per-repeat method.</li>
   </ul>
-  <p>The four scenarios above still need a matched concurrency-detector run. This section characterizes <code>maxConcurrency</code> under one saturating load.</p>
+  <p>This section characterizes <code>maxConcurrency</code> under one saturating load.</p>
 </section>
 
 <!-- ================= LIMITS ================= -->
