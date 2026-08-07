@@ -31,8 +31,9 @@ import ssl
 import statistics
 import time
 import urllib.request
+import uuid
 from collections import Counter, defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +48,7 @@ TOKENIZE_URL = BASE_URL + "/tokenize"
 EPP_METRICS_URL = os.environ.get("EPP_METRICS_URL", "http://localhost:9090/metrics")
 VLLM_METRICS_URL = os.environ.get("VLLM_METRICS_URL", "http://localhost:8001/metrics")
 
-# Objective (priority-tier) names sent in the x-gateway-inference-objective header.
+# Objective (priority-tier) names sent in the inference objective headers.
 # These MUST match the InferenceObjective resources bound to the target pool, or
 # the gate defaults every request to priority 0 (no prioritization). The upstream
 # endpoint uses a different name prefix, so make it overridable per endpoint.
@@ -77,14 +78,24 @@ class Tenant:
 class RequestSample:
     run_id: str
     scenario: str
+    request_id: str
     tenant: str
     priority: int
     objective: str
     status: str
+    planned_arrival_s: float | None
+    actual_send_s: float
     start_s: float
     ttft_s: float | None
     latency_s: float
     stream_chunks: int
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    tpot_s: float | None
+    timeout: bool
+    error_class: str | None
+    retry_count: int
+    token_count_source: str | None
 
 
 def now_s() -> float:
@@ -310,28 +321,146 @@ def target_for_phase(phases: list[dict[str, Any]], elapsed: float, rng: random.R
     return 0
 
 
+def rate_for_phase(phases: list[dict[str, Any]], elapsed: float, rng: random.Random | None = None) -> float:
+    """Calculate target RPS for open-loop arrivals.
+
+    SLO-proof Poisson phases should set rate_rps. For backwards-compatible
+    smoke runs, phases without rate_rps reuse the existing target function as
+    an offered-rate shape.
+    """
+    for phase in phases:
+        start = float(phase["start_s"])
+        end = start + float(phase["duration_s"])
+        if start <= elapsed < end:
+            if "rate_rps" in phase:
+                rate = float(phase["rate_rps"])
+                if phase.get("ramp_s"):
+                    phase_elapsed = elapsed - start
+                    rate *= min(1.0, max(0.0, phase_elapsed / float(phase["ramp_s"])))
+                return max(0.0, rate * TRAFFIC_SCALE)
+            return float(target_for_phase(phases, elapsed, rng))
+    return 0.0
+
+
+def parse_stream_line(line: bytes) -> dict[str, Any] | None:
+    stripped = line.strip()
+    if not stripped.startswith(b"data:"):
+        return None
+    payload = stripped[len(b"data:"):].strip()
+    if payload == b"[DONE]":
+        return {"done": True}
+    try:
+        return json.loads(payload.decode("utf-8"))
+    except Exception:
+        return None
+
+
+def completion_tokens_from_usage(event: dict[str, Any] | None) -> int | None:
+    if not event:
+        return None
+    usage = event.get("usage")
+    if not isinstance(usage, dict):
+        return None
+    value = usage.get("completion_tokens")
+    return int(value) if isinstance(value, (int, float)) else None
+
+
+def compute_tpot_s(
+    latency_s: float,
+    ttft_s: float | None,
+    completion_tokens: int | None,
+) -> float | None:
+    """Decode-only time-per-output-token.
+
+    Deliberately takes completion_tokens (from server usage), never a stream
+    chunk count: SSE chunk boundaries do not map 1:1 to decoded tokens, so
+    stream_chunks must never reach this computation. Returns None unless both
+    the first-token latency and a real completion-token count are available.
+    """
+    if completion_tokens is None or ttft_s is None:
+        return None
+    return (latency_s - ttft_s) / max(1, completion_tokens - 1)
+
+
+def compute_slo_proof_valid(
+    arrival_mode: str,
+    safety_state: dict[str, Any] | None,
+    metric_rows_present: bool,
+    samples: list["RequestSample"],
+) -> bool:
+    """Honest SLO-proof gate.
+
+    An SLO proof is only meaningful for an open-loop (poisson) run that stayed
+    under its outstanding safety ceiling, produced server metric samples and
+    client samples, and where every recorded request completed cleanly (HTTP
+    200, no timeouts, and no error_class). Closed-loop runs describe an offered
+    concurrency shape, not a proof, so they are never marked valid here.
+    """
+    if arrival_mode != "poisson":
+        return False
+    if safety_state:
+        return False
+    if not metric_rows_present or not samples:
+        return False
+    for sample in samples:
+        if sample.status != "200" or sample.timeout or sample.error_class is not None:
+            return False
+    return True
+
+
+def slo_proof_reason(
+    arrival_mode: str,
+    safety_state: dict[str, Any] | None,
+    metric_rows_present: bool,
+    samples: list["RequestSample"],
+) -> str:
+    """Human-readable justification mirroring compute_slo_proof_valid()."""
+    if arrival_mode != "poisson":
+        return "closed_loop_offered_concurrency_shape_not_a_proof"
+    if safety_state:
+        return "outstanding_safety_ceiling_hit"
+    if not metric_rows_present:
+        return "no_metric_samples"
+    if not samples:
+        return "no_client_samples"
+    if any(s.status != "200" or s.timeout or s.error_class is not None for s in samples):
+        return "non_200_responses_or_request_errors_present"
+    return "valid"
+
+
 async def send_one(
     session: aiohttp.ClientSession,
     run_id: str,
     scenario: str,
     tenant: Tenant,
     prompt: str,
+    prompt_tokens: int | None,
     output_tokens: int,
     start_zero: float,
     samples: list[RequestSample],
+    request_id: str | None = None,
+    planned_arrival_s: float | None = None,
+    retry_count: int = 0,
 ):
     start = now_s()
     ttft = None
     chunks = 0
     status = "Unknown"
+    timeout = False
+    error_class = None
+    completion_tokens = None
+    token_count_source = None
     payload = {
         "model": MODEL_NAME,
         "prompt": prompt,
         "max_tokens": output_tokens,
         "stream": True,
+        "stream_options": {"include_usage": True},
         "ignore_eos": True,
     }
     headers = {
+        "x-llm-d-inference-fairness-id": tenant.fairness_id,
+        "x-llm-d-inference-objective": tenant.inference_objective,
         "x-gateway-inference-fairness-id": tenant.fairness_id,
         "x-gateway-inference-objective": tenant.inference_objective,
     }
@@ -350,31 +479,52 @@ async def send_one(
                     if not line:
                         continue
                     chunks += 1
+                    event = parse_stream_line(line)
+                    if event and event.get("done"):
+                        break
                     if ttft is None:
                         ttft = now_s() - start
-                    if line.strip() == b"data: [DONE]":
-                        break
+                    from_usage = completion_tokens_from_usage(event)
+                    if from_usage is not None:
+                        completion_tokens = from_usage
+                        token_count_source = "stream_usage"
             else:
                 await resp.read()
     except asyncio.TimeoutError:
         status = "Timeout"
+        timeout = True
+        error_class = "Timeout"
     except asyncio.CancelledError:
         status = "Cancelled"
+        error_class = "Cancelled"
     except Exception as exc:
-        status = f"Error:{type(exc).__name__}"
+        error_class = type(exc).__name__
+        status = f"Error:{error_class}"
     finally:
+        latency_s = now_s() - start
+        tpot_s = compute_tpot_s(latency_s, ttft, completion_tokens)
         samples.append(
             RequestSample(
                 run_id=run_id,
                 scenario=scenario,
+                request_id=request_id or str(uuid.uuid4()),
                 tenant=tenant.fairness_id,
                 priority=tenant.priority,
                 objective=tenant.inference_objective,
                 status=status,
+                planned_arrival_s=planned_arrival_s,
+                actual_send_s=start - start_zero,
                 start_s=start - start_zero,
                 ttft_s=ttft,
-                latency_s=now_s() - start,
+                latency_s=latency_s,
                 stream_chunks=chunks,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                tpot_s=tpot_s,
+                timeout=timeout,
+                error_class=error_class,
+                retry_count=retry_count,
+                token_count_source=token_count_source,
             )
         )
 
@@ -391,6 +541,10 @@ async def tenant_driver(
     start_zero: float,
     samples: list[RequestSample],
     concurrency_log: list[dict[str, Any]],
+    traffic_log: list[dict[str, Any]],
+    arrival_mode: str = "closed_loop",
+    outstanding_safety_ceiling: int = 10_000,
+    safety_state: dict[str, Any] | None = None,
     traffic_seed: int = 42,
     sample_interval_s: float = 0.5,
 ):
@@ -398,12 +552,20 @@ async def tenant_driver(
     prompt_idx = 0
     rng = random.Random(traffic_seed + hash(tenant.fairness_id))
     next_log_s = 0.0
+    next_arrival_at = now_s()
+    issued_requests = 0
+    completed_requests = 0
+    safety_ceiling_state = "ok"
     try:
         while now_s() - start_zero < duration_s:
             elapsed = now_s() - start_zero
             target = target_for_phase(tenant.phases, elapsed, rng)
+            done_now = sum(1 for task in inflight if task.done())
+            completed_requests += done_now
             inflight = {task for task in inflight if not task.done()}
             actual = len(inflight)
+            target_rps = rate_for_phase(tenant.phases, elapsed, rng) if arrival_mode == "poisson" else 0.0
+            now = now_s()
 
             if elapsed >= next_log_s:
                 concurrency_log.append({
@@ -412,16 +574,84 @@ async def tenant_driver(
                     "target_concurrency": target,
                     "actual_inflight": actual,
                 })
+                traffic_log.append({
+                    "run_id": run_id,
+                    "scenario": scenario,
+                    "elapsed_s": round(elapsed, 3),
+                    "tenant": tenant.fairness_id,
+                    "arrival_process": "poisson" if arrival_mode == "poisson" else "closed_loop",
+                    "target_rps": round(target_rps, 6) if arrival_mode == "poisson" else "",
+                    "target_concurrency": target,
+                    "issued_requests": issued_requests,
+                    "completed_requests": completed_requests,
+                    "outstanding_requests": actual,
+                    "send_delay_s": "",
+                    "safety_ceiling_state": safety_ceiling_state,
+                })
                 while next_log_s <= elapsed:
                     next_log_s += sample_interval_s
 
-            while len(inflight) < target:
-                prompt = prompts[prompt_idx % len(prompts)]["prompt"]
-                prompt_idx += 1
-                task = asyncio.create_task(
-                    send_one(session, run_id, scenario, tenant, prompt, output_tokens, start_zero, samples)
-                )
-                inflight.add(task)
+            if arrival_mode == "poisson":
+                if target_rps <= 0:
+                    next_arrival_at = now + 0.05
+                while target_rps > 0 and now >= next_arrival_at:
+                    if len(inflight) >= outstanding_safety_ceiling:
+                        safety_ceiling_state = "hit"
+                        if safety_state is not None:
+                            safety_state[tenant.fairness_id] = {
+                                "state": "hit",
+                                "elapsed_s": round(elapsed, 3),
+                                "outstanding_requests": len(inflight),
+                                "safety_ceiling": outstanding_safety_ceiling,
+                            }
+                        break
+                    prompt_row = prompts[prompt_idx % len(prompts)]
+                    prompt_idx += 1
+                    planned_arrival_s = next_arrival_at - start_zero
+                    send_delay_s = max(0.0, now - next_arrival_at)
+                    request_id = f"{run_id}-{tenant.fairness_id}-{issued_requests + 1}"
+                    task = asyncio.create_task(
+                        send_one(
+                            session, run_id, scenario, tenant,
+                            prompt_row["prompt"], prompt_row.get("tokens"),
+                            output_tokens, start_zero, samples,
+                            request_id=request_id,
+                            planned_arrival_s=planned_arrival_s,
+                        )
+                    )
+                    inflight.add(task)
+                    issued_requests += 1
+                    traffic_log.append({
+                        "run_id": run_id,
+                        "scenario": scenario,
+                        "elapsed_s": round(elapsed, 3),
+                        "tenant": tenant.fairness_id,
+                        "arrival_process": "poisson",
+                        "target_rps": round(target_rps, 6),
+                        "target_concurrency": target,
+                        "issued_requests": issued_requests,
+                        "completed_requests": completed_requests,
+                        "outstanding_requests": len(inflight),
+                        "send_delay_s": round(send_delay_s, 6),
+                        "safety_ceiling_state": safety_ceiling_state,
+                    })
+                    next_arrival_at += rng.expovariate(target_rps)
+                    now = now_s()
+            else:
+                while len(inflight) < target:
+                    prompt_row = prompts[prompt_idx % len(prompts)]
+                    prompt_idx += 1
+                    request_id = f"{run_id}-{tenant.fairness_id}-{issued_requests + 1}"
+                    task = asyncio.create_task(
+                        send_one(
+                            session, run_id, scenario, tenant,
+                            prompt_row["prompt"], prompt_row.get("tokens"),
+                            output_tokens, start_zero, samples,
+                            request_id=request_id,
+                        )
+                    )
+                    inflight.add(task)
+                    issued_requests += 1
             await asyncio.sleep(0.05)
     finally:
         inflight = {task for task in inflight if not task.done()}
@@ -517,7 +747,7 @@ async def metric_sampler(
             next_sample_at += sample_interval_s
 
 
-def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], duration_s: int, trim_s: float = 0.0) -> list[dict[str, Any]]:
+def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], duration_s: int, trim_s: float = 0.0, arrival_mode: str = "closed_loop") -> list[dict[str, Any]]:
     # v4: steady-state trim. Requests that STARTED within the first `trim_s`
     # seconds are excluded from percentiles so the KV/APC warmup transient and
     # the closed-loop ramp-in do not pollute steady-state latency. Counts and
@@ -531,6 +761,7 @@ def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], 
         steady = [s for s in tenant_samples if s.start_s >= trim_s]
         ttfts = [s.ttft_s for s in steady if s.ttft_s is not None and s.status == "200"]
         lats = [s.latency_s for s in steady if s.status == "200"]
+        tpots = [s.tpot_s for s in steady if s.tpot_s is not None and s.status == "200"]
         counts = Counter(s.status for s in tenant_samples)
         n_steady = len(ttfts)
         # v4: below 500 the writeup uses p90 + the distribution, not p95 (plan sec 4).
@@ -538,6 +769,7 @@ def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], 
         rows.append({
             "run_id": run_id,
             "scenario": scenario,
+            "arrival_mode": arrival_mode,
             "tenant": tenant,
             "priority": tenant_samples[0].priority if tenant_samples else None,
             "objective": tenant_samples[0].objective if tenant_samples else None,
@@ -560,6 +792,10 @@ def summarize_samples(run_id: str, scenario: str, samples: list[RequestSample], 
             "latency_p90_s": percentile(lats, 0.90),
             "latency_p95_s": percentile(lats, 0.95),
             "latency_p99_s": percentile(lats, 0.99),
+            "tpot_p50_s": percentile(tpots, 0.50),
+            "tpot_p90_s": percentile(tpots, 0.90),
+            "tpot_p95_s": percentile(tpots, 0.95),
+            "tpot_p99_s": percentile(tpots, 0.99),
         })
     return rows
 
@@ -672,8 +908,18 @@ async def run_workload(
     traffic_seed: int = 42,
     trim_s: float = 0.0,
     metric_sample_interval_s: float = 0.5,
+    arrival_mode: str = "closed_loop",
+    outstanding_safety_ceiling: int = 10_000,
 ) -> dict[str, Any]:
-    print(json.dumps({"event": "run_start", "run_id": run_id, "scenario": scenario, "duration_s": duration_s, "drain_timeout_s": drain_timeout_s, "trim_s": trim_s}), flush=True)
+    print(json.dumps({
+        "event": "run_start",
+        "run_id": run_id,
+        "scenario": scenario,
+        "duration_s": duration_s,
+        "drain_timeout_s": drain_timeout_s,
+        "trim_s": trim_s,
+        "arrival_mode": arrival_mode,
+    }), flush=True)
     run_dir = out_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -685,6 +931,8 @@ async def run_workload(
     samples: list[RequestSample] = []
     metric_rows: list[dict[str, Any]] = []
     concurrency_log: list[dict[str, Any]] = []
+    traffic_log: list[dict[str, Any]] = []
+    safety_state: dict[str, Any] = {}
     connector = aiohttp.TCPConnector(limit=0, limit_per_host=0)
     async with aiohttp.ClientSession(connector=connector) as session:
         start_zero = now_s()
@@ -692,7 +940,8 @@ async def run_workload(
             asyncio.create_task(tenant_driver(
                 session, run_id, scenario, tenant, prompts, output_tokens,
                 duration_s, drain_timeout_s, start_zero, samples,
-                concurrency_log, traffic_seed, metric_sample_interval_s,
+                concurrency_log, traffic_log, arrival_mode, outstanding_safety_ceiling,
+                safety_state, traffic_seed, metric_sample_interval_s,
             ))
             for tenant in tenants
         ]
@@ -720,7 +969,10 @@ async def run_workload(
     (run_dir / "post_vllm.prom").write_text(post_vllm)
 
     with (run_dir / "client_samples.csv").open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(asdict(samples[0]).keys()) if samples else list(RequestSample("", "", "", 0, "", "", 0, 0, 0, 0).__dict__.keys()))
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[f.name for f in fields(RequestSample)],
+        )
         writer.writeheader()
         for sample in samples:
             writer.writerow(asdict(sample))
@@ -738,15 +990,48 @@ async def run_workload(
             writer.writeheader()
             writer.writerows(concurrency_log)
 
+    traffic_fieldnames = [
+        "run_id", "scenario", "elapsed_s", "tenant", "arrival_process",
+        "target_rps", "target_concurrency", "issued_requests",
+        "completed_requests", "outstanding_requests", "send_delay_s",
+        "safety_ceiling_state",
+    ]
+    with (run_dir / "traffic_samples.csv").open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=traffic_fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(traffic_log)
+
+    preconditions = {
+        "run_id": run_id,
+        "scenario": scenario,
+        "arrival_mode": arrival_mode,
+        "streaming_requested": True,
+        "traffic_samples_written": True,
+        "metric_samples_written": bool(metric_rows),
+        "client_samples_written": bool(samples),
+        "outstanding_safety_ceiling": outstanding_safety_ceiling,
+        "safety_ceiling": safety_state or {"state": "ok"},
+        "request_ids": "present",
+        "prompt_tokens": "present_from_prompt_pool",
+        "completion_tokens": "stream_usage_when_available",
+        "tpot": "computed_only_when_completion_tokens_available",
+        "slo_proof_valid": compute_slo_proof_valid(arrival_mode, safety_state, bool(metric_rows), samples),
+        "slo_proof_reason": slo_proof_reason(arrival_mode, safety_state, bool(metric_rows), samples),
+    }
+    (run_dir / "preconditions.json").write_text(json.dumps(preconditions, indent=2))
+
     tenants_set = {tenant.fairness_id for tenant in tenants}
     summary = {
         "run_id": run_id,
         "scenario": scenario,
         "duration_s": duration_s,
         "drain_timeout_s": drain_timeout_s,
+        "arrival_mode": arrival_mode,
+        "outstanding_safety_ceiling": outstanding_safety_ceiling,
+        "safety_ceiling": safety_state or {"state": "ok"},
         "metric_sample_interval_s": metric_sample_interval_s,
         "tenants": [asdict(t) for t in tenants],
-        "client_summary": summarize_samples(run_id, scenario, samples, duration_s, trim_s),
+        "client_summary": summarize_samples(run_id, scenario, samples, duration_s, trim_s, arrival_mode),
         "metric_delta": metric_delta(pre_epp + "\n" + pre_vllm, post_epp + "\n" + post_vllm, tenants_set),
         "metric_sample_summary": summarize_metric_samples(metric_rows),
     }
@@ -1487,7 +1772,10 @@ async def main():
     parser.add_argument("--test1-consol-sat", action="store_true",
                         help="Consolidation SATURATED (standard floods 2 premiums so the gate works)")
     parser.add_argument("--test2-slo", action="store_true",
-                        help="Test 2 SLO: premium light so premium p95<300ms while standard floods")
+                        help="Test 2 SLO shape: premium light so premium p95<300ms while standard floods. "
+                             "Under the default closed-loop mode this is an offered-concurrency shape, NOT an "
+                             "SLO proof; re-run with --arrival-mode poisson (preconditions.json slo_proof_valid) "
+                             "for open-loop evidence.")
     parser.add_argument("--test2-tuned", action="store_true",
                         help="Test 2 tiers with RAISED baseline (pool holds queue-forming point; premium heavier)")
     parser.add_argument("--test2-noisy", action="store_true",
@@ -1540,9 +1828,17 @@ async def main():
     parser.add_argument("--metric-sample-interval-s", type=float, default=0.5,
                         help="EPP, vLLM, and client-concurrency sample cadence in seconds (default 0.5; "
                              "minimum 0.1). Lower values increase metrics-endpoint and harness overhead.")
+    parser.add_argument("--arrival-mode", default="closed_loop", choices=["closed_loop", "poisson"],
+                        help="Traffic driver mode. closed_loop preserves existing target concurrency behavior; "
+                             "poisson drives open-loop arrivals using phase rate_rps values when present.")
+    parser.add_argument("--outstanding-safety-ceiling", type=int, default=10_000,
+                        help="Per-tenant outstanding request ceiling for open-loop runs. Hitting it marks "
+                             "the run invalid for SLO proof in preconditions.json.")
     args = parser.parse_args()
     if args.metric_sample_interval_s < 0.1:
         parser.error("--metric-sample-interval-s must be at least 0.1 seconds")
+    if args.outstanding_safety_ceiling < 1:
+        parser.error("--outstanding-safety-ceiling must be positive")
 
     global TRAFFIC_SCALE
     TRAFFIC_SCALE = args.traffic_scale
@@ -1566,7 +1862,12 @@ async def main():
         "stabilization_repeats": args.stabilization_repeats,
         "warmup_included_in_summaries": False,
         "traffic_seed": args.traffic_seed,
-        "headers": ["x-gateway-inference-objective", "x-gateway-inference-fairness-id"],
+        "headers": [
+            "x-llm-d-inference-objective",
+            "x-llm-d-inference-fairness-id",
+            "x-gateway-inference-objective",
+            "x-gateway-inference-fairness-id",
+        ],
         "objectives": OBJECTIVES,
         "flow_control_mode": os.environ.get("FLOW_CONTROL_MODE", ""),
         "queue_depth_threshold": os.environ.get("QUEUE_DEPTH_THRESHOLD", ""),
@@ -1574,6 +1875,8 @@ async def main():
         "vllm_prefix_caching_declared": args.vllm_prefix_caching,
         "traffic_scale": args.traffic_scale,
         "metric_sample_interval_s": args.metric_sample_interval_s,
+        "arrival_mode": args.arrival_mode,
+        "outstanding_safety_ceiling": args.outstanding_safety_ceiling,
         "harness_version": "v4",
         "peer_center": args.peer_center,
         "a_center": args.a_center,
@@ -1606,6 +1909,8 @@ async def main():
             out_dir,
             args.traffic_seed,
             metric_sample_interval_s=args.metric_sample_interval_s,
+            arrival_mode=args.arrival_mode,
+            outstanding_safety_ceiling=args.outstanding_safety_ceiling,
         )
         (out_dir / "warmup_summary.json").write_text(json.dumps(warmup_summary, indent=2))
         await asyncio.sleep(5)
@@ -1721,6 +2026,7 @@ async def main():
                     run_id, scenario, tenants, duration, args.drain_timeout, prompts,
                     args.output_tokens, token, out_dir, args.traffic_seed,
                     args.steady_state_trim_s, args.metric_sample_interval_s,
+                    args.arrival_mode, args.outstanding_safety_ceiling,
                 )
                 summary["stabilization_repeat"] = repeat
                 stabilization_summaries.append(summary)
@@ -1740,6 +2046,7 @@ async def main():
             run_id, scenario, tenants, duration, args.drain_timeout, prompts,
             args.output_tokens, token, out_dir, args.traffic_seed,
             args.steady_state_trim_s, args.metric_sample_interval_s,
+            args.arrival_mode, args.outstanding_safety_ceiling,
         )
         summary["repeat"] = repeat
         summaries.append(summary)
@@ -1749,11 +2056,12 @@ async def main():
 
     with (out_dir / "summary.csv").open("w", newline="") as f:
         fieldnames = [
-            "run_id", "repeat", "scenario", "tenant", "priority", "objective", "duration_s", "trim_s",
+            "run_id", "repeat", "scenario", "arrival_mode", "tenant", "priority", "objective", "duration_s", "trim_s",
             "total", "n_steady_ttft", "low_n_use_p90", "http_200",
             "http_429", "http_503", "timeouts", "errors", "throughput_rps",
             "ttft_p50_s", "ttft_p90_s", "ttft_p95_s", "ttft_p99_s",
             "latency_p50_s", "latency_p90_s", "latency_p95_s", "latency_p99_s",
+            "tpot_p50_s", "tpot_p90_s", "tpot_p95_s", "tpot_p99_s",
         ]
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
