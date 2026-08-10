@@ -477,7 +477,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
       <div id="haltBanner">saturation at the ceiling — the whole cycle halts</div>
       <div id="evidence" aria-live="polite"></div>
       <div id="playCtl">
-        <div class="simnote">Playground uses simulated dynamics. Evidence pages use measured data-v4 results.</div>
+        <div class="simnote">Playground uses simulated dynamics. Evidence pages use measured benchmark results.</div>
         <div class="kk">Per-tenant load</div>
         <div class="krow"><span class="kd" style="background:var(--brand)"></span>
           <input type="range" min="0" max="100" value="20" data-k="p" name="premium-load" aria-label="premium load"><span class="kv" id="kv_p">20</span></div>
@@ -1398,20 +1398,20 @@ function ebar(label,val,pct,color){
     <span class="ev">${val}</span></div>`;
 }
 const CANON={
-  source:'data-v4/CANONICAL-RESULTS.json',
-  tiers128:{source:'data-v4/tiers-gate-on-300s',
+  source:'benchmark-data/CANONICAL-RESULTS.json',
+  tiers128:{source:'benchmark-data/tiers-gate-on-300s',
     method:'median of per-repeat percentiles, trim_s=40, 3x300s',
     premium:{p95:1117,range:[1056,1211]},standard:{p95:1406,range:[1250,1488]}},
-  batch128:{source:'data-v4/batch-gate-off + batch-gate-on',
+  batch128:{source:'benchmark-data/batch-gate-off + batch-gate-on',
     off:{n429:48224},on:{n429:0}},
-  fairness128:{source:'data-v4/fairness-bigburst-gate-on',
+  fairness128:{source:'benchmark-data/fairness-bigburst-gate-on',
     method:'median of per-tenant per-repeat percentiles, 3x300s; modest same-band effect, not SLO proof',
     tenants:{'tenant a':943,'tenant b':877,'tenant c':893}}
 };
 function fmt(n){return Number(n).toLocaleString();}
 function measuredTitle(t,sim){return `<div class="et"><span class="ebadge${sim?' sim':''}">${sim?'Simulation':'Measured'}</span>${t}</div>`;}
 function sourceLine(source,method){
-  return `<div class="esource"><b>Source</b> ${source}<br><b>Method</b> ${method||'canonical result in data-v4'}</div>`;
+  return `<div class="esource"><b>Source</b> ${source}<br><b>Method</b> ${method||'canonical benchmark result'}</div>`;
 }
 function rangeChip(name,r){
   return `<span class="echip">${name} p95 range <b>${fmt(r[0])}-${fmt(r[1])} ms</b></span>`;
@@ -1621,7 +1621,7 @@ const PAGES=[
     evidence(`${measuredTitle('HTTP 429 rejections · batch flood')}
       <div class="eaxis"><span>${fmt(max)} events</span></div>
       ${ebar('flow control off',fmt(d.off.n429),100,'var(--danger)')}
-      ${sourceLine(d.source,'event totals from canonical data-v4 results')}`);}},
+      ${sourceLine(d.source,'event totals from canonical benchmark results')}`);}},
  {lit:['g-tbatch','a-t3','g-bm10','g-meter'],
   n:'With flow control on, the <b>same offered load</b> produced <b>0 rejections</b>: batch waited in its own band and drained as the pool allowed.',
   run(){setMeter(0.98);setFlow('bm10',0,'batch',18);
@@ -1632,7 +1632,7 @@ const PAGES=[
       ${ebar('flow control on',fmt(d.on.n429),2,'var(--ok)')}
       <div class="echips"><span class="echip">delta <b>${fmt(d.off.n429)} fewer rejections</b></span>
       <span class="echip">same offered load</span></div>
-      ${sourceLine(d.source,'event totals from canonical data-v4 results')}`);}},
+      ${sourceLine(d.source,'event totals from canonical benchmark results')}`);}},
  {lit:['g-bm10'],
   n:'The capacity behind that: each band holds about <b>1 GB</b> of queued requests, and anything queued past the <b>60 s</b> time-to-live (TTL) is released with an error instead of going stale.',
   run(){setFlow('bm10',0,'batch',18);
@@ -1671,7 +1671,7 @@ const PAGES=[
 /* ---- 10 · REPLAY ---- */
 {title:'Scenario replay',group:3,rail:'Replay',steps:[
  {lit:MACHINE,
-  n:'The playground uses simulated dynamics. The evidence pages use measured canonical runs from data-v4.',
+  n:'The playground uses simulated dynamics. The evidence pages use measured canonical runs from the benchmark data.',
   run(){$('#playCtl').classList.add('show');startPlay();}}
 ]}
 ];

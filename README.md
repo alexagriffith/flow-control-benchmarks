@@ -5,7 +5,7 @@ Flow control is the Endpoint Picker's policy layer for multi-tenant inference. W
 This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. Everything ran on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, with automatic prefix caching off so the latencies reflect scheduling rather than a warm cache.
 
 Public display labels and claim boundaries for the run folders live in
-[`data-v4/RUN-METADATA.json`](data-v4/RUN-METADATA.json), so tools can show
+[`benchmark-data/RUN-METADATA.json`](benchmark-data/RUN-METADATA.json), so tools can show
 readable scenario names instead of raw repeat ids.
 
 ## What flow control does, in one screen
@@ -36,7 +36,7 @@ The rest of the configuration follows from making the measurement honest rather 
 | Repeats | 3 counted; 300 s for corrected SLO-sensitive runs | Repeats capture run-to-run variance; SLO-sensitive claims use per-repeat p95 with a min-max range, never pooled repeats |
 | Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |
 
-The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`data-v4/operating-point-sweep`](data-v4/operating-point-sweep).
+The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`benchmark-data/operating-point-sweep`](benchmark-data/operating-point-sweep).
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags each request, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
@@ -62,11 +62,11 @@ An earlier cut pooled all repeats into one percentile and produced a 251 ms tier
 
 <img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT for the corrected 128-token service-tier run is 1117 ms with flow control on; earlier output-length cells are being restated with the same per-repeat method">
 
-Corrected 300 s gate-on data is in [`data-v4/tiers-gate-on-300s`](data-v4/tiers-gate-on-300s). The older 64- and 512-output cells remain in `data-v4/` for provenance, but their pooled output-length ratios are not used as headline SLO evidence until restated with the same per-repeat method.
+Corrected 300 s gate-on data is in [`benchmark-data/tiers-gate-on-300s`](benchmark-data/tiers-gate-on-300s). The older 64- and 512-output cells remain in `benchmark-data/` for provenance, but their pooled output-length ratios are not used as headline SLO evidence until restated with the same per-repeat method.
 
 **Why it matters.** A latency-sensitive product gets preferential admission through a surge it did not cause. That is a necessary part of enforcing tiered service objectives on shared capacity, but not the whole SLO proof by itself.
 
-*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`data-v4/tiers-gate-on-300s`](data-v4/tiers-gate-on-300s).*
+*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`benchmark-data/tiers-gate-on-300s`](benchmark-data/tiers-gate-on-300s).*
 
 ## Batch isolation under surge
 
@@ -91,7 +91,7 @@ Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batc
 
 **Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
-*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`data-v4/batch-gate-on`](data-v4/batch-gate-on) and [`data-v4/batch-gate-off`](data-v4/batch-gate-off).*
+*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`benchmark-data/batch-gate-on`](benchmark-data/batch-gate-on) and [`benchmark-data/batch-gate-off`](benchmark-data/batch-gate-off).*
 
 ## Batch eviction and retry
 
@@ -115,7 +115,7 @@ tested single-replica path.
 
 *Four matched scenarios, three counted 300-second repeats, one H100, prefix
 caching off. Data, configuration, and the visual report are in
-[`data-v4/batch-eviction`](data-v4/batch-eviction).*
+[`benchmark-data/batch-eviction`](benchmark-data/batch-eviction).*
 
 ## Consolidation without giving up latency
 
@@ -137,7 +137,7 @@ caching off. Data, configuration, and the visual report are in
 
 **Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
-*Saturated consolidation run, three counted repeats. Data in [`data-v4/consolidation-gate-on`](data-v4/consolidation-gate-on) and [`data-v4/consolidation-gate-off`](data-v4/consolidation-gate-off).*
+*Saturated consolidation run, three counted repeats. Data in [`benchmark-data/consolidation-gate-on`](benchmark-data/consolidation-gate-on) and [`benchmark-data/consolidation-gate-off`](benchmark-data/consolidation-gate-off).*
 
 ## The boundary: priority acts across tiers, not among equals
 
@@ -170,7 +170,7 @@ What the sweep tells a platform team:
 - **Tightening the cap trades standard's latency for premium's.** At 32, premium is protected and standard waits 12.7 s; at 128 they converge. You pick the point your SLAs demand.
 - **A concurrency cap is a separation control, not a latency-SLO control.** No setting reached premium p95 under 300 ms at this offered load, because a 300 ms objective needs a lower load, not only a tighter cap. Holding an absolute SLO is a load decision, shown next.
 
-*Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`data-v4/upstream-sweep`](data-v4/upstream-sweep).*
+*Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`benchmark-data/upstream-sweep`](benchmark-data/upstream-sweep).*
 
 ## SLO proof tests
 
@@ -184,7 +184,7 @@ The results above show priority admission and batch deferral. To claim that a de
 
 ## Scope
 
-Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms (data in [`data-v4/multi-replica-tiers`](data-v4/multi-replica-tiers)). The multi-replica behavior of the endpoint picker is a separate study.
+Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms (data in [`benchmark-data/multi-replica-tiers`](benchmark-data/multi-replica-tiers)). The multi-replica behavior of the endpoint picker is a separate study.
 
 A verification gap earlier in this campaign sent tenants to pools without priority objectives, so the gate saw every request at priority 0 and the tier results collapsed to no effect. Every counted run here was re-run with the priority resolution verified in the flow-control queue metric before the data was kept. The invalidated runs are archived, not deleted, and the correction is recorded in the run log.
 

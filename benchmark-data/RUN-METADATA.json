@@ -1,6 +1,6 @@
 {
   "schema": "flow-control-run-metadata-v1",
-  "purpose": "Public-safe display labels and claim boundaries for data-v4 runs. Use these labels in visualizers instead of raw folder names or internal run ids.",
+  "purpose": "Public-safe display labels and claim boundaries for runs in benchmark-data. Use these labels in visualizers instead of raw folder names or internal run ids.",
   "units": {
     "ttft": "milliseconds",
     "latency": "milliseconds",

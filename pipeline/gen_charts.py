@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate real-data SVG charts from the data-v4 benchmark CSVs.
+"""Generate real-data SVG charts from the CSVs in benchmark-data.
 
 Reads the gate-on / gate-off run pairs and writes the headline charts to assets/.
 The corrected SLO-sensitive service-tier result uses per-repeat percentiles from
 the 300 s backfill, not pooled repeats.
 
-Verified against data-v4/CANONICAL-RESULTS.json. Lead with the principle
+Verified against benchmark-data/CANONICAL-RESULTS.json. Lead with the principle
 (priority admission, zero rejections, premium ahead of standard), not a fake
 absolute SLO.
 """
@@ -13,7 +13,7 @@ import csv, glob, os
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "data-v4")
+DATA = os.path.join(ROOT, "benchmark-data")
 OUT = os.path.join(ROOT, "assets")
 os.makedirs(OUT, exist_ok=True)
 
@@ -25,7 +25,7 @@ FONT = "-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"
 
 WARMUP_START = 20.0  # seconds; skip warm-up phase, matches canonical
 
-# Corrected 2026-07-30 service-tier backfill. The older data-v4/tiers-gate-on
+# Corrected 2026-07-30 service-tier backfill. The older benchmark-data/tiers-gate-on
 # directory is kept for provenance, but its pooled 251 ms p95 is retired.
 TIERS_128_CORRECTED = {
     "premium": {"p50": 374, "p90": 914, "p95": 1117, "range": (1056, 1211)},
@@ -118,7 +118,7 @@ def chart_hero():
                         "across the four scenarios")
     s += txt(20, 40, "Flow control, off vs on", 24, 800, INK, spacing="-0.5")
     s += txt(20, 62, "Premium p95 time to first token on one GPU, GPT-OSS 20B behind the llm-d "
-                     "inference gateway. Every number is measured from data-v4.", 13, 400, MUTED)
+                     "inference gateway. Every number is measured from the benchmark data.", 13, 400, MUTED)
 
     # four cards
     cards = [
