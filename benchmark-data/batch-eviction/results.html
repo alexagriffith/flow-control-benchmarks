@@ -106,7 +106,7 @@
     }
     .decision-grid {
       display: grid;
-      grid-template-columns: minmax(260px, 1.15fr) repeat(3, minmax(150px, .65fr));
+      grid-template-columns: minmax(320px, 1.2fr) repeat(2, minmax(210px, .8fr));
       min-height: 190px;
     }
     .decision-copy {
@@ -643,18 +643,13 @@
           <p>Batch workloads can use shared GPU capacity while flow control returns capacity to realtime traffic when demand arrives.</p>
         </div>
         <div class="decision-stat">
-          <strong>Near reference</strong>
-          <span>Realtime p95 TTFT with batch eviction and retry</span>
+          <strong>Realtime latency protected</strong>
+          <span>p95 TTFT stayed close to the realtime-only result</span>
           <small>348 ms median; 324-472 ms across repeats</small>
         </div>
         <div class="decision-stat">
           <strong>Reliable batch recovery</strong>
           <span>Evicted requests were retried, and each batch job produced one final result</span>
-        </div>
-        <div class="decision-stat">
-          <strong>Batch continued</strong>
-          <span>Protected batch jobs completed</span>
-          <small>5,376 jobs across three repeats</small>
         </div>
       </div>
     </section>
