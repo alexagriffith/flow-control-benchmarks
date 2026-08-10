@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate real-data SVG charts from the CSVs in benchmark-data.
+"""Generate real-data SVG charts from the CSVs in core-flow-control.
 
 Reads the gate-on / gate-off run pairs and writes the headline charts to assets/.
 The corrected SLO-sensitive service-tier result uses per-repeat percentiles from
@@ -13,7 +13,7 @@ import csv, glob, os
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "benchmark-data")
+DATA = os.path.join(ROOT, "benchmark-data", "core-flow-control")
 OUT = os.path.join(ROOT, "assets")
 os.makedirs(OUT, exist_ok=True)
 
@@ -25,7 +25,7 @@ FONT = "-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"
 
 WARMUP_START = 20.0  # seconds; skip warm-up phase, matches canonical
 
-# Corrected 2026-07-30 service-tier backfill. The older benchmark-data/tiers-gate-on
+# Corrected 2026-07-30 service-tier backfill. The older benchmark-data/core-flow-control/tiers-gate-on
 # directory is kept for provenance, but its pooled 251 ms p95 is retired.
 TIERS_128_CORRECTED = {
     "premium": {"p50": 374, "p90": 914, "p95": 1117, "range": (1056, 1211)},

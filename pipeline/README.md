@@ -4,7 +4,7 @@
 
 Automatic prefix caching is off for every counted run, so the latencies reflect scheduling rather than a warm cache. Each prompt draws a unique head and body from a domain word pool, so no two prompts share more than a short system preamble.
 
-`gen_charts.py` draws every chart in `assets/` from the run CSVs in `benchmark-data/`. Point its path constants at the data root and run it. Same data in, identical charts out.
+`gen_charts.py` draws every chart in `assets/` from the run CSVs in `benchmark-data/core-flow-control/`. Point its path constants at the data root and run it. Same data in, identical charts out.
 
 Use `benchmark-data/RUN-METADATA.json` for public display names, scenario labels, and
 claim boundaries. Visualizers should prefer those labels over raw repeat ids

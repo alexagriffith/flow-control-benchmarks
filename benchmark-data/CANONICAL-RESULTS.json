@@ -15,7 +15,7 @@
             "p95": 1778
           }
         },
-        "source": "benchmark-data/tiers-gate-off",
+        "source": "benchmark-data/core-flow-control/tiers-gate-off",
         "method": "legacy 120s gate-off control; keep for provenance, do not compare as SLO proof until rerun with 300s/open-loop protocol"
       },
       "on": {
@@ -40,7 +40,7 @@
             ]
           }
         },
-        "source": "benchmark-data/tiers-gate-on-300s",
+        "source": "benchmark-data/core-flow-control/tiers-gate-on-300s",
         "method": "median of per-repeat percentiles, trim_s=40, 3x300s; replaces pooled 251 ms result"
       }
     },
@@ -292,7 +292,7 @@
             "p95": 882
           }
         },
-        "source": "benchmark-data/fairness-bigburst-gate-on",
+        "source": "benchmark-data/core-flow-control/fairness-bigburst-gate-on",
         "method": "median of per-tenant per-repeat percentiles, 3x300s; modest same-band effect, not SLO proof",
         "tenants": {
           "premium-tenant-a": {

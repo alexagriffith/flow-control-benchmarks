@@ -1399,12 +1399,12 @@ function ebar(label,val,pct,color){
 }
 const CANON={
   source:'benchmark-data/CANONICAL-RESULTS.json',
-  tiers128:{source:'benchmark-data/tiers-gate-on-300s',
+  tiers128:{source:'benchmark-data/core-flow-control/tiers-gate-on-300s',
     method:'median of per-repeat percentiles, trim_s=40, 3x300s',
     premium:{p95:1117,range:[1056,1211]},standard:{p95:1406,range:[1250,1488]}},
-  batch128:{source:'benchmark-data/batch-gate-off + batch-gate-on',
+  batch128:{source:'benchmark-data/core-flow-control/batch-gate-off + batch-gate-on',
     off:{n429:48224},on:{n429:0}},
-  fairness128:{source:'benchmark-data/fairness-bigburst-gate-on',
+  fairness128:{source:'benchmark-data/core-flow-control/fairness-bigburst-gate-on',
     method:'median of per-tenant per-repeat percentiles, 3x300s; modest same-band effect, not SLO proof',
     tenants:{'tenant a':943,'tenant b':877,'tenant c':893}}
 };
