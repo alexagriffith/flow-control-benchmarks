@@ -1,0 +1,105 @@
+{
+  "schema": "batch-eviction-benchmark-v1",
+  "date": "2026-08-09",
+  "repeats": 3,
+  "run_duration_seconds": 300,
+  "hardware": {
+    "replicas": 1,
+    "gpu": "NVIDIA H100"
+  },
+  "model_service": {
+    "model": "GPT-OSS 20B",
+    "runtime": "Red Hat AI 3.4 vLLM",
+    "max_num_seqs": 96,
+    "max_num_batched_tokens": 8192,
+    "prefix_cache": "disabled"
+  },
+  "endpoint_picker": {
+    "flow_control_gate": "enabled",
+    "saturation_detector": "concurrency detector",
+    "concurrency_mode": "requests",
+    "protected_max_concurrency": 48,
+    "headroom": 0.0,
+    "priority_holdback": {
+      "shape": "linear",
+      "domain": "rank",
+      "min_ceiling": 0.5,
+      "max_ceiling": 1.0
+    },
+    "queue_limits": {
+      "max_requests": 512,
+      "max_bytes": "4 GiB"
+    },
+    "priority_bands": [
+      {"priority": 100, "max_requests": 128, "max_bytes": "1 GiB"},
+      {"priority": 0, "max_requests": 128, "max_bytes": "1 GiB"},
+      {"priority": -10, "max_requests": 256, "max_bytes": "2 GiB"}
+    ],
+    "fairness": "round robin within each priority band",
+    "ordering": "first come, first served within each tenant queue"
+  },
+  "traffic": {
+    "realtime": {
+      "arrival_process": "seeded open-loop Poisson with a sinusoidally varying rate",
+      "mean_requests_per_second": 4.0,
+      "sinusoidal_amplitude": 0.65,
+      "period_seconds": 90,
+      "initial_burst_requests": 32,
+      "output_tokens": 32,
+      "prompt_repeat": 384
+    },
+    "batch": {
+      "starts_before_realtime_seconds": 60,
+      "async_backlog_jobs": 64,
+      "output_tokens": 512,
+      "prompt_repeat": 256,
+      "deadline_seconds": 900,
+      "drain_timeout_seconds": 900
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Realtime only",
+      "batch": "off",
+      "max_concurrency": 48,
+      "reserved_capacity": true,
+      "batch_eviction": false
+    },
+    {
+      "name": "Realtime with batch and no protection",
+      "batch": "starts first",
+      "max_concurrency": 1000000,
+      "reserved_capacity": false,
+      "batch_eviction": false
+    },
+    {
+      "name": "Realtime with reserved capacity",
+      "batch": "starts first",
+      "max_concurrency": 48,
+      "reserved_capacity": true,
+      "batch_eviction": false
+    },
+    {
+      "name": "Realtime with reserved capacity, batch eviction, and retry",
+      "batch": "starts first",
+      "max_concurrency": 48,
+      "reserved_capacity": true,
+      "batch_eviction": true
+    }
+  ],
+  "repeat_order": [
+    ["Realtime only", "Realtime with batch and no protection", "Realtime with reserved capacity", "Realtime with reserved capacity, batch eviction, and retry"],
+    ["Realtime with reserved capacity, batch eviction, and retry", "Realtime with reserved capacity", "Realtime with batch and no protection", "Realtime only"],
+    ["Realtime with batch and no protection", "Realtime with reserved capacity, batch eviction, and retry", "Realtime only", "Realtime with reserved capacity"]
+  ],
+  "evidence_gate": {
+    "flow_control_engaged_definition": "Endpoint Picker policy queue size greater than zero before first token",
+    "required_metrics": [
+      "realtime TTFT, TPOT, inter-token latency, offered rate, served rate, and status",
+      "Endpoint Picker queue, saturation, eviction, and request identifiers",
+      "vLLM running, waiting, KV cache, preemption, prompt tokens, and generation tokens",
+      "Async Processor retries, completions, failures, duplicates, deadlines, and queue drain",
+      "prefix-cache queries and hits"
+    ]
+  }
+}

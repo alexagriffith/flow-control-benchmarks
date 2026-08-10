@@ -47,6 +47,16 @@
       "evidence_label": "batch control",
       "claim_boundary": "Shows rejection behavior without the gate."
     },
+    "batch-eviction": {
+      "display_name": "Batch eviction and retry",
+      "short_name": "batch eviction",
+      "scenario": "batch recovery",
+      "flow_control": "on",
+      "detector": "concurrency detector with priority holdback",
+      "traffic_shape": "batch starts first, then realtime begins with a burst and continues as a seeded open-loop Poisson process with a sinusoidally varying rate",
+      "evidence_label": "single-replica batch eviction and retry",
+      "claim_boundary": "Shows reserved-capacity latency and safe batch recovery in the tested single-replica path; it does not prove multi-replica coordination or an absolute SLO."
+    },
     "consolidation-gate-on": {
       "display_name": "Consolidated tenants, flow control on",
       "short_name": "consolidation gate on",

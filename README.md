@@ -93,6 +93,30 @@ Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batc
 
 *Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`data-v4/batch-gate-on`](data-v4/batch-gate-on) and [`data-v4/batch-gate-off`](data-v4/batch-gate-off).*
 
+## Batch eviction and retry
+
+**What it proves.** Reserved capacity can keep realtime latency near its
+no-batch reference while batch is running. Eviction adds a recovery path for
+batch requests that already occupy vLLM.
+
+**What we saw.** The median realtime p95 TTFT was 342 ms with realtime traffic
+alone and 561 ms when batch could use all request capacity. Reserved capacity
+produced 341 ms. Reserved capacity with batch eviction and retry produced
+348 ms, with a 324-472 ms range across three repeats. All 38 evicted batch
+requests were retried and completed. The eviction-and-retry runs completed 5,376 batch
+jobs with zero duplicate results.
+
+<img src="assets/batch-eviction.svg" width="100%" alt="Realtime p95 TTFT across four matched scenarios: 342 milliseconds with realtime only, 561 milliseconds with batch and no protection, 341 milliseconds with reserved capacity, and 348 milliseconds with batch eviction and retry. All 38 evicted requests were retried and completed with zero duplicate results.">
+
+**Why it matters.** Batch can use spare GPU capacity while the platform reserves
+access for realtime work. When selected batch work is evicted, the Async
+Processor can retry it to completion without producing duplicate results in the
+tested single-replica path.
+
+*Four matched scenarios, three counted 300-second repeats, one H100, prefix
+caching off. Data, configuration, and the visual report are in
+[`data-v4/batch-eviction`](data-v4/batch-eviction).*
+
 ## Consolidation without giving up latency
 
 **What it proves.** Two premium tenants share one GPU, and when a standard tenant floods the pool, flow control keeps the premium tenants ahead of the flood.
