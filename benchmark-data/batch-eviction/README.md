@@ -1,8 +1,8 @@
 # Batch eviction and retry
 
-This benchmark measures whether realtime latency remains close to its no-batch
-reference when batch work already occupies vLLM, and whether evicted batch work
-can complete later without duplicate results.
+This benchmark tests whether flow control protects higher-priority realtime p95
+TTFT while lower-priority batch workloads share the same GPU. When realtime
+demand needed capacity, batch work was evicted, retried, and completed later.
 
 ## What the benchmark showed
 

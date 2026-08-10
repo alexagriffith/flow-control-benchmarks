@@ -97,24 +97,6 @@
       font-size: clamp(17px, 2.2vw, 22px);
       line-height: 1.35;
     }
-    .method-strip {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .method-strip li {
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      background: var(--paper);
-      padding: 6px 9px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 650;
-    }
-
     .decision-band {
       margin: 4px 0 0;
       border-top: 4px solid var(--teal);
@@ -651,37 +633,28 @@
   <main>
     <header class="hero" id="result">
       <h1>Flow control batch eviction benchmark</h1>
-      <p class="question">Can batch use spare GPU capacity while realtime traffic keeps predictable access to the model?</p>
-      <ul class="method-strip" aria-label="Fixed benchmark configuration">
-        <li>1 NVIDIA H100 GPU</li>
-        <li>GPT-OSS 20B</li>
-        <li>Red Hat AI 3.4 vLLM</li>
-        <li>Batch eviction Endpoint Picker build</li>
-        <li>Prefix cache off</li>
-        <li>3 matched repeats</li>
-      </ul>
+      <p class="question">Can flow control protect realtime p95 TTFT while batch workloads share the same GPU?</p>
     </header>
 
     <section class="decision-band" aria-labelledby="decision-title">
       <div class="decision-grid">
         <div class="decision-copy">
-          <h2 id="decision-title">Reserved capacity kept median realtime latency near its no-batch reference. Eviction safely recovered batch work.</h2>
-          <p>All 38 evicted batch requests were retried and completed with zero duplicate results in the tested single-replica setup.</p>
+          <h2 id="decision-title">Flow control protects higher-priority realtime p95 TTFT through reserved capacity and batch eviction. When realtime demand needs capacity, lower-priority batch work is evicted, retried, and completed later.</h2>
+          <p>Batch workloads can use shared GPU capacity while flow control returns capacity to realtime traffic when demand arrives.</p>
         </div>
         <div class="decision-stat">
-          <strong>Protected median</strong>
-          <span>Realtime p95 time to first token with batch eviction and retry</span>
+          <strong>Near reference</strong>
+          <span>Realtime p95 TTFT with batch eviction and retry</span>
           <small>348 ms median; 324-472 ms across repeats</small>
         </div>
         <div class="decision-stat">
-          <strong>Safe retry</strong>
-          <span>Every evicted batch request completed</span>
-          <small>38 of 38 retries completed</small>
+          <strong>Reliable batch recovery</strong>
+          <span>Evicted requests were retried, and each batch job produced one final result</span>
         </div>
         <div class="decision-stat">
-          <strong>No duplicates</strong>
-          <span>Batch work completed once</span>
-          <small>5,376 jobs in the eviction-and-retry runs</small>
+          <strong>Batch continued</strong>
+          <span>Protected batch jobs completed</span>
+          <small>5,376 jobs across three repeats</small>
         </div>
       </div>
     </section>
