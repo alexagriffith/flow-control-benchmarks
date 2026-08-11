@@ -1,0 +1,5 @@
+run_name,tenant,priority,offered_requests,http_200_requests,non_200_requests,served_requests_per_second,p50_ttft_ms,p95_ttft_ms,p99_ttft_ms,p95_tpot_ms_per_token,p95_e2e_latency_ms
+30-minute mixed-workload stability run,batch-long-context,-10,723,723,0,0.401667,585.450888,3309.07917,6578.26376,77.704854,9946.503639
+30-minute mixed-workload stability run,agentic,50,1800,1800,0,0.998333,289.811611,2080.036879,4381.287575,53.917996,27607.189417
+30-minute mixed-workload stability run,realtime-chat,100,12047,12047,0,6.691111,180.094719,1156.717062,2055.589437,64.449867,8250.607014
+30-minute mixed-workload stability run,standard-long-context,0,319,319,0,0.177222,721.629858,3320.846796,7393.129349,76.918669,9845.981359

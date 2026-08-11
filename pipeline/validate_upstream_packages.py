@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "benchmark-data" / "upstream-flow-control-v0.9.0"
 SCALING = DATA / "multi-replica-scaling"
+STABILITY = DATA / "long-stability"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
@@ -180,6 +181,136 @@ def validate_scaling(errors: list[str]) -> None:
     )
 
 
+def validate_stability(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+        "window-summary.csv",
+    }
+    found = {path.name for path in STABILITY.iterdir() if path.is_file()}
+    require(required <= found, "long-stability files missing", errors)
+
+    summary = read_csv(STABILITY / "summary.csv")
+    windows = read_csv(STABILITY / "window-summary.csv")
+    requests = read_csv(STABILITY / "request-results.csv")
+    traffic = read_csv(STABILITY / "traffic-samples.csv")
+    metrics = read_csv(STABILITY / "system-metrics.csv")
+    evidence = read_csv(STABILITY / "run-evidence.csv")
+    analysis = json.loads((STABILITY / "analysis.json").read_text())
+    config = json.loads((STABILITY / "run-config.json").read_text())
+
+    require(len(summary) == 4, "expected four workload summaries", errors)
+    require(len(requests) == 14889, "long-stability request row count changed", errors)
+    require(len(evidence) == 1, "expected one long-stability evidence row", errors)
+    require(len(traffic) > 0 and len(metrics) > 0, "stability samples are empty", errors)
+    require(
+        all(row["http_status"] == "200" for row in requests),
+        "long-stability request failed",
+        errors,
+    )
+    require(
+        sum(int(row["offered_requests"]) for row in summary) == 14889
+        and all(row["non_200_requests"] == "0" for row in summary),
+        "long-stability summaries do not match request evidence",
+        errors,
+    )
+
+    required_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+        "flow_control_engaged",
+    )
+    require(
+        all(is_true(evidence[0][field]) for field in required_gates),
+        "a long-stability evidence gate failed",
+        errors,
+    )
+    require(
+        evidence[0]["prefix_cache_queries"] == "0.0"
+        and evidence[0]["prefix_cache_hits"] == "0.0"
+        and evidence[0]["vllm_preemptions"] == "0.0"
+        and not is_true(evidence[0]["endpoint_picker_restarted"]),
+        "long-stability cache, preemption, or restart evidence changed",
+        errors,
+    )
+
+    premium_windows = {
+        row["window"]: round(float(row["p95_ttft_ms"]), 3)
+        for row in windows
+        if row["tenant"] == "realtime-chat"
+    }
+    expected_premium = {
+        "baseline": 299.295,
+        "surge-1": 1760.256,
+        "recovery-1": 127.183,
+        "surge-2": 1227.273,
+        "recovery-2": 279.2,
+        "final": 289.845,
+    }
+    require(
+        premium_windows == expected_premium,
+        "premium stability-window TTFT values changed",
+        errors,
+    )
+    require(
+        analysis["data_publishable"]
+        and analysis["stability_pass"]
+        and analysis["queue_drained"]
+        and analysis["flow_control_engaged_in_both_surges"],
+        "long-stability decision changed",
+        errors,
+    )
+    require(
+        analysis["requests"] == 14889
+        and analysis["http_statuses"] == {"200": 14889}
+        and analysis["preemptions"] == 0.0
+        and not analysis["epp_restarted"],
+        "long-stability result totals changed",
+        errors,
+    )
+
+    required_metrics = {
+        "endpoint_picker_inflight_requests",
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+    }
+    require(
+        required_metrics <= {row["metric"] for row in metrics},
+        "long-stability system metrics are incomplete",
+        errors,
+    )
+    require(
+        config["topology"] == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas": 1,
+            "gpus_per_model_replica": 1,
+        }
+        and config["endpoint_picker"]["detector"] == "request-concurrency"
+        and config["endpoint_picker"]["max_concurrency"] == 128
+        and config["endpoint_picker"]["headroom"] == 0.10
+        and config["model_service"]["prefix_cache"] == "disabled",
+        "long-stability configuration changed",
+        errors,
+    )
+
+
 def scan_sensitive_text(errors: list[str]) -> None:
     for path in DATA.rglob("*"):
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
@@ -193,6 +324,7 @@ def scan_sensitive_text(errors: list[str]) -> None:
 def main() -> int:
     errors: list[str] = []
     validate_scaling(errors)
+    validate_stability(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -201,6 +333,7 @@ def main() -> int:
         return 1
     print("Stable-upstream promotion validation passed.")
     print("- Model pool scaling: 9 runs, 24,462 request rows")
+    print("- Long stability: 1 run, 14,889 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

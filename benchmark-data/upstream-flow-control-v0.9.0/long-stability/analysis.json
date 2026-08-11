@@ -1,0 +1,69 @@
+{
+  "data_publishable": true,
+  "stability_pass": true,
+  "premium_p95_ttft_ms": {
+    "baseline": 299.295,
+    "surge-1": 1760.256,
+    "recovery-1": 127.183,
+    "surge-2": 1227.273,
+    "recovery-2": 279.2,
+    "final": 289.845
+  },
+  "premium_p99_ttft_ms": {
+    "baseline": 596.29,
+    "surge-1": 2667.828,
+    "recovery-1": 346.052,
+    "surge-2": 1926.864,
+    "recovery-2": 455.506,
+    "final": 393.685
+  },
+  "second_surge_p95_change_pct": -30.28,
+  "premium_surge_p95_ceiling_ms": 3000,
+  "queue_drained": true,
+  "flow_control_engaged_in_both_surges": true,
+  "queue_by_window": {
+    "baseline": {
+      "max": 0.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.0
+    },
+    "surge-1": {
+      "max": 39.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.3875
+    },
+    "recovery-1": {
+      "max": 8.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.0667
+    },
+    "surge-2": {
+      "max": 27.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.2708
+    },
+    "recovery-2": {
+      "max": 41.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.1444
+    },
+    "final": {
+      "max": 0.0,
+      "median": 0.0,
+      "active_sample_fraction": 0.0
+    }
+  },
+  "requests": 14889,
+  "http_statuses": {
+    "200": 14889
+  },
+  "max_vllm_waiting": 29.0,
+  "max_kv_cache_pct": 23.752,
+  "preemptions": 0.0,
+  "epp_restarted": false,
+  "schema": "stable-upstream-long-stability-analysis-v1",
+  "run_name": "30-minute mixed-workload stability run",
+  "business_question": "Does the selected priority-protection configuration recover after repeated production-shaped surges?",
+  "answer": "Flow control engaged during both surges, every request completed, and the policy queue returned to zero afterward.",
+  "claim_boundary": "This is one 30-minute, single-model, cache-off run. It supports recovery after repeated surges but does not promise a fixed TTFT for every load."
+}
