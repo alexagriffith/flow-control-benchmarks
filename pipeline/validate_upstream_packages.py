@@ -13,6 +13,7 @@ from pathlib import Path
 from validate_long_context_package import validate_long_context_package
 from validate_engine_configuration_package import validate_engine_configuration_package
 from validate_utilization_detector_package import validate_utilization_detector_package
+from validate_admission_detector_package import validate_admission_detector_package
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -929,6 +930,7 @@ def main() -> int:
     validate_long_context_package(errors, ROOT)
     validate_engine_configuration_package(errors, ROOT)
     validate_utilization_detector_package(errors, ROOT)
+    validate_admission_detector_package(errors, ROOT)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -945,6 +947,7 @@ def main() -> int:
     print("- Long-context admission: 16 runs, 36,906 request rows")
     print("- Engine configuration: 25 runs, 179,278 request rows")
     print("- Utilization detector calibration: 23 runs, 78,674 request rows")
+    print("- Request and token admission: 20 runs, 112,165 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

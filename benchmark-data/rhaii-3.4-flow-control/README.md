@@ -10,6 +10,6 @@ H100, and prefix caching off. Each run directory includes its benchmark
 configuration and measured output.
 
 The separately installed upstream concurrency detector is documented in
-[`../upstream-flow-control-v0.9.0/concurrency-detector-tuning/`](../upstream-flow-control-v0.9.0/concurrency-detector-tuning/).
+[`../upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/`](../upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/).
 Changing both the image and detector means those results do not isolate an
 image-version difference.

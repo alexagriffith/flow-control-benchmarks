@@ -1,0 +1,52 @@
+{
+  "experiment": "concurrency-detectors",
+  "request_count_medians": {
+    "128": {
+      "runs": 3,
+      "throughput_rps": 48.211111,
+      "steady_throughput_rps": 49.633333,
+      "p95_ttft_ms": 2075.835084,
+      "p99_ttft_ms": 2547.533542,
+      "p95_tpot_ms_per_token": 21.17596
+    },
+    "160": {
+      "runs": 3,
+      "throughput_rps": 49.183333,
+      "steady_throughput_rps": 51.133333,
+      "p95_ttft_ms": 2438.810792,
+      "p99_ttft_ms": 3090.735792,
+      "p95_tpot_ms_per_token": 20.155998
+    }
+  },
+  "mixed_size_medians": {
+    "request_count_128": {
+      "runs": 3,
+      "total_steady_throughput_rps": 18.808696,
+      "p95_ttft_ms_by_request_size": {
+        "short request": 8418.679583,
+        "medium request": 5658.528833,
+        "long request": 4163.141875
+      }
+    },
+    "input_token_1.2x": {
+      "runs": 3,
+      "total_steady_throughput_rps": 21.4,
+      "p95_ttft_ms_by_request_size": {
+        "short request": 6620.738333,
+        "medium request": 5213.166417,
+        "long request": 6352.499417
+      }
+    },
+    "input_plus_output_estimate": {
+      "runs": 1,
+      "total_steady_throughput_rps": 6.782609,
+      "p95_ttft_ms_by_request_size": {
+        "short request": 41909.050375,
+        "medium request": 27951.616875,
+        "long request": 13961.544084
+      }
+    }
+  },
+  "decision": "Use request-count 128 as the default. Use exact input-token admission when request-size variability requires size-aware control. Do not advance the fixed-output estimator.",
+  "claim_boundary": "Closed-loop detector calibration selects settings. Production behavior is tested separately with open-loop traffic."
+}

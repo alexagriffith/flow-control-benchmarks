@@ -170,7 +170,7 @@ What the sweep tells a platform team:
 - **Tightening the cap trades standard's latency for premium's.** At 32, premium is protected and standard waits 12.7 s; at 128 they converge. You pick the point your SLAs demand.
 - **A concurrency cap is a separation control, not a latency-SLO control.** No setting reached premium p95 under 300 ms at this offered load, because a 300 ms objective needs a lower load, not only a tighter cap. Holding an absolute SLO is a load decision, shown next.
 
-*Endpoint Picker v0.9.0 concurrency-detector tuning, with load matched across the cap values and premium resolved to priority 100. The run metrics record build commit `5f4e762f`. This compares cap settings within v0.9.0; it does not compare v0.9.0 with RHAII 3.4. Data in [`benchmark-data/upstream-flow-control-v0.9.0/concurrency-detector-tuning`](benchmark-data/upstream-flow-control-v0.9.0/concurrency-detector-tuning).*
+*Endpoint Picker v0.9.0 request-concurrency tuning, with load matched across the cap values and premium resolved to priority 100. The run metrics record build commit `5f4e762f`. This compares cap settings within v0.9.0; it does not compare v0.9.0 with RHAII 3.4. Data in [`benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning`](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning).*
 
 ## SLO proof tests
 
