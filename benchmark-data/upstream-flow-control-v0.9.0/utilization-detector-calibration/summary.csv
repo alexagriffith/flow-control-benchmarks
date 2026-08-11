@@ -1,0 +1,24 @@
+run_name,sweep,setting,value,repeat,evidence_role,arrival_mode,requests,http_200,http_429,timeouts,errors,throughput_rps,steady_throughput_rps,p95_ttft_ms,p99_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,peak_policy_queue_requests,peak_pool_saturation_ratio,queued_requests
+queue depth 1 - repeat 1,queue-depth detector,queue depth,1.0,1,calibration point,closed_loop,8331,8331,0,0,0,45.216667,47.358333,1825.446459,2158.537291,4422.295834,22.91143,62.0,64.0,8331.0
+queue depth 2 - repeat 1,queue-depth detector,queue depth,2.0,1,calibration point,closed_loop,8389,8389,0,0,0,45.538889,47.425,1805.500542,2047.768958,4342.847167,21.042884,62.0,32.0,8389.0
+queue depth 4 - repeat 1,queue-depth detector,queue depth,4.0,1,calibration point,closed_loop,7948,7948,0,0,0,43.088889,44.9,1829.342875,2059.889333,4648.4215,24.066509,59.0,16.0,7948.0
+queue depth 5 - repeat 1,queue-depth detector,queue depth,5.0,1,matched boundary,closed_loop,8426,8426,0,0,0,45.75,46.783333,1628.920875,1819.331375,4202.545584,21.420569,59.0,12.8,8426.0
+queue depth 5 - repeat 2,queue-depth detector,queue depth,5.0,2,matched boundary,closed_loop,7701,7701,0,0,0,41.716667,47.766667,1921.291416,2424.019667,4634.573708,23.966596,58.0,12.8,7701.0
+queue depth 5 - repeat 3,queue-depth detector,queue depth,5.0,3,matched boundary,closed_loop,8530,8530,0,0,0,46.322222,47.6,1863.287667,2142.009417,4369.277417,21.138247,59.0,12.6,8530.0
+queue depth 8 - repeat 1,queue-depth detector,queue depth,8.0,1,matched boundary,closed_loop,8349,8349,0,0,0,45.316667,46.816667,1554.4925,1627.754,4157.498667,20.929388,56.0,7.75,8349.0
+queue depth 8 - repeat 2,queue-depth detector,queue depth,8.0,2,matched boundary,closed_loop,8618,8618,0,0,0,46.811111,48.858333,2031.258958,2231.073667,4465.260167,20.438554,56.0,7.875,8618.0
+queue depth 8 - repeat 3,queue-depth detector,queue depth,8.0,3,matched boundary,closed_loop,8139,8139,0,0,0,44.172222,45.333333,1607.462917,1864.029666,4261.325458,21.997785,55.0,8.0,8139.0
+flow control off 0 - repeat 1,KV-cache detector,flow control off,0,1,matched control,closed_loop,293,293,0,0,0,1.094444,1.094444,16938.384917,17613.521917,64350.953417,186.159993,0.0,0.0,0.0
+flow control off 0 - repeat 2,KV-cache detector,flow control off,0,2,matched control,closed_loop,296,296,0,0,0,1.111111,1.111111,17477.54675,18678.5785,64682.539667,185.987657,0.0,0.0,0.0
+flow control off 0 - repeat 3,KV-cache detector,flow control off,0,3,matched control,closed_loop,296,296,0,0,0,1.111111,1.111111,16288.223542,16408.787292,63639.965375,185.809386,0.0,0.0,0.0
+KV threshold 0.5 - repeat 1,KV-cache detector,KV threshold,0.5,1,calibration point,closed_loop,326,326,0,0,0,1.277778,1.016667,36813.994125,37209.983416,75166.286375,179.600869,51.0,1.74398,326.0
+KV threshold 0.6 - repeat 1,KV-cache detector,KV threshold,0.6,1,calibration point,closed_loop,294,294,0,0,0,1.1,0.841667,39999.36325,40233.202375,68378.243208,180.427507,33.0,1.452893,294.0
+KV threshold 0.7 - repeat 1,KV-cache detector,KV threshold,0.7,1,calibration point,closed_loop,293,293,0,0,0,1.094444,0.866667,25813.681875,26506.643916,69092.873917,182.187318,34.0,1.243811,293.0
+KV threshold 0.75 - repeat 1,KV-cache detector,KV threshold,0.75,1,matched boundary,closed_loop,308,308,0,0,0,1.177778,0.916667,24351.084125,24415.269458,63961.389542,183.082368,28.0,1.161871,308.0
+KV threshold 0.75 - repeat 2,KV-cache detector,KV threshold,0.75,2,matched boundary,closed_loop,315,315,0,0,0,1.216667,1.058333,28540.358875,28724.332875,63696.250042,182.96858,29.0,1.16023,315.0
+KV threshold 0.75 - repeat 3,KV-cache detector,KV threshold,0.75,3,matched boundary,closed_loop,315,315,0,0,0,1.216667,1.0,29787.201542,29907.876167,65374.639084,181.662292,29.0,1.161316,315.0
+KV threshold 0.8 - repeat 1,KV-cache detector,KV threshold,0.8,1,matched boundary,closed_loop,309,309,0,0,0,1.183333,0.975,24895.618083,24980.52775,63436.555375,183.992658,27.0,1.087781,309.0
+KV threshold 0.8 - repeat 2,KV-cache detector,KV threshold,0.8,2,matched boundary,closed_loop,304,304,0,0,0,1.155556,0.866667,20744.978958,20988.952291,63062.783875,183.477533,23.0,1.088668,304.0
+KV threshold 0.8 - repeat 3,KV-cache detector,KV threshold,0.8,3,matched boundary,closed_loop,302,302,0,0,0,1.144444,0.858333,21559.096292,22409.380292,64360.248125,183.828462,23.0,1.088522,302.0
+KV threshold 0.9 - repeat 1,KV-cache detector,KV threshold,0.9,1,calibration point,closed_loop,296,296,0,0,0,1.111111,0.833333,16014.159292,17050.943416,63203.377541,186.452839,0.0,0.966945,296.0
+KV threshold 1 - repeat 1,KV-cache detector,KV threshold,1.0,1,calibration point,closed_loop,296,296,0,0,0,1.111111,0.85,16576.076709,18074.952208,64347.720459,186.241126,0.0,0.870804,296.0

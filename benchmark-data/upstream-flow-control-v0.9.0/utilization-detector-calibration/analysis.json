@@ -1,0 +1,49 @@
+{
+  "experiment": "utilization-detectors",
+  "queue_depth_medians": {
+    "5": {
+      "runs": 3,
+      "throughput_rps": 45.75,
+      "steady_throughput_rps": 47.6,
+      "p95_ttft_ms": 1863.287667,
+      "p99_ttft_ms": 2142.009417,
+      "p95_tpot_ms_per_token": 21.420569
+    },
+    "8": {
+      "runs": 3,
+      "throughput_rps": 45.316667,
+      "steady_throughput_rps": 46.816667,
+      "p95_ttft_ms": 1607.462917,
+      "p99_ttft_ms": 1864.029666,
+      "p95_tpot_ms_per_token": 20.929388
+    }
+  },
+  "kv_pressure_medians": {
+    "flow_control_off": {
+      "runs": 3,
+      "throughput_rps": 1.111111,
+      "steady_throughput_rps": 1.111111,
+      "p95_ttft_ms": 16938.384917,
+      "p99_ttft_ms": 17613.521917,
+      "p95_tpot_ms_per_token": 185.987657
+    },
+    "threshold_0.75": {
+      "runs": 3,
+      "throughput_rps": 1.216667,
+      "steady_throughput_rps": 1.0,
+      "p95_ttft_ms": 28540.358875,
+      "p99_ttft_ms": 28724.332875,
+      "p95_tpot_ms_per_token": 182.96858
+    },
+    "threshold_0.8": {
+      "runs": 3,
+      "throughput_rps": 1.155556,
+      "steady_throughput_rps": 0.866667,
+      "p95_ttft_ms": 21559.096292,
+      "p99_ttft_ms": 22409.380292,
+      "p95_tpot_ms_per_token": 183.828462
+    }
+  },
+  "decision": "Advance queue depths 2 and 5 into production traffic comparisons. Retain KV threshold 0.8 as the primary memory-pressure calibration point.",
+  "claim_boundary": "The KV sweep intentionally created extreme memory pressure and does not establish a latency SLO."
+}
