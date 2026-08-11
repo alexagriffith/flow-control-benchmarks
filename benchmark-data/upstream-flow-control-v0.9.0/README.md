@@ -6,6 +6,7 @@ traffic samples, system metrics, evidence gates, analysis, and claim boundary.
 
 | Package | Question |
 |---|---|
+| [Concurrency detector tuning](concurrency-detector-tuning/) | How does the request-concurrency cap trade realtime latency against lower-priority latency? |
 | [Batch interference baseline](batch-interference/) | How much can batch work already running in vLLM increase realtime latency? |
 | [Mixed production workload](mixed-production-workload/) | Which admission method better protects realtime traffic when four workload shapes share one model server? |
 | [Model pool scaling](multi-replica-scaling/) | Does priority protection remain stable as the model pool scales from one to four replicas? |

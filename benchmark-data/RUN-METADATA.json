@@ -137,15 +137,15 @@
       "evidence_label": "scale-out signal",
       "claim_boundary": "Shows multi-replica behavior for the prior detector; upstream concurrency-detector scale-out still needs a matched run."
     },
-    "upstream-concurrency-detector-sweep": {
-      "display_name": "Upstream maxConcurrency sweep",
-      "short_name": "upstream sweep",
+    "concurrency-detector-tuning": {
+      "display_name": "Endpoint Picker v0.9.0 request-concurrency tuning",
+      "short_name": "concurrency tuning",
       "scenario": "operating-point sweep",
       "flow_control": "on",
-      "detector": "upstream concurrency detector",
+      "detector": "Endpoint Picker v0.9.0 request-concurrency detector",
       "traffic_shape": "single tuning scenario across maxConcurrency values",
-      "evidence_label": "upstream detector tuning curve",
-      "claim_boundary": "Finds the upstream maxConcurrency knee; not a four-scenario detector comparison."
+      "evidence_label": "request-concurrency tuning curve",
+      "claim_boundary": "Finds the v0.9.0 maxConcurrency knee for one traffic shape; not a cross-image comparison."
     },
     "operating-point-sweep": {
       "display_name": "Single-GPU operating-point sweep",
