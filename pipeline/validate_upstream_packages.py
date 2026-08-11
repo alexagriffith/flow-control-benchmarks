@@ -15,6 +15,7 @@ from validate_engine_configuration_package import validate_engine_configuration_
 from validate_utilization_detector_package import validate_utilization_detector_package
 from validate_admission_detector_package import validate_admission_detector_package
 from validate_production_scenarios_package import validate_production_scenarios_package
+from validate_upstream_report import validate_upstream_report
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -937,6 +938,7 @@ def main() -> int:
     validate_utilization_detector_package(errors, ROOT)
     validate_admission_detector_package(errors, ROOT)
     validate_production_scenarios_package(errors, ROOT)
+    validate_upstream_report(errors, ROOT)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -955,6 +957,7 @@ def main() -> int:
     print("- Utilization detector calibration: 23 runs, 78,674 request rows")
     print("- Request and token admission: 20 runs, 112,165 request rows")
     print("- Production scenarios: 23 runs, 194,923 request rows")
+    print("- Grouped visual report: current")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

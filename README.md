@@ -2,11 +2,19 @@
 
 Flow control is the Endpoint Picker's policy layer for multi-tenant inference. While the GPU has capacity, requests pass straight through. When the pool saturates, flow control activates: new work waits in policy-aware queues in front of vLLM, so priority, fairness, and traffic class decide what runs next instead of arrival order.
 
-This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. Everything ran on one H100 serving GPT-OSS 20B behind the llm-d inference gateway, with automatic prefix caching off so the latencies reflect scheduling rather than a warm cache.
+This repo holds the measured evidence, the charts drawn from it, the per-request data, and the runner that produced it. The benchmark packages cover the RHAII 3.4 flow-control build, the llm-d Endpoint Picker v0.9.0, and the experimental batch-eviction build. Most control tests disable prefix caching so latency reflects scheduling; the prefix-routing package enables it explicitly.
 
 Public display labels and claim boundaries for the run folders live in
 [`benchmark-data/RUN-METADATA.json`](benchmark-data/RUN-METADATA.json), so tools can show
 readable scenario names instead of raw repeat ids.
+
+## Current evidence
+
+- [`benchmark-data/upstream-flow-control-v0.9.0/results.html`](benchmark-data/upstream-flow-control-v0.9.0/results.html) summarizes the selected configuration, four production scenarios, workload shapes, scaling, stability, and prefix-aware routing.
+- [`benchmark-data/rhaii-3.4-flow-control/`](benchmark-data/rhaii-3.4-flow-control/) contains the original utilization-detector evidence used throughout this README.
+- [`benchmark-data/batch-eviction/`](benchmark-data/batch-eviction/) contains the batch-eviction and retry proof for one and two model replicas.
+
+The v0.9.0 summary links each claim to its evidence package. Newly validated packages include configuration, request and system metrics, proof gates, and claim boundaries. Absolute latency depends on the model, hardware, request shape, and offered load.
 
 ## What flow control does, in one screen
 
@@ -18,11 +26,11 @@ Same traffic, same GPU, the only change is whether flow control is on. Premium i
 - **Overload is queued, not rejected.** When batch traffic flooded the pool, the run without flow control returned 48,224 HTTP 429 rejections. With flow control on, zero. The platform held the deferrable work until capacity existed instead of pushing retries back to the application.
 - **It costs nothing when the pool is calm.** When the GPU has headroom, gate-on and gate-off match. Flow control is the insurance that only charges under pressure.
 
-**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware, model shape, and offered load. The measured finding is priority admission: premium is served ahead of standard under saturation, and deferrable work waits instead of failing. A hard SLO claim needs a named objective and tests that report TTFT, end-to-end latency, TPOT, and success rate under the target load; see [SLO proof tests](docs/slo-proof-tests.md) and the [execution plan](docs/slo-proof-execution-plan.md).
+**How to read the numbers.** The pool is one GPU, so the absolute latencies track that hardware, model shape, and offered load. The measured finding is priority admission: premium is served ahead of standard under saturation, and deferrable work waits instead of failing. A hard SLO claim needs a named objective and tests that report time to first token (TTFT), end-to-end latency, time per output token (TPOT), and success rate under the target load; see [SLO proof tests](docs/slo-proof-tests.md) and the [execution plan](docs/slo-proof-execution-plan.md).
 
 ## How we chose the operating point and configuration
 
-Before any scenario, we swept a single tenant from 32 to 200 concurrent requests to find where this pool saturates. Throughput peaked at 128 concurrent requests, then fell: past that point the closed loop piled on latency without more goodput, and vLLM's running batch stayed pinned at its 128 limit with a real queue behind it. That knee is the operating point every scenario runs at, because a queueing policy only has something to do once the pool is full.
+Before any scenario, we swept a single tenant from 32 to 200 concurrent requests to find where this pool saturates. Throughput peaked at 128 concurrent requests. Beyond 128, latency rose without more throughput while vLLM stayed at its 128-request running limit and queued additional work. This selected 128 as the operating point for the scenarios.
 
 <img src="assets/operating-point-sweep.svg" width="100%" alt="Single-tenant sweep from 32 to 200 concurrent: throughput peaks at 128 requests per second and falls past it, while p95 TTFT climbs steadily; the knee at 128 is the chosen operating point">
 
@@ -31,7 +39,7 @@ The rest of the configuration follows from making the measurement honest rather 
 | Choice | Value | Why |
 |---|---|---|
 | Request shape | 512 in / 128 out | A single fixed shape so every number is comparable; the output ladder (64, 128, 512) is varied separately |
-| `max-num-seqs` | 128 | The GPU's running-batch limit; saturation means offered load beyond this, not that the H100 was exhausted |
+| `max-num-seqs` | 128 | The GPU's running-batch limit; saturation means offered load beyond this, not that the NVIDIA H100 was exhausted |
 | Prefix caching | off | So the latencies reflect scheduling, not a warm cache. Each prompt has a unique head and body |
 | Repeats | 3 counted; 300 s for corrected SLO-sensitive runs | Repeats capture run-to-run variance; SLO-sensitive claims use per-repeat p95 with a min-max range, never pooled repeats |
 | Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |

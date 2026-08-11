@@ -19,8 +19,9 @@ TTFT was 527 and 570 ms; repeat ranges extended to 619 and 675 ms.
 | Consolidation | Realtime tenants 509 and 556 ms; Standard burst 25,892 ms p95 TTFT |
 | Same-priority fairness | Overloaded tenant 12,097 ms; peers 527 and 570 ms p95 TTFT |
 
-Every selected result uses three repeats. All requests succeeded, flow control
-engaged during every run, and the prefix cache remained off.
+Each of the four selected scenario results uses three repeats. All requests
+succeeded, flow control engaged during every retained run, and the prefix cache
+remained off.
 
 ## Detector comparison
 
@@ -72,7 +73,7 @@ consolidation and same-priority evidence.
 
 | File | Contents |
 |---|---|
-| [`summary.csv`](summary.csv) | Per-run workload throughput, outcomes, TTFT, end-to-end latency, TPOT, and backend peaks. |
+| [`summary.csv`](summary.csv) | Per-run workload throughput, outcomes, TTFT, end-to-end latency, time per output token (TPOT), and backend peaks. |
 | [`window-summary.csv`](window-summary.csv) | Baseline, surge, and recovery metrics with units. |
 | [`request-results.csv`](request-results.csv) | One sanitized row per request. |
 | [`traffic-samples.csv`](traffic-samples.csv) | Issued, completed, and outstanding requests over time. |

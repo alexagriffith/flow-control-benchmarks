@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow control benchmark: Endpoint Picker v0.9.0</title>
+  <style>
+    :root {
+      --ink: #15202b;
+      --muted: #5f6c7b;
+      --line: #cdd5df;
+      --page: #f5f7f9;
+      --surface: #ffffff;
+      --navy: #102030;
+      --teal: #087f72;
+      --blue: #2d6cdf;
+      --amber: #c56a00;
+      --red: #b83232;
+      --violet: #6550a5;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--page);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    a { color: inherit; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.96);
+    }
+    .topbar-inner, main, footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar-inner { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .report-name { font-size: 14px; font-weight: 750; }
+    nav { display: flex; gap: 22px; font-size: 13px; color: var(--muted); }
+    nav a { text-decoration: none; }
+    nav a:hover, nav a:focus-visible { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+    .hero { padding: 52px 0 42px; }
+    .hero h1 { max-width: 820px; margin: 0; font-size: 66px; line-height: 1.02; letter-spacing: 0; }
+    .hero p { max-width: 780px; margin: 18px 0 0; color: var(--muted); font-size: 20px; line-height: 1.45; }
+    .result-band { background: var(--navy); color: #fff; border-top: 4px solid var(--teal); }
+    .result-grid { display: grid; grid-template-columns: 1.35fr repeat(2, .8fr); }
+    .result-grid > div { min-height: 210px; padding: 28px; border-right: 1px solid rgba(255,255,255,.18); display: flex; flex-direction: column; justify-content: space-between; }
+    .result-grid > div:last-child { border-right: 0; }
+    .result-grid h2 { margin: 0; font-size: 26px; line-height: 1.18; }
+    .result-grid strong { display: block; font-size: 27px; line-height: 1.08; }
+    .result-grid p, .result-grid span { margin: 12px 0 0; color: #b9c5d0; line-height: 1.5; }
+    .result-grid small { color: #67d4c7; font-weight: 750; }
+    .band { padding: 62px 0; border-bottom: 1px solid var(--line); }
+    .band.white { background: var(--surface); margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: calc(50vw - 50%); padding-right: calc(50vw - 50%); }
+    .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: end; margin-bottom: 28px; }
+    .section-head h2 { margin: 0; font-size: 34px; line-height: 1.08; }
+    .section-head p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .settings { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .setting { padding: 25px 22px; border-right: 1px solid var(--line); }
+    .setting:last-child { border-right: 0; }
+    .setting .value { display: block; font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .setting h3 { margin: 8px 0 4px; font-size: 17px; }
+    .setting p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; }
+    .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .scenario { border: 1px solid var(--line); background: var(--surface); padding: 22px; border-radius: 6px; }
+    .scenario h3 { margin: 0; font-size: 18px; }
+    .scenario .takeaway { margin: 7px 0 22px; color: var(--muted); min-height: 42px; line-height: 1.45; }
+    .dotplot { --min: 2.477121; --span: 2; position: relative; padding-top: 30px; }
+    .axis { position: absolute; top: 0; left: 128px; right: 56px; height: 22px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .axis span { position: absolute; bottom: 4px; transform: translateX(-50%); }
+    .axis span:first-child { transform: none; }
+    .axis span:last-child { transform: translateX(-100%); }
+    .dotrow { display: grid; grid-template-columns: 118px 1fr 48px; gap: 10px; align-items: center; min-height: 35px; }
+    .dotlabel { font-size: 12px; font-weight: 700; }
+    .track { position: relative; height: 2px; background: #dfe5eb; }
+    .dot { position: absolute; top: 50%; left: var(--x); width: 12px; height: 12px; transform: translate(-50%,-50%); border-radius: 50%; background: var(--blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--blue); }
+    .dot.standard { background: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+    .dot.batch { background: var(--red); box-shadow: 0 0 0 1px var(--red); }
+    .dot.peer { background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+    .dotvalue { text-align: right; font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .scale-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; }
+    .compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .compare { border-top: 3px solid var(--blue); background: #f8fafc; padding: 22px; }
+    .compare:last-child { border-top-color: var(--teal); }
+    .compare h3 { margin: 0 0 5px; font-size: 19px; }
+    .compare > p { margin: 0 0 18px; color: var(--muted); line-height: 1.45; }
+    .comparison-row { display: grid; grid-template-columns: 155px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+    .comparison-row strong { font-size: 12px; }
+    .comparison-row span { font-size: 13px; font-variant-numeric: tabular-nums; }
+    .comparison-row small { display: block; margin-top: 3px; color: var(--muted); }
+    .evidence-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .evidence { border-top: 3px solid var(--teal); background: var(--surface); padding: 20px; min-height: 190px; }
+    .evidence.blue { border-color: var(--blue); }
+    .evidence.amber { border-color: var(--amber); }
+    .evidence.violet { border-color: var(--violet); }
+    .evidence h3 { margin: 0; font-size: 17px; }
+    .evidence .big { display: block; margin-top: 22px; font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .evidence p { color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .mini-bars { margin-top: 18px; }
+    .mini-row { display: grid; grid-template-columns: 88px 1fr 70px; gap: 9px; align-items: center; margin: 9px 0; font-size: 11px; }
+    .mini-track { height: 8px; background: #e3e8ed; }
+    .mini-fill { height: 100%; width: var(--w); background: var(--blue); }
+    .mini-fill.teal { background: var(--teal); }
+    .mini-fill.amber { background: var(--amber); }
+    .mini-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 750; }
+    .boundary { margin-top: 26px; padding: 20px 22px; border-left: 4px solid var(--amber); background: #fff7e8; line-height: 1.5; }
+    details { margin-top: 22px; border: 1px solid var(--line); background: var(--surface); }
+    summary { padding: 16px 18px; cursor: pointer; font-weight: 750; }
+    .method { padding: 0 18px 18px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 11px 10px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    .packages { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 28px; }
+    .package { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+    .package a { font-weight: 750; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .package span { color: var(--muted); font-size: 12px; text-align: right; }
+    footer { padding: 30px 0 50px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (max-width: 820px) {
+      .topbar-inner { align-items: flex-start; padding: 14px 0; }
+      nav { display: none; }
+      .hero h1 { font-size: 48px; }
+      .result-grid, .settings, .scenario-grid, .compare-grid, .evidence-grid, .packages, .section-head { grid-template-columns: 1fr; }
+      .result-grid > div, .setting { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+      .setting { border-bottom-color: var(--line); }
+      .scenario .takeaway { min-height: auto; }
+      .evidence { min-height: 0; }
+    }
+    @media (max-width: 520px) {
+      .topbar-inner, main, footer { width: min(100% - 24px, 1180px); }
+      .hero { padding: 36px 0 30px; }
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 17px; }
+      .band { padding: 44px 0; }
+      .axis { left: 100px; right: 46px; }
+      .dotrow { grid-template-columns: 90px 1fr 38px; gap: 6px; }
+      .dotlabel, .dotvalue { font-size: 10px; }
+      .comparison-row { grid-template-columns: 1fr; }
+      .package { display: block; }
+      .package span { display: block; margin-top: 5px; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="report-name">Flow control benchmark</div>
+      <nav aria-label="Report sections">
+        <a href="#result">Result</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#production">Production traffic</a>
+        <a href="#evidence">Workload and scale</a>
+        <a href="#packages">Evidence</a>
+      </nav>
+    </div>
+  </div>
+
+  <main>
+    <header class="hero" id="result">
+      <h1>Flow control benchmark: Endpoint Picker v0.9.0</h1>
+      <p>Can one shared model pool protect priority traffic, adapt to workload shape, and scale without losing control?</p>
+    </header>
+
+    <section class="result-band" aria-label="Benchmark result">
+      <div class="result-grid">
+        <div>
+          <h2>Priority traffic stayed ahead while lower-priority and overloaded work absorbed more of the wait.</h2>
+          <p>Flow control engaged in every retained production-scenario run. All 194,923 requests completed successfully.</p>
+        </div>
+        <div>
+          <strong>Below 700 ms</strong>
+          <span>Median realtime p95 time to first token (TTFT) in tiering, batch isolation, and consolidation</span>
+          <small>Three repeats per selected scenario</small>
+        </div>
+        <div>
+          <strong>Matched per-GPU throughput</strong>
+          <span>Served requests per second (RPS) per GPU stayed within 0.6% from one to four GPUs</span>
+          <small>429 responses occurred at one and two GPUs</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="configuration">
+      <div class="section-head">
+        <h2>Selected configuration</h2>
+        <p>Closed-loop sweeps selected engine and admission settings. Open-loop production traffic tested the result.</p>
+      </div>
+      <div class="settings">
+        <div class="setting">
+          <span class="value">128</span>
+          <h3>vLLM max sequences</h3>
+          <p>The engine-capacity setting selected from three matched runs at 128, 160, and 192.</p>
+        </div>
+        <div class="setting">
+          <span class="value">8,192</span>
+          <h3>Maximum batched tokens</h3>
+          <p>The scheduling-step setting selected from 4,096, 8,192, and 16,384.</p>
+        </div>
+        <div class="setting">
+          <span class="value">128</span>
+          <h3>Request admission cap</h3>
+          <p>The default admission setting. Exact input-token admission remains available for uneven request sizes.</p>
+        </div>
+      </div>
+      <div class="boundary"><strong>Detector scope.</strong> Queue depths 2 and 5 remain utilization-detector comparison settings. Queue depth 8 led the short-request calibration, but it is not the production default.</div>
+    </section>
+
+    <section class="band white" id="production">
+      <div class="section-head">
+        <h2>Production traffic</h2>
+        <p>Open-loop Poisson arrivals used noisy sinusoidal phases, a timed surge, and recovery. Prefix caching was off.</p>
+      </div>
+      <div class="scenario-grid">
+        <article class="scenario">
+          <h3>Priority tiers</h3>
+          <p class="takeaway">Higher-priority traffic kept lower p95 TTFT while batch absorbed the longest delay.</p>
+          <div class="dotplot">
+            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
+            <div class="dotrow"><span class="dotlabel">Platinum</span><div class="track"><i class="dot peer" data-ms="404"></i></div><span class="dotvalue">404</span></div>
+            <div class="dotrow"><span class="dotlabel">Gold</span><div class="track"><i class="dot peer" data-ms="511"></i></div><span class="dotvalue">511</span></div>
+            <div class="dotrow"><span class="dotlabel">Silver</span><div class="track"><i class="dot standard" data-ms="656"></i></div><span class="dotvalue">656</span></div>
+            <div class="dotrow"><span class="dotlabel">Batch</span><div class="track"><i class="dot batch" data-ms="13264"></i></div><span class="dotvalue">13,264</span></div>
+          </div>
+          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
+        </article>
+        <article class="scenario">
+          <h3>Batch isolation</h3>
+          <p class="takeaway">Median realtime and standard p95 TTFT stayed below 600 ms while batch remained deferrable.</p>
+          <div class="dotplot">
+            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
+            <div class="dotrow"><span class="dotlabel">Realtime</span><div class="track"><i class="dot peer" data-ms="442"></i></div><span class="dotvalue">442</span></div>
+            <div class="dotrow"><span class="dotlabel">Standard</span><div class="track"><i class="dot standard" data-ms="515"></i></div><span class="dotvalue">515</span></div>
+            <div class="dotrow"><span class="dotlabel">Batch</span><div class="track"><i class="dot batch" data-ms="13077"></i></div><span class="dotvalue">13,077</span></div>
+          </div>
+          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
+        </article>
+        <article class="scenario">
+          <h3>Consolidation</h3>
+          <p class="takeaway">Two realtime tenants stayed below 600 ms during the standard burst.</p>
+          <div class="dotplot">
+            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
+            <div class="dotrow"><span class="dotlabel">Realtime A</span><div class="track"><i class="dot peer" data-ms="509"></i></div><span class="dotvalue">509</span></div>
+            <div class="dotrow"><span class="dotlabel">Realtime B</span><div class="track"><i class="dot peer" data-ms="556"></i></div><span class="dotvalue">556</span></div>
+            <div class="dotrow"><span class="dotlabel">Standard</span><div class="track"><i class="dot standard" data-ms="25892"></i></div><span class="dotvalue">25,892</span></div>
+          </div>
+          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
+        </article>
+        <article class="scenario">
+          <h3>Same-priority fairness</h3>
+          <p class="takeaway">The overloaded tenant absorbed most of the delay while both peers kept their turns.</p>
+          <div class="dotplot">
+            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
+            <div class="dotrow"><span class="dotlabel">Burster A</span><div class="track"><i class="dot batch" data-ms="12097"></i></div><span class="dotvalue">12,097</span></div>
+            <div class="dotrow"><span class="dotlabel">Peer B</span><div class="track"><i class="dot peer" data-ms="527"></i></div><span class="dotvalue">527</span></div>
+            <div class="dotrow"><span class="dotlabel">Peer C</span><div class="track"><i class="dot peer" data-ms="570"></i></div><span class="dotvalue">570</span></div>
+          </div>
+          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
+        </article>
+      </div>
+
+      <div class="section-head" style="margin-top:54px">
+        <h2>Detector comparison</h2>
+        <p>Three matched repeats support consolidation and same-priority comparisons. The ranges do not overlap.</p>
+      </div>
+      <div class="compare-grid">
+        <div class="compare">
+          <h3>Consolidation</h3>
+          <p>Request-count admission kept both realtime tenants below 600 ms.</p>
+          <div class="comparison-row"><strong>Request count 128</strong><span>509 and 556 ms<small>Selected setting</small></span></div>
+          <div class="comparison-row"><strong>Queue depth 2</strong><span>4,711 and 4,567 ms</span></div>
+          <div class="comparison-row"><strong>Queue depth 5</strong><span>5,117 and 4,906 ms</span></div>
+        </div>
+        <div class="compare">
+          <h3>Same-priority peers</h3>
+          <p>Request-count admission kept peer p95 TTFT below 700 ms across all repeats.</p>
+          <div class="comparison-row"><strong>Request count 128</strong><span>527 and 570 ms<small>Selected setting</small></span></div>
+          <div class="comparison-row"><strong>Queue depth 2</strong><span>5,023 and 4,519 ms</span></div>
+        </div>
+      </div>
+      <div class="boundary"><strong>Calibration only.</strong> One queue-depth-5 fairness run produced peer p95 TTFT of 5,506 and 5,464 ms. It is not part of the matched comparison.</div>
+      <div class="boundary"><strong>Statistical scope.</strong> Three repeats support descriptive medians and ranges. The report does not claim formal statistical significance.</div>
+    </section>
+
+    <section class="band" id="evidence">
+      <div class="section-head">
+        <h2>Workload and scale</h2>
+        <p>The selected settings were tested with different request shapes, mixed traffic, prefix reuse, repeated surges, and larger model pools.</p>
+      </div>
+      <div class="evidence-grid">
+        <article class="evidence blue">
+          <h3>Request shape changes latency</h3>
+          <div class="mini-bars">
+            <div class="mini-row"><span>Chat</span><div class="mini-track"><div class="mini-fill" style="--w:31%"></div></div><span class="mini-value">420 ms</span></div>
+            <div class="mini-row"><span>Agentic</span><div class="mini-track"><div class="mini-fill amber" style="--w:100%"></div></div><span class="mini-value">1,352 ms</span></div>
+          </div>
+          <p>All six runs completed successfully. The longer output shape produced higher p95 TTFT.</p>
+        </article>
+        <article class="evidence">
+          <h3>Long-context difference was inconclusive</h3>
+          <span class="big">16.4 ms</span>
+          <p>Exact-token admission averaged 337.1 ms versus 353.6 ms for request-count admission. The paired result was not statistically significant.</p>
+        </article>
+        <article class="evidence violet">
+          <h3>Mixed traffic changes the tradeoff</h3>
+          <span class="big">919 ms</span>
+          <p>Request-count admission lowered premium p95 TTFT by 919 ms. Token admission produced more even latency across priorities.</p>
+        </article>
+        <article class="evidence blue">
+          <h3>Per-GPU throughput stayed near the one-replica result</h3>
+          <div class="mini-bars">
+            <div class="mini-row"><span>1 GPU</span><div class="mini-track"><div class="mini-fill" style="--w:99.4%"></div></div><span class="mini-value">4.293 RPS</span></div>
+            <div class="mini-row"><span>2 GPUs</span><div class="mini-track"><div class="mini-fill" style="--w:100%"></div></div><span class="mini-value">4.317 RPS</span></div>
+            <div class="mini-row"><span>4 GPUs</span><div class="mini-track"><div class="mini-fill" style="--w:99.7%"></div></div><span class="mini-value">4.302 RPS</span></div>
+          </div>
+          <p>Sparse 429 responses at one and two replicas prevent a rejection-free scale claim.</p>
+        </article>
+        <article class="evidence amber">
+          <h3>Repeated surges recovered</h3>
+          <span class="big">14,889 requests</span>
+          <p>Every request completed. Flow control engaged during both surges, the queue drained, and preemptions stayed at zero.</p>
+        </article>
+        <article class="evidence violet">
+          <h3>Prefix-aware routing needs more tuning</h3>
+          <div class="mini-bars">
+            <div class="mini-row"><span>Random</span><div class="mini-track"><div class="mini-fill amber" style="--w:100%"></div></div><span class="mini-value">1,195 ms</span></div>
+            <div class="mini-row"><span>Prefix-aware</span><div class="mini-track"><div class="mini-fill teal" style="--w:78.3%"></div></div><span class="mini-value">936 ms</span></div>
+          </div>
+          <p>Realtime median improved, but cache hit rate did not and route imbalance increased.</p>
+        </article>
+      </div>
+
+      <details>
+        <summary>Method and claim boundaries</summary>
+        <div class="method">
+          <table>
+            <thead><tr><th>Area</th><th>Method</th><th>Boundary</th></tr></thead>
+            <tbody>
+              <tr><td>Production scenarios</td><td>Open-loop Poisson, noisy sinusoidal phases, three repeats, cache off</td><td>Single NVIDIA H100 and one model replica</td></tr>
+              <tr><td>Calibration sweeps</td><td>Closed-loop fixed concurrency</td><td>Selects settings; does not prove an SLO</td></tr>
+              <tr><td>Scale</td><td>One Endpoint Picker with one, two, and four model replicas</td><td>Sparse 429 responses at smaller pools</td></tr>
+              <tr><td>Prefix routing</td><td>Two model replicas with cache on and shared-prefix traffic</td><td>Directional result with high repeat variance</td></tr>
+              <tr><td>Metrics</td><td>Request rows, policy queues, vLLM running and waiting, KV cache, preemptions, route counts</td><td>Absolute latency depends on model, hardware, request shape, and load</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="band white" id="packages">
+      <div class="section-head">
+        <h2>Evidence packages</h2>
+        <p>Each package includes configuration, request data, traffic samples, system metrics, proof gates, and claim limits.</p>
+      </div>
+      <div class="packages">
+        <div class="package"><a href="engine-configuration/">Engine configuration</a><span>max sequences and batched tokens</span></div>
+        <div class="package"><a href="utilization-detector-calibration/">Utilization detector</a><span>queue depth and KV pressure</span></div>
+        <div class="package"><a href="request-and-token-admission-calibration/">Request and token admission</a><span>request caps and mixed sizes</span></div>
+        <div class="package"><a href="production-scenarios/">Production scenarios</a><span>priority, batch, consolidation, fairness</span></div>
+        <div class="package"><a href="selected-workload-shapes/">Workload shapes</a><span>chat and agentic output</span></div>
+        <div class="package"><a href="mixed-production-workload/">Mixed production workload</a><span>four workload shapes together</span></div>
+        <div class="package"><a href="long-context-admission/">Long-context admission</a><span>paired size-aware comparison</span></div>
+        <div class="package"><a href="batch-interference/">Batch interference</a><span>batch already running in vLLM</span></div>
+        <div class="package"><a href="multi-replica-scaling/">Model pool scaling</a><span>one, two, and four replicas</span></div>
+        <div class="package"><a href="long-stability/">Long stability</a><span>two surges and recovery</span></div>
+        <div class="package"><a href="prefix-cache-routing/">Prefix-cache routing</a><span>cache-on routing comparison</span></div>
+        <div class="package"><a href="request-concurrency-priority-tuning/">Earlier priority tuning</a><span>short-request two-tier study</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Evidence captured August 2026. Endpoint Picker v0.9.0. No fixed service-level objective is claimed.</footer>
+
+  <script>
+    "use strict";
+    const min = Math.log10(300);
+    const span = Math.log10(30000) - min;
+    document.querySelectorAll(".dot[data-ms]").forEach((dot) => {
+      const value = Math.max(300, Math.min(30000, Number(dot.dataset.ms)));
+      dot.style.setProperty("--x", `${((Math.log10(value) - min) / span) * 100}%`);
+    });
+  </script>
+</body>
+</html>
