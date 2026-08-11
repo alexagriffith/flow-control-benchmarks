@@ -1,6 +1,6 @@
 # Pipeline
 
-`benchmark_v4.py` is the runner that produced every accepted run. It drives multi-tenant traffic through the gateway with per-tenant objective and fairness headers, verifies priority resolution and gate state before counting a run, logs every request individually, scrapes vLLM and Endpoint Picker metrics, and writes one directory per repeat with `client_samples.csv`, `metric_samples.csv`, and `summary.json`.
+`benchmark_v4.py` produced the accepted core flow-control runs. It drives multi-tenant traffic through the gateway with per-tenant objective and fairness headers, verifies priority resolution and gate state before counting a run, logs every request individually, scrapes vLLM and Endpoint Picker metrics, and writes one directory per repeat with `client_samples.csv`, `metric_samples.csv`, and `summary.json`.
 
 Automatic prefix caching is off for every counted run, so the latencies reflect scheduling rather than a warm cache. Each prompt draws a unique head and body from a domain word pool, so no two prompts share more than a short system preamble.
 
@@ -9,3 +9,16 @@ Automatic prefix caching is off for every counted run, so the latencies reflect 
 Use `benchmark-data/RUN-METADATA.json` for public display names, scenario labels, and
 claim boundaries. Visualizers should prefer those labels over raw repeat ids
 such as `01-test4_batch_noisy-r01`.
+
+## Promotion order
+
+1. Add an accepted capability set under `benchmark-data/` with its own README,
+   configuration, summary, and supporting evidence.
+2. Run the package validator. For batch eviction, use:
+   `python3 pipeline/validate_batch_eviction_packages.py`.
+3. Build the grouped HTML report after every run package is complete.
+4. Update the repository README and shared charts last.
+
+Rejected or partial attempts stay outside `benchmark-data/`. Public packages
+must contain no customer names, private cluster identifiers, local paths, or
+internal image locations.

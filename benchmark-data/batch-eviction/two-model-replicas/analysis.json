@@ -1,0 +1,176 @@
+{
+  "schema": "batch-eviction-two-model-analysis-v1",
+  "production_repeats": 3,
+  "mechanism": {
+    "total_realtime_offered": 7690,
+    "total_realtime_http_200": 7689,
+    "realtime_success_rate": 0.9998699609882965,
+    "realtime_success_rate_95ci": [
+      0.9992636982588535,
+      0.9999770451429862
+    ],
+    "total_evictions": 57,
+    "retry_http_200_matches": 57,
+    "single_result_matches": 57,
+    "eviction_retry_success_rate_95ci": [
+      0.936858991216536,
+      0.9999999999999999
+    ],
+    "all_evictions_retried_once": true
+  },
+  "latency": {
+    "reference_median_run_p95_ttft_ms": 347.938165999949,
+    "two_model_median_run_p95_ttft_ms": 354.708541999571,
+    "delta_ms": 6.770375999622047,
+    "relative_delta": 0.01945856092034192,
+    "hierarchical_bootstrap_delta_95ci_ms": [
+      -175.42029194373754,
+      381.2212489974627
+    ],
+    "paired_seed_deltas_ms": {
+      "209301": 232.2828760206903,
+      "209302": -3.6873739991278853,
+      "209303": 30.42987489607185
+    },
+    "paired_seed_note": "The seeds align prompt and traffic generation inputs, but aggregate arrival rates differ by topology; these are a conservative consistency check, not paired observations.",
+    "same_direction": false,
+    "material": false,
+    "confidence_interval_excludes_zero": false,
+    "decision": "inconclusive",
+    "limitation": "Three repeats support only large-effect detection; small differences are inconclusive.",
+    "outlier_note": "One run measured 704.0 ms p95 TTFT; the other two measured 344.3 and 354.7 ms. A separate same-seed follow-up checks whether this is reproducible.",
+    "p99_ttft_ms": {
+      "reference_median_run_value": 999.7417908161879,
+      "two_model_median_run_value": 951.4667920011561,
+      "delta": -48.27499881503172,
+      "relative_delta": -0.04828746708249545,
+      "hierarchical_bootstrap_delta_95ci": [
+        -421.96816633259004,
+        194.99270798041834
+      ],
+      "interpretation": "descriptive; three repeats do not support a small-effect claim"
+    },
+    "p95_tpot_ms": {
+      "reference_median_run_value": 16.920077974998183,
+      "two_model_median_run_value": 16.84972177422277,
+      "delta": -0.07035620077541438,
+      "relative_delta": -0.00415814873190157,
+      "hierarchical_bootstrap_delta_95ci": [
+        -0.250655940392118,
+        2.4698252519526918
+      ],
+      "interpretation": "descriptive; three repeats do not support a small-effect claim"
+    }
+  },
+  "throughput": {
+    "metric": "realtime served requests per second per GPU",
+    "reference_median": 4.316666666666666,
+    "two_model_median": 4.243333333333333,
+    "delta": -0.07333333333333325,
+    "relative_delta": -0.01698841698841697,
+    "interpretation": "descriptive only; three repeats do not support a small-effect claim"
+  },
+  "burst_timing": [
+    {
+      "run_name": "Production repeat 1",
+      "overall": {
+        "requests": 2531,
+        "p50_ttft_ms": 241.50066699985473,
+        "p95_ttft_ms": 704.0027919993008,
+        "p99_ttft_ms": 1075.6221250012459
+      },
+      "initial_burst": {
+        "requests": 63,
+        "p50_ttft_ms": 740.558957999383,
+        "p95_ttft_ms": 1076.9192919997295,
+        "p99_ttft_ms": 1130.3053329993418
+      },
+      "after_initial_burst": {
+        "requests": 2468,
+        "p50_ttft_ms": 240.0437910000619,
+        "p95_ttft_ms": 439.1140830011864,
+        "p99_ttft_ms": 1023.3637500004988
+      },
+      "slow_request_routes": {
+        "Model replica 1": 73,
+        "Model replica 2": 54
+      }
+    },
+    {
+      "run_name": "Production repeat 2",
+      "overall": {
+        "requests": 2612,
+        "p50_ttft_ms": 229.89079099897936,
+        "p95_ttft_ms": 344.2507920008211,
+        "p99_ttft_ms": 895.1783330012404
+      },
+      "initial_burst": {
+        "requests": 64,
+        "p50_ttft_ms": 793.4693750012229,
+        "p95_ttft_ms": 1096.0809999996854,
+        "p99_ttft_ms": 1155.2988749990618
+      },
+      "after_initial_burst": {
+        "requests": 2548,
+        "p50_ttft_ms": 227.90979199999128,
+        "p95_ttft_ms": 317.04412500039325,
+        "p99_ttft_ms": 561.7677919999551
+      },
+      "slow_request_routes": {
+        "Model replica 1": 62,
+        "Model replica 2": 69
+      }
+    },
+    {
+      "run_name": "Production repeat 3",
+      "overall": {
+        "requests": 2546,
+        "p50_ttft_ms": 229.95737499877578,
+        "p95_ttft_ms": 354.708541999571,
+        "p99_ttft_ms": 951.4667920011561
+      },
+      "initial_burst": {
+        "requests": 64,
+        "p50_ttft_ms": 749.1656250003871,
+        "p95_ttft_ms": 1368.5378749996744,
+        "p99_ttft_ms": 1423.8396659984573
+      },
+      "after_initial_burst": {
+        "requests": 2482,
+        "p50_ttft_ms": 228.3358330005285,
+        "p95_ttft_ms": 322.7069160002429,
+        "p99_ttft_ms": 568.2868339990819
+      },
+      "slow_request_routes": {
+        "Model replica 1": 60,
+        "Model replica 2": 68
+      }
+    },
+    {
+      "run_name": "Same-seed latency follow-up",
+      "overall": {
+        "requests": 2531,
+        "p50_ttft_ms": 224.3880830010312,
+        "p95_ttft_ms": 560.6419159994402,
+        "p99_ttft_ms": 1184.7356250000303
+      },
+      "initial_burst": {
+        "requests": 63,
+        "p50_ttft_ms": 790.3924160000315,
+        "p95_ttft_ms": 1942.1238750001066,
+        "p99_ttft_ms": 1952.5501250009256
+      },
+      "after_initial_burst": {
+        "requests": 2468,
+        "p50_ttft_ms": 222.61670800071442,
+        "p95_ttft_ms": 332.7519169997686,
+        "p99_ttft_ms": 759.438458000659
+      },
+      "slow_request_routes": {
+        "Model replica 1": 72,
+        "Model replica 2": 55
+      }
+    }
+  ],
+  "claim_boundary": "The eviction-and-retry mechanism passed across two model replicas. The latency scaling difference is inconclusive because the three-repeat confidence interval includes zero and one repeat had higher burst-driven TTFT."
+}

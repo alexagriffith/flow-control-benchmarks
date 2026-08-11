@@ -54,8 +54,28 @@
       "flow_control": "on",
       "detector": "concurrency detector with priority holdback",
       "traffic_shape": "batch starts first, then realtime begins with a burst and continues as a seeded open-loop Poisson process with a sinusoidally varying rate",
-      "evidence_label": "single-replica batch eviction and retry",
-      "claim_boundary": "Shows reserved-capacity latency and safe batch recovery in the tested single-replica path; it does not prove multi-replica coordination or an absolute SLO."
+      "evidence_label": "batch eviction and retry across one-model and two-model topologies",
+      "claim_boundary": "The one-model package establishes reserved-capacity latency protection. The two-model package establishes eviction and retry across two model replicas; its latency scaling comparison is inconclusive."
+    },
+    "batch-eviction-single-model": {
+      "display_name": "Batch eviction, one model replica",
+      "short_name": "batch eviction, one model",
+      "scenario": "batch recovery",
+      "flow_control": "on",
+      "detector": "concurrency detector with priority holdback",
+      "traffic_shape": "batch starts first, then realtime begins with a burst and continues as a seeded open-loop Poisson process with a sinusoidally varying rate",
+      "evidence_label": "reserved-capacity latency protection and batch recovery",
+      "claim_boundary": "Shows reserved-capacity latency protection and batch recovery with one Endpoint Picker and one model replica; it does not set an absolute SLO."
+    },
+    "batch-eviction-two-model": {
+      "display_name": "Batch eviction, two model replicas",
+      "short_name": "batch eviction, two models",
+      "scenario": "batch recovery across model replicas",
+      "flow_control": "on",
+      "detector": "concurrency detector with priority holdback",
+      "traffic_shape": "batch starts first, then doubled aggregate realtime traffic begins with a burst and continues as a seeded open-loop Poisson process with a sinusoidally varying rate",
+      "evidence_label": "batch eviction and retry across two model replicas",
+      "claim_boundary": "Shows the eviction-and-retry mechanism across one Endpoint Picker and two model replicas. The latency scaling comparison is inconclusive, and multiple Endpoint Picker replicas were not tested."
     },
     "consolidation-gate-on": {
       "display_name": "Consolidated tenants, flow control on",
