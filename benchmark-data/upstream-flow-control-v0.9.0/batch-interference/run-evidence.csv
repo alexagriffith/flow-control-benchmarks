@@ -1,0 +1,7 @@
+run_name,model_replicas,repeat,data_quality_passed,proof_checks_passed,offered_schedule_passed,metric_capture_passed,flow_control_metrics_passed,headers_passed,route_evidence_passed,request_shapes_passed,stream_integrity_passed,flow_control_engaged,peak_endpoint_picker_queue_requests,peak_pool_saturation_ratio,queued_requests_total,queue_time_seconds_total,prefix_cache_queries,prefix_cache_hits,peak_vllm_running_requests,peak_vllm_waiting_requests,peak_kv_cache_usage_ratio,vllm_preemptions,endpoint_picker_restarted
+realtime only - repeat 1,1,1,true,true,true,true,true,true,true,true,true,false,0.0,0.070312,354.0,0.010973,0.0,0.0,9.0,0.0,0.015764,0.0,false
+realtime only - repeat 2,1,2,true,true,true,true,true,true,true,true,true,false,0.0,0.070312,354.0,0.01029,0.0,0.0,9.0,0.0,0.015796,0.0,false
+realtime only - repeat 3,1,3,true,true,true,true,true,true,true,true,true,false,0.0,0.070312,354.0,0.010687,0.0,0.0,9.0,0.0,0.015737,0.0,false
+realtime with batch already running - repeat 1,1,1,true,true,true,true,true,true,true,true,true,true,83.0,1.015625,846.0,4410.825111,0.0,0.0,128.0,63.0,0.443593,0.0,false
+realtime with batch already running - repeat 2,1,2,true,true,true,true,true,true,true,true,true,true,86.0,1.007812,846.0,4317.403978,0.0,0.0,128.0,64.0,0.443502,0.0,false
+realtime with batch already running - repeat 3,1,3,true,true,true,true,true,true,true,true,true,true,81.0,1.015625,846.0,4087.180895,0.0,0.0,127.0,62.0,0.443176,0.0,false

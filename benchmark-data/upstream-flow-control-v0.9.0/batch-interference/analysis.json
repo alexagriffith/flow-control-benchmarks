@@ -1,0 +1,324 @@
+{
+  "experiment": "stable_image_batch_interference_baseline",
+  "run_count": 6,
+  "all_data_quality_valid": true,
+  "all_slo_proof_valid": true,
+  "by_arm": {
+    "realtime only": {
+      "runs": 3,
+      "all_data_quality_valid": true,
+      "all_slo_proof_valid": true,
+      "http_200_total": 1062,
+      "http_429_total": 0,
+      "flow_control_materially_engaged_runs": 0,
+      "realtime_surge_p95_ttft_ms": {
+        "median": 133.395,
+        "min": 132.576,
+        "max": 137.017
+      },
+      "realtime_surge_p99_ttft_ms": {
+        "median": 147.3,
+        "min": 142.591,
+        "max": 150.021
+      },
+      "realtime_surge_p95_tpot_ms": {
+        "median": 7.724,
+        "min": 7.649,
+        "max": 7.804
+      },
+      "realtime_surge_p99_tpot_ms": {
+        "median": 9.683,
+        "min": 9.669,
+        "max": 9.723
+      },
+      "realtime_surge_p95_latency_ms": {
+        "median": 988.945,
+        "min": 979.372,
+        "max": 999.302
+      },
+      "realtime_surge_p99_latency_ms": {
+        "median": 1239.761,
+        "min": 1237.975,
+        "max": 1244.834
+      },
+      "realtime_epp_queue_mean_ms": {
+        "median": 0.03,
+        "min": 0.029,
+        "max": 0.031
+      },
+      "batch_epp_queue_mean_ms": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "max_epp_queue": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "max_pool_saturation": {
+        "median": 0.07,
+        "min": 0.07,
+        "max": 0.07
+      },
+      "max_vllm_running": {
+        "median": 9.0,
+        "min": 9.0,
+        "max": 9.0
+      },
+      "max_vllm_waiting": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "max_vllm_kv_cache_usage_pct": {
+        "median": 1.576,
+        "min": 1.574,
+        "max": 1.58
+      },
+      "vllm_preemptions_delta": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "realtime with batch already running": {
+      "runs": 3,
+      "all_data_quality_valid": true,
+      "all_slo_proof_valid": true,
+      "http_200_total": 2538,
+      "http_429_total": 0,
+      "flow_control_materially_engaged_runs": 3,
+      "realtime_surge_p95_ttft_ms": {
+        "median": 15378.459,
+        "min": 15168.291,
+        "max": 15919.173
+      },
+      "realtime_surge_p99_ttft_ms": {
+        "median": 18293.552,
+        "min": 18037.354,
+        "max": 18774.795
+      },
+      "realtime_surge_p95_tpot_ms": {
+        "median": 267.095,
+        "min": 262.074,
+        "max": 269.14
+      },
+      "realtime_surge_p99_tpot_ms": {
+        "median": 284.591,
+        "min": 282.354,
+        "max": 285.591
+      },
+      "realtime_surge_p95_latency_ms": {
+        "median": 34188.534,
+        "min": 33545.671,
+        "max": 34450.314
+      },
+      "realtime_surge_p99_latency_ms": {
+        "median": 36428.089,
+        "min": 36142.232,
+        "max": 36556.226
+      },
+      "realtime_epp_queue_mean_ms": {
+        "median": 397.971,
+        "min": 366.909,
+        "max": 436.095
+      },
+      "batch_epp_queue_mean_ms": {
+        "median": 8461.436,
+        "min": 8020.933,
+        "max": 8701.096
+      },
+      "max_epp_queue": {
+        "median": 83.0,
+        "min": 81.0,
+        "max": 86.0
+      },
+      "max_pool_saturation": {
+        "median": 1.016,
+        "min": 1.008,
+        "max": 1.016
+      },
+      "max_vllm_running": {
+        "median": 128.0,
+        "min": 127.0,
+        "max": 128.0
+      },
+      "max_vllm_waiting": {
+        "median": 63.0,
+        "min": 62.0,
+        "max": 64.0
+      },
+      "max_vllm_kv_cache_usage_pct": {
+        "median": 44.35,
+        "min": 44.318,
+        "max": 44.359
+      },
+      "vllm_preemptions_delta": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "comparison": {
+    "realtime_p95_ttft_increase_ms": 15245.064,
+    "realtime_p95_ttft_factor": 115.285
+  },
+  "runs": [
+    {
+      "arm": "realtime with batch already running",
+      "repeat": 1,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 846,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 15378.459,
+      "realtime_surge_p99_ttft_ms": 18037.354,
+      "realtime_surge_p95_tpot_ms": 267.095,
+      "realtime_surge_p99_tpot_ms": 284.591,
+      "realtime_surge_p95_latency_ms": 34188.534,
+      "realtime_surge_p99_latency_ms": 36428.089,
+      "realtime_epp_queue_mean_ms": 366.909,
+      "batch_epp_queue_mean_ms": 8701.096,
+      "max_epp_queue": 83.0,
+      "max_pool_saturation": 1.015625,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 63.0,
+      "max_vllm_kv_cache_usage_pct": 44.359,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": true,
+      "run_name": "realtime with batch already running - repeat 1"
+    },
+    {
+      "arm": "realtime with batch already running",
+      "repeat": 2,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 846,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 15919.173,
+      "realtime_surge_p99_ttft_ms": 18774.795,
+      "realtime_surge_p95_tpot_ms": 269.14,
+      "realtime_surge_p99_tpot_ms": 285.591,
+      "realtime_surge_p95_latency_ms": 34450.314,
+      "realtime_surge_p99_latency_ms": 36556.226,
+      "realtime_epp_queue_mean_ms": 436.095,
+      "batch_epp_queue_mean_ms": 8461.436,
+      "max_epp_queue": 86.0,
+      "max_pool_saturation": 1.0078125,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 64.0,
+      "max_vllm_kv_cache_usage_pct": 44.35,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": true,
+      "run_name": "realtime with batch already running - repeat 2"
+    },
+    {
+      "arm": "realtime with batch already running",
+      "repeat": 3,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 846,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 15168.291,
+      "realtime_surge_p99_ttft_ms": 18293.552,
+      "realtime_surge_p95_tpot_ms": 262.074,
+      "realtime_surge_p99_tpot_ms": 282.354,
+      "realtime_surge_p95_latency_ms": 33545.671,
+      "realtime_surge_p99_latency_ms": 36142.232,
+      "realtime_epp_queue_mean_ms": 397.971,
+      "batch_epp_queue_mean_ms": 8020.933,
+      "max_epp_queue": 81.0,
+      "max_pool_saturation": 1.015625,
+      "max_vllm_running": 127.0,
+      "max_vllm_waiting": 62.0,
+      "max_vllm_kv_cache_usage_pct": 44.318,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": true,
+      "run_name": "realtime with batch already running - repeat 3"
+    },
+    {
+      "arm": "realtime only",
+      "repeat": 1,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 354,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 137.017,
+      "realtime_surge_p99_ttft_ms": 150.021,
+      "realtime_surge_p95_tpot_ms": 7.724,
+      "realtime_surge_p99_tpot_ms": 9.669,
+      "realtime_surge_p95_latency_ms": 988.945,
+      "realtime_surge_p99_latency_ms": 1237.975,
+      "realtime_epp_queue_mean_ms": 0.031,
+      "batch_epp_queue_mean_ms": 0.0,
+      "max_epp_queue": 0.0,
+      "max_pool_saturation": 0.0703125,
+      "max_vllm_running": 9.0,
+      "max_vllm_waiting": 0.0,
+      "max_vllm_kv_cache_usage_pct": 1.576,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": false,
+      "run_name": "realtime only - repeat 1"
+    },
+    {
+      "arm": "realtime only",
+      "repeat": 2,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 354,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 133.395,
+      "realtime_surge_p99_ttft_ms": 142.591,
+      "realtime_surge_p95_tpot_ms": 7.804,
+      "realtime_surge_p99_tpot_ms": 9.723,
+      "realtime_surge_p95_latency_ms": 999.302,
+      "realtime_surge_p99_latency_ms": 1244.834,
+      "realtime_epp_queue_mean_ms": 0.029,
+      "batch_epp_queue_mean_ms": 0.0,
+      "max_epp_queue": 0.0,
+      "max_pool_saturation": 0.0703125,
+      "max_vllm_running": 9.0,
+      "max_vllm_waiting": 0.0,
+      "max_vllm_kv_cache_usage_pct": 1.58,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": false,
+      "run_name": "realtime only - repeat 2"
+    },
+    {
+      "arm": "realtime only",
+      "repeat": 3,
+      "data_quality_valid": true,
+      "slo_proof_valid": true,
+      "http_200": 354,
+      "http_429": 0,
+      "realtime_surge_requests": 227,
+      "realtime_surge_p95_ttft_ms": 132.576,
+      "realtime_surge_p99_ttft_ms": 147.3,
+      "realtime_surge_p95_tpot_ms": 7.649,
+      "realtime_surge_p99_tpot_ms": 9.683,
+      "realtime_surge_p95_latency_ms": 979.372,
+      "realtime_surge_p99_latency_ms": 1239.761,
+      "realtime_epp_queue_mean_ms": 0.03,
+      "batch_epp_queue_mean_ms": 0.0,
+      "max_epp_queue": 0.0,
+      "max_pool_saturation": 0.0703125,
+      "max_vllm_running": 9.0,
+      "max_vllm_waiting": 0.0,
+      "max_vllm_kv_cache_usage_pct": 1.574,
+      "vllm_preemptions_delta": 0.0,
+      "flow_control_materially_engaged": false,
+      "run_name": "realtime only - repeat 3"
+    }
+  ],
+  "schema": "stable-upstream-batch-interference-analysis-v1",
+  "business_question": "How much does batch work already running in vLLM increase realtime latency?",
+  "answer": "At this tested load, realtime median p95 TTFT increased from 133 ms to 15,378 ms when batch work was already running in vLLM.",
+  "claim_boundary": "This is an interference baseline. It shows why priority queues alone cannot reclaim capacity from work already running in vLLM; it does not test reserved capacity or eviction."
+}

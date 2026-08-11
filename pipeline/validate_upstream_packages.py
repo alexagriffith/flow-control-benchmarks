@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "benchmark-data" / "upstream-flow-control-v0.9.0"
 SCALING = DATA / "multi-replica-scaling"
 STABILITY = DATA / "long-stability"
+BATCH = DATA / "batch-interference"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
@@ -311,6 +312,157 @@ def validate_stability(errors: list[str]) -> None:
     )
 
 
+def validate_batch_interference(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+    }
+    found = {path.name for path in BATCH.iterdir() if path.is_file()}
+    require(required <= found, "batch-interference files missing", errors)
+
+    summary = read_csv(BATCH / "summary.csv")
+    requests = read_csv(BATCH / "request-results.csv")
+    traffic = read_csv(BATCH / "traffic-samples.csv")
+    metrics = read_csv(BATCH / "system-metrics.csv")
+    evidence = read_csv(BATCH / "run-evidence.csv")
+    analysis = json.loads((BATCH / "analysis.json").read_text())
+    config = json.loads((BATCH / "run-config.json").read_text())
+
+    arms = Counter(row["arm"] for row in summary)
+    require(
+        arms == {
+            "realtime only": 3,
+            "realtime with batch already running": 3,
+        },
+        "expected three repeats in each batch-interference arm",
+        errors,
+    )
+    require(len(requests) == 3600, "batch-interference request count changed", errors)
+    require(len(evidence) == 6, "expected six batch-interference evidence rows", errors)
+    require(len(traffic) > 0 and len(metrics) > 0, "batch samples are empty", errors)
+    require(
+        all(row["http_status"] == "200" for row in requests),
+        "batch-interference request failed",
+        errors,
+    )
+    require(
+        sum(int(row["http_200_requests"]) for row in summary) == 3600
+        and all(row["http_429_requests"] == "0" for row in summary),
+        "batch-interference summaries do not match requests",
+        errors,
+    )
+    request_counts = Counter(row["run_name"] for row in requests)
+    require(
+        all(
+            request_counts[row["run_name"]]
+            == int(row["http_200_requests"]) + int(row["http_429_requests"])
+            for row in summary
+        ),
+        "batch-interference request rows do not match each run summary",
+        errors,
+    )
+
+    base_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+    )
+    require(
+        all(is_true(row[field]) for row in evidence for field in base_gates),
+        "a batch-interference evidence gate failed",
+        errors,
+    )
+    engagement = {row["run_name"]: is_true(row["flow_control_engaged"]) for row in evidence}
+    require(
+        all(
+            not engagement[row["run_name"]]
+            if row["arm"] == "realtime only"
+            else engagement[row["run_name"]]
+            for row in summary
+        ),
+        "batch-interference flow-control engagement boundary changed",
+        errors,
+    )
+    require(
+        all(
+            row["prefix_cache_queries"] == "0.0"
+            and row["prefix_cache_hits"] == "0.0"
+            and row["vllm_preemptions"] == "0.0"
+            and not is_true(row["endpoint_picker_restarted"])
+            for row in evidence
+        ),
+        "batch-interference cache, preemption, or restart evidence changed",
+        errors,
+    )
+
+    require(
+        analysis["run_count"] == 6
+        and analysis["all_data_quality_valid"]
+        and analysis["comparison"]["realtime_p95_ttft_increase_ms"] == 15245.064
+        and analysis["comparison"]["realtime_p95_ttft_factor"] == 115.285,
+        "batch-interference comparison changed",
+        errors,
+    )
+    require(
+        analysis["by_arm"]["realtime only"]["realtime_surge_p95_ttft_ms"][
+            "median"
+        ]
+        == 133.395
+        and analysis["by_arm"]["realtime with batch already running"][
+            "realtime_surge_p95_ttft_ms"
+        ]["median"]
+        == 15378.459,
+        "batch-interference median TTFT changed",
+        errors,
+    )
+    required_metrics = {
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+        "vllm_prefix_cache_queries_total",
+        "vllm_prefix_cache_hits_total",
+    }
+    require(
+        required_metrics <= {row["metric"] for row in metrics},
+        "batch-interference system metrics are incomplete",
+        errors,
+    )
+    require(
+        config["topology"] == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas": 1,
+            "gpus_per_model_replica": 1,
+        }
+        and config["hardware"]["gpu_per_model_replica"] == "NVIDIA H100"
+        and config["model_service"]["model"] == "GPT-OSS 20B"
+        and config["model_service"]["max_num_seqs"] == 128
+        and config["endpoint_picker"]["version"]
+        == "llm-d Endpoint Picker v0.9.0"
+        and config["endpoint_picker"]["detector"] == "request-concurrency"
+        and config["endpoint_picker"]["max_concurrency"] == 128
+        and config["endpoint_picker"]["headroom"] == 0.10
+        and config["endpoint_picker"]["reserved_capacity"] == "not configured"
+        and config["endpoint_picker"]["batch_eviction"] == "not configured",
+        "batch-interference configuration changed",
+        errors,
+    )
+
+
 def scan_sensitive_text(errors: list[str]) -> None:
     for path in DATA.rglob("*"):
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
@@ -325,6 +477,7 @@ def main() -> int:
     errors: list[str] = []
     validate_scaling(errors)
     validate_stability(errors)
+    validate_batch_interference(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -334,6 +487,7 @@ def main() -> int:
     print("Stable-upstream promotion validation passed.")
     print("- Model pool scaling: 9 runs, 24,462 request rows")
     print("- Long stability: 1 run, 14,889 request rows")
+    print("- Batch interference: 6 runs, 3,600 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

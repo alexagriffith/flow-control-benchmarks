@@ -1,0 +1,147 @@
+{
+  "schema": "stable-upstream-batch-interference-benchmark-v1",
+  "date": "2026-08-10",
+  "topology": {
+    "endpoint_picker_replicas": 1,
+    "model_replicas": 1,
+    "gpus_per_model_replica": 1
+  },
+  "hardware": {
+    "gpu_per_model_replica": "NVIDIA H100"
+  },
+  "model_service": {
+    "model": "GPT-OSS 20B",
+    "runtime": "Red Hat AI Inference Server vLLM",
+    "tensor_parallel_size": 1,
+    "max_model_len": 32768,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 128,
+    "gpu_memory_utilization": 0.9,
+    "prefix_cache": "disabled"
+  },
+  "endpoint_picker": {
+    "version": "llm-d Endpoint Picker v0.9.0",
+    "flow_control_gate": "enabled",
+    "detector": "request-concurrency",
+    "max_concurrency": 128,
+    "headroom": 0.1,
+    "picker": "random",
+    "priority_bands": [
+      100,
+      50,
+      0,
+      -10
+    ],
+    "fairness": "round-robin within each priority band",
+    "reserved_capacity": "not configured",
+    "batch_eviction": "not configured"
+  },
+  "traffic": {
+    "production_scenarios": [
+      {
+        "name": "realtime-only-reference",
+        "duration_s": 240,
+        "analysis_windows": [
+          {
+            "name": "surge",
+            "start_s": 80,
+            "end_s": 160
+          },
+          {
+            "name": "recovery",
+            "start_s": 190,
+            "end_s": 230
+          }
+        ],
+        "tenants": [
+          {
+            "fairness_id": "realtime-chat",
+            "priority": 100,
+            "input_tokens": 4096,
+            "output_tokens": 128,
+            "phases": [
+              {
+                "start_s": 60,
+                "duration_s": 120,
+                "rate_pattern": "noisy_sinusoidal",
+                "rate_center": 3.0,
+                "rate_amplitude": 0.6,
+                "period_s": 37,
+                "phase_offset": 0.1,
+                "rate_noise": 0.3,
+                "rate_spike_probability": 0.02
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "realtime-with-batch-already-running",
+        "duration_s": 240,
+        "analysis_windows": [
+          {
+            "name": "baseline",
+            "start_s": 20,
+            "end_s": 55
+          },
+          {
+            "name": "surge",
+            "start_s": 80,
+            "end_s": 160
+          },
+          {
+            "name": "recovery",
+            "start_s": 190,
+            "end_s": 230
+          }
+        ],
+        "tenants": [
+          {
+            "fairness_id": "realtime-chat",
+            "priority": 100,
+            "input_tokens": 4096,
+            "output_tokens": 128,
+            "phases": [
+              {
+                "start_s": 60,
+                "duration_s": 120,
+                "rate_pattern": "noisy_sinusoidal",
+                "rate_center": 3.0,
+                "rate_amplitude": 0.6,
+                "period_s": 37,
+                "phase_offset": 0.1,
+                "rate_noise": 0.3,
+                "rate_spike_probability": 0.02
+              }
+            ]
+          },
+          {
+            "fairness_id": "batch-long-context",
+            "priority": -10,
+            "input_tokens": 20000,
+            "output_tokens": 128,
+            "phases": [
+              {
+                "start_s": 0,
+                "duration_s": 180,
+                "rate_pattern": "noisy_sinusoidal",
+                "rate_center": 2.75,
+                "rate_amplitude": 0.55,
+                "period_s": 31,
+                "phase_offset": 0.4,
+                "rate_noise": 0.275,
+                "rate_spike_probability": 0.02
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "execution": {
+    "arrival": "open-loop Poisson replay with noisy sinusoidal rates",
+    "production_repeats_per_arm": 3,
+    "matched_realtime_trace": true,
+    "cache_mode": "off"
+  }
+}

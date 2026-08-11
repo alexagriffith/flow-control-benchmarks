@@ -1,0 +1,7 @@
+run_name,arm,repeat,data_quality_passed,proof_checks_passed,http_200_requests,http_429_requests,realtime_surge_requests,realtime_surge_p95_ttft_ms,realtime_surge_p99_ttft_ms,realtime_surge_p95_tpot_ms_per_token,realtime_surge_p95_e2e_latency_ms,realtime_endpoint_picker_queue_mean_ms,batch_endpoint_picker_queue_mean_ms,peak_endpoint_picker_queue_requests,peak_pool_saturation_ratio,peak_vllm_running_requests,peak_vllm_waiting_requests,peak_kv_cache_usage_percent,vllm_preemptions,flow_control_materially_engaged
+realtime with batch already running - repeat 1,realtime with batch already running,1,true,true,846,0,227,15378.459,18037.354,267.095,34188.534,366.909,8701.096,83.0,1.015625,128.0,63.0,44.359,0.0,true
+realtime with batch already running - repeat 2,realtime with batch already running,2,true,true,846,0,227,15919.173,18774.795,269.14,34450.314,436.095,8461.436,86.0,1.0078125,128.0,64.0,44.35,0.0,true
+realtime with batch already running - repeat 3,realtime with batch already running,3,true,true,846,0,227,15168.291,18293.552,262.074,33545.671,397.971,8020.933,81.0,1.015625,127.0,62.0,44.318,0.0,true
+realtime only - repeat 1,realtime only,1,true,true,354,0,227,137.017,150.021,7.724,988.945,0.031,0.0,0.0,0.0703125,9.0,0.0,1.576,0.0,false
+realtime only - repeat 2,realtime only,2,true,true,354,0,227,133.395,142.591,7.804,999.302,0.029,0.0,0.0,0.0703125,9.0,0.0,1.58,0.0,false
+realtime only - repeat 3,realtime only,3,true,true,354,0,227,132.576,147.3,7.649,979.372,0.03,0.0,0.0,0.0703125,9.0,0.0,1.574,0.0,false
