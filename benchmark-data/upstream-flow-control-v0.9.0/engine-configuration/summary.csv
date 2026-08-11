@@ -1,0 +1,26 @@
+run_name,sweep,setting,value,repeat,evidence_role,arrival_mode,requests,http_200,http_429,timeouts,errors,steady_throughput_rps,p95_ttft_ms,p99_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,peak_policy_queue_requests,peak_pool_saturation_ratio,queued_requests
+concurrency 8 - repeat 1,flow-control-off capacity,concurrency,8.0,1,capacity curve,closed_loop,1321,1321,0,0,0,7.908333,270.582125,401.322042,1040.063666,6.642188,0.0,0.0,0.0
+concurrency 16 - repeat 1,flow-control-off capacity,concurrency,16.0,1,capacity curve,closed_loop,2398,2398,0,0,0,14.433333,329.87375,346.892625,1150.688125,7.177037,0.0,0.0,0.0
+concurrency 24 - repeat 1,flow-control-off capacity,concurrency,24.0,1,capacity curve,closed_loop,3140,3140,0,0,0,18.716667,322.953958,684.283375,1313.114292,8.321144,0.0,0.0,0.0
+concurrency 32 - repeat 1,flow-control-off capacity,concurrency,32.0,1,capacity curve,closed_loop,3933,3933,0,0,0,23.5,385.506167,714.749042,1394.582708,8.981316,0.0,0.0,0.0
+concurrency 48 - repeat 1,flow-control-off capacity,concurrency,48.0,1,capacity curve,closed_loop,5079,5079,0,0,0,30.083333,511.674333,808.574291,1651.895208,10.27991,0.0,0.0,0.0
+concurrency 64 - repeat 1,flow-control-off capacity,concurrency,64.0,1,capacity curve,closed_loop,6163,6163,0,0,0,36.925,595.258916,646.60825,1769.455583,11.488454,0.0,0.0,0.0
+concurrency 96 - repeat 1,flow-control-off capacity,concurrency,96.0,1,capacity curve,closed_loop,7082,7082,0,0,0,43.133333,867.434375,990.839959,2487.869042,16.765736,0.0,0.0,0.0
+concurrency 128 - repeat 1,flow-control-off capacity,concurrency,128.0,1,capacity curve,closed_loop,8155,8155,0,0,0,48.958333,1021.989167,1369.724583,3084.828292,19.279963,0.0,0.0,0.0
+concurrency 160 - repeat 1,flow-control-off capacity,concurrency,160.0,1,capacity curve,closed_loop,8838,8838,0,0,0,50.658333,933.507666,998.926834,3302.983709,19.296952,0.0,0.0,0.0
+max sequences 64 - repeat 1,vLLM max sequences,max sequences,64.0,1,calibration point,closed_loop,6854,6854,0,0,0,37.825,3393.146792,3448.685625,4908.708333,12.621318,0.0,0.0,0.0
+max sequences 96 - repeat 1,vLLM max sequences,max sequences,96.0,1,calibration point,closed_loop,7647,7647,0,0,0,43.533333,2270.316833,2307.11775,4288.745084,16.525895,0.0,0.0,0.0
+max sequences 128 - repeat 1,vLLM max sequences,max sequences,128.0,1,selected,closed_loop,8692,8692,0,0,0,51.091667,1566.649458,1652.975042,3878.523042,18.935308,0.0,0.0,0.0
+max sequences 128 - repeat 2,vLLM max sequences,max sequences,128.0,2,selected,closed_loop,8413,8413,0,0,0,48.658333,1822.05125,1888.182125,4258.920875,20.159474,0.0,0.0,0.0
+max sequences 128 - repeat 3,vLLM max sequences,max sequences,128.0,3,selected,closed_loop,8497,8497,0,0,0,50.533333,1933.46,2028.486167,4281.393667,19.567304,0.0,0.0,0.0
+max sequences 160 - repeat 1,vLLM max sequences,max sequences,160.0,1,decision boundary,closed_loop,8222,8222,0,0,0,49.875,1365.176584,2215.493708,4793.473375,28.328121,0.0,0.0,0.0
+max sequences 160 - repeat 2,vLLM max sequences,max sequences,160.0,2,decision boundary,closed_loop,8554,8554,0,0,0,52.833333,1164.844542,1532.542625,4199.916625,25.714186,0.0,0.0,0.0
+max sequences 160 - repeat 3,vLLM max sequences,max sequences,160.0,3,decision boundary,closed_loop,8292,8292,0,0,0,50.708333,1575.212708,1977.651,4620.38475,27.048305,0.0,0.0,0.0
+max sequences 192 - repeat 1,vLLM max sequences,max sequences,192.0,1,decision boundary,closed_loop,8252,8252,0,0,0,51.933333,1690.712833,2785.465959,4699.915958,30.225868,0.0,0.0,0.0
+max sequences 192 - repeat 2,vLLM max sequences,max sequences,192.0,2,decision boundary,closed_loop,8378,8378,0,0,0,51.375,1961.925958,2613.4375,4901.867666,28.862933,0.0,0.0,0.0
+max sequences 192 - repeat 3,vLLM max sequences,max sequences,192.0,3,decision boundary,closed_loop,9403,9403,0,0,0,56.116667,1629.6155,1933.733417,3956.777417,24.366999,0.0,0.0,0.0
+batched tokens 4096 - repeat 1,vLLM batched tokens,batched tokens,4096.0,1,calibration point,closed_loop,8088,8088,0,0,0,47.808333,1876.799708,2013.302542,4373.612375,20.507374,0.0,0.0,0.0
+batched tokens 16384 - repeat 1,vLLM batched tokens,batched tokens,16384.0,1,calibration point,closed_loop,8275,8275,0,0,0,48.741667,2161.861417,2565.215333,4736.712458,22.754301,0.0,0.0,0.0
+batched tokens 8192 - repeat 1,vLLM batched tokens,batched tokens,8192,1,selected,closed_loop,8692,8692,0,0,0,51.091667,1566.649458,1652.975042,3878.523042,18.935308,0.0,0.0,0.0
+batched tokens 8192 - repeat 2,vLLM batched tokens,batched tokens,8192,2,selected,closed_loop,8413,8413,0,0,0,48.658333,1822.05125,1888.182125,4258.920875,20.159474,0.0,0.0,0.0
+batched tokens 8192 - repeat 3,vLLM batched tokens,batched tokens,8192,3,selected,closed_loop,8497,8497,0,0,0,50.533333,1933.46,2028.486167,4281.393667,19.567304,0.0,0.0,0.0

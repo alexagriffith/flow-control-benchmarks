@@ -1,0 +1,54 @@
+{
+  "experiment": "engine-configuration",
+  "selected": {
+    "max_num_sequences": 128,
+    "max_num_batched_tokens": 8192
+  },
+  "max_sequence_medians": {
+    "128": {
+      "runs": 3,
+      "steady_throughput_rps": 50.533333,
+      "p95_ttft_ms": 1822.05125,
+      "p99_ttft_ms": 1888.182125,
+      "p95_tpot_ms_per_token": 19.567304
+    },
+    "160": {
+      "runs": 3,
+      "steady_throughput_rps": 50.708333,
+      "p95_ttft_ms": 1365.176584,
+      "p99_ttft_ms": 1977.651,
+      "p95_tpot_ms_per_token": 27.048305
+    },
+    "192": {
+      "runs": 3,
+      "steady_throughput_rps": 51.933333,
+      "p95_ttft_ms": 1690.712833,
+      "p99_ttft_ms": 2613.4375,
+      "p95_tpot_ms_per_token": 28.862933
+    }
+  },
+  "batched_token_results": {
+    "4096": {
+      "runs": 1,
+      "steady_throughput_rps": 47.808333,
+      "p95_ttft_ms": 1876.799708,
+      "p99_ttft_ms": 2013.302542,
+      "p95_tpot_ms_per_token": 20.507374
+    },
+    "8192": {
+      "runs": 3,
+      "steady_throughput_rps": 50.533333,
+      "p95_ttft_ms": 1822.05125,
+      "p99_ttft_ms": 1888.182125,
+      "p95_tpot_ms_per_token": 19.567304
+    },
+    "16384": {
+      "runs": 1,
+      "steady_throughput_rps": 48.741667,
+      "p95_ttft_ms": 2161.861417,
+      "p99_ttft_ms": 2565.215333,
+      "p95_tpot_ms_per_token": 22.754301
+    }
+  },
+  "claim_boundary": "Closed-loop engine calibration selects capacity settings. It is not an SLO proof."
+}
