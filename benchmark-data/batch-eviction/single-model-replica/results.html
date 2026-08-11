@@ -638,8 +638,8 @@
     <section class="decision-band" aria-labelledby="decision-title">
       <div class="decision-grid">
         <div class="decision-copy">
-          <h2 id="decision-title">Flow control protects higher-priority realtime p95 TTFT through reserved capacity and batch eviction. When realtime demand needs capacity, lower-priority batch work is evicted, retried, and completed later.</h2>
-          <p>Batch workloads can use shared GPU capacity while flow control returns capacity to realtime traffic when demand arrives.</p>
+          <h2 id="decision-title">Flow control protects higher-priority realtime p95 TTFT through reserved capacity and batch eviction.</h2>
+          <p>When realtime demand needs capacity, lower-priority batch work is evicted, retried, and completed later.</p>
         </div>
         <div class="decision-stat">
           <strong>Realtime latency protected</strong>
@@ -880,7 +880,6 @@
     "use strict";
 
     const runColumns = [
-      {key:"run",label:"Run name"},
       {key:"arm",label:"Scenario"},
       {key:"repeat",label:"Repeat",num:true},
       {key:"valid",label:"Audit passed"},
