@@ -210,7 +210,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
             value = round(result["median_p95_ttft_ms"])
             require_text(text, f'data-value="{value}"', f"{scenario} {workload} chart value changed", errors)
             require_text(text, f'>{value:,} ms<', f"{scenario} {workload} display value changed", errors)
-    require_text(text, "Nine matched scaling runs across three model-pool sizes", "scale evidence scope changed", errors)
+    require_text(text, "Nine matched runs; HTTP 429: 5/3,498, 1/7,014, and 0/13,950", "scale evidence scope changed", errors)
     require_text(text, "Incoming request rate over time", "production traffic title changed", errors)
     require_text(text, "requests/s", "production traffic y-axis unit changed", errors)
     for expected_range in (
@@ -311,12 +311,14 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require_text(text, "Batch eviction is planned for Endpoint Picker v0.10.0.", "batch-eviction release note changed", errors)
 
     required_claims = (
-        "Flow control protected realtime traffic across four production-shaped scenarios.",
+        "With flow control engaged, steady realtime tenants maintained low TTFT across four production-shaped scenarios.",
+        "Selected steady realtime tenants recorded median p95 time to first token (TTFT) between 404 and 570 ms.",
         "Open-loop Poisson arrivals followed noisy sinusoidal phases",
         "Request count and queue depth used the same prompts, noisy-sinusoidal traffic schedule, model, GPU, and three-repeat structure.",
         "Flow control was engaged and policy queues were active in every retained run.",
         "Reserved capacity and eviction are covered separately.",
-        "HTTP 429: 5/3,498, 1/7,014, and 0/13,950.",
+        "HTTP 429: 5/3,498 at one replica, 1/7,014 at two, and 0/13,950 at four.",
+        "sparse 429s prevent a rejection-free claim at every pool size.",
         "No fixed service-level objective is claimed.",
     )
     for claim in required_claims:

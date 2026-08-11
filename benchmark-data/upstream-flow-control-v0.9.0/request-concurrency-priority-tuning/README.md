@@ -24,12 +24,30 @@ and detector configurations. A direct implementation comparison requires the
 same deterministic traffic, model image, engine settings, and at least three
 counterbalanced repeats.
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Request-concurrency priority tuning tested serving path](architecture.svg)
+
+![Request-concurrency priority tuning benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+<!-- /generated:package-visuals -->
+
 ## Reproduce
 
-This historical July package used [`pipeline/archive/benchmark-2026-07.py`](../../../pipeline/archive/benchmark-2026-07.py), not the current runner. It tested `maxConcurrency` 32, 48, 64, 96, and 128 with two 120-second closed-loop repeats per point, 512 input tokens, 128 output tokens, seed 42, a 384-prompt pool, and cache off.
+This historical July package used [`pipeline/archive/benchmark-2026-07.py`](../../../pipeline/archive/benchmark-2026-07.py), not the current runner. The public copy changes only deployment-specific defaults; its traffic and measurement logic matches the executed runner. Both hashes are recorded in [`run-config.json`](run-config.json). The sweep tested `maxConcurrency` 32, 48, 64, 96, and 128 with two 120-second closed-loop repeats per point, 512 input tokens, 128 output tokens, seed 42, a 384-prompt pool, and cache off.
 
 ```bash
-python3 pipeline/archive/benchmark-2026-07.py --output-dir <output-dir> --input-tokens 512 --output-tokens 128 --prompt-pool-size 384 --skip-sweep --test2-noisy --scenario-duration 120 --repeats 2 --stabilization-repeats 0 --warmup-duration 0 --warmup-concurrency 16 --steady-state-trim-s 20 --traffic-seed 42 --vllm-prefix-caching off
+OUTPUT_DIR=${OUTPUT_DIR:-results/request-concurrency-priority-tuning}
+python3 pipeline/archive/benchmark-2026-07.py \
+  --output-dir "$OUTPUT_DIR" --input-tokens 512 --output-tokens 128 \
+  --prompt-pool-size 384 --skip-sweep --test2-noisy \
+  --scenario-duration 120 --repeats 2 --stabilization-repeats 0 \
+  --warmup-duration 0 --warmup-concurrency 16 --steady-state-trim-s 20 \
+  --traffic-seed 42 --vllm-prefix-caching off
 ```
 
 Set the Endpoint Picker request-concurrency cap before each point. Every run folder retains its exact [`benchmark_config.json`](us_sweep_maxc48/benchmark_config.json).

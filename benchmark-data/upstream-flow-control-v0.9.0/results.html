@@ -236,18 +236,18 @@
     <section class="result-band" aria-label="Benchmark result">
       <div class="result-grid">
         <div>
-          <h2>Flow control protected realtime traffic across four production-shaped scenarios.</h2>
-          <p>When demand surged, lower-priority and overloaded workloads absorbed most of the wait.</p>
+          <h2>With flow control engaged, steady realtime tenants maintained low TTFT across four production-shaped scenarios.</h2>
+          <p>When demand surged, lower-priority workloads and the overloaded same-priority tenant absorbed most of the wait.</p>
         </div>
         <div>
-          <strong>Priority protection</strong>
-          <span>Realtime median p95 time to first token (TTFT) stayed between 404 and 570 ms across all four production scenarios.</span>
+          <strong>Steady realtime latency</strong>
+          <span>Selected steady realtime tenants recorded median p95 time to first token (TTFT) between 404 and 570 ms.</span>
           <small>Flow control engaged in every retained run</small>
         </div>
         <div>
           <strong>Per-GPU throughput held</strong>
           <span>Served requests per second (RPS) per GPU varied by at most 0.6% across one, two, and four model replicas.</span>
-          <small><a href="#scale">Nine matched scaling runs across three model-pool sizes</a></small>
+          <small><a href="#scale">Nine matched runs; HTTP 429: 5/3,498, 1/7,014, and 0/13,950</a></small>
         </div>
       </div>
     </section>
@@ -335,7 +335,7 @@
     <section class="band white" id="scale">
       <div class="section-head"><h2>Scale, recovery, and routing</h2><p>The selected configuration was tested across larger model pools, repeated surges, and cache-aware routing.</p></div>
       <div class="chart-grid three">
-        <figure class="chart"><h3>Per-GPU throughput held as the model pool grew</h3><p class="takeaway">Served RPS per GPU varied by at most 0.6% across one, two, and four replicas.</p><div class="sweep-chart" role="img" aria-label="Model-pool scaling comparing served requests per second per GPU and premium surge p95 TTFT at one, two, and four replicas." data-labels="1 replica|2 replicas|4 replicas" data-throughput="4.293|4.317|4.302" data-latency="374|340|322" data-throughput-label="RPS per GPU" data-latency-label="p95 TTFT"></div><figcaption class="caption">Premium p95 TTFT ranges: 366–416 ms, 332–349 ms, and 306–349 ms. HTTP 429: 5/3,498, 1/7,014, and 0/13,950.</figcaption></figure>
+        <figure class="chart"><h3>Per-GPU throughput held as the model pool grew</h3><p class="takeaway">Served RPS per GPU varied by at most 0.6% across one, two, and four replicas.</p><div class="sweep-chart" role="img" aria-label="Model-pool scaling comparing served requests per second per GPU and premium surge p95 TTFT at one, two, and four replicas." data-labels="1 replica|2 replicas|4 replicas" data-throughput="4.293|4.317|4.302" data-latency="374|340|322" data-throughput-label="RPS per GPU" data-latency-label="p95 TTFT"></div><figcaption class="caption">Premium p95 TTFT ranges: 366–416 ms, 332–349 ms, and 306–349 ms. HTTP 429: 5/3,498 at one replica, 1/7,014 at two, and 0/13,950 at four. Throughput scaled cleanly; sparse 429s prevent a rejection-free claim at every pool size.</figcaption></figure>
         <figure class="chart amber"><h3>The queue drained after both sustained surges</h3><p class="takeaway">Flow control engaged twice; final p95 TTFT returned to 290 ms with zero preemptions.</p><div class="phase-chart" role="img" aria-label="Premium p95 TTFT across baseline, two surge periods, two recoveries, and the final phase." data-labels="Baseline|Surge 1|Recovery 1|Surge 2|Recovery 2|Final" data-values="299|1760|127|1227|279|290"></div><figcaption class="caption">One 30-minute run, 14,889 completed requests, cache off.</figcaption></figure>
         <figure class="chart violet"><h3>Prefix-aware routing did not improve overall TTFT consistently</h3><p class="takeaway">Median overall p95 TTFT changed by workload, with high variation across repeats.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--amber)"></i>Random</span><span><i class="swatch" style="--key:var(--violet)"></i>Prefix-aware</span></div><div class="pair-axis"><span>500 ms</span><span>60,000 ms · log scale</span></div><div class="paired" data-min="500" data-max="60000" data-scale="log"><div class="pair-row"><span class="bar-label">Realtime</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="1195"></i><i class="marker violet" data-value="936"></i></div><span class="pair-values">1,195 / 936 ms</span></div><div class="pair-row"><span class="bar-label">Agentic</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="4364"></i><i class="marker violet" data-value="3946"></i></div><span class="pair-values">4,364 / 3,946 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="10324"></i><i class="marker violet" data-value="12635"></i></div><span class="pair-values">10,324 / 12,635 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="49763"></i><i class="marker violet" data-value="44462"></i></div><span class="pair-values">49,763 / 44,462 ms</span></div></div><figcaption class="caption">Overall p95 TTFT by workload across three repeats per routing mode. Standard was 22% slower with prefix-aware routing. Cache hit rate did not increase, and median route imbalance rose from 0.9% to 19.1%.</figcaption><p class="decision-line">Keep random routing as the control configuration for this workload.</p></figure>
       </div>

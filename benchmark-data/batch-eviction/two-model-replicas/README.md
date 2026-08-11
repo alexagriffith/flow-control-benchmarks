@@ -5,6 +5,26 @@ realtime traffic while batch workloads run across two model replicas. When
 realtime demand needed capacity, lower-priority batch work was evicted and
 retried.
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Batch eviction: 2 model replicas tested serving path](architecture.svg)
+
+![Batch eviction: 2 model replicas benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
+## Recorded replay
+
+[![Two-model batch-eviction replay](replay-poster.png)](replay.mp4)
+
+Accepted production repeat 1, replayed from 45 to 75 seconds at 1× speed. The replay shows one Endpoint Picker, two model replicas, the batch queue, and recorded model pressure. Eviction and retry outcomes remain in [`eviction-retry-correlation.csv`](eviction-retry-correlation.csv).
+
 ## What the benchmark showed
 
 - Flow control engaged in all three production repeats.

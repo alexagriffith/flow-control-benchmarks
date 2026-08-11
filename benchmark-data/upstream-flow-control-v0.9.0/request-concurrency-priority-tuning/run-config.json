@@ -2,6 +2,9 @@
   "package": "request-concurrency-priority-tuning",
   "runner": {
     "source": "pipeline/archive/benchmark-2026-07.py",
+    "published_sha256": "0d5296e42922f6691db267598afe3ec5ac4f653b96a9935f5fefbf8e4c2dbce3",
+    "executed_sha256": "cfc227b88faa9041ba88c2e352c27fae328a97d1fce6ec0b9c6859c32d136998",
+    "sanitized_deployment_defaults_only": true,
     "traffic_driver": "native closed loop",
     "historical_runner": true
   },

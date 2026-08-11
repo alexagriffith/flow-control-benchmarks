@@ -5,6 +5,20 @@
 Does the selected priority-protection configuration recover after repeated
 production-shaped surges?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Long stability tested serving path](architecture.svg)
+
+![Long stability benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 All 14,889 requests completed during the 30-minute mixed-workload run. Flow
@@ -66,7 +80,7 @@ This package used GuideLLM 0.7.0 for one 1,800-second run. The configuration was
 
 ```bash
 python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/long-stability/scenario.json --scenario mixed_workload_long_stability --out-dir /tmp/long-stability --traffic-seed 20260809
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/long-stability/manifest.json --run-dir results/long-stability --prefix long-stability --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 600 --recover-multiline-sse
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/long-stability/manifest.json --run-dir results/long-stability --prefix long-stability --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 600 --recover-multiline-sse
 ```
 
 [`scenario.json`](scenario.json) contains both surges and the recovery windows. [`run-config.json`](run-config.json) records the full service configuration.

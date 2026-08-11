@@ -1,0 +1,67 @@
+# Generated from run-config.json. Contains no credentials or cluster endpoints.
+schema_version: 1
+source: "run-config.json"
+tested_configuration:
+  schema: "stable-upstream-multi-replica-benchmark-v1"
+  date: "2026-08-10"
+  topology:
+    endpoint_picker_replicas: 1
+    model_replicas_tested:
+      - 1
+      - 2
+      - 4
+    gpus_per_model_replica: 1
+  hardware:
+    gpu_per_model_replica: "NVIDIA H100"
+  model_service:
+    model: "GPT-OSS 20B"
+    runtime: "Red Hat AI Inference Server vLLM"
+    tensor_parallel_size: 1
+    max_model_len: 32768
+    max_num_batched_tokens: 8192
+    max_num_seqs: 128
+    gpu_memory_utilization: 0.9
+    prefix_cache: "disabled"
+  endpoint_picker:
+    version: "llm-d Endpoint Picker v0.9.0"
+    flow_control_gate: "enabled"
+    detector: "token-concurrency"
+    max_token_concurrency: 20000
+    estimated_output_tokens_included: false
+    headroom: 0.25
+    picker: "random"
+    priority_bands:
+      - 100
+      - 50
+      - 0
+      - -10
+    fairness: "round-robin within each priority band"
+  traffic:
+    scenario_file: "scenario.json"
+    description: "Cache-off long-context interference with offered load scaled per model replica."
+    scenario_names:
+      - "one_replica_scaled_load"
+      - "two_replica_scaled_load"
+      - "four_replica_scaled_load"
+  execution:
+    arrival: "open-loop Poisson replay with noisy sinusoidal phases"
+    seed: 18
+    production_repeats_per_topology: 3
+    matched_offered_load_per_gpu: true
+    load_generator: "GuideLLM"
+    worker_processes_per_tenant_per_gpu: 8
+    worker_poll_interval_seconds: 0.01
+  decision_limits:
+    offered_load_difference_per_gpu_percent: 1
+    maximum_served_rps_per_gpu_regression_percent: 15
+    maximum_premium_burst_p95_ttft_regression_percent: 20
+    required_non_200_responses: 0
+    required_endpoint_picker_restarts: 0
+  runner:
+    scenario_source: "pipeline/benchmark.py"
+    sha256: "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0"
+    traffic_driver: "GuideLLM"
+    guidellm_version: "0.7.0"
+    trace_compiler: "pipeline/guidellm_trace.py"
+    launcher: "pipeline/run_guidellm_scenario.py"
+    scenario_file: "scenario.json"

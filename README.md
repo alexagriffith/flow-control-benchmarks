@@ -13,8 +13,15 @@ readable scenario names instead of raw repeat ids.
 - [`benchmark-data/upstream-flow-control-v0.9.0/results.html`](benchmark-data/upstream-flow-control-v0.9.0/results.html) summarizes the selected configuration, four production scenarios, workload shapes, scaling, stability, and prefix-aware routing.
 - [`benchmark-data/rhaii-3.4-flow-control/`](benchmark-data/rhaii-3.4-flow-control/) contains the original utilization-detector evidence used throughout this README.
 - [`benchmark-data/batch-eviction/`](benchmark-data/batch-eviction/) contains the batch-eviction and retry proof for one and two model replicas.
+- [`flow-control-visualizer`](https://github.com/alexagriffith/flow-control-visualizer) replays the published time-series packages as synchronized traffic, Endpoint Picker queue, and vLLM views.
 
 The v0.9.0 summary links each claim to its evidence package. Newly validated packages include configuration, request and system metrics, proof gates, and claim boundaries. Absolute latency depends on the model, hardware, request shape, and offered load.
+
+## Reproduce and replay
+
+Each accepted package records the scenario, seed, runner hash, image, tested configuration, commands, and evidence gate. Those inputs reproduce the issued traffic. TTFT and model output will vary across clusters, so compare repeated distributions under the same hardware and software contract instead of expecting identical request-by-request values. GuideLLM creates the requests again; saved model responses are evidence, not replay input.
+
+Selected time-series packages also include a recorded replay. The same clips can be regenerated with the public [Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer) and the package commands in [`pipeline/README.md`](pipeline/README.md).
 
 ## What flow control does, in one screen
 

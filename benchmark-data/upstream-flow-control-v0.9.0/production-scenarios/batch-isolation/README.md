@@ -5,6 +5,20 @@
 Can realtime and standard work retain lower TTFT while batch traffic shares the
 same model server?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Batch isolation tested serving path](architecture.svg)
+
+![Batch isolation benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## What the benchmark showed
 
 | Workload | Median surge p95 TTFT |
@@ -48,7 +62,7 @@ This scenario used GuideLLM 0.7.0 with request-count admission at 128 requests, 
 
 ```bash
 python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/scenario.json --scenario batch_isolation --out-dir /tmp/batch-isolation --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/batch-isolation/manifest.json --run-dir results/batch-isolation --prefix batch-isolation --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/batch-isolation/manifest.json --run-dir results/batch-isolation --prefix batch-isolation --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
 ```
 
 [`scenario.json`](scenario.json) contains only the batch-isolation traffic. [`run-config.json`](run-config.json) records the tested images and settings.

@@ -3,6 +3,7 @@
 These packages test the [llm-d Endpoint Picker v0.9.0](https://github.com/llm-d/llm-d-router) flow-control path. Each
 package contains the selected repeats, exact configuration, request-level data,
 traffic samples, system metrics, evidence gates, analysis, and claim boundary.
+Each capability folder also includes a tested architecture diagram and plots generated from its accepted data.
 
 View the visual summary in [`results.html`](results.html).
 
@@ -10,7 +11,9 @@ View the visual summary in [`results.html`](results.html).
 
 The current campaign runner is [`pipeline/benchmark.py`](../../pipeline/benchmark.py), SHA-256 `3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0`. Closed-loop sweeps ran it directly. Open-loop packages used GuideLLM 0.7.0 with traffic schedules compiled from the same runner.
 
-Every package below contains runner provenance and a README that names the detector settings, repeat count, cache state, and launch command. Scenario-based packages also contain the exact traffic definition. Closed-loop engine sweeps record their point matrix in `run-config.json`; the historical July package retains its per-run `benchmark_config.json` files. The common Kubernetes and metrics setup is documented in [`pipeline/README.md`](../../pipeline/README.md).
+Every package below contains runner provenance and a README that names the detector settings, repeat count, cache state, and launch arguments. Scenario-based packages also contain the executable traffic definition. Closed-loop engine sweeps record their point matrix in `run-config.json`; the historical July package retains its per-run `benchmark_config.json` files. The common Kubernetes client and metrics setup is documented in [`pipeline/README.md`](../../pipeline/README.md). The repository reruns traffic against a compatible deployed model service; it does not install the model service itself.
+
+The scenario, seed, and runner hash reproduce the issued GuideLLM traffic. Latency and model output are measured results, so another cluster should compare repeated distributions rather than expect identical request-by-request values.
 
 ## Configuration
 

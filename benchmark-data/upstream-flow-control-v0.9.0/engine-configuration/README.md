@@ -5,6 +5,20 @@
 Which vLLM limits provide a useful throughput and latency balance before flow
 control policy is evaluated under production traffic?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Engine capacity and configuration tested serving path](architecture.svg)
+
+![Engine capacity and configuration benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 The single-GPU capacity curve flattened near concurrency 128. Increasing
@@ -71,7 +85,15 @@ separately.
 This package used the native closed-loop runner with cache off. `max-num-seqs` was tested at 64, 96, 128, 160, and 192. `max-num-batched-tokens` was tested at 4,096, 8,192, and 16,384. The selected point and its nearest boundaries were repeated three times.
 
 ```bash
-pipeline/run-in-cluster.sh <output-dir> <live-status.json> <prompt-cache-dir> "" -- --sweep-points <max-num-seqs> --sweep-duration 180 --skip-scenarios --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 --steady-state-trim-s 30 --metric-sample-interval-s 0.5 --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
+OUTPUT_DIR=${OUTPUT_DIR:-results/engine-configuration}
+PROMPT_CACHE_DIR=${PROMPT_CACHE_DIR:?Set the generated prompt-cache directory}
+
+pipeline/run-in-cluster.sh \
+  "$OUTPUT_DIR" "$OUTPUT_DIR/live-status.json" "$PROMPT_CACHE_DIR" "" -- \
+  --sweep-points 192 --sweep-duration 180 --skip-scenarios \
+  --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 \
+  --steady-state-trim-s 30 --metric-sample-interval-s 0.5 \
+  --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
 ```
 
-Set the corresponding vLLM `max-num-seqs` and `max-num-batched-tokens` before each point. [`run-config.json`](run-config.json) records the image, hardware, model, and metric cadence.
+Run the command after setting vLLM `max-num-seqs` to each of 64, 96, 128, 160, and 192. With `max-num-seqs=128`, repeat it after setting `max-num-batched-tokens` to 4,096, 8,192, and 16,384. Use a distinct `OUTPUT_DIR` for every setting and repeat. [`run-config.json`](run-config.json) records the complete matrix.

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -40,6 +41,13 @@ def is_true(value: str) -> bool:
 def require(condition: bool, message: str, errors: list[str]) -> None:
     if not condition:
         errors.append(message)
+
+
+def nearest_rank_percentile(values: list[float], quantile: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return ordered[min(len(ordered) - 1, math.ceil(quantile * len(ordered)) - 1)]
 
 
 def validate_production_scenarios_package(errors: list[str], root: Path) -> None:
@@ -128,6 +136,27 @@ def validate_production_scenarios_package(errors: list[str], root: Path) -> None
         summary_counts[row["run_name"]] += int(row["requests"])
     require(evidence_runs == summary_runs == set(request_counts), "production run names do not align", errors)
     require(request_counts == summary_counts, "request rows do not match run summaries", errors)
+
+    requests_by_run_and_workload: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
+    for row in requests:
+        requests_by_run_and_workload[(row["run_name"], row["tenant"])].append(row)
+    for row in summary:
+        source = requests_by_run_and_workload[(row["run_name"], row["workload"])]
+        ttft = [float(item["ttft_ms"]) for item in source if item["http_status"] == "200"]
+        observed_p95 = nearest_rank_percentile(ttft, 0.95)
+        observed_p99 = nearest_rank_percentile(ttft, 0.99)
+        require(
+            observed_p95 is not None
+            and abs(observed_p95 - float(row["p95_ttft_ms"])) < 0.001,
+            f"request rows do not reproduce p95 TTFT for {row['run_name']} / {row['workload']}",
+            errors,
+        )
+        require(
+            observed_p99 is not None
+            and abs(observed_p99 - float(row["p99_ttft_ms"])) < 0.001,
+            f"request rows do not reproduce p99 TTFT for {row['run_name']} / {row['workload']}",
+            errors,
+        )
 
     summaries_by_run: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in summary:

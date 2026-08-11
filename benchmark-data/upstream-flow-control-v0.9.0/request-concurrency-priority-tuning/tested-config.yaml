@@ -1,0 +1,30 @@
+# Generated from run-config.json. Contains no credentials or cluster endpoints.
+schema_version: 1
+source: "run-config.json"
+tested_configuration:
+  package: "request-concurrency-priority-tuning"
+  runner:
+    source: "pipeline/archive/benchmark-2026-07.py"
+    published_sha256: "0d5296e42922f6691db267598afe3ec5ac4f653b96a9935f5fefbf8e4c2dbce3"
+    executed_sha256: "cfc227b88faa9041ba88c2e352c27fae328a97d1fce6ec0b9c6859c32d136998"
+    sanitized_deployment_defaults_only: true
+    traffic_driver: "native closed loop"
+    historical_runner: true
+  endpoint_picker:
+    version: "llm-d Endpoint Picker v0.9.0"
+    detector: "request-concurrency"
+    max_concurrency_values:
+      - 32
+      - 48
+      - 64
+      - 96
+      - 128
+  traffic:
+    input_tokens: 512
+    output_tokens: 128
+    prompt_pool_size: 384
+    scenario_duration_seconds: 120
+    repeats_per_value: 2
+    traffic_seed: 42
+    cache_mode: "off"
+  scope: "Historical priority-tuning calibration. New runs use pipeline/benchmark.py."

@@ -4,6 +4,20 @@
 
 How much can batch work already running in vLLM increase realtime latency?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Batch interference baseline tested serving path](architecture.svg)
+
+![Batch interference baseline benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 Realtime median p95 TTFT increased from 133 ms to 15,378 ms when batch work was
@@ -66,7 +80,7 @@ This package used GuideLLM 0.7.0, one Endpoint Picker, one model replica, reques
 ```bash
 for scenario in batch_realtime_only_4k batch_realtime_with_batch_20k_no_holdback_rate_2_75; do
   python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/batch-interference/scenarios.json --scenario "$scenario" --out-dir "/tmp/$scenario" --traffic-seed 42
-  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --recover-multiline-sse
+  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --recover-multiline-sse
 done
 ```
 

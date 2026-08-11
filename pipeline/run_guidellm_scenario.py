@@ -1196,7 +1196,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--expected-prefix-lru-capacity-per-server", type=int)
     parser.add_argument("--expected-model-replicas", type=int, default=1)
     parser.add_argument("--vllm-args-configmap", default="flow-control-vllm-args")
-    parser.add_argument("--endpoint", default="http://flow-control-epp.default.svc.cluster.local:8080")
+    parser.add_argument("--endpoint")
     parser.add_argument("--model", default="openai/gpt-oss-20b")
     parser.add_argument("--http-version", choices=("1", "2"), default="2")
     parser.add_argument("--guidellm-worker-processes", type=int, default=10)
@@ -1206,10 +1206,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--recover-multiline-sse", action="store_true")
     parser.add_argument("--epp-service", default="flow-control-epp")
     parser.add_argument("--model-service", default="flow-control-model")
-    parser.add_argument("--epp-metrics-url", default="http://flow-control-epp.default.svc.cluster.local:9090/metrics")
-    parser.add_argument("--epp-plugin-state-url", default="http://flow-control-epp.default.svc.cluster.local:9090/debug/plugins/state")
+    parser.add_argument("--epp-metrics-url")
+    parser.add_argument("--epp-plugin-state-url")
     parser.add_argument("--vllm-metrics-port", type=int, default=8000)
-    parser.add_argument("--envoy-metrics-url", default="http://flow-control-epp.default.svc.cluster.local:19000/stats/prometheus")
+    parser.add_argument("--envoy-metrics-url")
     parser.add_argument("--envoy-cluster-name", default="epp")
     parser.add_argument("--expected-envoy-remaining-requests", type=int, default=10000)
     parser.add_argument("--max-epp-memory-fraction", type=float, default=0.85)
@@ -1224,6 +1224,17 @@ def parse_args() -> argparse.Namespace:
         "--shared-prefix-group-mode", choices=("shared", "tenant"), default="shared"
     )
     args = parser.parse_args()
+    epp_host = f"{args.epp_service}.{args.namespace}.svc.cluster.local"
+    args.endpoint = args.endpoint or f"http://{epp_host}:8080"
+    args.epp_metrics_url = args.epp_metrics_url or f"http://{epp_host}:9090/metrics"
+    args.epp_plugin_state_url = (
+        args.epp_plugin_state_url
+        or f"http://{epp_host}:9090/debug/plugins/state"
+    )
+    args.envoy_metrics_url = (
+        args.envoy_metrics_url
+        or f"http://{epp_host}:19000/stats/prometheus"
+    )
     if args.shared_prefix_fraction is not None and not 0.0 < args.shared_prefix_fraction < 1.0:
         parser.error("--shared-prefix-fraction must be between 0 and 1")
     if args.kubernetes_memory_interval_s <= 0:

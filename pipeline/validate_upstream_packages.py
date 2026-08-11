@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import re
 import statistics
 from collections import Counter, defaultdict
@@ -64,6 +65,57 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
         errors.append(message)
 
 
+def nearest_rank_percentile(values: list[float], quantile: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return ordered[min(len(ordered) - 1, math.ceil(quantile * len(ordered)) - 1)]
+
+
+def request_percentile(
+    rows: list[dict[str, str]],
+    run_name: str,
+    tenant: str,
+    quantile: float,
+    start_s: float | None = None,
+    end_s: float | None = None,
+) -> float | None:
+    values = []
+    for row in rows:
+        if row["run_name"] != run_name or row["tenant"] != tenant:
+            continue
+        if row["http_status"] != "200" or not row["ttft_ms"]:
+            continue
+        arrival = float(row["planned_arrival_seconds"])
+        if start_s is not None and arrival < start_s:
+            continue
+        if end_s is not None and arrival >= end_s:
+            continue
+        values.append(float(row["ttft_ms"]))
+    return nearest_rank_percentile(values, quantile)
+
+
+def require_request_percentile(
+    rows: list[dict[str, str]],
+    run_name: str,
+    tenant: str,
+    quantile: float,
+    expected: str,
+    label: str,
+    errors: list[str],
+    start_s: float | None = None,
+    end_s: float | None = None,
+) -> None:
+    observed = request_percentile(
+        rows, run_name, tenant, quantile, start_s=start_s, end_s=end_s,
+    )
+    require(
+        observed is not None and abs(observed - float(expected)) < 0.001,
+        f"request rows do not reproduce {label} for {run_name}",
+        errors,
+    )
+
+
 def validate_scaling(errors: list[str]) -> None:
     required = {
         "README.md",
@@ -71,6 +123,7 @@ def validate_scaling(errors: list[str]) -> None:
         "request-results.csv",
         "run-config.json",
         "run-evidence.csv",
+        "scenario.json",
         "summary.csv",
         "system-metrics.csv",
         "traffic-samples.csv",
@@ -85,6 +138,7 @@ def validate_scaling(errors: list[str]) -> None:
     evidence = read_csv(SCALING / "run-evidence.csv")
     analysis = json.loads((SCALING / "analysis.json").read_text())
     config = json.loads((SCALING / "run-config.json").read_text())
+    scenario_config = json.loads((SCALING / "scenario.json").read_text())
 
     expected_runs = {1: 3, 2: 3, 4: 3}
     runs_by_topology = Counter(int(row["model_replicas"]) for row in summary)
@@ -100,6 +154,16 @@ def validate_scaling(errors: list[str]) -> None:
             request_counts[row["run_name"]] == int(row["offered_requests"]),
             f"request rows do not match summary for {row['run_name']}",
             errors,
+        )
+        require_request_percentile(
+            requests, row["run_name"], "realtime-chat", 0.95,
+            row["premium_burst_p95_ttft_ms"], "premium burst p95 TTFT", errors,
+            start_s=100, end_s=190,
+        )
+        require_request_percentile(
+            requests, row["run_name"], "realtime-chat", 0.99,
+            row["premium_burst_p99_ttft_ms"], "premium burst p99 TTFT", errors,
+            start_s=100, end_s=190,
         )
 
     required_gates = (
@@ -182,6 +246,21 @@ def validate_scaling(errors: list[str]) -> None:
         "model-pool topology changed",
         errors,
     )
+    executable_scenario_names = [
+        scenario["name"] for scenario in scenario_config["scenarios"]
+    ]
+    require(
+        config["traffic"] == {
+            "scenario_file": "scenario.json",
+            "description": (
+                "Cache-off long-context interference with offered load scaled "
+                "per model replica."
+            ),
+            "scenario_names": executable_scenario_names,
+        },
+        "run-config traffic names do not match executable scenario names",
+        errors,
+    )
     require(
         config["endpoint_picker"]["version"] == "llm-d Endpoint Picker v0.9.0"
         and config["endpoint_picker"]["detector"] == "token-concurrency"
@@ -231,6 +310,15 @@ def validate_stability(errors: list[str]) -> None:
         "long-stability request failed",
         errors,
     )
+    for row in summary:
+        require_request_percentile(
+            requests, row["run_name"], row["tenant"], 0.95,
+            row["p95_ttft_ms"], f"{row['tenant']} overall p95 TTFT", errors,
+        )
+        require_request_percentile(
+            requests, row["run_name"], row["tenant"], 0.99,
+            row["p99_ttft_ms"], f"{row['tenant']} overall p99 TTFT", errors,
+        )
     require(
         sum(int(row["offered_requests"]) for row in summary) == 14889
         and all(row["non_200_requests"] == "0" for row in summary),
@@ -373,6 +461,17 @@ def validate_batch_interference(errors: list[str]) -> None:
         "batch-interference summaries do not match requests",
         errors,
     )
+    for row in summary:
+        require_request_percentile(
+            requests, row["run_name"], "realtime-chat", 0.95,
+            row["realtime_surge_p95_ttft_ms"], "realtime surge p95 TTFT", errors,
+            start_s=80, end_s=160,
+        )
+        require_request_percentile(
+            requests, row["run_name"], "realtime-chat", 0.99,
+            row["realtime_surge_p99_ttft_ms"], "realtime surge p99 TTFT", errors,
+            start_s=80, end_s=160,
+        )
     request_counts = Counter(row["run_name"] for row in requests)
     require(
         all(
@@ -527,6 +626,23 @@ def validate_mixed_production_workload(errors: list[str]) -> None:
         "mixed-workload summaries do not match request evidence",
         errors,
     )
+    mixed_tenants = {
+        "realtime-chat": ("realtime_surge_p95_ttft_ms", "realtime_surge_p99_ttft_ms"),
+        "agentic": ("agentic_surge_p95_ttft_ms", None),
+        "standard-long-context": ("standard_long_context_surge_p95_ttft_ms", None),
+        "batch-long-context": ("batch_surge_p95_ttft_ms", None),
+    }
+    for row in summary:
+        for tenant, (p95_field, p99_field) in mixed_tenants.items():
+            require_request_percentile(
+                requests, row["run_name"], tenant, 0.95, row[p95_field],
+                f"{tenant} surge p95 TTFT", errors, start_s=80, end_s=135,
+            )
+            if p99_field:
+                require_request_percentile(
+                    requests, row["run_name"], tenant, 0.99, row[p99_field],
+                    f"{tenant} surge p99 TTFT", errors, start_s=80, end_s=135,
+                )
 
     required_gates = (
         "data_quality_passed",
@@ -657,6 +773,20 @@ def validate_selected_workload_shapes(errors: list[str]) -> None:
         "selected-workload-shapes summaries do not match request evidence",
         errors,
     )
+    shape_tenants = {
+        "chat short output": "chat-short-output",
+        "agentic longer output": "agentic-longer-output",
+    }
+    for row in summary:
+        tenant = shape_tenants[row["workload_shape"]]
+        require_request_percentile(
+            requests, row["run_name"], tenant, 0.95, row["surge_p95_ttft_ms"],
+            f"{tenant} surge p95 TTFT", errors, start_s=80, end_s=135,
+        )
+        require_request_percentile(
+            requests, row["run_name"], tenant, 0.99, row["surge_p99_ttft_ms"],
+            f"{tenant} surge p99 TTFT", errors, start_s=80, end_s=135,
+        )
 
     required_gates = (
         "data_quality_passed",
@@ -783,6 +913,29 @@ def validate_prefix_cache_routing(errors: list[str]) -> None:
         "prefix-cache-routing HTTP 429 count changed",
         errors,
     )
+    routing_tenants = {
+        "realtime-chat": ("realtime_surge_p95_ttft_ms", "realtime_surge_p99_ttft_ms"),
+        "agentic": ("agentic_surge_p95_ttft_ms", "agentic_surge_p99_ttft_ms"),
+        "standard-long-context": (
+            "standard_long_context_surge_p95_ttft_ms",
+            "standard_long_context_surge_p99_ttft_ms",
+        ),
+        "batch-long-context": ("batch_surge_p95_ttft_ms", "batch_surge_p99_ttft_ms"),
+    }
+    for row in summary:
+        require_request_percentile(
+            requests, row["run_name"], "realtime-chat", 0.95,
+            row["realtime_overall_p95_ttft_ms"], "realtime overall p95 TTFT", errors,
+        )
+        for tenant, (p95_field, p99_field) in routing_tenants.items():
+            require_request_percentile(
+                requests, row["run_name"], tenant, 0.95, row[p95_field],
+                f"{tenant} surge p95 TTFT", errors, start_s=80, end_s=135,
+            )
+            require_request_percentile(
+                requests, row["run_name"], tenant, 0.99, row[p99_field],
+                f"{tenant} surge p99 TTFT", errors, start_s=80, end_s=135,
+            )
 
     base_gates = (
         "data_quality_passed",
@@ -929,6 +1082,54 @@ def scan_sensitive_text(errors: list[str]) -> None:
                 errors.append(f"{label} found in {path.relative_to(ROOT)}")
 
 
+def validate_package_visuals(errors: list[str]) -> None:
+    package_paths = {
+        DATA / "batch-interference",
+        DATA / "engine-configuration",
+        DATA / "long-context-admission",
+        DATA / "long-stability",
+        DATA / "mixed-production-workload",
+        DATA / "multi-replica-scaling",
+        DATA / "prefix-cache-routing",
+        DATA / "production-scenarios",
+        DATA / "production-scenarios" / "batch-isolation",
+        DATA / "production-scenarios" / "consolidation",
+        DATA / "production-scenarios" / "priority-tiers",
+        DATA / "production-scenarios" / "same-priority-fairness",
+        DATA / "request-and-token-admission-calibration",
+        DATA / "request-concurrency-priority-tuning",
+        DATA / "selected-workload-shapes",
+        DATA / "utilization-detector-calibration",
+    }
+    for package in sorted(package_paths):
+        for filename in ("architecture.svg", "results.svg", "tested-config.yaml"):
+            require(
+                (package / filename).is_file(),
+                f"package visual missing: {(package / filename).relative_to(ROOT)}",
+                errors,
+            )
+        readme = package / "README.md"
+        readme_text = readme.read_text(errors="replace") if readme.is_file() else ""
+        require(
+            "<!-- generated:package-visuals -->" in readme_text
+            and "](architecture.svg)" in readme_text
+            and "](results.svg)" in readme_text
+            and "](tested-config.yaml)" in readme_text,
+            f"package visual links missing from {readme.relative_to(ROOT)}",
+            errors,
+        )
+    for package in (
+        DATA / "production-scenarios" / "priority-tiers",
+        DATA / "production-scenarios" / "same-priority-fairness",
+    ):
+        for filename in ("replay.mp4", "replay-poster.png"):
+            require(
+                (package / filename).is_file(),
+                f"recorded replay missing: {(package / filename).relative_to(ROOT)}",
+                errors,
+            )
+
+
 def validate_reproduction_contract(errors: list[str]) -> None:
     runner = ROOT / "pipeline" / "benchmark.py"
     expected_hash = "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0"
@@ -942,8 +1143,11 @@ def validate_reproduction_contract(errors: list[str]) -> None:
         "guidellm_k8s.py",
         "guidellm_scenario_to_run.py",
         "guidellm_trace.py",
+        "generate_package_configs.py",
+        "generate_package_visuals.py",
         "metrics_capture.py",
         "metrics_preflight.py",
+        "package_visual_specs.py",
         "prometheus_validate.py",
         "run-in-cluster.sh",
         "run_guidellm_scenario.py",
@@ -951,6 +1155,11 @@ def validate_reproduction_contract(errors: list[str]) -> None:
     }
     for name in required_pipeline_files:
         require((ROOT / "pipeline" / name).is_file(), f"pipeline helper missing: {name}", errors)
+    require(
+        (ROOT / "pipeline" / "kubernetes" / "benchmark-runner.yaml").is_file(),
+        "benchmark runner manifest is missing",
+        errors,
+    )
 
     readmes = [DATA / "README.md"]
     readmes.extend(path for path in DATA.glob("*/README.md"))
@@ -962,13 +1171,24 @@ def validate_reproduction_contract(errors: list[str]) -> None:
             f"reproduction section missing from {readme.relative_to(ROOT)}",
             errors,
         )
+        bash_blocks = re.findall(r"```bash\n(.*?)```", text, flags=re.DOTALL)
+        require(
+            not any(re.search(r"<[^>]+>", block) for block in bash_blocks),
+            f"shell placeholder remains in {readme.relative_to(ROOT)}",
+            errors,
+        )
 
     for config_path in DATA.rglob("run-config.json"):
         config = json.loads(config_path.read_text())
         runner_config = config.get("runner", {})
         if runner_config.get("historical_runner"):
             require(
-                runner_config.get("source") == "pipeline/archive/benchmark-2026-07.py",
+                runner_config.get("source") == "pipeline/archive/benchmark-2026-07.py"
+                and runner_config.get("published_sha256")
+                == "0d5296e42922f6691db267598afe3ec5ac4f653b96a9935f5fefbf8e4c2dbce3"
+                and runner_config.get("executed_sha256")
+                == "cfc227b88faa9041ba88c2e352c27fae328a97d1fce6ec0b9c6859c32d136998"
+                and runner_config.get("sanitized_deployment_defaults_only") is True,
                 f"historical runner provenance changed in {config_path.relative_to(ROOT)}",
                 errors,
             )
@@ -1022,6 +1242,7 @@ def main() -> int:
     validate_admission_detector_package(errors, ROOT)
     validate_production_scenarios_package(errors, ROOT)
     validate_upstream_report(errors, ROOT)
+    validate_package_visuals(errors)
     validate_reproduction_contract(errors)
     scan_sensitive_text(errors)
     if errors:
@@ -1042,6 +1263,7 @@ def main() -> int:
     print("- Request and token admission: 20 runs, 112,165 request rows")
     print("- Production scenarios: 23 runs, 194,923 request rows")
     print("- Grouped visual report: current")
+    print("- Per-package architecture and result visuals: complete")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Runner provenance and reproduction commands: complete")
     print("- Public-content scan: passed")

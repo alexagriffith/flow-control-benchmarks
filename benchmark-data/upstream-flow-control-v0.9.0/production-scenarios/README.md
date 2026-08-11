@@ -5,6 +5,18 @@
 Can one shared model server protect priority traffic across four production
 patterns while lower-priority or overloaded work absorbs the queue?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Four production traffic scenarios tested serving path](architecture.svg)
+
+![Four production traffic scenarios benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+<!-- /generated:package-visuals -->
+
 ## Scenario packages
 
 Each scenario has its own folder. No request, traffic, metric, or proof CSV is
@@ -97,8 +109,31 @@ Each scenario folder contains its own `summary.csv`, `window-summary.csv`,
 All four scenarios used GuideLLM 0.7.0, open-loop Poisson arrivals, noisy sinusoidal phases, seed 42, one Endpoint Picker, one model replica, random routing, and cache off. The selected arm used request-count admission at 128 requests with 10% headroom. Consolidation and same-priority fairness also ran matched utilization-detector arms at queue depth 2; consolidation included queue depth 5.
 
 ```bash
-python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/scenarios.json --scenario <priority_tiers|batch_isolation|consolidation|same_priority_fairness> --out-dir /tmp/production-scenario --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/production-scenario/manifest.json --run-dir results/production-scenario --prefix production-scenario --namespace <namespace> --runner-pod <runner-pod> --expected-detector <concurrency-detector-or-utilization-detector> --expected-concurrency-mode requests --expected-max-concurrency <128-or-unset> --expected-queue-depth <unset|2|5> --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+for SCENARIO in priority_tiers batch_isolation consolidation same_priority_fairness; do
+  HEADROOM=0.10
+  if [[ "$SCENARIO" == batch_isolation ]]; then HEADROOM=0.15; fi
+  python3 pipeline/guidellm_trace.py \
+    --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/scenarios.json \
+    --scenario "$SCENARIO" --out-dir "/tmp/$SCENARIO" --traffic-seed 42
+
+  for REPEAT in 1 2 3; do
+    python3 pipeline/run_guidellm_scenario.py \
+      --manifest "/tmp/$SCENARIO/manifest.json" \
+      --run-dir "results/$SCENARIO/request-count/repeat-$REPEAT" \
+      --prefix "$SCENARIO-request-count-repeat-$REPEAT" \
+      --namespace "${NAMESPACE:-flow-control}" \
+      --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+      --expected-detector concurrency-detector \
+      --expected-concurrency-mode requests \
+      --expected-max-concurrency 128 \
+      --expected-headroom "$HEADROOM" \
+      --expected-picker random-picker \
+      --expected-prefix-cache off \
+      --expected-model-replicas 1 \
+      --http-version 1 --guidellm-worker-processes 4 \
+      --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+  done
+done
 ```
 
-Run each selected arm three times. [`scenarios.json`](scenarios.json) contains the complete traffic definitions; each scenario folder contains only its own traffic and evidence.
+Batch isolation used `--expected-headroom 0.15`; the other selected scenarios used `0.10`. The child READMEs contain the exact utilization-detector comparison commands. [`scenarios.json`](scenarios.json) contains the executable traffic definitions; each scenario folder contains only its own traffic and evidence.

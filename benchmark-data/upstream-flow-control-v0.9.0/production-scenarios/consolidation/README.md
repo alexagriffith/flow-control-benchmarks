@@ -5,6 +5,20 @@
 Can two realtime tenants retain lower TTFT while standard traffic surges on the
 same model server?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Consolidation tested serving path](architecture.svg)
+
+![Consolidation benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## What the benchmark showed
 
 With request-count admission, the two realtime tenants had median surge p95
@@ -47,8 +61,39 @@ caching remained off.
 This scenario used GuideLLM 0.7.0, random routing, one model replica, and cache off. Three matched repeats compared request-count admission at 128 requests and 10% headroom with utilization detection at queue depths 2 and 5.
 
 ```bash
-python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/scenario.json --scenario consolidation --out-dir /tmp/consolidation --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/consolidation/manifest.json --run-dir results/consolidation --prefix consolidation --namespace <namespace> --runner-pod <runner-pod> --expected-detector <concurrency-detector-or-utilization-detector> --expected-concurrency-mode requests --expected-max-concurrency <128-or-unset> --expected-queue-depth <unset|2|5> --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/guidellm_trace.py \
+  --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/scenario.json \
+  --scenario consolidation --out-dir /tmp/consolidation --traffic-seed 42
+
+for REPEAT in 1 2 3; do
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest /tmp/consolidation/manifest.json \
+    --run-dir "results/consolidation/request-count/repeat-$REPEAT" \
+    --prefix "consolidation-request-count-repeat-$REPEAT" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode requests --expected-max-concurrency 128 \
+    --expected-headroom 0.10 --expected-picker random-picker \
+    --expected-prefix-cache off --expected-model-replicas 1 \
+    --http-version 1 --guidellm-worker-processes 4 \
+    --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+
+  for QUEUE_DEPTH in 2 5; do
+    python3 pipeline/run_guidellm_scenario.py \
+      --manifest /tmp/consolidation/manifest.json \
+      --run-dir "results/consolidation/queue-depth-$QUEUE_DEPTH/repeat-$REPEAT" \
+      --prefix "consolidation-queue-depth-$QUEUE_DEPTH-repeat-$REPEAT" \
+      --namespace "${NAMESPACE:-flow-control}" \
+      --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+      --expected-detector utilization-detector \
+      --expected-concurrency-mode requests --expected-queue-depth "$QUEUE_DEPTH" \
+      --expected-headroom 0.00 --expected-picker random-picker \
+      --expected-prefix-cache off --expected-model-replicas 1 \
+      --http-version 1 --guidellm-worker-processes 4 \
+      --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+  done
+done
 ```
 
 [`scenario.json`](scenario.json) contains only the consolidation traffic. [`run-config.json`](run-config.json) defines the three detector arms.

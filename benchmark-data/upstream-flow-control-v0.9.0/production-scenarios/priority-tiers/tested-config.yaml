@@ -1,0 +1,38 @@
+# Generated from run-config.json. Contains no credentials or cluster endpoints.
+schema_version: 1
+source: "run-config.json"
+tested_configuration:
+  topology:
+    endpoint_picker_replicas: 1
+    model_replicas: 1
+    gpus_per_model_replica: 1
+  endpoint_picker:
+    image: "ghcr.io/llm-d/llm-d-router-endpoint-picker:v0.9.0"
+    selected_detector: "request-count admission"
+    max_concurrency: 128
+    comparison_detectors:
+      []
+    selected_headroom: 0.1
+  model_service:
+    image: "registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:ad06abf3bb5235ebb5b2df84cd1b9fd09e823f0ff2eebfc82bb4590275ccfe0b"
+    model: "openai/gpt-oss-20b"
+    gpu: "1 NVIDIA H100"
+    max_num_sequences: 128
+    max_num_batched_tokens: 8192
+    prefix_cache: "disabled"
+  traffic:
+    arrival_mode: "open-loop Poisson"
+    pattern: "noisy sinusoidal phases with a timed surge and recovery"
+    production_repeats: 3
+    scenario: "priority tiers"
+  metrics:
+    captured_during_every_run: true
+    direct_and_prometheus: true
+  runner:
+    scenario_source: "pipeline/benchmark.py"
+    sha256: "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0"
+    traffic_driver: "GuideLLM"
+    guidellm_version: "0.7.0"
+    trace_compiler: "pipeline/guidellm_trace.py"
+    launcher: "pipeline/run_guidellm_scenario.py"
+    scenario_file: "scenario.json"

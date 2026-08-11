@@ -38,6 +38,55 @@ class RunGuideLlmScenarioTests(unittest.TestCase):
         with patch("sys.argv", argv), self.assertRaises(SystemExit):
             runner.parse_args()
 
+    def test_namespace_sets_default_service_urls(self) -> None:
+        argv = [
+            "run_guidellm_scenario.py",
+            "--manifest", "manifest.json",
+            "--run-dir", "run",
+            "--prefix", "test",
+            "--namespace", "benchmarking",
+            "--epp-service", "picker",
+        ]
+        with patch("sys.argv", argv):
+            args = runner.parse_args()
+
+        self.assertEqual(
+            args.endpoint,
+            "http://picker.benchmarking.svc.cluster.local:8080",
+        )
+        self.assertEqual(
+            args.epp_metrics_url,
+            "http://picker.benchmarking.svc.cluster.local:9090/metrics",
+        )
+        self.assertEqual(
+            args.epp_plugin_state_url,
+            "http://picker.benchmarking.svc.cluster.local:9090/debug/plugins/state",
+        )
+        self.assertEqual(
+            args.envoy_metrics_url,
+            "http://picker.benchmarking.svc.cluster.local:19000/stats/prometheus",
+        )
+
+    def test_explicit_service_urls_override_namespace_defaults(self) -> None:
+        argv = [
+            "run_guidellm_scenario.py",
+            "--manifest", "manifest.json",
+            "--run-dir", "run",
+            "--prefix", "test",
+            "--namespace", "benchmarking",
+            "--endpoint", "https://gateway.example.test",
+            "--epp-metrics-url", "http://metrics.example.test/metrics",
+            "--epp-plugin-state-url", "http://metrics.example.test/state",
+            "--envoy-metrics-url", "http://envoy.example.test/metrics",
+        ]
+        with patch("sys.argv", argv):
+            args = runner.parse_args()
+
+        self.assertEqual(args.endpoint, "https://gateway.example.test")
+        self.assertEqual(args.epp_metrics_url, "http://metrics.example.test/metrics")
+        self.assertEqual(args.epp_plugin_state_url, "http://metrics.example.test/state")
+        self.assertEqual(args.envoy_metrics_url, "http://envoy.example.test/metrics")
+
     def test_cache_evidence_matches_explicit_mode(self) -> None:
         names = {"vllm:prefix_cache_queries", "vllm:prefix_cache_hits"}
         self.assertTrue(prefix_cache_evidence(

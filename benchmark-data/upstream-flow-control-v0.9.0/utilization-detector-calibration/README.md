@@ -4,6 +4,20 @@
 
 When should queue depth or KV-cache pressure activate flow control?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Utilization detector calibration tested serving path](architecture.svg)
+
+![Utilization detector calibration benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Queue-depth result
 
 Queue depth 8 produced the lowest p95 TTFT in this short-request closed-loop
@@ -71,7 +85,17 @@ tested with noisy traffic, mixed priorities, and varying request shapes.
 These cache-off closed-loop sweeps used the current `pipeline/benchmark.py`. Queue-depth thresholds were 1, 2, 4, 5, and 8. KV-cache thresholds were 0.50, 0.60, 0.70, 0.75, 0.80, 0.90, and 1.00. Selected points and boundaries ran three times.
 
 ```bash
-pipeline/run-in-cluster.sh <output-dir> <live-status.json> <prompt-cache-dir> benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/<queue-depth-scenario.json-or-kv-threshold-scenario.json> -- --scenario-filter <utilization_queue_depth_calibration-or-utilization_kv_threshold_calibration> --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 --steady-state-trim-s 30 --metric-sample-interval-s 0.5 --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
+OUTPUT_DIR=${OUTPUT_DIR:-results/utilization-detector-calibration}
+PROMPT_CACHE_DIR=${PROMPT_CACHE_DIR:?Set the generated prompt-cache directory}
+SCENARIO_FILE=${SCENARIO_FILE:-benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/queue-depth-scenario.json}
+SCENARIO_FILTER=${SCENARIO_FILTER:-utilization_queue_depth_calibration}
+
+pipeline/run-in-cluster.sh \
+  "$OUTPUT_DIR" "$OUTPUT_DIR/live-status.json" "$PROMPT_CACHE_DIR" \
+  "$SCENARIO_FILE" -- --scenario-filter "$SCENARIO_FILTER" \
+  --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 \
+  --steady-state-trim-s 30 --metric-sample-interval-s 0.5 \
+  --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
 ```
 
-Set the tested threshold in the Endpoint Picker before each point. Both exact traffic definitions are published beside this README; [`run-config.json`](run-config.json) records the images and metric cadence.
+For the KV-cache sweep, set `SCENARIO_FILE` to `kv-threshold-scenario.json` and `SCENARIO_FILTER` to `utilization_kv_threshold_calibration`. Set the tested threshold in the Endpoint Picker before each point. Both exact traffic definitions are published beside this README; [`run-config.json`](run-config.json) records the images and metric cadence.

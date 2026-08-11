@@ -1,0 +1,71 @@
+# Generated from run-config.json. Contains no credentials or cluster endpoints.
+schema_version: 1
+source: "run-config.json"
+tested_configuration:
+  schema: "batch-eviction-two-model-benchmark-v1"
+  date: "2026-08-10"
+  topology:
+    endpoint_picker_replicas: 1
+    vllm_model_replicas: 2
+    gpus_per_model_replica: 1
+  hardware:
+    gpu_per_model_replica: "NVIDIA H100"
+  model_service:
+    model: "GPT-OSS 20B"
+    runtime: "Red Hat AI 3.4 vLLM"
+    max_num_seqs: 96
+    max_num_batched_tokens: 8192
+    max_model_len: 32768
+    gpu_memory_utilization: 0.9
+    prefix_cache: "disabled"
+  endpoint_picker:
+    detector: "request-concurrency"
+    max_concurrency_per_model_replica: 48
+    minimum_ceiling: 0.5
+    eviction: "enabled"
+    realtime_priority: 100
+    batch_priority: -10
+  traffic:
+    duration_seconds: 300
+    batch_warmup_seconds: 60
+    realtime_arrival: "open-loop noisy sinusoidal Poisson"
+    realtime_base_rps_total: 8.0
+    realtime_initial_burst_total: 64
+    realtime_amplitude: 0.65
+    realtime_period_seconds: 90
+    realtime_input_repeat: 384
+    realtime_output_tokens: 32
+    batch_backlog_total: 128
+    batch_input_repeat: 256
+    batch_output_tokens: 512
+    async_concurrency_total: 80
+    seeds:
+      - 209301
+      - 209302
+      - 209303
+  execution:
+    uncounted_validation_probe: 1
+    production_repeats: 3
+    idle_cooldown_seconds_before_each_run: 75
+    reject_partial_attempts: true
+    teardown_owned_resources_after_completion: true
+    readiness_check: "two direct requests per model replica"
+    full_path_warmup: "60-second uncounted validation probe at production load"
+  evidence_gates:
+    latency_claim:
+      consistent_direction_across_repeats: true
+      minimum_material_relative_effect: 0.15
+      minimum_material_absolute_effect_ms: 50
+      hierarchical_bootstrap_confidence: 0.95
+      otherwise: "inconclusive"
+    model_balance:
+      minimum_request_share_per_replica: 0.3
+      minimum_token_share_per_replica: 0.3
+      simultaneous_preload_running_requests_per_replica: 20
+    flow_control_engaged: "Endpoint Picker policy queue size greater than zero before first token"
+    required_observability:
+      - "realtime TTFT, TPOT, end-to-end latency, offered rate, served rate, and status"
+      - "Endpoint Picker queue, saturation, eviction, and request identifiers"
+      - "per-model vLLM running, waiting, KV cache, preemption, and token metrics"
+      - "Async Processor retries, completions, failures, duplicates, and queue drain"
+      - "prefix-cache queries and hits"

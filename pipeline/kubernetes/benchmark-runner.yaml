@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flow-control-benchmark-runner
+  labels:
+    app: flow-control-benchmark-runner
+    managed-by: flow-control-benchmark
+spec:
+  restartPolicy: Always
+  automountServiceAccountToken: false
+  containers:
+    - name: runner
+      image: docker.io/library/python@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -lc
+        - >-
+          python -m pip install --no-cache-dir --disable-pip-version-check aiohttp==3.14.1 &&
+          touch /tmp/runner-ready &&
+          sleep infinity
+      env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      readinessProbe:
+        exec:
+          command: ["test", "-f", "/tmp/runner-ready"]
+        initialDelaySeconds: 2
+        periodSeconds: 2
+      resources:
+        requests:
+          cpu: "1"
+          memory: 1Gi
+          ephemeral-storage: 2Gi
+        limits:
+          cpu: "4"
+          memory: 4Gi
+          ephemeral-storage: 8Gi
+      volumeMounts:
+        - name: work
+          mountPath: /work
+        - name: temp
+          mountPath: /tmp
+  volumes:
+    - name: work
+      emptyDir: {}
+    - name: temp
+      emptyDir:
+        sizeLimit: 8Gi

@@ -5,6 +5,20 @@
 Does exact input-token admission protect realtime latency from a burst of large
 requests better than request-count admission?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Long-context admission tested serving path](architecture.svg)
+
+![Long-context admission benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 Exact-token admission made large-request pressure visible to flow control. It
@@ -72,8 +86,41 @@ part of the evidence.
 This package used GuideLLM 0.7.0 with two model replicas, random routing, cache off, and eight paired traffic seeds. It compared request-count admission at 128 requests and 10% headroom with exact input-token admission at 20,000 tokens per replica and 25% headroom.
 
 ```bash
-python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/scenario.json --scenario premium_with_long_context_burst --out-dir /tmp/long-context --traffic-seed <101-108>
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/long-context/manifest.json --run-dir results/long-context --prefix long-context --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode <requests-or-tokens> --expected-max-concurrency <128-or-1000000> --expected-max-token-concurrency <unset-or-20000> --expected-add-estimated-output-tokens false --expected-headroom <0.10-or-0.25> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 2 --http-version 1 --guidellm-worker-processes 10 --drain-after-done --recover-multiline-sse
+for SEED in 101 102 103 104 105 106 107 108; do
+  TRACE_DIR="/tmp/long-context-$SEED"
+  python3 pipeline/guidellm_trace.py \
+    --scenario-file benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/scenario.json \
+    --scenario premium_with_long_context_burst --out-dir "$TRACE_DIR" \
+    --traffic-seed "$SEED"
+
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest "$TRACE_DIR/manifest.json" \
+    --run-dir "results/long-context/request-count/seed-$SEED" \
+    --prefix "long-context-request-count-seed-$SEED" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode requests --expected-max-concurrency 128 \
+    --expected-add-estimated-output-tokens false --expected-headroom 0.10 \
+    --expected-picker random-picker --expected-prefix-cache off \
+    --expected-model-replicas 2 --http-version 1 \
+    --guidellm-worker-processes 10 --drain-after-done \
+    --recover-multiline-sse
+
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest "$TRACE_DIR/manifest.json" \
+    --run-dir "results/long-context/input-token/seed-$SEED" \
+    --prefix "long-context-input-token-seed-$SEED" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode tokens --expected-max-token-concurrency 20000 \
+    --expected-add-estimated-output-tokens false --expected-headroom 0.25 \
+    --expected-picker random-picker --expected-prefix-cache off \
+    --expected-model-replicas 2 --http-version 1 \
+    --guidellm-worker-processes 10 --drain-after-done \
+    --recover-multiline-sse
+done
 ```
 
 [`scenario.json`](scenario.json) defines the matched traffic. [`run-config.json`](run-config.json) defines both admission arms without placeholders.

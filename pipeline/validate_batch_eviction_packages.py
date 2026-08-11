@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "benchmark-data" / "batch-eviction"
 SINGLE = DATA / "single-model-replica"
 TWO = DATA / "two-model-replicas"
-TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt"}
+TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
     "local user path": re.compile(r"/Users/|\\Users\\"),
@@ -241,10 +241,37 @@ def scan_sensitive_text(errors: list[str]) -> None:
                 errors.append(f"{label} found in {path.relative_to(ROOT)}")
 
 
+def validate_package_visuals(errors: list[str]) -> None:
+    for package in (SINGLE, TWO):
+        for filename in ("architecture.svg", "results.svg", "tested-config.yaml"):
+            require(
+                (package / filename).is_file(),
+                f"package visual missing: {(package / filename).relative_to(ROOT)}",
+                errors,
+            )
+        readme = package / "README.md"
+        readme_text = readme.read_text(errors="replace") if readme.is_file() else ""
+        require(
+            "<!-- generated:package-visuals -->" in readme_text
+            and "](architecture.svg)" in readme_text
+            and "](results.svg)" in readme_text
+            and "](tested-config.yaml)" in readme_text,
+            f"package visual links missing from {readme.relative_to(ROOT)}",
+            errors,
+        )
+    for filename in ("replay.mp4", "replay-poster.png"):
+        require(
+            (TWO / filename).is_file(),
+            f"recorded replay missing: {(TWO / filename).relative_to(ROOT)}",
+            errors,
+        )
+
+
 def main() -> int:
     errors: list[str] = []
     validate_single(errors)
     validate_two(errors)
+    validate_package_visuals(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Batch-eviction promotion validation failed:")
@@ -254,6 +281,7 @@ def main() -> int:
     print("Batch-eviction promotion validation passed.")
     print("- Single-model package: 12 runs, 38 correlated evictions, 5,376 batch completions")
     print("- Two-model package: 3 production repeats, 1 follow-up, 57 production + 24 follow-up correlated evictions")
+    print("- Per-package architecture and result visuals: complete")
     print("- Public-content scan: passed")
     return 0
 

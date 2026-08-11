@@ -5,6 +5,20 @@
 Which admission method better protects realtime traffic when chat, agentic,
 long-context, and batch work share one model server?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Mixed production workload tested serving path](architecture.svg)
+
+![Mixed production workload benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 Request-count admission gave realtime chat the lower surge latency. Input-token
@@ -58,8 +72,40 @@ setup; they do not define a general service-level objective.
 This package used GuideLLM 0.7.0, one model replica, random routing, and cache off. Three matched repeats compared request-count admission at 128 requests and 10% headroom with input-token admission at 75,000 tokens and no headroom.
 
 ```bash
-python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/scenario.json --scenario mixed_production_request_shapes --out-dir /tmp/mixed-production --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/mixed-production/manifest.json --run-dir results/mixed-production --prefix mixed-production --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode <requests-or-tokens> --expected-max-concurrency <128-or-1000000> --expected-max-token-concurrency <unset-or-75000> --expected-add-estimated-output-tokens false --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/guidellm_trace.py \
+  --scenario-file benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/scenario.json \
+  --scenario mixed_production_request_shapes --out-dir /tmp/mixed-production \
+  --traffic-seed 42
+
+for REPEAT in 1 2 3; do
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest /tmp/mixed-production/manifest.json \
+    --run-dir "results/mixed-production/request-count/repeat-$REPEAT" \
+    --prefix "mixed-production-request-count-repeat-$REPEAT" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode requests --expected-max-concurrency 128 \
+    --expected-add-estimated-output-tokens false --expected-headroom 0.10 \
+    --expected-picker random-picker --expected-prefix-cache off \
+    --expected-model-replicas 1 --http-version 1 \
+    --guidellm-worker-processes 4 --drain-after-done \
+    --drain-timeout-s 300 --recover-multiline-sse
+
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest /tmp/mixed-production/manifest.json \
+    --run-dir "results/mixed-production/input-token/repeat-$REPEAT" \
+    --prefix "mixed-production-input-token-repeat-$REPEAT" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode tokens --expected-max-token-concurrency 75000 \
+    --expected-add-estimated-output-tokens false --expected-headroom 0.00 \
+    --expected-picker random-picker --expected-prefix-cache off \
+    --expected-model-replicas 1 --http-version 1 \
+    --guidellm-worker-processes 4 --drain-after-done \
+    --drain-timeout-s 300 --recover-multiline-sse
+done
 ```
 
 The four tenant shapes and rates are in [`scenario.json`](scenario.json). The two exact admission arms are in [`run-config.json`](run-config.json).

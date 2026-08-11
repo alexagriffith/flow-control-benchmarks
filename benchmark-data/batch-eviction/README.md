@@ -10,5 +10,5 @@ topologies and keep each claim tied to the evidence that supports it.
 | [`two-model-replicas/`](two-model-replicas/) | One Endpoint Picker and two model replicas | Eviction and retry worked across both model replicas. The latency scaling comparison remains inconclusive. |
 
 Each package includes its configuration, run summary, request-level evidence,
-and claim boundary. The repository README and shared charts are updated only
+claim boundary, tested architecture diagram, and data-bound result plots. The repository README and shared charts are updated only
 after a package passes its data and public-content reviews.

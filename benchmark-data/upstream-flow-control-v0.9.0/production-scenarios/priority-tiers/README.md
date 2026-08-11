@@ -5,6 +5,26 @@
 Does flow control preserve dispatch order across four priority bands during a
 shared-model surge?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Priority tiers tested serving path](architecture.svg)
+
+![Priority tiers benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
+## Recorded replay
+
+[![Priority tiers replay](replay-poster.png)](replay.mp4)
+
+Accepted repeat 2, replayed from 220 to 280 seconds at 2× speed. Lower-priority batch work remains queued while the higher-priority queues stay nearly empty and vLLM remains full.
+
 ## What the benchmark showed
 
 | Priority band | Median surge p95 TTFT |
@@ -49,7 +69,7 @@ This scenario used GuideLLM 0.7.0 with request-count admission at 128 requests, 
 
 ```bash
 python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/scenario.json --scenario priority_tiers --out-dir /tmp/priority-tiers --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/priority-tiers/manifest.json --run-dir results/priority-tiers --prefix priority-tiers --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/priority-tiers/manifest.json --run-dir results/priority-tiers --prefix priority-tiers --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
 ```
 
 [`scenario.json`](scenario.json) contains only the priority-tier traffic. [`run-config.json`](run-config.json) records the tested images and settings.

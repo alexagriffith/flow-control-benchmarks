@@ -16,7 +16,7 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 base_dir=$(cd "$script_dir/.." && pwd)
 namespace=${BENCHMARK_RUNNER_NAMESPACE:-default}
 pod=${BENCHMARK_RUNNER_POD:-flow-control-benchmark-runner}
-manifest=${BENCHMARK_RUNNER_MANIFEST:-$base_dir/00-config/08-benchmark-runner.yaml}
+manifest=${BENCHMARK_RUNNER_MANIFEST:-$script_dir/kubernetes/benchmark-runner.yaml}
 remote_root=/work/current
 remote_runner=$remote_root/runner
 remote_input=$remote_root/input
@@ -37,7 +37,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-kubectl apply -f "$manifest"
+kubectl apply -n "$namespace" -f "$manifest"
 kubectl wait -n "$namespace" --for=condition=Ready pod/"$pod" --timeout=600s
 kubectl exec -n "$namespace" "$pod" -c runner -- \
   sh -lc "rm -rf '$remote_root' && mkdir -p '$remote_runner' '$remote_input/prompt-pools' '$remote_output'"

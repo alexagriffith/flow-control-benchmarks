@@ -5,6 +5,26 @@
 Can peer tenants keep receiving service while one tenant in the same priority
 band overloads the shared model?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Same-priority fairness tested serving path](architecture.svg)
+
+![Same-priority fairness benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
+## Recorded replay
+
+[![Same-priority fairness replay](replay-poster.png)](replay.mp4)
+
+Accepted repeat 2, replayed from 95 to 155 seconds at 2× speed. The overloaded tenant's queue grows while the two peer queues remain near zero.
+
 ## What the benchmark showed
 
 With request-count admission, the overloaded tenant had median surge p95 TTFT
@@ -51,8 +71,51 @@ much work vLLM admits during the burst.
 This scenario used GuideLLM 0.7.0, random routing, one model replica, and cache off. Three matched repeats compared request-count admission at 128 requests and 10% headroom with utilization detection at queue depth 2. Queue depth 5 was retained only as a single calibration run.
 
 ```bash
-python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/scenario.json --scenario same_priority_fairness --out-dir /tmp/same-priority-fairness --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/same-priority-fairness/manifest.json --run-dir results/same-priority-fairness --prefix same-priority-fairness --namespace <namespace> --runner-pod <runner-pod> --expected-detector <concurrency-detector-or-utilization-detector> --expected-concurrency-mode requests --expected-max-concurrency <128-or-unset> --expected-queue-depth <unset-or-2> --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/guidellm_trace.py \
+  --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/scenario.json \
+  --scenario same_priority_fairness --out-dir /tmp/same-priority-fairness \
+  --traffic-seed 42
+
+for REPEAT in 1 2 3; do
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest /tmp/same-priority-fairness/manifest.json \
+    --run-dir "results/same-priority-fairness/request-count/repeat-$REPEAT" \
+    --prefix "same-priority-request-count-repeat-$REPEAT" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector concurrency-detector \
+    --expected-concurrency-mode requests --expected-max-concurrency 128 \
+    --expected-headroom 0.10 --expected-picker random-picker \
+    --expected-prefix-cache off --expected-model-replicas 1 \
+    --http-version 1 --guidellm-worker-processes 4 \
+    --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+
+  python3 pipeline/run_guidellm_scenario.py \
+    --manifest /tmp/same-priority-fairness/manifest.json \
+    --run-dir "results/same-priority-fairness/queue-depth-2/repeat-$REPEAT" \
+    --prefix "same-priority-queue-depth-2-repeat-$REPEAT" \
+    --namespace "${NAMESPACE:-flow-control}" \
+    --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+    --expected-detector utilization-detector \
+    --expected-concurrency-mode requests --expected-queue-depth 2 \
+    --expected-headroom 0.00 --expected-picker random-picker \
+    --expected-prefix-cache off --expected-model-replicas 1 \
+    --http-version 1 --guidellm-worker-processes 4 \
+    --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+done
+
+python3 pipeline/run_guidellm_scenario.py \
+  --manifest /tmp/same-priority-fairness/manifest.json \
+  --run-dir results/same-priority-fairness/queue-depth-5/calibration \
+  --prefix same-priority-queue-depth-5-calibration \
+  --namespace "${NAMESPACE:-flow-control}" \
+  --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" \
+  --expected-detector utilization-detector \
+  --expected-concurrency-mode requests --expected-queue-depth 5 \
+  --expected-headroom 0.00 --expected-picker random-picker \
+  --expected-prefix-cache off --expected-model-replicas 1 \
+  --http-version 1 --guidellm-worker-processes 4 \
+  --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
 ```
 
 [`scenario.json`](scenario.json) contains only the fairness traffic. [`run-config.json`](run-config.json) defines the matched detector arms.

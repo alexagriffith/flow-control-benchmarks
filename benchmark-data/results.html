@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow control benchmark evidence map</title>
+  <style>
+    :root {
+      --ink: #101820;
+      --muted: #5c6875;
+      --line: #ccd5df;
+      --paper: #ffffff;
+      --band: #f3f6f8;
+      --blue: #2867e8;
+      --teal: #078276;
+      --orange: #d76b00;
+      --red: #bd3030;
+      --violet: #7352a3;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    nav { position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); }
+    nav div, main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    nav div { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 650; }
+    nav span { font-weight: 760; }
+    header { padding: 62px 0 42px; border-bottom: 1px solid var(--line); background: var(--band); }
+    header > div { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    h1 { max-width: 850px; margin: 0 0 12px; font-size: clamp(38px, 6vw, 68px); line-height: 1.02; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 28px; line-height: 1.12; letter-spacing: 0; }
+    h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.2; letter-spacing: 0; }
+    p { margin: 0; }
+    .lead { max-width: 800px; color: var(--muted); font-size: 19px; }
+    section { padding: 54px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-bottom: 25px; }
+    .section-head p { color: var(--muted); }
+    .lanes, .proof-grid, .link-grid { display: grid; gap: 14px; }
+    .lanes { grid-template-columns: repeat(3, 1fr); }
+    .lane { min-height: 285px; padding: 22px; border: 1px solid var(--line); border-top: 4px solid var(--blue); }
+    .lane:nth-child(2) { border-top-color: var(--teal); }
+    .lane:nth-child(3) { border-top-color: var(--violet); }
+    .eyebrow { margin-bottom: 16px; color: var(--muted); font-size: 12px; font-weight: 750; text-transform: uppercase; }
+    .outcome { margin: 12px 0 18px; font-size: 25px; font-weight: 780; line-height: 1.15; }
+    .small { color: var(--muted); font-size: 13px; }
+    .proof-grid { grid-template-columns: repeat(2, 1fr); }
+    .proof { padding: 21px; border: 1px solid var(--line); }
+    .row { display: grid; grid-template-columns: minmax(125px, 1fr) 3fr 72px; gap: 12px; align-items: center; margin-top: 12px; }
+    .track { height: 12px; background: #e5eaf0; }
+    .bar { height: 100%; background: var(--blue); }
+    .bar.teal { background: var(--teal); }
+    .bar.orange { background: var(--orange); }
+    .bar.red { background: var(--red); }
+    .bar.violet { background: var(--violet); }
+    .value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 720; }
+    .note { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); }
+    .decision { display: grid; grid-template-columns: 190px 1fr 1fr; border-top: 1px solid var(--line); }
+    .decision > div { padding: 16px 12px; border-bottom: 1px solid var(--line); }
+    .decision .label { font-weight: 750; }
+    .good { color: #006c5e; font-weight: 720; }
+    .bound { color: #9b4d00; font-weight: 720; }
+    .link-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-link { display: block; padding: 20px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+    .page-link:hover { border-color: var(--blue); }
+    .page-link span { display: block; margin-top: 5px; color: var(--muted); }
+    footer { padding: 24px 0 44px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 800px) {
+      .lanes, .proof-grid, .link-grid, .section-head { grid-template-columns: 1fr; }
+      .decision { grid-template-columns: 1fr; }
+      .decision > div { padding-bottom: 7px; }
+      .decision .label { padding-top: 18px; }
+      .row { grid-template-columns: 110px 1fr 70px; }
+    }
+  </style>
+</head>
+<body>
+  <nav><div><span>Flow control benchmark</span><a href="#pages">Open evidence pages</a></div></nav>
+  <header>
+    <div>
+      <h1>Flow control evidence, tied together</h1>
+      <p class="lead">Three benchmark campaigns establish priority behavior, production configuration choices, and safe recovery for batch work that is already running.</p>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>What each campaign adds</h2>
+        <p>The absolute latency values are specific to each model, GPU, request shape, and offered load. Compare mechanisms within a matched campaign.</p>
+      </div>
+      <div class="lanes">
+        <article class="lane">
+          <p class="eyebrow">RHAII 3.4 flow control</p>
+          <h3>Priority and queueing baseline</h3>
+          <p class="outcome">Higher-priority traffic dispatches first while batch absorbs the wait.</p>
+          <p class="small">The gate removed 48,224 batch HTTP 429 responses at the same offered load. Same-priority fairness prevented starvation but did not create a separate latency tier.</p>
+        </article>
+        <article class="lane">
+          <p class="eyebrow">Endpoint Picker v0.9.0</p>
+          <h3>Configuration and production traffic</h3>
+          <p class="outcome">Request-count admission protected steady realtime tenants across four production-shaped scenarios.</p>
+          <p class="small">Engine, detector, admission, workload-shape, mixed-traffic, routing, stability, and model-pool tests define where each setting helps and where it does not.</p>
+        </article>
+        <article class="lane">
+          <p class="eyebrow">Batch eviction build</p>
+          <h3>Recovery for work already in vLLM</h3>
+          <p class="outcome">Reserved capacity protected realtime p95 TTFT while evicted batch work was retried reliably.</p>
+          <p class="small">The one-model-replica proof reproduced across three repeats. A two-model-replica follow-up confirms the mechanism across a shared model pool.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Evidence at a glance</h2>
+        <p>Each chart compares matched conditions inside one campaign. All TTFT values are p95 in milliseconds.</p>
+      </div>
+      <div class="proof-grid">
+        <article class="proof">
+          <h3>RHAII 3.4: service tiers during saturation</h3>
+          <div class="row"><span>Premium</span><div class="track"><div class="bar teal" style="width:79%"></div></div><span class="value">1,117 ms</span></div>
+          <div class="row"><span>Standard</span><div class="track"><div class="bar orange" style="width:100%"></div></div><span class="value">1,406 ms</span></div>
+          <p class="note">Premium stayed ahead while standard traffic created the surge.</p>
+        </article>
+        <article class="proof">
+          <h3>RHAII 3.4: batch overload handling</h3>
+          <div class="row"><span>Gate off</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">48,224</span></div>
+          <div class="row"><span>Gate on</span><div class="track"><div class="bar teal" style="width:0%"></div></div><span class="value">0</span></div>
+          <p class="note">HTTP 429 responses. With flow control, deferrable work waited instead of failing.</p>
+        </article>
+        <article class="proof">
+          <h3>v0.9.0: priority tiers</h3>
+          <div class="row"><span>Platinum</span><div class="track"><div class="bar teal" style="width:3%"></div></div><span class="value">404 ms</span></div>
+          <div class="row"><span>Gold</span><div class="track"><div class="bar blue" style="width:4%"></div></div><span class="value">511 ms</span></div>
+          <div class="row"><span>Silver</span><div class="track"><div class="bar orange" style="width:5%"></div></div><span class="value">656 ms</span></div>
+          <div class="row"><span>Batch</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">13,264 ms</span></div>
+          <p class="note">Log-scale relationship shown on the detailed page. Flow control was engaged and batch absorbed most of the wait.</p>
+        </article>
+        <article class="proof">
+          <h3>Batch eviction: realtime protection</h3>
+          <div class="row"><span>Realtime only</span><div class="track"><div class="bar blue" style="width:61%"></div></div><span class="value">342 ms</span></div>
+          <div class="row"><span>Unprotected batch</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">561 ms</span></div>
+          <div class="row"><span>Reserved capacity</span><div class="track"><div class="bar teal" style="width:61%"></div></div><span class="value">341 ms</span></div>
+          <div class="row"><span>Eviction + retry</span><div class="track"><div class="bar violet" style="width:62%"></div></div><span class="value">348 ms</span></div>
+          <p class="note">Median across three repeats. Evicted batch requests were retried, and each job produced one final result.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Decision map</h2>
+        <p>The evidence supports operating decisions without claiming that one latency number transfers to every deployment.</p>
+      </div>
+      <div class="decision">
+        <div class="label">Across priority tiers</div><div class="good">Supported</div><div>Higher-priority queued work dispatches first during saturation.</div>
+        <div class="label">Within one priority tier</div><div class="good">Fair dispatch supported</div><div>Round robin prevents starvation. It does not guarantee equal TTFT.</div>
+        <div class="label">Batch not yet running</div><div class="good">Supported</div><div>Policy queues defer batch work while realtime traffic is served.</div>
+        <div class="label">Batch already running</div><div class="good">Supported by eviction build</div><div>Reserved capacity protects realtime; eviction and retry recover selected batch work.</div>
+        <div class="label">Admission choice</div><div class="bound">Workload dependent</div><div>Request count favored realtime latency here. Token admission distributed delay more evenly across mixed request sizes.</div>
+        <div class="label">Model-pool scaling</div><div class="bound">Throughput result with boundary</div><div>Per-GPU throughput stayed flat from one to four replicas; sparse HTTP 429 responses prevent a rejection-free claim at every size.</div>
+      </div>
+    </section>
+
+    <section id="pages">
+      <div class="section-head"><h2>Open the detailed pages</h2><p>Use the benchmark pages for evidence and the learning pages for mechanism details.</p></div>
+      <div class="link-grid">
+        <a class="page-link" href="upstream-flow-control-v0.9.0/results.html"><strong>Endpoint Picker v0.9.0 benchmark</strong><span>Configuration sweeps, production scenarios, workloads, scale, routing, and stability.</span></a>
+        <a class="page-link" href="batch-eviction/single-model-replica/results.html"><strong>Batch eviction benchmark</strong><span>Four matched conditions, retry path, evidence limits, and run database.</span></a>
+        <a class="page-link" href="../learn/flow-control-journey.html"><strong>Detailed benchmark walkthrough</strong><span>How the operating point and evidence were built.</span></a>
+        <a class="page-link" href="../learn/flow-control.html"><strong>Flow control explainer</strong><span>How priority, fairness, queues, and dispatch work.</span></a>
+      </div>
+    </section>
+    <footer>Evidence captured July-August 2026. No fixed service-level objective is claimed.</footer>
+  </main>
+</body>
+</html>

@@ -4,6 +4,18 @@ This benchmark tests whether flow control protects higher-priority realtime p95
 TTFT while lower-priority batch workloads share the same GPU. When realtime
 demand needed capacity, batch work was evicted, retried, and completed later.
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Batch eviction: 1 model replica tested serving path](architecture.svg)
+
+![Batch eviction: 1 model replica benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+<!-- /generated:package-visuals -->
+
 ## What the benchmark showed
 
 - The median realtime p95 time to first token was 342 ms with realtime traffic alone.

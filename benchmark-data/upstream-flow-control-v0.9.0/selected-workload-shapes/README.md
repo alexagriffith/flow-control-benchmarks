@@ -5,13 +5,27 @@
 Do the selected request-concurrency flow-control settings keep all requests
 served across representative single-tenant workload shapes under surge load?
 
+<!-- generated:package-visuals -->
+
+## Visual summary
+
+![Selected workload shapes tested serving path](architecture.svg)
+
+![Selected workload shapes benchmark results](results.svg)
+
+[Tested configuration](tested-config.yaml)
+
+[Replay this package with Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer#replay-a-published-benchmark-package)
+
+<!-- /generated:package-visuals -->
+
 ## Result
 
 All requests completed with HTTP 200 in all six runs. Flow control engaged in
 every run. vLLM recorded no preemptions and prefix cache counters remained zero
 in all runs. The Endpoint Picker did not restart.
 
-| Workload shape | Repeat | Offered requests | Success | Surge p95 TTFT (ms) | Surge p99 TTFT (ms) | Peak EPP queue |
+| Workload shape | Repeat | Offered requests | Success | Surge p95 TTFT (ms) | Surge p99 TTFT (ms) | Peak EPP queue (requests) |
 |---|---:|---:|---:|---:|---:|---:|
 | chat short output | 1 | 2,947 | 100% | 420.2 | 723.7 | 16 |
 | chat short output | 2 | 2,947 | 100% | 397.1 | 577.0 | 8 |
@@ -67,7 +81,7 @@ This package used GuideLLM 0.7.0, request-count admission at 128 requests, 10% h
 ```bash
 for scenario in chat_short_output agentic_longer_output; do
   python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/selected-workload-shapes/scenarios.json --scenario "$scenario" --out-dir "/tmp/$scenario" --traffic-seed 42
-  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 240 --recover-multiline-sse
+  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 240 --recover-multiline-sse
 done
 ```
 
