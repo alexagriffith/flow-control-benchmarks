@@ -15,6 +15,7 @@ DATA = ROOT / "benchmark-data" / "upstream-flow-control-v0.9.0"
 SCALING = DATA / "multi-replica-scaling"
 STABILITY = DATA / "long-stability"
 BATCH = DATA / "batch-interference"
+MIXED = DATA / "mixed-production-workload"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
@@ -463,6 +464,138 @@ def validate_batch_interference(errors: list[str]) -> None:
     )
 
 
+def validate_mixed_production_workload(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+        "window-summary.csv",
+    }
+    found = {path.name for path in MIXED.iterdir() if path.is_file()}
+    require(required <= found, "mixed-production files missing", errors)
+
+    summary = read_csv(MIXED / "summary.csv")
+    requests = read_csv(MIXED / "request-results.csv")
+    traffic = read_csv(MIXED / "traffic-samples.csv")
+    metrics = read_csv(MIXED / "system-metrics.csv")
+    evidence = read_csv(MIXED / "run-evidence.csv")
+    analysis = json.loads((MIXED / "analysis.json").read_text())
+    config = json.loads((MIXED / "run-config.json").read_text())
+
+    methods = Counter(row["admission_method"] for row in summary)
+    require(
+        methods == {"request-count admission": 3, "input-token admission": 3},
+        "expected three repeats per mixed-workload admission method",
+        errors,
+    )
+    require(len(summary) == 6 and len(evidence) == 6, "expected six mixed runs", errors)
+    require(len(requests) == 9132, "mixed-workload request count changed", errors)
+    require(len(traffic) > 0 and len(metrics) > 0, "mixed-workload samples are empty", errors)
+    require(
+        all(row["http_status"] == "200" for row in requests),
+        "mixed-workload request failed",
+        errors,
+    )
+    request_counts = Counter(row["run_name"] for row in requests)
+    require(
+        all(
+            request_counts[row["run_name"]] == int(row["http_200_requests"])
+            and row["non_200_requests"] == "0"
+            and is_true(row["detector_activated"])
+            for row in summary
+        ),
+        "mixed-workload summaries do not match request evidence",
+        errors,
+    )
+
+    required_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+        "flow_control_engaged",
+    )
+    require(
+        all(is_true(row[field]) for row in evidence for field in required_gates),
+        "a mixed-workload evidence gate failed",
+        errors,
+    )
+    require(
+        all(
+            row["prefix_cache_queries"] == "0.0"
+            and row["prefix_cache_hits"] == "0.0"
+            and row["vllm_preemptions"] == "0.0"
+            and not is_true(row["endpoint_picker_restarted"])
+            for row in evidence
+        ),
+        "mixed-workload cache, preemption, or restart evidence changed",
+        errors,
+    )
+
+    request_method = analysis["by_admission_method"]["request-count admission"]
+    token_method = analysis["by_admission_method"]["input-token admission"]
+    require(
+        request_method["premium_surge_p95_ttft_ms"]["median"] == 1994.498
+        and token_method["premium_surge_p95_ttft_ms"]["median"] == 2913.568
+        and request_method["batch_surge_p95_ttft_ms"]["median"] == 8653.621
+        and token_method["batch_surge_p95_ttft_ms"]["median"] == 2831.684,
+        "mixed-workload latency comparison changed",
+        errors,
+    )
+    require(
+        request_method["max_vllm_waiting"]["median"] == 16.0
+        and token_method["max_vllm_waiting"]["median"] == 43.0,
+        "mixed-workload vLLM waiting comparison changed",
+        errors,
+    )
+
+    required_metrics = {
+        "endpoint_picker_inflight_requests",
+        "endpoint_picker_inflight_tokens",
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+        "vllm_prefix_cache_queries_total",
+        "vllm_prefix_cache_hits_total",
+    }
+    require(
+        required_metrics <= {row["metric"] for row in metrics},
+        "mixed-workload system metrics are incomplete",
+        errors,
+    )
+    arms = config["endpoint_picker"]["admission_arms"]
+    require(
+        config["topology"]
+        == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas": 1,
+            "gpus_per_model_replica": 1,
+        }
+        and config["endpoint_picker"]["version"] == "llm-d Endpoint Picker v0.9.0"
+        and arms[0]["max_concurrency"] == 128
+        and arms[0]["headroom"] == 0.10
+        and arms[1]["max_token_concurrency"] == 75000
+        and not arms[1]["estimated_output_tokens_included"]
+        and config["model_service"]["prefix_cache"] == "disabled"
+        and config["execution"]["matched_deterministic_trace"],
+        "mixed-workload configuration changed",
+        errors,
+    )
+
+
 def scan_sensitive_text(errors: list[str]) -> None:
     for path in DATA.rglob("*"):
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
@@ -478,6 +611,7 @@ def main() -> int:
     validate_scaling(errors)
     validate_stability(errors)
     validate_batch_interference(errors)
+    validate_mixed_production_workload(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -488,6 +622,7 @@ def main() -> int:
     print("- Model pool scaling: 9 runs, 24,462 request rows")
     print("- Long stability: 1 run, 14,889 request rows")
     print("- Batch interference: 6 runs, 3,600 request rows")
+    print("- Mixed production workload: 6 runs, 9,132 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

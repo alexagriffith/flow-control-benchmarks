@@ -36,7 +36,7 @@ The rest of the configuration follows from making the measurement honest rather 
 | Repeats | 3 counted; 300 s for corrected SLO-sensitive runs | Repeats capture run-to-run variance; SLO-sensitive claims use per-repeat p95 with a min-max range, never pooled repeats |
 | Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |
 
-The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`benchmark-data/core-flow-control/operating-point-sweep`](benchmark-data/core-flow-control/operating-point-sweep).
+The sweep was run at 180 s per point over two passes in randomized order, and the two passes agreed. Data in [`benchmark-data/rhaii-3.4-flow-control/operating-point-sweep`](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep).
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags each request, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
 
@@ -62,11 +62,11 @@ An earlier cut pooled all repeats into one percentile and produced a 251 ms tier
 
 <img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT for the corrected 128-token service-tier run is 1117 ms with flow control on; earlier output-length cells are being restated with the same per-repeat method">
 
-Corrected 300 s gate-on data is in [`benchmark-data/core-flow-control/tiers-gate-on-300s`](benchmark-data/core-flow-control/tiers-gate-on-300s). The older 64- and 512-output cells remain in `benchmark-data/core-flow-control/` for provenance, but their pooled output-length ratios are not used as headline SLO evidence until restated with the same per-repeat method.
+Corrected 300 s gate-on data is in [`benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s`](benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s). The older 64- and 512-output cells remain in `benchmark-data/rhaii-3.4-flow-control/` for provenance, but their pooled output-length ratios are not used as headline SLO evidence until restated with the same per-repeat method.
 
 **Why it matters.** A latency-sensitive product gets preferential admission through a surge it did not cause. That is a necessary part of enforcing tiered service objectives on shared capacity, but not the whole SLO proof by itself.
 
-*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`benchmark-data/core-flow-control/tiers-gate-on-300s`](benchmark-data/core-flow-control/tiers-gate-on-300s).*
+*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s`](benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s).*
 
 ## Batch isolation under surge
 
@@ -91,7 +91,7 @@ Gate off, 48,224 batch requests were rejected with HTTP 429. Gate on, zero. Batc
 
 **Why it matters.** Without the gate, application teams build retry and backoff for the requests the platform refuses. With it, overnight document and report pipelines can fill the same GPUs that serve interactive traffic by day, and the platform holds the work until capacity exists. That is what lets a consolidated pool run hot.
 
-*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`benchmark-data/core-flow-control/batch-gate-on`](benchmark-data/core-flow-control/batch-gate-on) and [`benchmark-data/core-flow-control/batch-gate-off`](benchmark-data/core-flow-control/batch-gate-off).*
+*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`benchmark-data/rhaii-3.4-flow-control/batch-gate-on`](benchmark-data/rhaii-3.4-flow-control/batch-gate-on) and [`benchmark-data/rhaii-3.4-flow-control/batch-gate-off`](benchmark-data/rhaii-3.4-flow-control/batch-gate-off).*
 
 ## Batch eviction and retry
 
@@ -137,7 +137,7 @@ caching off. Data, configuration, and the visual report are in
 
 **Why it matters.** Consolidation is a cost decision. Packing tenants onto one GPU only pays off if a noisy neighbor cannot take the interactive tenants down with it, and flow control is what holds that line.
 
-*Saturated consolidation run, three counted repeats. Data in [`benchmark-data/core-flow-control/consolidation-gate-on`](benchmark-data/core-flow-control/consolidation-gate-on) and [`benchmark-data/core-flow-control/consolidation-gate-off`](benchmark-data/core-flow-control/consolidation-gate-off).*
+*Saturated consolidation run, three counted repeats. Data in [`benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on`](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on) and [`benchmark-data/rhaii-3.4-flow-control/consolidation-gate-off`](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-off).*
 
 ## The boundary: priority acts across tiers, not among equals
 
@@ -157,7 +157,7 @@ Both results scope the strong ones. Flow control changes who waits when tiers co
 
 ## The concurrency detector, and the limit of a latency SLO
 
-Every result above uses the shipped **utilization detector**, which gates on vLLM queue depth. An alternative **concurrency detector**, from upstream llm-d, caps in-flight concurrency directly. The two answer the saturation question differently, so we swept the concurrency detector to see whether it does better on an absolute latency target. We swept its `maxConcurrency` from 32 to 128 to find whether any setting holds premium under 300 ms at a saturating load.
+Every result above uses the RHAII 3.4 **utilization detector**, which gates on vLLM queue depth. A separately installed upstream **concurrency detector** caps in-flight requests directly. We swept `maxConcurrency` from 32 to 128 to measure the latency tradeoff at one saturating load.
 
 <img src="assets/upstream-sweep.svg" width="100%" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens">
 
@@ -170,7 +170,7 @@ What the sweep tells a platform team:
 - **Tightening the cap trades standard's latency for premium's.** At 32, premium is protected and standard waits 12.7 s; at 128 they converge. You pick the point your SLAs demand.
 - **A concurrency cap is a separation control, not a latency-SLO control.** No setting reached premium p95 under 300 ms at this offered load, because a 300 ms objective needs a lower load, not only a tighter cap. Holding an absolute SLO is a load decision, shown next.
 
-*Upstream concurrency-detector sweep, matched load, premium resolved to priority 100. Data in [`benchmark-data/core-flow-control/upstream-sweep`](benchmark-data/core-flow-control/upstream-sweep).*
+*Upstream concurrency-detector sweep, with load matched across the cap values and premium resolved to priority 100. The exact Endpoint Picker version was not captured, so this is tuning evidence rather than a direct image comparison. Data in [`benchmark-data/upstream-concurrency-detector-sweep`](benchmark-data/upstream-concurrency-detector-sweep).*
 
 ## SLO proof tests
 
@@ -184,9 +184,9 @@ The results above show priority admission and batch deferral. To claim that a de
 
 ## Scope
 
-Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms (data in [`benchmark-data/core-flow-control/multi-replica-tiers`](benchmark-data/core-flow-control/multi-replica-tiers)). The multi-replica behavior of the endpoint picker is a separate study.
+Every run above is a single replica, so cross-pod scoring was not the subject; what is measured is priority admission control on one pool. A two-replica pass reproduced the tier result, with the premium p95 TTFT at 177 ms (data in [`benchmark-data/rhaii-3.4-flow-control/multi-replica-tiers`](benchmark-data/rhaii-3.4-flow-control/multi-replica-tiers)). The multi-replica behavior of the Endpoint Picker is a separate study.
 
-A verification gap earlier in this campaign sent tenants to pools without priority objectives, so the gate saw every request at priority 0 and the tier results collapsed to no effect. Every counted run here was re-run with the priority resolution verified in the flow-control queue metric before the data was kept. The invalidated runs are archived, not deleted, and the correction is recorded in the run log.
+Every counted run verifies priority resolution in the flow-control queue metric before its data is accepted. Runs that fail this check are excluded from the public benchmark data.
 
 ## The walkthrough
 
@@ -203,7 +203,7 @@ Six stops take you from the cost problem to the dispatch path, the saturation ga
 
 `pipeline/benchmark_v4.py` is the runner that produced every accepted run. It drives multi-tenant traffic through the gateway with per-tenant objective and fairness headers, verifies priority resolution and gate state before counting, logs every request, scrapes vLLM and Endpoint Picker metrics, and writes one directory per repeat with `client_samples.csv`, `metric_samples.csv`, and `summary.json`. `pipeline/gen_charts.py` draws every chart in `assets/` from those CSVs. Same data in, identical charts out.
 
-The first campaign's report and its run-level data are archived in [`archive/`](archive/) so the progression is visible. The numbers in this README supersede it.
+The public benchmark folders contain only accepted evidence. Earlier exploratory data is excluded from this repository and is not used by this README.
 
 
 ## Other resources

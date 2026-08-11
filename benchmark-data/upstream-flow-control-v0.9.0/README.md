@@ -7,6 +7,7 @@ traffic samples, system metrics, evidence gates, analysis, and claim boundary.
 | Package | Question |
 |---|---|
 | [Batch interference baseline](batch-interference/) | How much can batch work already running in vLLM increase realtime latency? |
+| [Mixed production workload](mixed-production-workload/) | Which admission method better protects realtime traffic when four workload shapes share one model server? |
 | [Model pool scaling](multi-replica-scaling/) | Does priority protection remain stable as the model pool scales from one to four replicas? |
 | [Long stability](long-stability/) | Does the selected configuration recover after repeated production-shaped surges? |
 

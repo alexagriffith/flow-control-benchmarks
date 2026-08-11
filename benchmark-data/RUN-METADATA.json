@@ -12,7 +12,7 @@
       "short_name": "tiers gate on",
       "scenario": "priority tiers",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "noisy standard surge with steady premium",
       "evidence_label": "priority protection under saturation",
       "claim_boundary": "Shows priority separation under saturated load; not a full SLO proof without a named latency objective and matched detector comparison."
@@ -32,7 +32,7 @@
       "short_name": "batch gate on",
       "scenario": "batch isolation",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "batch surge with foreground traffic present",
       "evidence_label": "batch isolation",
       "claim_boundary": "Shows deferrable work is queued behind interactive tiers instead of being rejected."
@@ -82,7 +82,7 @@
       "short_name": "consolidation gate on",
       "scenario": "consolidation",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "two premium tenants steady while standard floods the shared pool",
       "evidence_label": "shared-pool protection",
       "claim_boundary": "Shows premium tenants stay ahead of standard traffic on a single shared GPU."
@@ -102,7 +102,7 @@
       "short_name": "fairness big burst",
       "scenario": "same-priority fairness",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "one same-priority tenant bursts while peers share the band",
       "evidence_label": "same-band fairness signal",
       "claim_boundary": "Shows bounded same-band dispatch behavior; it does not prove a separate latency tier among equal-priority tenants."
@@ -112,7 +112,7 @@
       "short_name": "fairness gate on",
       "scenario": "same-priority fairness",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "same-priority premium tenants with one higher-volume tenant",
       "evidence_label": "same-band fairness",
       "claim_boundary": "Older fairness evidence; use the big-burst run for the current headline."
@@ -132,12 +132,12 @@
       "short_name": "multi-replica tiers",
       "scenario": "multi-replica priority tiers",
       "flow_control": "on",
-      "detector": "downstream queue-depth detector",
+      "detector": "RHAII 3.4 utilization detector",
       "traffic_shape": "service-tier traffic across multiple replicas",
       "evidence_label": "scale-out signal",
       "claim_boundary": "Shows multi-replica behavior for the prior detector; upstream concurrency-detector scale-out still needs a matched run."
     },
-    "upstream-sweep": {
+    "upstream-concurrency-detector-sweep": {
       "display_name": "Upstream maxConcurrency sweep",
       "short_name": "upstream sweep",
       "scenario": "operating-point sweep",

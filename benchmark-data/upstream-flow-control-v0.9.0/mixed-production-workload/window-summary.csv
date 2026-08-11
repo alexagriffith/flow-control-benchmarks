@@ -1,0 +1,67 @@
+run_name,admission_method,admission_limit,repeat,window,window_start_seconds,window_end_seconds,tenant,priority,requests,http_200_requests,non_200_requests,served_requests_per_second,p95_ttft_ms,p99_ttft_ms,p95_tpot_ms_per_token,p95_e2e_latency_ms
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,688.096762,688.096762,21.422343,2742.626905
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,376.551628,376.551628,13.273153,6796.171665
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.457143,320.378304,392.2894,15.882419,2033.188105
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,11626.374483,11843.962908,138.970211,17788.740158
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,surge,80.0,135.0,agentic,50,88,88,0,1.2,2784.05261,3705.688238,57.207793,29290.597916
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,surge,80.0,135.0,realtime-chat,100,577,577,0,9.981818,1751.228571,2592.576265,66.211654,8475.502014
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,surge,80.0,135.0,standard-long-context,0,33,33,0,0.527273,5056.444407,5872.75672,89.300146,11430.891514
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,636.88302,636.88302,12.419948,1590.036631
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,recovery,155.0,175.0,agentic,50,3,3,0,1.1,85.302114,85.302114,8.809084,4510.705471
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,318.927526,580.409765,11.708455,1498.933315
+request-count admission - repeat 1,request-count admission,128 requests with 10% headroom,1,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,446.504593,446.504593,13.050739,1670.746326
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,688.285351,688.285351,21.575702,2761.907339
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,382.11441,382.11441,13.295102,6807.387114
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.457143,322.796106,400.894165,16.079059,2058.354378
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,8653.620958,10723.052263,111.745967,14308.100224
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,surge,80.0,135.0,agentic,50,88,88,0,1.2,2669.508934,3895.199537,56.513439,28935.204029
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,surge,80.0,135.0,realtime-chat,100,577,577,0,9.981818,1994.497776,2636.329889,66.60514,8525.990486
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,surge,80.0,135.0,standard-long-context,0,33,33,0,0.527273,5149.644613,6477.604389,88.760536,11363.680363
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,630.347252,630.347252,11.389928,1458.147049
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,recovery,155.0,175.0,agentic,50,3,3,0,1.0,83.580017,83.580017,8.366157,4283.850193
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,306.815147,568.472147,10.759016,1377.40612
+request-count admission - repeat 2,request-count admission,128 requests with 10% headroom,2,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,440.64784,440.64784,12.015568,1538.223505
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,684.738636,684.738636,21.483431,2750.106812
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,373.176336,373.176336,13.378484,6850.088358
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.4,325.305939,399.644852,15.923601,2038.496256
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,7946.270466,9625.980616,98.900212,12659.498453
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,surge,80.0,135.0,agentic,50,88,88,0,1.163636,2745.435953,3843.951941,56.27611,28813.732147
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,surge,80.0,135.0,realtime-chat,100,577,577,0,9.890909,2102.913141,2750.748634,67.436466,8635.23984
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,surge,80.0,135.0,standard-long-context,0,33,33,0,0.490909,6978.06859,7935.955286,101.79304,13031.408072
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,641.021252,641.021252,12.046507,1542.233706
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,recovery,155.0,175.0,agentic,50,3,3,0,1.2,87.813616,87.813616,8.741194,4476.046324
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,316.216469,588.716269,11.151273,1427.611828
+request-count admission - repeat 3,request-count admission,128 requests with 10% headroom,3,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,451.094866,451.094866,12.68805,1624.310017
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,684.263229,684.263229,21.522015,2755.043983
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,376.547575,376.547575,13.107791,6711.485147
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.4,323.474884,379.34494,15.801175,2022.799492
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,2806.536436,3392.806768,76.809634,9832.804918
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,surge,80.0,135.0,agentic,50,88,88,0,1.181818,2812.541485,3390.294313,58.095109,29744.920731
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,surge,80.0,135.0,realtime-chat,100,577,577,0,9.872727,2872.56813,3150.426388,75.257687,9634.410858
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,surge,80.0,135.0,standard-long-context,0,33,33,0,0.490909,3048.552275,3189.194679,76.221406,9756.729603
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,638.454676,638.454676,12.121098,1551.71442
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,recovery,155.0,175.0,agentic,50,3,3,0,0.95,86.492538,86.492538,8.888574,4551.307917
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,315.932751,578.599215,11.246037,1439.723492
+input-token admission - repeat 1,input-token admission,"75,000 input tokens",1,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,448.85993,448.85993,12.754831,1632.854462
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,685.076714,685.076714,21.549648,2758.61454
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,378.877401,378.877401,13.579411,6952.94261
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.4,326.170206,401.627302,16.461818,2107.339859
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,2831.684351,3408.341169,77.008544,9857.323647
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,surge,80.0,135.0,agentic,50,88,88,0,1.145455,2835.645199,3320.031404,57.441185,29412.310839
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,surge,80.0,135.0,realtime-chat,100,577,577,0,9.872727,2913.568497,3148.571968,75.458787,9659.071207
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,surge,80.0,135.0,standard-long-context,0,33,33,0,0.490909,3075.613737,3210.099459,76.426303,9782.854319
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,646.257877,646.257877,12.461588,1595.300913
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,recovery,155.0,175.0,agentic,50,3,3,0,0.95,84.928751,84.928751,8.729348,4469.77973
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,304.186583,590.452194,11.274757,1443.397284
+input-token admission - repeat 2,input-token admission,"75,000 input tokens",2,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,446.382523,446.382523,13.031473,1668.26582
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,baseline,20.0,55.0,batch-long-context,-10,15,15,0,0.428571,687.756777,687.756777,21.702228,2778.100729
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,baseline,20.0,55.0,agentic,50,11,11,0,0.314286,374.470234,374.470234,12.076933,6183.70223
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,baseline,20.0,55.0,realtime-chat,100,153,153,0,4.428571,324.489117,392.806768,15.939042,2040.403605
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,surge,80.0,135.0,batch-long-context,-10,26,26,0,0.563636,2875.475645,3426.235676,77.318676,9897.854328
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,surge,80.0,135.0,agentic,50,88,88,0,1.163636,2846.936941,3343.922377,57.730324,29558.16412
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,surge,80.0,135.0,realtime-chat,100,577,577,0,9.8,2934.983015,3205.802917,76.100834,9741.532087
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,surge,80.0,135.0,standard-long-context,0,33,33,0,0.490909,3116.773844,3323.085785,76.943392,9849.093914
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,recovery,155.0,175.0,batch-long-context,-10,3,3,0,0.1,643.530846,643.530846,12.422716,1590.376616
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,recovery,155.0,175.0,agentic,50,3,3,0,0.9,84.982634,84.982634,8.597146,4402.104139
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,recovery,155.0,175.0,realtime-chat,100,70,70,0,3.7,194.359303,591.220379,11.230651,1437.755108
+input-token admission - repeat 3,input-token admission,"75,000 input tokens",3,recovery,155.0,175.0,standard-long-context,0,2,2,0,0.1,452.982187,452.982187,13.063561,1672.392845

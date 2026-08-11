@@ -423,7 +423,7 @@ footer a{color:var(--txt2)}
       <tbody><tr><td class="wrap">Input length</td><td class="mono wrap">512 in (fixed)</td><td class="wrap">Short interactive work; held constant across every scenario</td></tr><tr><td class="wrap">Output length</td><td class="mono wrap">64 / 128 / 512 (swept)</td><td class="wrap">Output is the saturation limiter, so we swept it; 128 is the headline</td></tr><tr><td class="mono wrap">max-num-seqs</td><td class="mono wrap">128 (set)</td><td class="wrap">The engine's running-batch cap we set; the sweep confirmed the knee lands here</td></tr><tr><td class="mono wrap">max-num-batched-tokens</td><td class="mono wrap">8192</td><td class="wrap">Prefill budget per step for this model and GPU</td></tr><tr><td class="wrap">Prefix caching</td><td class="mono wrap">off</td><td class="wrap">Latencies reflect scheduling, not a warm cache</td></tr><tr><td class="wrap">Repeats</td><td class="mono wrap">3 counted</td><td class="wrap">Each headline is the median of the three per-repeat p95s, steady-state trimmed, with the min–max range shown</td></tr></tbody>
     </table>
   </div>
-  <p>The sweep ran 180 s per point over two passes in randomized order, and both agreed. Data in <code>benchmark-data/core-flow-control/operating-point-sweep</code>.</p>
+  <p>The sweep ran 180 s per point over two passes in randomized order, and both agreed. Data in <code>benchmark-data/rhaii-3.4-flow-control/operating-point-sweep</code>.</p>
 </section>
 
 <section class="chapter" id="knee-choice">
@@ -622,7 +622,7 @@ footer a{color:var(--txt2)}
 <section class="chapter" id="multireplica">
   <h2>Tier protection holds on two replicas</h2>
   <p class="lead">The same service-tiers scenario on a two-replica pool with flow control on kept premium ahead of standard, so the ordering survives scale-out.</p>
-  <p>The two-replica percentiles are being restated with per-repeat percentiles; the ordering and zero rejections stand. Data in <code>benchmark-data/core-flow-control/multi-replica-tiers</code>.</p>
+  <p>The two-replica percentiles are being restated with per-repeat percentiles; the ordering and zero rejections stand. Data in <code>benchmark-data/rhaii-3.4-flow-control/multi-replica-tiers</code>.</p>
 </section>
 
 <!-- ================= BATCH ISOLATION ================= -->

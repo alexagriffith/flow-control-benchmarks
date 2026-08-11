@@ -1,0 +1,628 @@
+{
+  "experiment": "mixed-production-workload-admission-comparison",
+  "run_count": 6,
+  "all_runs_publishable_data": true,
+  "comparison_valid": true,
+  "comparison": {
+    "premium_request_minus_token_p95_ttft_ms": -919.07,
+    "gold_request_minus_token_p95_ttft_ms": -90.209,
+    "standard_request_minus_token_p95_ttft_ms": 2074.031,
+    "batch_request_minus_token_p95_ttft_ms": 5821.937
+  },
+  "runs": [
+    {
+      "repeat": 1,
+      "http_200": 1522,
+      "metric_samples": 284,
+      "exact_state_samples": 284,
+      "max_schedule_p99_lag_ms": 94.627,
+      "max_schedule_lag_ms": 98.476,
+      "max_epp_queue": 30.0,
+      "max_pool_saturation": 1.0234375,
+      "max_epp_inflight_requests": 131.0,
+      "max_epp_inflight_tokens": 72838.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 15.0,
+      "max_vllm_kv_cache_pct": 21.97,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 1751.229,
+      "premium_surge_p99_ttft_ms": 2592.576,
+      "premium_surge_p95_tpot_ms": 66.212,
+      "premium_surge_served_rps": 9.982,
+      "premium_recovery_p95_ttft_ms": 318.928,
+      "premium_queue_mean_ms": 101.802,
+      "gold_surge_p95_ttft_ms": 2784.053,
+      "gold_surge_p99_ttft_ms": 3705.688,
+      "gold_surge_p95_tpot_ms": 57.208,
+      "gold_surge_served_rps": 1.2,
+      "gold_recovery_p95_ttft_ms": 85.302,
+      "gold_queue_mean_ms": 224.806,
+      "standard_surge_p95_ttft_ms": 5056.444,
+      "standard_surge_p99_ttft_ms": 5872.757,
+      "standard_surge_p95_tpot_ms": 89.3,
+      "standard_surge_served_rps": 0.527,
+      "standard_recovery_p95_ttft_ms": 446.505,
+      "standard_queue_mean_ms": 544.196,
+      "batch_surge_p95_ttft_ms": 11626.374,
+      "batch_surge_p99_ttft_ms": 11843.963,
+      "batch_surge_p95_tpot_ms": 138.97,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 636.883,
+      "batch_queue_mean_ms": 741.693,
+      "run_name": "request-count admission - repeat 1",
+      "admission_method": "request-count admission"
+    },
+    {
+      "repeat": 2,
+      "http_200": 1522,
+      "metric_samples": 284,
+      "exact_state_samples": 284,
+      "max_schedule_p99_lag_ms": 93.873,
+      "max_schedule_lag_ms": 100.474,
+      "max_epp_queue": 26.0,
+      "max_pool_saturation": 1.015625,
+      "max_epp_inflight_requests": 130.0,
+      "max_epp_inflight_tokens": 80790.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 16.0,
+      "max_vllm_kv_cache_pct": 21.886,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 1994.498,
+      "premium_surge_p99_ttft_ms": 2636.33,
+      "premium_surge_p95_tpot_ms": 66.605,
+      "premium_surge_served_rps": 9.982,
+      "premium_recovery_p95_ttft_ms": 306.815,
+      "premium_queue_mean_ms": 115.05,
+      "gold_surge_p95_ttft_ms": 2669.509,
+      "gold_surge_p99_ttft_ms": 3895.2,
+      "gold_surge_p95_tpot_ms": 56.513,
+      "gold_surge_served_rps": 1.2,
+      "gold_recovery_p95_ttft_ms": 83.58,
+      "gold_queue_mean_ms": 232.407,
+      "standard_surge_p95_ttft_ms": 5149.645,
+      "standard_surge_p99_ttft_ms": 6477.604,
+      "standard_surge_p95_tpot_ms": 88.761,
+      "standard_surge_served_rps": 0.527,
+      "standard_recovery_p95_ttft_ms": 440.648,
+      "standard_queue_mean_ms": 431.27,
+      "batch_surge_p95_ttft_ms": 8653.621,
+      "batch_surge_p99_ttft_ms": 10723.052,
+      "batch_surge_p95_tpot_ms": 111.746,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 630.347,
+      "batch_queue_mean_ms": 653.021,
+      "run_name": "request-count admission - repeat 2",
+      "admission_method": "request-count admission"
+    },
+    {
+      "repeat": 3,
+      "http_200": 1522,
+      "metric_samples": 284,
+      "exact_state_samples": 284,
+      "max_schedule_p99_lag_ms": 94.86,
+      "max_schedule_lag_ms": 109.423,
+      "max_epp_queue": 27.0,
+      "max_pool_saturation": 1.015625,
+      "max_epp_inflight_requests": 131.0,
+      "max_epp_inflight_tokens": 75142.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 16.0,
+      "max_vllm_kv_cache_pct": 21.964,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 2102.913,
+      "premium_surge_p99_ttft_ms": 2750.749,
+      "premium_surge_p95_tpot_ms": 67.436,
+      "premium_surge_served_rps": 9.891,
+      "premium_recovery_p95_ttft_ms": 316.216,
+      "premium_queue_mean_ms": 115.856,
+      "gold_surge_p95_ttft_ms": 2745.436,
+      "gold_surge_p99_ttft_ms": 3843.952,
+      "gold_surge_p95_tpot_ms": 56.276,
+      "gold_surge_served_rps": 1.164,
+      "gold_recovery_p95_ttft_ms": 87.814,
+      "gold_queue_mean_ms": 274.813,
+      "standard_surge_p95_ttft_ms": 6978.069,
+      "standard_surge_p99_ttft_ms": 7935.955,
+      "standard_surge_p95_tpot_ms": 101.793,
+      "standard_surge_served_rps": 0.491,
+      "standard_recovery_p95_ttft_ms": 451.095,
+      "standard_queue_mean_ms": 1010.67,
+      "batch_surge_p95_ttft_ms": 7946.27,
+      "batch_surge_p99_ttft_ms": 9625.981,
+      "batch_surge_p95_tpot_ms": 98.9,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 641.021,
+      "batch_queue_mean_ms": 354.213,
+      "run_name": "request-count admission - repeat 3",
+      "admission_method": "request-count admission"
+    },
+    {
+      "repeat": 1,
+      "http_200": 1522,
+      "metric_samples": 284,
+      "exact_state_samples": 284,
+      "max_schedule_p99_lag_ms": 90.672,
+      "max_schedule_lag_ms": 95.819,
+      "max_epp_queue": 3.0,
+      "max_pool_saturation": 1.0328533333333334,
+      "max_epp_inflight_requests": 168.0,
+      "max_epp_inflight_tokens": 77978.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 43.0,
+      "max_vllm_kv_cache_pct": 23.082,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 2872.568,
+      "premium_surge_p99_ttft_ms": 3150.426,
+      "premium_surge_p95_tpot_ms": 75.258,
+      "premium_surge_served_rps": 9.873,
+      "premium_recovery_p95_ttft_ms": 315.933,
+      "premium_queue_mean_ms": 1.674,
+      "gold_surge_p95_ttft_ms": 2812.541,
+      "gold_surge_p99_ttft_ms": 3390.294,
+      "gold_surge_p95_tpot_ms": 58.095,
+      "gold_surge_served_rps": 1.182,
+      "gold_recovery_p95_ttft_ms": 86.493,
+      "gold_queue_mean_ms": 1.496,
+      "standard_surge_p95_ttft_ms": 3048.552,
+      "standard_surge_p99_ttft_ms": 3189.195,
+      "standard_surge_p95_tpot_ms": 76.221,
+      "standard_surge_served_rps": 0.491,
+      "standard_recovery_p95_ttft_ms": 448.86,
+      "standard_queue_mean_ms": 4.137,
+      "batch_surge_p95_ttft_ms": 2806.536,
+      "batch_surge_p99_ttft_ms": 3392.807,
+      "batch_surge_p95_tpot_ms": 76.81,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 638.455,
+      "batch_queue_mean_ms": 0.073,
+      "run_name": "input-token admission - repeat 1",
+      "admission_method": "input-token admission"
+    },
+    {
+      "repeat": 2,
+      "http_200": 1522,
+      "metric_samples": 285,
+      "exact_state_samples": 285,
+      "max_schedule_p99_lag_ms": 98.265,
+      "max_schedule_lag_ms": 101.368,
+      "max_epp_queue": 2.0,
+      "max_pool_saturation": 1.0328533333333334,
+      "max_epp_inflight_requests": 171.0,
+      "max_epp_inflight_tokens": 77464.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 43.0,
+      "max_vllm_kv_cache_pct": 23.509,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 2913.568,
+      "premium_surge_p99_ttft_ms": 3148.572,
+      "premium_surge_p95_tpot_ms": 75.459,
+      "premium_surge_served_rps": 9.873,
+      "premium_recovery_p95_ttft_ms": 304.187,
+      "premium_queue_mean_ms": 1.956,
+      "gold_surge_p95_ttft_ms": 2835.645,
+      "gold_surge_p99_ttft_ms": 3320.031,
+      "gold_surge_p95_tpot_ms": 57.441,
+      "gold_surge_served_rps": 1.145,
+      "gold_recovery_p95_ttft_ms": 84.929,
+      "gold_queue_mean_ms": 1.609,
+      "standard_surge_p95_ttft_ms": 3075.614,
+      "standard_surge_p99_ttft_ms": 3210.099,
+      "standard_surge_p95_tpot_ms": 76.426,
+      "standard_surge_served_rps": 0.491,
+      "standard_recovery_p95_ttft_ms": 446.383,
+      "standard_queue_mean_ms": 4.314,
+      "batch_surge_p95_ttft_ms": 2831.684,
+      "batch_surge_p99_ttft_ms": 3408.341,
+      "batch_surge_p95_tpot_ms": 77.009,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 646.258,
+      "batch_queue_mean_ms": 0.305,
+      "run_name": "input-token admission - repeat 2",
+      "admission_method": "input-token admission"
+    },
+    {
+      "repeat": 3,
+      "http_200": 1522,
+      "metric_samples": 282,
+      "exact_state_samples": 282,
+      "max_schedule_p99_lag_ms": 97.23,
+      "max_schedule_lag_ms": 97.23,
+      "max_epp_queue": 4.0,
+      "max_pool_saturation": 1.0328533333333334,
+      "max_epp_inflight_requests": 171.0,
+      "max_epp_inflight_tokens": 76962.0,
+      "max_vllm_running": 128.0,
+      "max_vllm_waiting": 45.0,
+      "max_vllm_kv_cache_pct": 23.45,
+      "vllm_preemptions": 0.0,
+      "detector_activated": true,
+      "premium_surge_p95_ttft_ms": 2934.983,
+      "premium_surge_p99_ttft_ms": 3205.803,
+      "premium_surge_p95_tpot_ms": 76.101,
+      "premium_surge_served_rps": 9.8,
+      "premium_recovery_p95_ttft_ms": 194.359,
+      "premium_queue_mean_ms": 2.879,
+      "gold_surge_p95_ttft_ms": 2846.937,
+      "gold_surge_p99_ttft_ms": 3343.922,
+      "gold_surge_p95_tpot_ms": 57.73,
+      "gold_surge_served_rps": 1.164,
+      "gold_recovery_p95_ttft_ms": 84.983,
+      "gold_queue_mean_ms": 1.666,
+      "standard_surge_p95_ttft_ms": 3116.774,
+      "standard_surge_p99_ttft_ms": 3323.086,
+      "standard_surge_p95_tpot_ms": 76.943,
+      "standard_surge_served_rps": 0.491,
+      "standard_recovery_p95_ttft_ms": 452.982,
+      "standard_queue_mean_ms": 4.69,
+      "batch_surge_p95_ttft_ms": 2875.476,
+      "batch_surge_p99_ttft_ms": 3426.236,
+      "batch_surge_p95_tpot_ms": 77.319,
+      "batch_surge_served_rps": 0.564,
+      "batch_recovery_p95_ttft_ms": 643.531,
+      "batch_queue_mean_ms": 0.583,
+      "run_name": "input-token admission - repeat 3",
+      "admission_method": "input-token admission"
+    }
+  ],
+  "schema": "stable-upstream-mixed-workload-analysis-v1",
+  "business_question": "How do request-count and input-token admission trade priority protection against latency balance when mixed workloads share one model server?",
+  "answer": "Request-count admission lowered realtime-chat median surge p95 TTFT by 919 ms and shifted more latency to batch. Input-token admission produced more even latency across priorities but left more requests waiting inside vLLM.",
+  "claim_boundary": "The configuration guidance applies to the tested traffic shapes and limits. The latency values are specific to this model, GPU, and single-replica setup.",
+  "by_admission_method": {
+    "request-count admission": {
+      "runs": 3,
+      "http_200_total": 4566,
+      "detector_activated_runs": 3,
+      "max_schedule_p99_lag_ms": {
+        "median": 94.627,
+        "min": 93.873,
+        "max": 94.86
+      },
+      "max_schedule_lag_ms": {
+        "median": 100.474,
+        "min": 98.476,
+        "max": 109.423
+      },
+      "max_epp_queue": {
+        "median": 27.0,
+        "min": 26.0,
+        "max": 30.0
+      },
+      "max_pool_saturation": {
+        "median": 1.016,
+        "min": 1.016,
+        "max": 1.023
+      },
+      "max_epp_inflight_requests": {
+        "median": 131.0,
+        "min": 130.0,
+        "max": 131.0
+      },
+      "max_epp_inflight_tokens": {
+        "median": 75142.0,
+        "min": 72838.0,
+        "max": 80790.0
+      },
+      "max_vllm_running": {
+        "median": 128.0,
+        "min": 128.0,
+        "max": 128.0
+      },
+      "max_vllm_waiting": {
+        "median": 16.0,
+        "min": 15.0,
+        "max": 16.0
+      },
+      "max_vllm_kv_cache_pct": {
+        "median": 21.964,
+        "min": 21.886,
+        "max": 21.97
+      },
+      "vllm_preemptions": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "premium_surge_p95_ttft_ms": {
+        "median": 1994.498,
+        "min": 1751.229,
+        "max": 2102.913
+      },
+      "premium_surge_p99_ttft_ms": {
+        "median": 2636.33,
+        "min": 2592.576,
+        "max": 2750.749
+      },
+      "premium_surge_p95_tpot_ms": {
+        "median": 66.605,
+        "min": 66.212,
+        "max": 67.436
+      },
+      "premium_surge_served_rps": {
+        "median": 9.982,
+        "min": 9.891,
+        "max": 9.982
+      },
+      "premium_recovery_p95_ttft_ms": {
+        "median": 316.216,
+        "min": 306.815,
+        "max": 318.928
+      },
+      "premium_queue_mean_ms": {
+        "median": 115.05,
+        "min": 101.802,
+        "max": 115.856
+      },
+      "gold_surge_p95_ttft_ms": {
+        "median": 2745.436,
+        "min": 2669.509,
+        "max": 2784.053
+      },
+      "gold_surge_p99_ttft_ms": {
+        "median": 3843.952,
+        "min": 3705.688,
+        "max": 3895.2
+      },
+      "gold_surge_p95_tpot_ms": {
+        "median": 56.513,
+        "min": 56.276,
+        "max": 57.208
+      },
+      "gold_surge_served_rps": {
+        "median": 1.2,
+        "min": 1.164,
+        "max": 1.2
+      },
+      "gold_recovery_p95_ttft_ms": {
+        "median": 85.302,
+        "min": 83.58,
+        "max": 87.814
+      },
+      "gold_queue_mean_ms": {
+        "median": 232.407,
+        "min": 224.806,
+        "max": 274.813
+      },
+      "standard_surge_p95_ttft_ms": {
+        "median": 5149.645,
+        "min": 5056.444,
+        "max": 6978.069
+      },
+      "standard_surge_p99_ttft_ms": {
+        "median": 6477.604,
+        "min": 5872.757,
+        "max": 7935.955
+      },
+      "standard_surge_p95_tpot_ms": {
+        "median": 89.3,
+        "min": 88.761,
+        "max": 101.793
+      },
+      "standard_surge_served_rps": {
+        "median": 0.527,
+        "min": 0.491,
+        "max": 0.527
+      },
+      "standard_recovery_p95_ttft_ms": {
+        "median": 446.505,
+        "min": 440.648,
+        "max": 451.095
+      },
+      "standard_queue_mean_ms": {
+        "median": 544.196,
+        "min": 431.27,
+        "max": 1010.67
+      },
+      "batch_surge_p95_ttft_ms": {
+        "median": 8653.621,
+        "min": 7946.27,
+        "max": 11626.374
+      },
+      "batch_surge_p99_ttft_ms": {
+        "median": 10723.052,
+        "min": 9625.981,
+        "max": 11843.963
+      },
+      "batch_surge_p95_tpot_ms": {
+        "median": 111.746,
+        "min": 98.9,
+        "max": 138.97
+      },
+      "batch_surge_served_rps": {
+        "median": 0.564,
+        "min": 0.564,
+        "max": 0.564
+      },
+      "batch_recovery_p95_ttft_ms": {
+        "median": 636.883,
+        "min": 630.347,
+        "max": 641.021
+      },
+      "batch_queue_mean_ms": {
+        "median": 653.021,
+        "min": 354.213,
+        "max": 741.693
+      }
+    },
+    "input-token admission": {
+      "runs": 3,
+      "http_200_total": 4566,
+      "detector_activated_runs": 3,
+      "max_schedule_p99_lag_ms": {
+        "median": 97.23,
+        "min": 90.672,
+        "max": 98.265
+      },
+      "max_schedule_lag_ms": {
+        "median": 97.23,
+        "min": 95.819,
+        "max": 101.368
+      },
+      "max_epp_queue": {
+        "median": 3.0,
+        "min": 2.0,
+        "max": 4.0
+      },
+      "max_pool_saturation": {
+        "median": 1.033,
+        "min": 1.033,
+        "max": 1.033
+      },
+      "max_epp_inflight_requests": {
+        "median": 171.0,
+        "min": 168.0,
+        "max": 171.0
+      },
+      "max_epp_inflight_tokens": {
+        "median": 77464.0,
+        "min": 76962.0,
+        "max": 77978.0
+      },
+      "max_vllm_running": {
+        "median": 128.0,
+        "min": 128.0,
+        "max": 128.0
+      },
+      "max_vllm_waiting": {
+        "median": 43.0,
+        "min": 43.0,
+        "max": 45.0
+      },
+      "max_vllm_kv_cache_pct": {
+        "median": 23.45,
+        "min": 23.082,
+        "max": 23.509
+      },
+      "vllm_preemptions": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "premium_surge_p95_ttft_ms": {
+        "median": 2913.568,
+        "min": 2872.568,
+        "max": 2934.983
+      },
+      "premium_surge_p99_ttft_ms": {
+        "median": 3150.426,
+        "min": 3148.572,
+        "max": 3205.803
+      },
+      "premium_surge_p95_tpot_ms": {
+        "median": 75.459,
+        "min": 75.258,
+        "max": 76.101
+      },
+      "premium_surge_served_rps": {
+        "median": 9.873,
+        "min": 9.8,
+        "max": 9.873
+      },
+      "premium_recovery_p95_ttft_ms": {
+        "median": 304.187,
+        "min": 194.359,
+        "max": 315.933
+      },
+      "premium_queue_mean_ms": {
+        "median": 1.956,
+        "min": 1.674,
+        "max": 2.879
+      },
+      "gold_surge_p95_ttft_ms": {
+        "median": 2835.645,
+        "min": 2812.541,
+        "max": 2846.937
+      },
+      "gold_surge_p99_ttft_ms": {
+        "median": 3343.922,
+        "min": 3320.031,
+        "max": 3390.294
+      },
+      "gold_surge_p95_tpot_ms": {
+        "median": 57.73,
+        "min": 57.441,
+        "max": 58.095
+      },
+      "gold_surge_served_rps": {
+        "median": 1.164,
+        "min": 1.145,
+        "max": 1.182
+      },
+      "gold_recovery_p95_ttft_ms": {
+        "median": 84.983,
+        "min": 84.929,
+        "max": 86.493
+      },
+      "gold_queue_mean_ms": {
+        "median": 1.609,
+        "min": 1.496,
+        "max": 1.666
+      },
+      "standard_surge_p95_ttft_ms": {
+        "median": 3075.614,
+        "min": 3048.552,
+        "max": 3116.774
+      },
+      "standard_surge_p99_ttft_ms": {
+        "median": 3210.099,
+        "min": 3189.195,
+        "max": 3323.086
+      },
+      "standard_surge_p95_tpot_ms": {
+        "median": 76.426,
+        "min": 76.221,
+        "max": 76.943
+      },
+      "standard_surge_served_rps": {
+        "median": 0.491,
+        "min": 0.491,
+        "max": 0.491
+      },
+      "standard_recovery_p95_ttft_ms": {
+        "median": 448.86,
+        "min": 446.383,
+        "max": 452.982
+      },
+      "standard_queue_mean_ms": {
+        "median": 4.314,
+        "min": 4.137,
+        "max": 4.69
+      },
+      "batch_surge_p95_ttft_ms": {
+        "median": 2831.684,
+        "min": 2806.536,
+        "max": 2875.476
+      },
+      "batch_surge_p99_ttft_ms": {
+        "median": 3408.341,
+        "min": 3392.807,
+        "max": 3426.236
+      },
+      "batch_surge_p95_tpot_ms": {
+        "median": 77.009,
+        "min": 76.81,
+        "max": 77.319
+      },
+      "batch_surge_served_rps": {
+        "median": 0.564,
+        "min": 0.564,
+        "max": 0.564
+      },
+      "batch_recovery_p95_ttft_ms": {
+        "median": 643.531,
+        "min": 638.455,
+        "max": 646.258
+      },
+      "batch_queue_mean_ms": {
+        "median": 0.305,
+        "min": 0.073,
+        "max": 0.583
+      }
+    }
+  }
+}
