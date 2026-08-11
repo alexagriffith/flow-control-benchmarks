@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "description": "Matched closed-loop load for request-concurrency detector calibration.",
+  "scenarios": [
+    {
+      "name": "request_concurrency_calibration",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "ramp", "start_s": 0, "end_s": 30},
+        {"name": "steady_pressure", "start_s": 60, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "standard-request-concurrency-calibration",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 180, "concurrency": 192, "ramp_s": 30}
+          ]
+        }
+      ]
+    }
+  ]
+}

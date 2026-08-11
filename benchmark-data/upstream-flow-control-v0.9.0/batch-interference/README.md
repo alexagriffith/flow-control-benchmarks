@@ -58,3 +58,16 @@ reserved capacity or batch eviction.
 The evidence includes queue, saturation, vLLM running and waiting, KV cache,
 and preemption data. Exact Endpoint Picker in-flight plugin-state samples are
 not part of this package.
+
+## Reproduce
+
+This package used GuideLLM 0.7.0, one Endpoint Picker, one model replica, request-count admission at 128 requests, 10% headroom, random routing, and cache off. Each arm ran three times with the same realtime trace.
+
+```bash
+for scenario in batch_realtime_only_4k batch_realtime_with_batch_20k_no_holdback_rate_2_75; do
+  python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/batch-interference/scenarios.json --scenario "$scenario" --out-dir "/tmp/$scenario" --traffic-seed 42
+  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --recover-multiline-sse
+done
+```
+
+The traffic phases and token sizes are in [`scenarios.json`](scenarios.json). The deployed images, engine settings, and topology are in [`run-config.json`](run-config.json).

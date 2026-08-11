@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "description": "Matched mixed-size closed-loop load for request, token, and hybrid admission calibration.",
+  "scenarios": [
+    {
+      "name": "token_admission_calibration",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "ramp", "start_s": 0, "end_s": 30},
+        {"name": "steady_pressure", "start_s": 60, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "token-short-calibration",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [{"start_s": 0, "duration_s": 180, "concurrency": 96, "ramp_s": 30}]
+        },
+        {
+          "fairness_id": "token-medium-calibration",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 2048,
+          "output_tokens": 128,
+          "phases": [{"start_s": 0, "duration_s": 180, "concurrency": 64, "ramp_s": 30}]
+        },
+        {
+          "fairness_id": "token-long-calibration",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 8192,
+          "output_tokens": 128,
+          "phases": [{"start_s": 0, "duration_s": 180, "concurrency": 32, "ramp_s": 30}]
+        }
+      ]
+    }
+  ]
+}

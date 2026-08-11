@@ -59,3 +59,14 @@ The complete configuration is in [`run-config.json`](run-config.json).
 This package tests one Endpoint Picker with one, two, or four model replicas. It
 does not test multiple Endpoint Picker replicas, set an absolute service-level
 objective, or show rejection-free service at every pool size.
+
+## Reproduce
+
+This package used GuideLLM 0.7.0 with one Endpoint Picker and one, two, or four model replicas. Offered load scaled with the replica count. Each topology ran three times with seed 18, exact input-token admission at 20,000 tokens per replica, 25% headroom, random routing, and cache off.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/scenario.json --scenario <one_replica_scaled_load|two_replica_scaled_load|four_replica_scaled_load> --out-dir /tmp/model-pool-scale --traffic-seed 18
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/model-pool-scale/manifest.json --run-dir results/model-pool-scale --prefix model-pool-scale --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode tokens --expected-max-concurrency 1000000 --expected-max-token-concurrency 20000 --expected-add-estimated-output-tokens false --expected-headroom 0.25 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas <1|2|4> --http-version 1 --guidellm-worker-processes <8|16|32> --guidellm-mp-poll-interval-s 0.01 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+```
+
+[`scenario.json`](scenario.json) defines the matched per-GPU traffic. [`run-config.json`](run-config.json) defines the topology matrix.

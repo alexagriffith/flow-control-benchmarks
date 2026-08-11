@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "description": "Cache-off long-context interference with offered load scaled per model replica.",
+  "scenarios": [
+    {
+      "name": "one_replica_scaled_load",
+      "duration_s": 270,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "burst", "start_s": 100, "end_s": 190},
+        {"name": "recovery", "start_s": 230, "end_s": 260}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "edge-premium-chat",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 270, "rate_pattern": "noisy_sinusoidal", "rate_center": 4, "rate_amplitude": 0.75, "period_s": 37, "phase_offset": 0.0, "rate_noise": 0.2, "rate_spike_probability": 0.02}
+          ]
+        },
+        {
+          "fairness_id": "edge-standard-long-context",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 60, "duration_s": 150, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.5, "rate_amplitude": 0.125, "period_s": 29, "phase_offset": 0.4, "rate_noise": 0.025, "rate_spike_probability": 0.02, "ramp_s": 8}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two_replica_scaled_load",
+      "duration_s": 270,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "burst", "start_s": 100, "end_s": 190},
+        {"name": "recovery", "start_s": 230, "end_s": 260}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "edge-premium-chat",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 270, "rate_pattern": "noisy_sinusoidal", "rate_center": 8, "rate_amplitude": 1.5, "period_s": 37, "phase_offset": 0.0, "rate_noise": 0.4, "rate_spike_probability": 0.02}
+          ]
+        },
+        {
+          "fairness_id": "edge-standard-long-context",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 60, "duration_s": 150, "rate_pattern": "noisy_sinusoidal", "rate_center": 1, "rate_amplitude": 0.25, "period_s": 29, "phase_offset": 0.4, "rate_noise": 0.05, "rate_spike_probability": 0.02, "ramp_s": 8}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "four_replica_scaled_load",
+      "duration_s": 270,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "burst", "start_s": 100, "end_s": 190},
+        {"name": "recovery", "start_s": 230, "end_s": 260}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "edge-premium-chat",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 270, "rate_pattern": "noisy_sinusoidal", "rate_center": 16, "rate_amplitude": 3, "period_s": 37, "phase_offset": 0.0, "rate_noise": 0.8, "rate_spike_probability": 0.02}
+          ]
+        },
+        {
+          "fairness_id": "edge-standard-long-context",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 60, "duration_s": 150, "rate_pattern": "noisy_sinusoidal", "rate_center": 2, "rate_amplitude": 0.5, "period_s": 29, "phase_offset": 0.4, "rate_noise": 0.1, "rate_spike_probability": 0.02, "ramp_s": 8}
+          ]
+        }
+      ]
+    }
+  ]
+}

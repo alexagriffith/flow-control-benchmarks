@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "name": "same_priority_fairness",
+      "duration_s": 240,
+      "analysis_windows": [
+        {
+          "name": "baseline",
+          "start_s": 20,
+          "end_s": 75
+        },
+        {
+          "name": "surge",
+          "start_s": 100,
+          "end_s": 175
+        },
+        {
+          "name": "recovery",
+          "start_s": 195,
+          "end_s": 235
+        }
+      ],
+      "tenants": [
+        {
+          "fairness_id": "premium-burster-a",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 80,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 31,
+              "phase_offset": 0.0,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            },
+            {
+              "start_s": 80,
+              "duration_s": 110,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 45,
+              "rate_amplitude": 10,
+              "period_s": 29,
+              "phase_offset": 0.0,
+              "rate_noise": 2.25,
+              "rate_spike_probability": 0.04,
+              "ramp_s": 10
+            },
+            {
+              "start_s": 190,
+              "duration_s": 50,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 31,
+              "phase_offset": 0.0,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "premium-peer-b",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 240,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 43,
+              "phase_offset": 0.35,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "premium-peer-c",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 240,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 47,
+              "phase_offset": 0.7,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "description": "Two-replica saturated mixed production traffic for prefix-cache routing.",
+  "scenarios": [
+    {
+      "name": "two_replica_prefix_mix",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 135},
+        {"name": "recovery", "start_s": 155, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "cache-premium-chat",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 20, "rate_amplitude": 5, "period_s": 37, "phase_offset": 0.0, "rate_noise": 1.0, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 50, "rate_amplitude": 10, "period_s": 31, "phase_offset": 0.0, "rate_noise": 2.5, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 15, "rate_amplitude": 3.5, "period_s": 23, "phase_offset": 0.0, "rate_noise": 0.75}
+          ]
+        },
+        {
+          "fairness_id": "cache-gold-agentic",
+          "priority": 50,
+          "objective": "flow-control-v090-gold",
+          "input_tokens": 4096,
+          "output_tokens": 512,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 2.5, "rate_amplitude": 0.6, "period_s": 41, "phase_offset": 0.2, "rate_noise": 0.125, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 9.0, "rate_amplitude": 2.0, "period_s": 29, "phase_offset": 0.2, "rate_noise": 0.45, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 1.5, "rate_amplitude": 0.4, "period_s": 19, "phase_offset": 0.2, "rate_noise": 0.075}
+          ]
+        },
+        {
+          "fairness_id": "cache-standard-long",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.25, "rate_amplitude": 0.075, "period_s": 43, "phase_offset": 0.4, "rate_noise": 0.0125, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 1.75, "rate_amplitude": 0.4, "period_s": 33, "phase_offset": 0.4, "rate_noise": 0.0875, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.25, "rate_amplitude": 0.075, "period_s": 21, "phase_offset": 0.4, "rate_noise": 0.0125}
+          ]
+        },
+        {
+          "fairness_id": "cache-batch-long",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 1.5, "rate_amplitude": 0.4, "period_s": 47, "phase_offset": 0.6, "rate_noise": 0.075, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 3.0, "rate_amplitude": 0.7, "period_s": 35, "phase_offset": 0.6, "rate_noise": 0.15, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.5, "rate_amplitude": 0.15, "period_s": 25, "phase_offset": 0.6, "rate_noise": 0.025}
+          ]
+        }
+      ]
+    }
+  ]
+}

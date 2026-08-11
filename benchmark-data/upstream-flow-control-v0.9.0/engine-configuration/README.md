@@ -65,3 +65,13 @@ The complete shared configuration is in [`run-config.json`](run-config.json).
 This is closed-loop engine calibration, not an SLO proof. The selected settings
 are the starting point for the open-loop production scenarios published
 separately.
+
+## Reproduce
+
+This package used the native closed-loop runner with cache off. `max-num-seqs` was tested at 64, 96, 128, 160, and 192. `max-num-batched-tokens` was tested at 4,096, 8,192, and 16,384. The selected point and its nearest boundaries were repeated three times.
+
+```bash
+pipeline/run-in-cluster.sh <output-dir> <live-status.json> <prompt-cache-dir> "" -- --sweep-points <max-num-seqs> --sweep-duration 180 --skip-scenarios --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 --steady-state-trim-s 30 --metric-sample-interval-s 0.5 --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
+```
+
+Set the corresponding vLLM `max-num-seqs` and `max-num-batched-tokens` before each point. [`run-config.json`](run-config.json) records the image, hardware, model, and metric cadence.

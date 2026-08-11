@@ -45,3 +45,14 @@ caching remained off.
 The queue-depth-5 result is a single-run calibration. Round-robin fairness
 within the priority band prevents starvation; peer TTFT still depends on how
 much work vLLM admits during the burst.
+
+## Reproduce
+
+This scenario used GuideLLM 0.7.0, random routing, one model replica, and cache off. Three matched repeats compared request-count admission at 128 requests and 10% headroom with utilization detection at queue depth 2. Queue depth 5 was retained only as a single calibration run.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/scenario.json --scenario same_priority_fairness --out-dir /tmp/same-priority-fairness --traffic-seed 42
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/same-priority-fairness/manifest.json --run-dir results/same-priority-fairness --prefix same-priority-fairness --namespace <namespace> --runner-pod <runner-pod> --expected-detector <concurrency-detector-or-utilization-detector> --expected-concurrency-mode requests --expected-max-concurrency <128-or-unset> --expected-queue-depth <unset-or-2> --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+```
+
+[`scenario.json`](scenario.json) contains only the fairness traffic. [`run-config.json`](run-config.json) defines the matched detector arms.

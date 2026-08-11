@@ -71,3 +71,13 @@ utilization and preemptions.
 
 These are closed-loop admission calibrations. The selected settings are tested
 separately with open-loop noisy traffic before any production SLO claim.
+
+## Reproduce
+
+These cache-off closed-loop sweeps used the current `pipeline/benchmark.py`. Request-count caps were 16, 32, 48, 64, 96, 128, and 160. Token admission tested input-token limits at 0.8, 1.0, and 1.2 times measured capacity, plus a fixed output-token estimate. Selected points and boundaries ran three times.
+
+```bash
+pipeline/run-in-cluster.sh <output-dir> <live-status.json> <prompt-cache-dir> benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/<request-concurrency-scenario.json-or-token-admission-scenario.json> -- --scenario-filter <request_concurrency_calibration-or-token_admission_calibration> --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 --steady-state-trim-s 30 --metric-sample-interval-s 0.5 --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
+```
+
+Set the tested request or token cap in the Endpoint Picker before each point. Both traffic definitions are published beside this README; [`run-config.json`](run-config.json) records the images and metric cadence.

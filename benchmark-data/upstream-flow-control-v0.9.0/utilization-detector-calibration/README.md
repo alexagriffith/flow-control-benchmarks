@@ -65,3 +65,13 @@ a latency SLO.
 These closed-loop sweeps calibrate activation points. Customer-facing behavior
 is established by the open-loop production scenarios, where thresholds are
 tested with noisy traffic, mixed priorities, and varying request shapes.
+
+## Reproduce
+
+These cache-off closed-loop sweeps used the current `pipeline/benchmark.py`. Queue-depth thresholds were 1, 2, 4, 5, and 8. KV-cache thresholds were 0.50, 0.60, 0.70, 0.75, 0.80, 0.90, and 1.00. Selected points and boundaries ran three times.
+
+```bash
+pipeline/run-in-cluster.sh <output-dir> <live-status.json> <prompt-cache-dir> benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/<queue-depth-scenario.json-or-kv-threshold-scenario.json> -- --scenario-filter <utilization_queue_depth_calibration-or-utilization_kv_threshold_calibration> --prompt-pool-size 24 --warmup-duration 30 --warmup-concurrency 2 --steady-state-trim-s 30 --metric-sample-interval-s 0.5 --vllm-prefix-caching off --traffic-seed 42 --arrival-mode closed_loop
+```
+
+Set the tested threshold in the Endpoint Picker before each point. Both exact traffic definitions are published beside this README; [`run-config.json`](run-config.json) records the images and metric cadence.

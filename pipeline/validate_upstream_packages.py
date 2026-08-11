@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import re
 import statistics
@@ -916,13 +917,95 @@ def validate_prefix_cache_routing(errors: list[str]) -> None:
 
 
 def scan_sensitive_text(errors: list[str]) -> None:
-    for path in DATA.rglob("*"):
+    paths = list(DATA.rglob("*")) + list((ROOT / "pipeline").rglob("*"))
+    for path in paths:
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
+            continue
+        if path.parent == ROOT / "pipeline" and path.name.startswith("validate_"):
             continue
         text = path.read_text(errors="replace")
         for label, pattern in DENYLIST.items():
             if pattern.search(text):
                 errors.append(f"{label} found in {path.relative_to(ROOT)}")
+
+
+def validate_reproduction_contract(errors: list[str]) -> None:
+    runner = ROOT / "pipeline" / "benchmark.py"
+    expected_hash = "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0"
+    require(runner.is_file(), "canonical benchmark runner is missing", errors)
+    if runner.is_file():
+        actual_hash = hashlib.sha256(runner.read_bytes()).hexdigest()
+        require(actual_hash == expected_hash, "canonical benchmark runner changed", errors)
+
+    required_pipeline_files = {
+        "capture_run_context.py",
+        "guidellm_k8s.py",
+        "guidellm_scenario_to_run.py",
+        "guidellm_trace.py",
+        "metrics_capture.py",
+        "metrics_preflight.py",
+        "prometheus_validate.py",
+        "run-in-cluster.sh",
+        "run_guidellm_scenario.py",
+        "sync_guidellm_status.py",
+    }
+    for name in required_pipeline_files:
+        require((ROOT / "pipeline" / name).is_file(), f"pipeline helper missing: {name}", errors)
+
+    readmes = [DATA / "README.md"]
+    readmes.extend(path for path in DATA.glob("*/README.md"))
+    readmes.extend(path for path in (DATA / "production-scenarios").glob("*/README.md"))
+    for readme in readmes:
+        text = readme.read_text(errors="replace")
+        require(
+            "## Reproduce" in text or "## Runner and reproduction" in text,
+            f"reproduction section missing from {readme.relative_to(ROOT)}",
+            errors,
+        )
+
+    for config_path in DATA.rglob("run-config.json"):
+        config = json.loads(config_path.read_text())
+        runner_config = config.get("runner", {})
+        if runner_config.get("historical_runner"):
+            require(
+                runner_config.get("source") == "pipeline/archive/benchmark-2026-07.py",
+                f"historical runner provenance changed in {config_path.relative_to(ROOT)}",
+                errors,
+            )
+            continue
+        require(
+            runner_config.get("sha256") == expected_hash,
+            f"runner provenance missing from {config_path.relative_to(ROOT)}",
+            errors,
+        )
+        scenario_name = runner_config.get("scenario_file")
+        if scenario_name:
+            require(
+                (config_path.parent / scenario_name).is_file(),
+                f"configured scenario file missing from {config_path.relative_to(ROOT)}",
+                errors,
+            )
+
+    required_scenarios = {
+        DATA / "batch-interference" / "scenarios.json",
+        DATA / "long-context-admission" / "scenario.json",
+        DATA / "long-stability" / "scenario.json",
+        DATA / "mixed-production-workload" / "scenario.json",
+        DATA / "multi-replica-scaling" / "scenario.json",
+        DATA / "prefix-cache-routing" / "scenario.json",
+        DATA / "production-scenarios" / "scenarios.json",
+        DATA / "production-scenarios" / "batch-isolation" / "scenario.json",
+        DATA / "production-scenarios" / "consolidation" / "scenario.json",
+        DATA / "production-scenarios" / "priority-tiers" / "scenario.json",
+        DATA / "production-scenarios" / "same-priority-fairness" / "scenario.json",
+        DATA / "request-and-token-admission-calibration" / "request-concurrency-scenario.json",
+        DATA / "request-and-token-admission-calibration" / "token-admission-scenario.json",
+        DATA / "selected-workload-shapes" / "scenarios.json",
+        DATA / "utilization-detector-calibration" / "queue-depth-scenario.json",
+        DATA / "utilization-detector-calibration" / "kv-threshold-scenario.json",
+    }
+    for scenario in required_scenarios:
+        require(scenario.is_file(), f"scenario definition missing: {scenario.relative_to(ROOT)}", errors)
 
 
 def main() -> int:
@@ -939,6 +1022,7 @@ def main() -> int:
     validate_admission_detector_package(errors, ROOT)
     validate_production_scenarios_package(errors, ROOT)
     validate_upstream_report(errors, ROOT)
+    validate_reproduction_contract(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -959,6 +1043,7 @@ def main() -> int:
     print("- Production scenarios: 23 runs, 194,923 request rows")
     print("- Grouped visual report: current")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
+    print("- Runner provenance and reproduction commands: complete")
     print("- Public-content scan: passed")
     return 0
 

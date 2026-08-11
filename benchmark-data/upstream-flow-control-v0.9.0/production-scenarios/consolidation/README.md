@@ -41,3 +41,14 @@ caching remained off.
 | [`run-evidence.csv`](run-evidence.csv) | Headers, route counts, cache state, flow-control engagement, and proof gates. |
 | [`run-config.json`](run-config.json) | Images, topology, engine settings, detector settings, and traffic method. |
 | [`analysis.json`](analysis.json) | Matched detector medians, ranges, run inventory, and claim boundary. |
+
+## Reproduce
+
+This scenario used GuideLLM 0.7.0, random routing, one model replica, and cache off. Three matched repeats compared request-count admission at 128 requests and 10% headroom with utilization detection at queue depths 2 and 5.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/scenario.json --scenario consolidation --out-dir /tmp/consolidation --traffic-seed 42
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/consolidation/manifest.json --run-dir results/consolidation --prefix consolidation --namespace <namespace> --runner-pod <runner-pod> --expected-detector <concurrency-detector-or-utilization-detector> --expected-concurrency-mode requests --expected-max-concurrency <128-or-unset> --expected-queue-depth <unset|2|5> --expected-headroom <0.10-or-0.00> --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+```
+
+[`scenario.json`](scenario.json) contains only the consolidation traffic. [`run-config.json`](run-config.json) defines the three detector arms.

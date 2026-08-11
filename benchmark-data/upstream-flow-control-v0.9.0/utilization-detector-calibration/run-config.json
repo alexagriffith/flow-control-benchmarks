@@ -20,5 +20,59 @@
   "measurement": {
     "direct_metric_interval_seconds": 0.5,
     "prometheus_interval_seconds": 5
-  }
+  },
+  "runner": {
+    "source": "pipeline/benchmark.py",
+    "sha256": "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0",
+    "traffic_driver": "native closed loop",
+    "launcher": "pipeline/run-in-cluster.sh"
+  },
+  "execution": {
+    "arrival_mode": "closed_loop",
+    "prompt_pool_size": 24,
+    "warmup_seconds": 30,
+    "warmup_concurrency": 2,
+    "steady_state_trim_seconds": 30,
+    "traffic_seed": 42,
+    "direct_metric_interval_seconds": 0.5,
+    "prometheus_interval_seconds": 5,
+    "cache_mode": "off"
+  },
+  "sweeps": [
+    {
+      "name": "queue-depth threshold",
+      "scenario_file": "queue-depth-scenario.json",
+      "values": [
+        1,
+        2,
+        4,
+        5,
+        8
+      ],
+      "matched_repeat_values": [
+        5,
+        8
+      ],
+      "repeats": 3
+    },
+    {
+      "name": "KV-cache threshold",
+      "scenario_file": "kv-threshold-scenario.json",
+      "values": [
+        0.5,
+        0.6,
+        0.7,
+        0.75,
+        0.8,
+        0.9,
+        1.0
+      ],
+      "matched_repeat_values": [
+        "flow-control-off",
+        0.75,
+        0.8
+      ],
+      "repeats": 3
+    }
+  ]
 }

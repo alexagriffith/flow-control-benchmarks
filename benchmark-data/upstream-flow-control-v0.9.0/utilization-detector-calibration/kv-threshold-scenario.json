@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "description": "Matched cache-off pressure workload for the isolated KV-threshold sweep.",
+  "scenarios": [
+    {
+      "name": "utilization_kv_threshold_calibration",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "ramp", "start_s": 0, "end_s": 90},
+        {"name": "steady_pressure", "start_s": 90, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "standard-kv-threshold-calibration",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 28672,
+          "output_tokens": 256,
+          "phases": [
+            {"start_s": 0, "duration_s": 180, "concurrency": 96, "ramp_s": 90}
+          ]
+        }
+      ]
+    }
+  ]
+}

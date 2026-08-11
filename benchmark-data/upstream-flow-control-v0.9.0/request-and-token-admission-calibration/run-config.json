@@ -20,5 +20,64 @@
   "measurement": {
     "direct_metric_interval_seconds": 0.5,
     "prometheus_interval_seconds": 5
-  }
+  },
+  "runner": {
+    "source": "pipeline/benchmark.py",
+    "sha256": "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0",
+    "traffic_driver": "native closed loop",
+    "launcher": "pipeline/run-in-cluster.sh"
+  },
+  "execution": {
+    "arrival_mode": "closed_loop",
+    "prompt_pool_size": 24,
+    "warmup_seconds": 30,
+    "warmup_concurrency": 2,
+    "steady_state_trim_seconds": 30,
+    "traffic_seed": 42,
+    "direct_metric_interval_seconds": 0.5,
+    "prometheus_interval_seconds": 5,
+    "cache_mode": "off"
+  },
+  "sweeps": [
+    {
+      "name": "request-count admission",
+      "scenario_file": "request-concurrency-scenario.json",
+      "values": [
+        16,
+        32,
+        48,
+        64,
+        96,
+        128,
+        160
+      ],
+      "matched_repeat_values": [
+        128,
+        160
+      ],
+      "repeats": 3
+    },
+    {
+      "name": "token admission",
+      "scenario_file": "token-admission-scenario.json",
+      "input_sizes": [
+        512,
+        2048,
+        8192
+      ],
+      "output_tokens": 128,
+      "arms": [
+        "request-count-128",
+        "input-token-0.8x",
+        "input-token-1.0x",
+        "input-token-1.2x",
+        "input-plus-output-estimate"
+      ],
+      "matched_repeat_values": [
+        "request-count-128",
+        "input-token-1.2x"
+      ],
+      "repeats": 3
+    }
+  ]
 }

@@ -143,5 +143,14 @@
     "production_repeats_per_arm": 3,
     "matched_realtime_trace": true,
     "cache_mode": "off"
+  },
+  "runner": {
+    "scenario_source": "pipeline/benchmark.py",
+    "sha256": "3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0",
+    "traffic_driver": "GuideLLM",
+    "guidellm_version": "0.7.0",
+    "trace_compiler": "pipeline/guidellm_trace.py",
+    "launcher": "pipeline/run_guidellm_scenario.py",
+    "scenario_file": "scenarios.json"
   }
 }

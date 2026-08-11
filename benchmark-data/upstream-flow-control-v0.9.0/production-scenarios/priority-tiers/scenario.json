@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "name": "priority_tiers",
+      "duration_s": 240,
+      "analysis_windows": [
+        {
+          "name": "baseline",
+          "start_s": 20,
+          "end_s": 75
+        },
+        {
+          "name": "surge",
+          "start_s": 100,
+          "end_s": 175
+        },
+        {
+          "name": "recovery",
+          "start_s": 195,
+          "end_s": 235
+        }
+      ],
+      "tenants": [
+        {
+          "fairness_id": "platinum-realtime",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 240,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 37,
+              "phase_offset": 0.0,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "gold-realtime",
+          "priority": 50,
+          "objective": "flow-control-v090-gold",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 240,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 7,
+              "rate_amplitude": 1,
+              "period_s": 43,
+              "phase_offset": 0.2,
+              "rate_noise": 0.35,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "silver-standard",
+          "priority": 0,
+          "objective": "flow-control-v090-standard",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 80,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 8,
+              "rate_amplitude": 2,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.4,
+              "rate_spike_probability": 0.02
+            },
+            {
+              "start_s": 80,
+              "duration_s": 110,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 21,
+              "rate_amplitude": 4,
+              "period_s": 29,
+              "phase_offset": 0.4,
+              "rate_noise": 0.8,
+              "rate_spike_probability": 0.03,
+              "ramp_s": 10
+            },
+            {
+              "start_s": 190,
+              "duration_s": 50,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 8,
+              "rate_amplitude": 2,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.4,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "bronze-batch",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 80,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 47,
+              "phase_offset": 0.6,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            },
+            {
+              "start_s": 80,
+              "duration_s": 110,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 19,
+              "rate_amplitude": 4,
+              "period_s": 33,
+              "phase_offset": 0.6,
+              "rate_noise": 0.8,
+              "rate_spike_probability": 0.03,
+              "ramp_s": 10
+            },
+            {
+              "start_s": 190,
+              "duration_s": 50,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 5,
+              "rate_amplitude": 1,
+              "period_s": 47,
+              "phase_offset": 0.6,
+              "rate_noise": 0.25,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

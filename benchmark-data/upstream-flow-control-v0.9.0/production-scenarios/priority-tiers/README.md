@@ -42,3 +42,14 @@ control engaged during each run, and prefix caching remained off.
 
 This package does not include a matched utilization-detector comparison because
 the retained priority-tier controls did not pass route-count proof.
+
+## Reproduce
+
+This scenario used GuideLLM 0.7.0 with request-count admission at 128 requests, 10% headroom, random routing, one model replica, and cache off. Three selected repeats used the same deterministic traffic schedule.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/scenario.json --scenario priority_tiers --out-dir /tmp/priority-tiers --traffic-seed 42
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/priority-tiers/manifest.json --run-dir results/priority-tiers --prefix priority-tiers --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+```
+
+[`scenario.json`](scenario.json) contains only the priority-tier traffic. [`run-config.json`](run-config.json) records the tested images and settings.

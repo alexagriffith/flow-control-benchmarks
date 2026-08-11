@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "description": "Cache-off production-shaped calibration for the selected request-concurrency detector.",
+  "scenarios": [
+    {
+      "name": "chat_short_output",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 135},
+        {"name": "recovery", "start_s": 155, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "shape-chat-premium",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 12, "rate_amplitude": 2.5, "period_s": 37, "phase_offset": 0.0, "rate_noise": 0.6, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 24, "rate_amplitude": 5, "period_s": 31, "phase_offset": 0.0, "rate_noise": 1.2, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 8, "rate_amplitude": 2, "period_s": 23, "phase_offset": 0.0, "rate_noise": 0.4}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "agentic_longer_output",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 135},
+        {"name": "recovery", "start_s": 155, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "shape-agentic-premium",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 4096,
+          "output_tokens": 512,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 2, "rate_amplitude": 0.5, "period_s": 37, "phase_offset": 0.2, "rate_noise": 0.1, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 7.5, "rate_amplitude": 1.4, "period_s": 31, "phase_offset": 0.2, "rate_noise": 0.375, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 2, "rate_amplitude": 0.5, "period_s": 23, "phase_offset": 0.2, "rate_noise": 0.1}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "long_context_short_output",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 135},
+        {"name": "recovery", "start_s": 155, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "shape-long-context-premium",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.4, "rate_amplitude": 0.1, "period_s": 37, "phase_offset": 0.4, "rate_noise": 0.02, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 2.75, "rate_amplitude": 0.55, "period_s": 31, "phase_offset": 0.4, "rate_noise": 0.1375, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.4, "rate_amplitude": 0.1, "period_s": 23, "phase_offset": 0.4, "rate_noise": 0.02}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch_long_context_short_output",
+      "duration_s": 180,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 135},
+        {"name": "recovery", "start_s": 155, "end_s": 175}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "shape-batch",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 60, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.4, "rate_amplitude": 0.1, "period_s": 37, "phase_offset": 0.6, "rate_noise": 0.02, "rate_spike_probability": 0.02},
+            {"start_s": 60, "duration_s": 90, "rate_pattern": "noisy_sinusoidal", "rate_center": 1.8, "rate_amplitude": 0.35, "period_s": 31, "phase_offset": 0.6, "rate_noise": 0.09, "rate_spike_probability": 0.02, "ramp_s": 10},
+            {"start_s": 150, "duration_s": 30, "rate_pattern": "noisy_sinusoidal", "rate_center": 0.4, "rate_amplitude": 0.1, "period_s": 23, "phase_offset": 0.6, "rate_noise": 0.02}
+          ]
+        }
+      ]
+    }
+  ]
+}

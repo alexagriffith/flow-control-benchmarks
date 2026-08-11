@@ -84,3 +84,14 @@ many distinct prefixes distributed across replicas.
 
 Sparse HTTP 429 responses are preserved as measured admission outcomes. Every
 other non-200 response, timeout, and client error was zero.
+
+## Reproduce
+
+This package used GuideLLM 0.7.0 with two model replicas, request-count admission at 128 requests, 10% headroom, and prefix caching on. Three matched repeats compared random routing with max-score prefix-aware routing. Each tenant reused a shared prefix for 75% of requests.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/scenario.json --scenario two_replica_prefix_mix --out-dir /tmp/prefix-routing --traffic-seed 42
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/prefix-routing/manifest.json --run-dir results/prefix-routing --prefix prefix-routing --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker <random-picker-or-max-score-picker> --expected-prefix-cache on --expected-model-replicas 2 --shared-prefix-fraction 0.75 --shared-prefix-group shared-context --http-version 1 --guidellm-worker-processes 8 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+```
+
+The workload is in [`scenario.json`](scenario.json). Prefix scorer and routing settings are in [`run-config.json`](run-config.json).

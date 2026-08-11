@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "name": "batch_pressure_calibration_20k",
+      "duration_s": 120,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 10, "end_s": 35},
+        {"name": "surge", "start_s": 45, "end_s": 105}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "batch-calibration",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 120,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 1.5,
+              "rate_amplitude": 0.3,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.15,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch_pressure_calibration_20k_rate_4_5",
+      "duration_s": 120,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 10, "end_s": 35},
+        {"name": "surge", "start_s": 45, "end_s": 105}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "batch-calibration",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 120,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 4.5,
+              "rate_amplitude": 0.9,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.45,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch_pressure_calibration_20k_rate_2_75",
+      "duration_s": 120,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 10, "end_s": 35},
+        {"name": "surge", "start_s": 45, "end_s": 105}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "batch-calibration",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 120,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 2.75,
+              "rate_amplitude": 0.55,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.275,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch_realtime_only_4k",
+      "duration_s": 240,
+      "analysis_windows": [
+        {"name": "surge", "start_s": 80, "end_s": 160},
+        {"name": "recovery", "start_s": 190, "end_s": 230}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "batch-proof-realtime",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 4096,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 60,
+              "duration_s": 120,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 3.0,
+              "rate_amplitude": 0.6,
+              "period_s": 37,
+              "phase_offset": 0.1,
+              "rate_noise": 0.3,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch_realtime_with_batch_20k_no_holdback_rate_2_75",
+      "duration_s": 240,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 20, "end_s": 55},
+        {"name": "surge", "start_s": 80, "end_s": 160},
+        {"name": "recovery", "start_s": 190, "end_s": 230}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "batch-proof-realtime",
+          "priority": 100,
+          "objective": "flow-control-v090-premium",
+          "input_tokens": 4096,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 60,
+              "duration_s": 120,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 3.0,
+              "rate_amplitude": 0.6,
+              "period_s": 37,
+              "phase_offset": 0.1,
+              "rate_noise": 0.3,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        },
+        {
+          "fairness_id": "batch-proof-deferrable",
+          "priority": -10,
+          "objective": "flow-control-v090-batch",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [
+            {
+              "start_s": 0,
+              "duration_s": 180,
+              "rate_pattern": "noisy_sinusoidal",
+              "rate_center": 2.75,
+              "rate_amplitude": 0.55,
+              "period_s": 31,
+              "phase_offset": 0.4,
+              "rate_noise": 0.275,
+              "rate_spike_probability": 0.02
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

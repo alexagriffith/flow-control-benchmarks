@@ -59,3 +59,16 @@ do not represent mixed-tenant or multi-replica deployments.
 
 Batch and long-context workload shape evidence appear in their dedicated
 packages.
+
+## Reproduce
+
+This package used GuideLLM 0.7.0, request-count admission at 128 requests, 10% headroom, random routing, one model replica, and cache off. Chat and agentic shapes each ran three times.
+
+```bash
+for scenario in chat_short_output agentic_longer_output; do
+  python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/selected-workload-shapes/scenarios.json --scenario "$scenario" --out-dir "/tmp/$scenario" --traffic-seed 42
+  python3 pipeline/run_guidellm_scenario.py --manifest "/tmp/$scenario/manifest.json" --run-dir "results/$scenario" --prefix "$scenario" --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 240 --recover-multiline-sse
+done
+```
+
+All four authored workload shapes remain in [`scenarios.json`](scenarios.json). The accepted chat and agentic run settings are in [`run-config.json`](run-config.json).

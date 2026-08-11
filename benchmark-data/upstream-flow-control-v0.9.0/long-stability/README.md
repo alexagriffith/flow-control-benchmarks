@@ -59,3 +59,14 @@ The complete traffic and system configuration is in
 
 This is one 30-minute, single-model, cache-off run. It supports recovery after
 repeated surges but does not promise a fixed TTFT for every load.
+
+## Reproduce
+
+This package used GuideLLM 0.7.0 for one 1,800-second run. The configuration was request-count admission at 128 requests, 10% headroom, random routing, one model replica, four GuideLLM workers per tenant, and cache off.
+
+```bash
+python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/long-stability/scenario.json --scenario mixed_workload_long_stability --out-dir /tmp/long-stability --traffic-seed 20260809
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/long-stability/manifest.json --run-dir results/long-stability --prefix long-stability --namespace <namespace> --runner-pod <runner-pod> --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 600 --recover-multiline-sse
+```
+
+[`scenario.json`](scenario.json) contains both surges and the recovery windows. [`run-config.json`](run-config.json) records the full service configuration.
