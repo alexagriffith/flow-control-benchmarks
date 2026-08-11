@@ -1,0 +1,7 @@
+run_name,arm,repeat,model_replica_1_requests,model_replica_2_requests,less_used_replica_share_percent,route_imbalance_percent
+random routing - repeat 1,random routing,1,3736,3744,49.947,0.107
+random routing - repeat 2,random routing,2,3684,3792,49.278,1.445
+random routing - repeat 3,random routing,3,3706,3774,49.545,0.909
+prefix-aware routing - repeat 1,prefix-aware routing,1,3026,4454,40.455,19.091
+prefix-aware routing - repeat 2,prefix-aware routing,2,3229,4244,43.211,13.583
+prefix-aware routing - repeat 3,prefix-aware routing,3,2922,4546,39.126,21.747

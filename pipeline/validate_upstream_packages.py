@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -17,6 +18,7 @@ STABILITY = DATA / "long-stability"
 BATCH = DATA / "batch-interference"
 MIXED = DATA / "mixed-production-workload"
 SHAPES = DATA / "selected-workload-shapes"
+PREFIX_CACHE = DATA / "prefix-cache-routing"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
@@ -719,6 +721,189 @@ def validate_selected_workload_shapes(errors: list[str]) -> None:
     )
 
 
+def validate_prefix_cache_routing(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "routing-balance.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+    }
+    found = {path.name for path in PREFIX_CACHE.iterdir() if path.is_file()}
+    require(required <= found, "prefix-cache-routing files missing", errors)
+
+    summary = read_csv(PREFIX_CACHE / "summary.csv")
+    requests = read_csv(PREFIX_CACHE / "request-results.csv")
+    traffic = read_csv(PREFIX_CACHE / "traffic-samples.csv")
+    metrics = read_csv(PREFIX_CACHE / "system-metrics.csv")
+    evidence = read_csv(PREFIX_CACHE / "run-evidence.csv")
+    routing = read_csv(PREFIX_CACHE / "routing-balance.csv")
+    analysis = json.loads((PREFIX_CACHE / "analysis.json").read_text())
+    config = json.loads((PREFIX_CACHE / "run-config.json").read_text())
+
+    arms = Counter(row["arm"] for row in summary)
+    require(
+        arms == {"random routing": 3, "prefix-aware routing": 3},
+        "expected three repeats per prefix-cache routing arm",
+        errors,
+    )
+    require(len(summary) == 6 and len(evidence) == 6, "expected six prefix-cache-routing runs", errors)
+    require(len(routing) == 6, "expected six prefix-cache routing-balance rows", errors)
+    require(len(requests) == 44880, "prefix-cache-routing request row count changed", errors)
+    require(len(traffic) > 0 and len(metrics) > 0, "prefix-cache-routing samples are empty", errors)
+
+    require(
+        all(row["http_status"] in {"200", "429"} for row in requests),
+        "prefix-cache-routing request had unexpected status",
+        errors,
+    )
+    require(
+        sum(1 for row in requests if row["http_status"] == "200") == 44857,
+        "prefix-cache-routing HTTP 200 count changed",
+        errors,
+    )
+    require(
+        sum(1 for row in requests if row["http_status"] == "429") == 23,
+        "prefix-cache-routing HTTP 429 count changed",
+        errors,
+    )
+
+    base_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+        "flow_control_engaged",
+    )
+    require(
+        all(is_true(row[field]) for row in evidence for field in base_gates),
+        "a prefix-cache-routing evidence gate failed",
+        errors,
+    )
+    require(
+        all(row["prefix_cache_declared"] == "on" for row in evidence),
+        "prefix cache was not declared on in all runs",
+        errors,
+    )
+    require(
+        all(float(row["prefix_cache_queries"]) > 0 for row in evidence),
+        "prefix cache queries were zero in at least one run",
+        errors,
+    )
+    require(
+        all(
+            row["vllm_preemptions"] == "0.0"
+            and not is_true(row["endpoint_picker_restarted"])
+            for row in evidence
+        ),
+        "prefix-cache-routing preemption or restart evidence changed",
+        errors,
+    )
+
+    random_arm = analysis["by_arm"]["random routing"]
+    prefix_arm = analysis["by_arm"]["prefix-aware routing"]
+    require(
+        random_arm["realtime_surge_p95_ttft_ms"]["median"] == 1327.211
+        and prefix_arm["realtime_surge_p95_ttft_ms"]["median"] == 1124.916,
+        "prefix-cache-routing realtime median p95 TTFT changed",
+        errors,
+    )
+    require(
+        random_arm["standard_long_context_surge_p95_ttft_ms"]["median"] == 11252.391
+        and prefix_arm["standard_long_context_surge_p95_ttft_ms"]["median"] == 12871.56,
+        "prefix-cache-routing standard-long-context median p95 TTFT changed",
+        errors,
+    )
+    require(
+        analysis["comparison"]["realtime_p95_ttft_difference_ms"] == -202.295
+        and analysis["comparison"]["realtime_p95_ttft_difference_percent"] == -15.242,
+        "prefix-cache-routing comparison delta changed",
+        errors,
+    )
+    require(
+        analysis["data_publishable"],
+        "prefix-cache-routing analysis is not publishable",
+        errors,
+    )
+    require(
+        analysis["decision"] == "Keep random routing as the control configuration.",
+        "prefix-cache-routing decision changed",
+        errors,
+    )
+    overall = {
+        (row["workload"], row["metric"]): row
+        for row in analysis["overall_latency_comparison"]
+    }
+    require(
+        overall[("realtime-chat", "p95 TTFT")]
+        == {
+            "workload": "realtime-chat",
+            "metric": "p95 TTFT",
+            "random_routing_median_ms": 1194.7,
+            "prefix_aware_routing_median_ms": 935.7,
+            "change_percent": -21.7,
+        },
+        "prefix-cache-routing overall realtime comparison changed",
+        errors,
+    )
+    route_medians = {
+        arm: round(statistics.median(float(row["route_imbalance_percent"]) for row in routing if row["arm"] == arm), 1)
+        for arm in {row["arm"] for row in routing}
+    }
+    require(
+        route_medians == {"random routing": 0.9, "prefix-aware routing": 19.1},
+        "prefix-cache-routing route balance changed",
+        errors,
+    )
+
+    required_metrics = {
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+        "vllm_prefix_cache_queries_total",
+        "vllm_prefix_cache_hits_total",
+        "endpoint_picker_prefix_index_entries",
+        "endpoint_picker_resident_memory_bytes",
+    }
+    require(
+        required_metrics <= {row["metric"] for row in metrics},
+        "prefix-cache-routing system metrics are incomplete",
+        errors,
+    )
+    routing_arms = {arm["name"] for arm in config["endpoint_picker"]["routing_arms"]}
+    require(
+        routing_arms == {"random routing", "prefix-aware routing"},
+        "prefix-cache-routing arm names changed",
+        errors,
+    )
+    require(
+        config["topology"] == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas": 2,
+            "gpus_per_model_replica": 1,
+        }
+        and config["endpoint_picker"]["version"] == "llm-d Endpoint Picker v0.9.0"
+        and config["endpoint_picker"]["detector"] == "request-concurrency"
+        and config["endpoint_picker"]["max_concurrency"] == 128
+        and config["endpoint_picker"]["headroom"] == 0.10
+        and config["model_service"]["prefix_cache"] == "enabled",
+        "prefix-cache-routing configuration changed",
+        errors,
+    )
+
+
 def scan_sensitive_text(errors: list[str]) -> None:
     for path in DATA.rglob("*"):
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
@@ -736,6 +921,7 @@ def main() -> int:
     validate_stability(errors)
     validate_batch_interference(errors)
     validate_mixed_production_workload(errors)
+    validate_prefix_cache_routing(errors)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -748,6 +934,7 @@ def main() -> int:
     print("- Long stability: 1 run, 14,889 request rows")
     print("- Batch interference: 6 runs, 3,600 request rows")
     print("- Mixed production workload: 6 runs, 9,132 request rows")
+    print("- Prefix-cache routing: 6 runs, 44,880 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

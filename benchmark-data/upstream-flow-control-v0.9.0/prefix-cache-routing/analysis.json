@@ -1,0 +1,324 @@
+{
+  "schema": "stable-upstream-prefix-cache-routing-analysis-v1",
+  "experiment": "prefix-cache-routing-comparison",
+  "business_question": "Does prefix-aware routing improve service under a saturated mixed workload when prefix caching is enabled?",
+  "answer": "Prefix-aware routing lowered overall median realtime p95 TTFT from 1,195 ms to 936 ms, but the effect was not consistent. It did not increase the measured prefix-cache hit rate and increased median route imbalance from 0.9% to 19.1%.",
+  "claim_boundary": "This comparison ran with one shared prompt prefix per tenant covering 75% of each request. With more distinct shared prefixes, affinity routing may have a clearer opportunity to improve cache reuse. These results do not support selecting prefix-aware routing as the default for this workload shape.",
+  "decision": "Keep random routing as the control configuration.",
+  "data_publishable": true,
+  "run_count": 6,
+  "all_data_quality_valid": true,
+  "by_arm": {
+    "random routing": {
+      "runs": 3,
+      "http_200_total": 22436,
+      "http_429_total": 4,
+      "realtime_surge_p95_ttft_ms": {
+        "median": 1327.211,
+        "min": 1215.375,
+        "max": 1699.82
+      },
+      "realtime_surge_p99_ttft_ms": {
+        "median": 2087.15,
+        "min": 1568.334,
+        "max": 2104.918
+      },
+      "agentic_surge_p95_ttft_ms": {
+        "median": 5094.994,
+        "min": 4448.436,
+        "max": 5149.505
+      },
+      "standard_long_context_surge_p95_ttft_ms": {
+        "median": 11252.391,
+        "min": 9794.401,
+        "max": 15629.853
+      },
+      "batch_surge_p95_ttft_ms": {
+        "median": 54749.479,
+        "min": 51311.883,
+        "max": 57928.116
+      },
+      "prefix_cache_hit_rate": {
+        "median": 0.744201,
+        "min": 0.744198,
+        "max": 0.744205
+      },
+      "max_endpoint_picker_queue": {
+        "median": 211.0,
+        "min": 190.0,
+        "max": 225.0
+      },
+      "max_vllm_waiting": {
+        "median": 26.0,
+        "min": 16.0,
+        "max": 29.0
+      }
+    },
+    "prefix-aware routing": {
+      "runs": 3,
+      "http_200_total": 22421,
+      "http_429_total": 19,
+      "realtime_surge_p95_ttft_ms": {
+        "median": 1124.916,
+        "min": 905.067,
+        "max": 2000.168
+      },
+      "realtime_surge_p99_ttft_ms": {
+        "median": 1777.361,
+        "min": 1484.229,
+        "max": 2463.719
+      },
+      "agentic_surge_p95_ttft_ms": {
+        "median": 4408.219,
+        "min": 3061.622,
+        "max": 6520.036
+      },
+      "standard_long_context_surge_p95_ttft_ms": {
+        "median": 12871.56,
+        "min": 11995.458,
+        "max": 15407.581
+      },
+      "batch_surge_p95_ttft_ms": {
+        "median": 46863.101,
+        "min": 46228.153,
+        "max": 58189.665
+      },
+      "prefix_cache_hit_rate": {
+        "median": 0.744084,
+        "min": 0.743482,
+        "max": 0.744181
+      },
+      "max_endpoint_picker_queue": {
+        "median": 192.0,
+        "min": 179.0,
+        "max": 213.0
+      },
+      "max_vllm_waiting": {
+        "median": 24.0,
+        "min": 16.0,
+        "max": 24.0
+      }
+    }
+  },
+  "overall_latency_comparison": [
+    {
+      "workload": "realtime-chat",
+      "metric": "p95 TTFT",
+      "random_routing_median_ms": 1194.7,
+      "prefix_aware_routing_median_ms": 935.7,
+      "change_percent": -21.7
+    },
+    {
+      "workload": "realtime-chat",
+      "metric": "p99 TTFT",
+      "random_routing_median_ms": 1787.0,
+      "prefix_aware_routing_median_ms": 1492.6,
+      "change_percent": -16.5
+    },
+    {
+      "workload": "agentic",
+      "metric": "p95 TTFT",
+      "random_routing_median_ms": 4364.2,
+      "prefix_aware_routing_median_ms": 3946.3,
+      "change_percent": -9.6
+    },
+    {
+      "workload": "agentic",
+      "metric": "p99 TTFT",
+      "random_routing_median_ms": 5689.3,
+      "prefix_aware_routing_median_ms": 4681.3,
+      "change_percent": -17.7
+    },
+    {
+      "workload": "standard-long-context",
+      "metric": "p95 TTFT",
+      "random_routing_median_ms": 10324.0,
+      "prefix_aware_routing_median_ms": 12634.7,
+      "change_percent": 22.4
+    },
+    {
+      "workload": "standard-long-context",
+      "metric": "p99 TTFT",
+      "random_routing_median_ms": 11654.7,
+      "prefix_aware_routing_median_ms": 14554.0,
+      "change_percent": 24.9
+    },
+    {
+      "workload": "batch-long-context",
+      "metric": "p95 TTFT",
+      "random_routing_median_ms": 49762.6,
+      "prefix_aware_routing_median_ms": 44462.3,
+      "change_percent": -10.7
+    },
+    {
+      "workload": "batch-long-context",
+      "metric": "p99 TTFT",
+      "random_routing_median_ms": 55590.3,
+      "prefix_aware_routing_median_ms": 49168.4,
+      "change_percent": -11.6
+    }
+  ],
+  "route_balance": [
+    {
+      "run_name": "random routing - repeat 1",
+      "arm": "random routing",
+      "repeat": 1,
+      "model_replica_1_requests": 3736,
+      "model_replica_2_requests": 3744,
+      "less_used_replica_share_percent": 49.947,
+      "route_imbalance_percent": 0.107
+    },
+    {
+      "run_name": "random routing - repeat 2",
+      "arm": "random routing",
+      "repeat": 2,
+      "model_replica_1_requests": 3684,
+      "model_replica_2_requests": 3792,
+      "less_used_replica_share_percent": 49.278,
+      "route_imbalance_percent": 1.445
+    },
+    {
+      "run_name": "random routing - repeat 3",
+      "arm": "random routing",
+      "repeat": 3,
+      "model_replica_1_requests": 3706,
+      "model_replica_2_requests": 3774,
+      "less_used_replica_share_percent": 49.545,
+      "route_imbalance_percent": 0.909
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 1",
+      "arm": "prefix-aware routing",
+      "repeat": 1,
+      "model_replica_1_requests": 3026,
+      "model_replica_2_requests": 4454,
+      "less_used_replica_share_percent": 40.455,
+      "route_imbalance_percent": 19.091
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 2",
+      "arm": "prefix-aware routing",
+      "repeat": 2,
+      "model_replica_1_requests": 3229,
+      "model_replica_2_requests": 4244,
+      "less_used_replica_share_percent": 43.211,
+      "route_imbalance_percent": 13.583
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 3",
+      "arm": "prefix-aware routing",
+      "repeat": 3,
+      "model_replica_1_requests": 2922,
+      "model_replica_2_requests": 4546,
+      "less_used_replica_share_percent": 39.126,
+      "route_imbalance_percent": 21.747
+    }
+  ],
+  "comparison": {
+    "realtime_p95_ttft_random_median_ms": 1327.211,
+    "realtime_p95_ttft_prefix_aware_median_ms": 1124.916,
+    "realtime_p95_ttft_difference_ms": -202.295,
+    "realtime_p95_ttft_difference_percent": -15.242,
+    "prefix_cache_hit_rate_random_median": 0.744201,
+    "prefix_cache_hit_rate_prefix_aware_median": 0.744084,
+    "note": "A negative difference means prefix-aware routing had lower TTFT. The premium tier showed directional improvement but with high repeat-to-repeat variance. Standard-long-context TTFT was higher under prefix-aware routing."
+  },
+  "runs": [
+    {
+      "run_name": "random routing - repeat 1",
+      "arm": "random routing",
+      "repeat": 1,
+      "data_quality_valid": true,
+      "http_200": 7480,
+      "http_429": 0,
+      "realtime_surge_p95_ttft_ms": 1699.820042,
+      "agentic_surge_p95_ttft_ms": 5094.99383,
+      "standard_long_context_surge_p95_ttft_ms": 9794.40093,
+      "batch_surge_p95_ttft_ms": 57928.116322,
+      "prefix_cache_hit_rate": 0.744205,
+      "max_epp_queue": 225.0,
+      "max_vllm_waiting": 16.0,
+      "vllm_preemptions": 0.0
+    },
+    {
+      "run_name": "random routing - repeat 2",
+      "arm": "random routing",
+      "repeat": 2,
+      "data_quality_valid": true,
+      "http_200": 7476,
+      "http_429": 4,
+      "realtime_surge_p95_ttft_ms": 1215.374708,
+      "agentic_surge_p95_ttft_ms": 5149.504662,
+      "standard_long_context_surge_p95_ttft_ms": 15629.852533,
+      "batch_surge_p95_ttft_ms": 54749.479294,
+      "prefix_cache_hit_rate": 0.744201,
+      "max_epp_queue": 211.0,
+      "max_vllm_waiting": 26.0,
+      "vllm_preemptions": 0.0
+    },
+    {
+      "run_name": "random routing - repeat 3",
+      "arm": "random routing",
+      "repeat": 3,
+      "data_quality_valid": true,
+      "http_200": 7480,
+      "http_429": 0,
+      "realtime_surge_p95_ttft_ms": 1327.21138,
+      "agentic_surge_p95_ttft_ms": 4448.435545,
+      "standard_long_context_surge_p95_ttft_ms": 11252.390862,
+      "batch_surge_p95_ttft_ms": 51311.883211,
+      "prefix_cache_hit_rate": 0.744198,
+      "max_epp_queue": 190.0,
+      "max_vllm_waiting": 29.0,
+      "vllm_preemptions": 0.0
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 1",
+      "arm": "prefix-aware routing",
+      "repeat": 1,
+      "data_quality_valid": true,
+      "http_200": 7480,
+      "http_429": 0,
+      "realtime_surge_p95_ttft_ms": 1124.9156,
+      "agentic_surge_p95_ttft_ms": 4408.219337,
+      "standard_long_context_surge_p95_ttft_ms": 12871.560335,
+      "batch_surge_p95_ttft_ms": 58189.664841,
+      "prefix_cache_hit_rate": 0.744084,
+      "max_epp_queue": 192.0,
+      "max_vllm_waiting": 24.0,
+      "vllm_preemptions": 0.0
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 2",
+      "arm": "prefix-aware routing",
+      "repeat": 2,
+      "data_quality_valid": true,
+      "http_200": 7473,
+      "http_429": 7,
+      "realtime_surge_p95_ttft_ms": 2000.167608,
+      "agentic_surge_p95_ttft_ms": 6520.035744,
+      "standard_long_context_surge_p95_ttft_ms": 15407.580853,
+      "batch_surge_p95_ttft_ms": 46863.101244,
+      "prefix_cache_hit_rate": 0.744181,
+      "max_epp_queue": 213.0,
+      "max_vllm_waiting": 24.0,
+      "vllm_preemptions": 0.0
+    },
+    {
+      "run_name": "prefix-aware routing - repeat 3",
+      "arm": "prefix-aware routing",
+      "repeat": 3,
+      "data_quality_valid": true,
+      "http_200": 7468,
+      "http_429": 12,
+      "realtime_surge_p95_ttft_ms": 905.067444,
+      "agentic_surge_p95_ttft_ms": 3061.621904,
+      "standard_long_context_surge_p95_ttft_ms": 11995.458126,
+      "batch_surge_p95_ttft_ms": 46228.153467,
+      "prefix_cache_hit_rate": 0.743482,
+      "max_epp_queue": 179.0,
+      "max_vllm_waiting": 16.0,
+      "vllm_preemptions": 0.0
+    }
+  ]
+}
