@@ -1,0 +1,182 @@
+{
+  "experiment": "same-priority fairness",
+  "selected_configuration_results": {
+    "realtime burster A": {
+      "runs": 3,
+      "median_p95_ttft_ms": 12096.770525,
+      "range_p95_ttft_ms": [
+        10248.920918,
+        14950.17004
+      ],
+      "median_p99_ttft_ms": 12892.339706,
+      "median_p95_tpot_ms_per_token": 111.665351
+    },
+    "realtime peer B": {
+      "runs": 3,
+      "median_p95_ttft_ms": 527.397871,
+      "range_p95_ttft_ms": [
+        508.270264,
+        618.970633
+      ],
+      "median_p99_ttft_ms": 613.160372,
+      "median_p95_tpot_ms_per_token": 23.142617
+    },
+    "realtime peer C": {
+      "runs": 3,
+      "median_p95_ttft_ms": 570.042372,
+      "range_p95_ttft_ms": [
+        563.451052,
+        675.481558
+      ],
+      "median_p99_ttft_ms": 750.711679,
+      "median_p95_tpot_ms_per_token": 23.346014
+    }
+  },
+  "matched_detector_comparisons": {
+    "queue depth 2": {
+      "realtime burster A": {
+        "runs": 3,
+        "median_p95_ttft_ms": 17303.201914,
+        "range_p95_ttft_ms": [
+          16603.911161,
+          17808.835745
+        ],
+        "median_p99_ttft_ms": 17860.060692,
+        "median_p95_tpot_ms_per_token": 154.847242
+      },
+      "realtime peer B": {
+        "runs": 3,
+        "median_p95_ttft_ms": 5022.908211,
+        "range_p95_ttft_ms": [
+          4716.146469,
+          5079.794407
+        ],
+        "median_p99_ttft_ms": 5747.056007,
+        "median_p95_tpot_ms_per_token": 58.738872
+      },
+      "realtime peer C": {
+        "runs": 3,
+        "median_p95_ttft_ms": 4519.311428,
+        "range_p95_ttft_ms": [
+          4463.540316,
+          4769.00506
+        ],
+        "median_p99_ttft_ms": 5593.36257,
+        "median_p95_tpot_ms_per_token": 55.305403
+      }
+    },
+    "request count 128, 10% headroom": {
+      "realtime burster A": {
+        "runs": 3,
+        "median_p95_ttft_ms": 12096.770525,
+        "range_p95_ttft_ms": [
+          10248.920918,
+          14950.17004
+        ],
+        "median_p99_ttft_ms": 12892.339706,
+        "median_p95_tpot_ms_per_token": 111.665351
+      },
+      "realtime peer B": {
+        "runs": 3,
+        "median_p95_ttft_ms": 527.397871,
+        "range_p95_ttft_ms": [
+          508.270264,
+          618.970633
+        ],
+        "median_p99_ttft_ms": 613.160372,
+        "median_p95_tpot_ms_per_token": 23.142617
+      },
+      "realtime peer C": {
+        "runs": 3,
+        "median_p95_ttft_ms": 570.042372,
+        "range_p95_ttft_ms": [
+          563.451052,
+          675.481558
+        ],
+        "median_p99_ttft_ms": 750.711679,
+        "median_p95_tpot_ms_per_token": 23.346014
+      }
+    }
+  },
+  "calibration_only": {
+    "same-priority queue depth 5": {
+      "realtime burster A": {
+        "runs": 1,
+        "median_p95_ttft_ms": 33823.66395,
+        "range_p95_ttft_ms": [
+          33823.66395,
+          33823.66395
+        ],
+        "median_p99_ttft_ms": 35458.660841,
+        "median_p95_tpot_ms_per_token": 287.693106
+      },
+      "realtime peer B": {
+        "runs": 1,
+        "median_p95_ttft_ms": 5505.86009,
+        "range_p95_ttft_ms": [
+          5505.86009,
+          5505.86009
+        ],
+        "median_p99_ttft_ms": 6978.860855,
+        "median_p95_tpot_ms_per_token": 66.488888
+      },
+      "realtime peer C": {
+        "runs": 1,
+        "median_p95_ttft_ms": 5464.366436,
+        "range_p95_ttft_ms": [
+          5464.366436,
+          5464.366436
+        ],
+        "median_p99_ttft_ms": 7316.706657,
+        "median_p95_tpot_ms_per_token": 65.628899
+      }
+    }
+  },
+  "retained_run_inventory": [
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 5",
+      "evidence_role": "single-run calibration",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    }
+  ],
+  "saturation_metric_interpretation": "The pool saturation metric is a detector-normalized score. Request-count admission divides in-flight requests by the configured cap. Utilization admission uses the larger of queue depth divided by its threshold and KV-cache utilization divided by its threshold. Read 1.0 as the configured saturation boundary within each detector; raw magnitudes are not compared across detectors.",
+  "statistical_scope": "The consolidation and same-priority comparisons use three matched repeats. Their realtime p95 TTFT ranges do not overlap across the tested detectors. With three repeats, the report presents descriptive medians and ranges rather than a formal significance claim.",
+  "claim_boundary": "This package contains production-shaped single-GPU evidence for same-priority fairness. It includes matched repeated detector comparisons."
+}

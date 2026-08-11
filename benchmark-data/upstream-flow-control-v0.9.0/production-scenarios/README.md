@@ -5,6 +5,18 @@
 Can one shared model server protect priority traffic across four production
 patterns while lower-priority or overloaded work absorbs the queue?
 
+## Scenario packages
+
+Each scenario has its own folder. No request, traffic, metric, or proof CSV is
+aggregated across scenarios.
+
+| Scenario | Question | Evidence |
+|---|---|---|
+| [Priority tiers](priority-tiers/) | Does dispatch order preserve the four configured priority bands during a surge? | 3 selected repeats |
+| [Batch isolation](batch-isolation/) | Can realtime and standard work retain lower TTFT while batch absorbs more of the queue? | 3 selected repeats; 1 queue-depth calibration |
+| [Consolidation](consolidation/) | Can two realtime tenants retain lower TTFT while standard traffic surges? | 3 matched repeats for each of 3 detector settings |
+| [Same-priority fairness](same-priority-fairness/) | Can peer tenants keep receiving service while one tenant in the same band overloads the shared model? | 3 matched repeats for each of 2 detector settings; 1 calibration |
+
 ## Selected configuration
 
 The request-count detector kept median realtime p95 TTFT below 700 ms in the
@@ -69,15 +81,13 @@ proof, and the batch queue-depth-5 control failed its response-outcome gate;
 those attempts are not included. Detector claims are limited to the matched
 consolidation and same-priority evidence.
 
-## Evidence
+## Shared configuration and analysis
 
 | File | Contents |
 |---|---|
-| [`summary.csv`](summary.csv) | Per-run workload throughput, outcomes, TTFT, end-to-end latency, time per output token (TPOT), and backend peaks. |
-| [`window-summary.csv`](window-summary.csv) | Baseline, surge, and recovery metrics with units. |
-| [`request-results.csv`](request-results.csv) | One sanitized row per request. |
-| [`traffic-samples.csv`](traffic-samples.csv) | Issued, completed, and outstanding requests over time. |
-| [`system-metrics.csv`](system-metrics.csv) | Curated queue, saturation, vLLM, KV-cache, preemption, and cache metrics. |
-| [`run-evidence.csv`](run-evidence.csv) | Observed priorities and objective headers, route counts, cache state, engagement, and proof gates. |
 | [`run-config.json`](run-config.json) | Images, topology, engine settings, detector settings, and traffic method. |
 | [`analysis.json`](analysis.json) | Matched medians, ranges, exclusions, and claim boundary. |
+
+Each scenario folder contains its own `summary.csv`, `window-summary.csv`,
+`request-results.csv`, `traffic-samples.csv`, `system-metrics.csv`,
+`run-evidence.csv`, `run-config.json`, and `analysis.json`.

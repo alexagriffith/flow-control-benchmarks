@@ -1,0 +1,99 @@
+{
+  "experiment": "batch isolation",
+  "selected_configuration_results": {
+    "realtime": {
+      "runs": 3,
+      "median_p95_ttft_ms": 441.851854,
+      "range_p95_ttft_ms": [
+        370.687008,
+        669.149399
+      ],
+      "median_p99_ttft_ms": 567.050695,
+      "median_p95_tpot_ms_per_token": 23.070568
+    },
+    "standard": {
+      "runs": 3,
+      "median_p95_ttft_ms": 515.385866,
+      "range_p95_ttft_ms": [
+        435.703516,
+        1017.155886
+      ],
+      "median_p99_ttft_ms": 641.850948,
+      "median_p95_tpot_ms_per_token": 23.372663
+    },
+    "batch": {
+      "runs": 3,
+      "median_p95_ttft_ms": 13077.339411,
+      "range_p95_ttft_ms": [
+        11424.613237,
+        15241.892099
+      ],
+      "median_p99_ttft_ms": 13491.666794,
+      "median_p95_tpot_ms_per_token": 119.545
+    }
+  },
+  "matched_detector_comparisons": {},
+  "calibration_only": {
+    "batch queue depth 2": {
+      "realtime": {
+        "runs": 1,
+        "median_p95_ttft_ms": 4519.713402,
+        "range_p95_ttft_ms": [
+          4519.713402,
+          4519.713402
+        ],
+        "median_p99_ttft_ms": 4916.324377,
+        "median_p95_tpot_ms_per_token": 55.007748
+      },
+      "standard": {
+        "runs": 1,
+        "median_p95_ttft_ms": 4366.770983,
+        "range_p95_ttft_ms": [
+          4366.770983,
+          4366.770983
+        ],
+        "median_p99_ttft_ms": 4886.055946,
+        "median_p95_tpot_ms_per_token": 54.259107
+      },
+      "batch": {
+        "runs": 1,
+        "median_p95_ttft_ms": 11449.07999,
+        "range_p95_ttft_ms": [
+          11449.07999,
+          11449.07999
+        ],
+        "median_p99_ttft_ms": 11806.423903,
+        "median_p95_tpot_ms_per_token": 109.429313
+      }
+    }
+  },
+  "retained_run_inventory": [
+    {
+      "scenario": "batch isolation",
+      "detector": "queue depth 2",
+      "evidence_role": "single-run calibration",
+      "repeat": 1
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 1
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 2
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 3
+    }
+  ],
+  "saturation_metric_interpretation": "The pool saturation metric is a detector-normalized score. Request-count admission divides in-flight requests by the configured cap. Utilization admission uses the larger of queue depth divided by its threshold and KV-cache utilization divided by its threshold. Read 1.0 as the configured saturation boundary within each detector; raw magnitudes are not compared across detectors.",
+  "statistical_scope": "Three selected repeats support descriptive medians and ranges for this scenario.",
+  "claim_boundary": "This package contains production-shaped single-GPU evidence for batch isolation. It does not include a matched detector comparison."
+}

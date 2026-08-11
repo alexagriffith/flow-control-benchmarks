@@ -10,9 +10,27 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 
+SCENARIO_FOLDERS = {
+    "priority tiers": "priority-tiers",
+    "batch isolation": "batch-isolation",
+    "consolidation": "consolidation",
+    "same-priority fairness": "same-priority-fairness",
+}
+
+
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open() as handle:
         return list(csv.DictReader(handle))
+
+
+def read_scenario_csvs(package: Path, name: str) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for scenario, folder in SCENARIO_FOLDERS.items():
+        scenario_rows = read_csv(package / folder / name)
+        if any(row["scenario"] != scenario for row in scenario_rows):
+            raise ValueError(f"{folder}/{name} contains another scenario")
+        rows.extend(scenario_rows)
+    return rows
 
 
 def is_true(value: str) -> bool:
@@ -26,20 +44,27 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
 
 def validate_production_scenarios_package(errors: list[str], root: Path) -> None:
     package = root / "benchmark-data" / "upstream-flow-control-v0.9.0" / "production-scenarios"
-    required = {
+    required = {"README.md", "analysis.json", "run-config.json"}
+    found = {path.name for path in package.iterdir() if path.is_file()}
+    require(required <= found, "production-scenario files missing", errors)
+    require(not any(package.glob("*.csv")), "production CSVs must be separated by scenario", errors)
+
+    scenario_required = {
         "README.md", "analysis.json", "request-results.csv", "run-config.json",
         "run-evidence.csv", "summary.csv", "system-metrics.csv", "traffic-samples.csv",
         "window-summary.csv",
     }
-    found = {path.name for path in package.iterdir() if path.is_file()}
-    require(required <= found, "production-scenario files missing", errors)
+    for scenario, folder in SCENARIO_FOLDERS.items():
+        scenario_path = package / folder
+        scenario_found = {path.name for path in scenario_path.iterdir() if path.is_file()}
+        require(scenario_required <= scenario_found, f"{scenario} files missing", errors)
 
-    evidence = read_csv(package / "run-evidence.csv")
-    summary = read_csv(package / "summary.csv")
-    requests = read_csv(package / "request-results.csv")
-    traffic = read_csv(package / "traffic-samples.csv")
-    metrics = read_csv(package / "system-metrics.csv")
-    windows = read_csv(package / "window-summary.csv")
+    evidence = read_scenario_csvs(package, "run-evidence.csv")
+    summary = read_scenario_csvs(package, "summary.csv")
+    requests = read_scenario_csvs(package, "request-results.csv")
+    traffic = read_scenario_csvs(package, "traffic-samples.csv")
+    metrics = read_scenario_csvs(package, "system-metrics.csv")
+    windows = read_scenario_csvs(package, "window-summary.csv")
     analysis = json.loads((package / "analysis.json").read_text())
     config = json.loads((package / "run-config.json").read_text())
     readme = (package / "README.md").read_text()

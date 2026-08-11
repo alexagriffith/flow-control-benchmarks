@@ -77,17 +77,19 @@ def derive_production_traffic(path: Path) -> dict[str, dict[str, list[float]]]:
         "same-priority fairness": "request count 128, 10% headroom",
     }
     series: dict[tuple[str, str], list[tuple[float, int]]] = defaultdict(list)
-    with path.open(newline="") as handle:
-        for row in csv.DictReader(handle):
-            scenario = row["scenario"]
-            if (
-                scenario in selected
-                and row["detector"] == selected[scenario]
-                and int(row["repeat"]) == 2
-            ):
-                series[(scenario, row["tenant"])].append(
-                    (float(row["elapsed_seconds"]), int(row["issued_requests"]))
-                )
+    paths = sorted(path.glob("*/traffic-samples.csv")) if path.is_dir() else [path]
+    for traffic_path in paths:
+        with traffic_path.open(newline="") as handle:
+            for row in csv.DictReader(handle):
+                scenario = row["scenario"]
+                if (
+                    scenario in selected
+                    and row["detector"] == selected[scenario]
+                    and int(row["repeat"]) == 2
+                ):
+                    series[(scenario, row["tenant"])].append(
+                        (float(row["elapsed_seconds"]), int(row["issued_requests"]))
+                    )
     result: dict[str, dict[str, list[float]]] = {}
     for (scenario, tenant), points in sorted(series.items()):
         ordered = sorted(points)
@@ -244,7 +246,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require(traffic_match is not None, "production traffic data is missing", errors)
     if traffic_match:
         embedded_traffic = json.loads(traffic_match.group(1))
-        expected_traffic = derive_production_traffic(data / "production-scenarios" / "traffic-samples.csv")
+        expected_traffic = derive_production_traffic(data / "production-scenarios")
         require(embedded_traffic == expected_traffic, "production traffic plot data changed", errors)
 
     shape_expected = round(shapes["by_workload_shape"]["chat short output"]["median"]["surge_p95_ttft_ms"])

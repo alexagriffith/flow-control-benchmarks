@@ -1,0 +1,70 @@
+{
+  "experiment": "priority tiers",
+  "selected_configuration_results": {
+    "platinum realtime": {
+      "runs": 3,
+      "median_p95_ttft_ms": 404.415607,
+      "range_p95_ttft_ms": [
+        367.857456,
+        485.809803
+      ],
+      "median_p99_ttft_ms": 474.006891,
+      "median_p95_tpot_ms_per_token": 22.901006
+    },
+    "gold realtime": {
+      "runs": 3,
+      "median_p95_ttft_ms": 510.768414,
+      "range_p95_ttft_ms": [
+        414.258242,
+        594.352722
+      ],
+      "median_p99_ttft_ms": 571.871519,
+      "median_p95_tpot_ms_per_token": 23.541288
+    },
+    "silver standard": {
+      "runs": 3,
+      "median_p95_ttft_ms": 656.145811,
+      "range_p95_ttft_ms": [
+        592.422009,
+        777.571678
+      ],
+      "median_p99_ttft_ms": 795.123577,
+      "median_p95_tpot_ms_per_token": 24.416706
+    },
+    "bronze batch": {
+      "runs": 3,
+      "median_p95_ttft_ms": 13263.902187,
+      "range_p95_ttft_ms": [
+        11458.435297,
+        17728.231668
+      ],
+      "median_p99_ttft_ms": 13783.685684,
+      "median_p95_tpot_ms_per_token": 122.552954
+    }
+  },
+  "matched_detector_comparisons": {},
+  "calibration_only": {},
+  "retained_run_inventory": [
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 1
+    },
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 2
+    },
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 3
+    }
+  ],
+  "saturation_metric_interpretation": "The pool saturation metric is a detector-normalized score. Request-count admission divides in-flight requests by the configured cap. Utilization admission uses the larger of queue depth divided by its threshold and KV-cache utilization divided by its threshold. Read 1.0 as the configured saturation boundary within each detector; raw magnitudes are not compared across detectors.",
+  "statistical_scope": "Three selected repeats support descriptive medians and ranges for this scenario.",
+  "claim_boundary": "This package contains production-shaped single-GPU evidence for priority tiers. It does not include a matched detector comparison."
+}
