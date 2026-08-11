@@ -45,8 +45,8 @@
     .hero h1 { max-width: 820px; margin: 0; font-size: 66px; line-height: 1.02; letter-spacing: 0; }
     .hero p { max-width: 780px; margin: 18px 0 0; color: var(--muted); font-size: 20px; line-height: 1.45; }
     .result-band { background: var(--navy); color: #fff; border-top: 4px solid var(--teal); }
-    .result-grid { display: grid; grid-template-columns: 1.35fr repeat(2, .8fr); }
-    .result-grid > div { min-height: 210px; padding: 28px; border-right: 1px solid rgba(255,255,255,.18); display: flex; flex-direction: column; justify-content: space-between; }
+    .result-grid { display: grid; grid-template-columns: 1.4fr repeat(2, .8fr); }
+    .result-grid > div { min-height: 205px; padding: 28px; border-right: 1px solid rgba(255,255,255,.18); display: flex; flex-direction: column; justify-content: space-between; }
     .result-grid > div:last-child { border-right: 0; }
     .result-grid h2 { margin: 0; font-size: 26px; line-height: 1.18; }
     .result-grid strong { display: block; font-size: 27px; line-height: 1.08; }
@@ -57,55 +57,116 @@
     .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: end; margin-bottom: 28px; }
     .section-head h2 { margin: 0; font-size: 34px; line-height: 1.08; }
     .section-head p { margin: 0; color: var(--muted); line-height: 1.5; }
-    .settings { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    .setting { padding: 25px 22px; border-right: 1px solid var(--line); }
-    .setting:last-child { border-right: 0; }
-    .setting .value { display: block; font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .setting h3 { margin: 8px 0 4px; font-size: 17px; }
-    .setting p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; }
-    .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .scenario { border: 1px solid var(--line); background: var(--surface); padding: 22px; border-radius: 6px; }
-    .scenario h3 { margin: 0; font-size: 18px; }
-    .scenario .takeaway { margin: 7px 0 22px; color: var(--muted); min-height: 42px; line-height: 1.45; }
-    .dotplot { --min: 2.477121; --span: 2; position: relative; padding-top: 30px; }
+    .chart-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .chart-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .chart { margin: 0; padding: 22px; border: 1px solid var(--line); border-top: 3px solid var(--blue); background: var(--surface); min-width: 0; }
+    .chart.teal { border-top-color: var(--teal); }
+    .chart.amber { border-top-color: var(--amber); }
+    .chart.violet { border-top-color: var(--violet); }
+    .chart.red { border-top-color: var(--red); }
+    .chart.wide { grid-column: 1 / -1; }
+    .chart h3 { margin: 0; font-size: 19px; line-height: 1.2; }
+    .chart h4 { margin: 18px 0 7px; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .takeaway { margin: 7px 0 20px; color: var(--muted); line-height: 1.45; }
+    .caption { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .metric-split { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .bar-chart { position: relative; }
+    .bar-row { display: grid; grid-template-columns: 118px 1fr 78px; gap: 10px; align-items: center; min-height: 31px; }
+    .bar-label { font-size: 11px; font-weight: 700; }
+    .bar-track { height: 11px; overflow: hidden; background: #e1e7ed; }
+    .bar { display: block; width: 0; min-width: 3px; height: 100%; background: var(--blue); }
+    .bar.teal { background: var(--teal); }
+    .bar.amber { background: var(--amber); }
+    .bar.red { background: var(--red); }
+    .bar.violet { background: var(--violet); }
+    .bar-value { text-align: right; font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sweep-chart, .phase-chart { margin-top: 16px; }
+    .sweep-svg, .phase-svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .plot-grid { stroke: #dfe5eb; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .plot-axis { fill: var(--muted); font-size: 10px; }
+    .plot-axis.throughput { fill: var(--teal); font-weight: 750; }
+    .plot-axis.latency { fill: var(--amber); font-weight: 750; }
+    .plot-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+    .plot-line.throughput { stroke: var(--teal); }
+    .plot-line.latency { stroke: var(--amber); }
+    .plot-line.premium { stroke: var(--blue); }
+    .plot-point { stroke: var(--surface); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .plot-point.throughput { fill: var(--teal); }
+    .plot-point.latency { fill: var(--amber); }
+    .plot-point.premium { fill: var(--blue); }
+    .plot-value { fill: var(--ink); font-size: 10px; font-weight: 750; }
+    .plot-selected { fill: #e7f5f2; }
+    .plot-selected-label { fill: var(--teal); font-size: 10px; font-weight: 750; }
+    .range-chart { margin-top: 18px; }
+    .range-axis { position: relative; height: 30px; margin-left: 136px; margin-right: 72px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .range-axis span { position: absolute; bottom: 5px; transform: translateX(-50%); white-space: nowrap; }
+    .range-axis span:first-child { transform: none; }
+    .range-axis span:last-child { transform: translateX(-100%); }
+    .range-group { margin-top: 16px; }
+    .range-group h4 { margin: 0 0 6px; color: var(--ink); font-size: 12px; text-transform: none; }
+    .range-row { display: grid; grid-template-columns: 126px 1fr 62px; gap: 10px; align-items: center; min-height: 32px; }
+    .range-label { font-size: 11px; font-weight: 700; }
+    .range-track { position: relative; height: 18px; border-bottom: 1px solid #dfe5eb; }
+    .range-line { position: absolute; top: 8px; left: var(--low); width: calc(var(--high) - var(--low)); height: 3px; background: #9aa7b4; }
+    .range-dot { position: absolute; top: 3px; left: var(--mid); width: 12px; height: 12px; border: 2px solid var(--surface); border-radius: 50%; transform: translateX(-50%); background: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+    .range-row.peer .range-dot { background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+    .range-value { text-align: right; font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .range-note { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .heatmap { display: grid; grid-template-columns: 136px repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 18px; }
+    .heat-head { padding: 0 7px 6px; color: var(--muted); font-size: 10px; font-weight: 750; text-align: center; }
+    .heat-label { display: flex; flex-direction: column; justify-content: center; padding: 9px 7px; border: 1px solid var(--line); font-size: 11px; font-weight: 750; }
+    .heat-label small { margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 600; }
+    .heat-cell { display: flex; min-height: 54px; align-items: center; justify-content: center; padding: 7px; border: 1px solid rgba(21,32,43,.08); background: #eef2f5; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 10px; }
+    .heat-gradient { width: 120px; height: 8px; background: linear-gradient(90deg, rgba(197,106,0,.17), rgba(197,106,0,.85)); }
+    .screening { display: inline-block; margin-top: 4px; padding: 2px 4px; border: 1px solid currentColor; color: var(--amber); font-size: 8px; line-height: 1; text-transform: uppercase; }
+    .bar-key { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 2px 0 14px; color: var(--muted); font-size: 10px; }
+    .bar-key span { display: inline-flex; align-items: center; gap: 5px; }
+    .swatch { width: 14px; height: 4px; background: var(--key); }
+    .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .scenario { border-top-color: var(--teal); }
+    .latency-chart { position: relative; padding-top: 30px; }
     .axis { position: absolute; top: 0; left: 128px; right: 56px; height: 22px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
-    .axis span { position: absolute; bottom: 4px; transform: translateX(-50%); }
+    .axis span { position: absolute; bottom: 4px; transform: translateX(-50%); white-space: nowrap; }
     .axis span:first-child { transform: none; }
     .axis span:last-child { transform: translateX(-100%); }
-    .dotrow { display: grid; grid-template-columns: 118px 1fr 48px; gap: 10px; align-items: center; min-height: 35px; }
-    .dotlabel { font-size: 12px; font-weight: 700; }
-    .track { position: relative; height: 2px; background: #dfe5eb; }
-    .dot { position: absolute; top: 50%; left: var(--x); width: 12px; height: 12px; transform: translate(-50%,-50%); border-radius: 50%; background: var(--blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--blue); }
-    .dot.standard { background: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-    .dot.batch { background: var(--red); box-shadow: 0 0 0 1px var(--red); }
-    .dot.peer { background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
-    .dotvalue { text-align: right; font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .latency-row { display: grid; grid-template-columns: 118px 1fr 48px; gap: 10px; align-items: center; min-height: 35px; }
+    .latency-label { font-size: 12px; font-weight: 700; }
+    .latency-track { height: 12px; overflow: hidden; background: #dfe5eb; }
+    .latency-bar { width: var(--w); min-width: 6px; height: 100%; background: var(--blue); }
+    .latency-bar.standard { background: var(--amber); }
+    .latency-bar.batch { background: var(--red); }
+    .latency-bar.peer { background: var(--teal); }
+    .latency-value { text-align: right; font-size: 12px; font-weight: 750; font-variant-numeric: tabular-nums; }
     .scale-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; }
-    .compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    .compare { border-top: 3px solid var(--blue); background: #f8fafc; padding: 22px; }
-    .compare:last-child { border-top-color: var(--teal); }
-    .compare h3 { margin: 0 0 5px; font-size: 19px; }
-    .compare > p { margin: 0 0 18px; color: var(--muted); line-height: 1.45; }
-    .comparison-row { display: grid; grid-template-columns: 155px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
-    .comparison-row strong { font-size: 12px; }
-    .comparison-row span { font-size: 13px; font-variant-numeric: tabular-nums; }
-    .comparison-row small { display: block; margin-top: 3px; color: var(--muted); }
-    .evidence-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .evidence { border-top: 3px solid var(--teal); background: var(--surface); padding: 20px; min-height: 190px; }
-    .evidence.blue { border-color: var(--blue); }
-    .evidence.amber { border-color: var(--amber); }
-    .evidence.violet { border-color: var(--violet); }
-    .evidence h3 { margin: 0; font-size: 17px; }
-    .evidence .big { display: block; margin-top: 22px; font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .evidence p { color: var(--muted); line-height: 1.45; font-size: 13px; }
-    .mini-bars { margin-top: 18px; }
-    .mini-row { display: grid; grid-template-columns: 88px 1fr 70px; gap: 9px; align-items: center; margin: 9px 0; font-size: 11px; }
-    .mini-track { height: 8px; background: #e3e8ed; }
-    .mini-fill { height: 100%; width: var(--w); background: var(--blue); }
-    .mini-fill.teal { background: var(--teal); }
-    .mini-fill.amber { background: var(--amber); }
-    .mini-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 750; }
-    .boundary { margin-top: 26px; padding: 20px 22px; border-left: 4px solid var(--amber); background: #fff7e8; line-height: 1.5; }
+    .traffic-panel { margin-top: 20px; padding-top: 28px; border-top: 1px solid var(--line); }
+    .traffic-head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+    .traffic-head h3 { margin: 0; font-size: 22px; }
+    .traffic-head p { margin: 0; color: var(--muted); font-size: 13px; }
+    .traffic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .traffic-small { min-width: 0; padding: 16px; border: 1px solid var(--line); background: var(--surface); }
+    .traffic-small h4 { margin: 0 0 9px; font-size: 14px; }
+    .traffic-legend { display: flex; flex-wrap: wrap; gap: 7px 12px; min-height: 34px; margin-bottom: 5px; color: var(--muted); font-size: 10px; }
+    .traffic-key { display: inline-flex; align-items: center; gap: 5px; }
+    .traffic-swatch { width: 13px; height: 3px; background: var(--key-color); }
+    .traffic-svg { display: block; width: 100%; aspect-ratio: 3 / 1; min-height: 130px; overflow: visible; }
+    .traffic-gridline { stroke: #dfe5eb; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .traffic-surge { fill: #fff2dc; }
+    .traffic-line { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .traffic-axis-label { fill: var(--muted); font-size: 9px; }
+    .traffic-method { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .comparison-set { margin-top: 52px; }
+    .pair-key { display: flex; gap: 18px; margin-bottom: 12px; color: var(--muted); font-size: 10px; }
+    .pair-axis { display: flex; justify-content: space-between; margin: 0 110px 6px 65px; color: var(--muted); font-size: 10px; }
+    .pair-row { display: grid; grid-template-columns: 55px 1fr 100px; gap: 10px; align-items: center; min-height: 31px; }
+    .pair-track { position: relative; height: 18px; border-bottom: 1px solid var(--line); }
+    .pair-line { position: absolute; top: 8px; left: var(--left); width: var(--width); height: 2px; background: #aeb8c3; }
+    .marker { position: absolute; top: 4px; left: var(--x); width: 9px; height: 9px; border-radius: 50%; transform: translateX(-50%); background: var(--blue); }
+    .marker.token { background: var(--teal); }
+    .marker.violet { background: var(--violet); }
+    .marker.amber { background: var(--amber); }
+    .pair-values { text-align: right; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .decision-line { margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--line); font-weight: 750; line-height: 1.45; }
     details { margin-top: 22px; border: 1px solid var(--line); background: var(--surface); }
     summary { padding: 16px 18px; cursor: pointer; font-weight: 750; }
     .method { padding: 0 18px 18px; overflow-x: auto; }
@@ -121,11 +182,10 @@
       .topbar-inner { align-items: flex-start; padding: 14px 0; }
       nav { display: none; }
       .hero h1 { font-size: 48px; }
-      .result-grid, .settings, .scenario-grid, .compare-grid, .evidence-grid, .packages, .section-head { grid-template-columns: 1fr; }
-      .result-grid > div, .setting { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.18); }
-      .setting { border-bottom-color: var(--line); }
-      .scenario .takeaway { min-height: auto; }
-      .evidence { min-height: 0; }
+      .result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid { grid-template-columns: 1fr; }
+      .result-grid > div { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+      .traffic-head { display: block; }
+      .traffic-head p { margin-top: 6px; }
     }
     @media (max-width: 520px) {
       .topbar-inner, main, footer { width: min(100% - 24px, 1180px); }
@@ -134,9 +194,19 @@
       .hero p { font-size: 17px; }
       .band { padding: 44px 0; }
       .axis { left: 100px; right: 46px; }
-      .dotrow { grid-template-columns: 90px 1fr 38px; gap: 6px; }
-      .dotlabel, .dotvalue { font-size: 10px; }
-      .comparison-row { grid-template-columns: 1fr; }
+      .latency-row { grid-template-columns: 90px 1fr 38px; gap: 6px; }
+      .latency-label, .latency-value { font-size: 10px; }
+      .metric-split { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 90px 1fr 68px; gap: 6px; }
+      .bar-label, .bar-value { font-size: 10px; }
+      .range-axis { margin-left: 96px; margin-right: 58px; }
+      .range-row { grid-template-columns: 86px 1fr 52px; gap: 6px; }
+      .range-label, .range-value { font-size: 9px; }
+      .pair-row { grid-template-columns: 45px 1fr 86px; gap: 6px; }
+      .chart.wide { grid-column: auto; }
+      .heatmap { grid-template-columns: 86px repeat(3, minmax(0, 1fr)); gap: 3px; }
+      .heat-head { padding: 0 2px 5px; font-size: 8px; }
+      .heat-label, .heat-cell { padding: 5px 3px; font-size: 8px; }
       .package { display: block; }
       .package span { display: block; margin-top: 5px; text-align: left; }
     }
@@ -150,7 +220,8 @@
         <a href="#result">Result</a>
         <a href="#configuration">Configuration</a>
         <a href="#production">Production traffic</a>
-        <a href="#evidence">Workload and scale</a>
+        <a href="#workloads">Workloads</a>
+        <a href="#scale">Scale and recovery</a>
         <a href="#packages">Evidence</a>
       </nav>
     </div>
@@ -165,186 +236,110 @@
     <section class="result-band" aria-label="Benchmark result">
       <div class="result-grid">
         <div>
-          <h2>Priority traffic stayed ahead while lower-priority and overloaded work absorbed more of the wait.</h2>
-          <p>Flow control engaged in every retained production-scenario run. All 194,923 requests completed successfully.</p>
+          <h2>Flow control protected realtime traffic across four production-shaped scenarios.</h2>
+          <p>When demand surged, lower-priority and overloaded workloads absorbed most of the wait.</p>
         </div>
         <div>
-          <strong>Below 700 ms</strong>
-          <span>Median realtime p95 time to first token (TTFT) in tiering, batch isolation, and consolidation</span>
-          <small>Three repeats per selected scenario</small>
+          <strong>Priority protection</strong>
+          <span>Realtime median p95 time to first token (TTFT) stayed between 404 and 570 ms across all four production scenarios.</span>
+          <small>Flow control engaged in every retained run</small>
         </div>
         <div>
-          <strong>Matched per-GPU throughput</strong>
-          <span>Served requests per second (RPS) per GPU stayed within 0.6% from one to four GPUs</span>
-          <small>429 responses occurred at one and two GPUs</small>
+          <strong>Per-GPU throughput held</strong>
+          <span>Served requests per second (RPS) per GPU varied by at most 0.6% across one, two, and four model replicas.</span>
+          <small><a href="#scale">Nine matched scaling runs across three model-pool sizes</a></small>
         </div>
       </div>
     </section>
 
     <section class="band" id="configuration">
       <div class="section-head">
-        <h2>Selected configuration</h2>
-        <p>Closed-loop sweeps selected engine and admission settings. Open-loop production traffic tested the result.</p>
+        <h2>How the configuration was selected</h2>
+        <p>Calibration sweeps narrowed the engine and admission settings before production-shaped traffic was introduced.</p>
       </div>
-      <div class="settings">
-        <div class="setting">
-          <span class="value">128</span>
-          <h3>vLLM max sequences</h3>
-          <p>The engine-capacity setting selected from three matched runs at 128, 160, and 192.</p>
-        </div>
-        <div class="setting">
-          <span class="value">8,192</span>
-          <h3>Maximum batched tokens</h3>
-          <p>The scheduling-step setting selected from 4,096, 8,192, and 16,384.</p>
-        </div>
-        <div class="setting">
-          <span class="value">128</span>
-          <h3>Request admission cap</h3>
-          <p>The default admission setting. Exact input-token admission remains available for uneven request sizes.</p>
-        </div>
+      <div class="chart-grid">
+        <figure class="chart">
+          <h3>128 sequences limited tail latency with little throughput loss</h3>
+          <p class="takeaway">From 128 to 192 sequences, throughput rose 2.7% and p99 TTFT rose 725 ms.</p>
+          <div class="sweep-chart" role="img" aria-label="Maximum sequence sweep comparing steady throughput and p99 TTFT at 128, 160, and 192 sequences." data-labels="128|160|192" data-throughput="50.533|50.708|51.933" data-latency="1888|1978|2613" data-latency-label="p99 TTFT" data-selected="0"></div>
+          <figcaption class="caption">Three matched runs at each vLLM maximum-sequence setting. The highlighted point advanced.</figcaption>
+        </figure>
+        <figure class="chart teal">
+          <h3>8,192 batched tokens led the tested points</h3>
+          <p class="takeaway">It produced the highest throughput and the lowest p95 TTFT in this sweep.</p>
+          <div class="sweep-chart" role="img" aria-label="Batched-token sweep comparing steady throughput and p95 TTFT at 4096, 8192, and 16384 tokens." data-labels="4,096|8,192|16,384" data-throughput="47.808|50.533|48.742" data-latency="1877|1822|2162" data-latency-label="p95 TTFT" data-selected="1"></div>
+          <figcaption class="caption">The 4,096 and 16,384 points were screening runs; the selected 8,192 point was repeated three times.</figcaption>
+        </figure>
+        <figure class="chart violet">
+          <h3>A request cap of 128 lowered TTFT relative to 160</h3>
+          <p class="takeaway">The tighter cap reduced p95 TTFT by 363 ms with 2.9% less steady throughput.</p>
+          <div class="sweep-chart" role="img" aria-label="Request-cap sweep comparing steady throughput and p95 TTFT at caps 128 and 160." data-labels="128|160" data-throughput="49.633|51.133" data-latency="2076|2439" data-latency-label="p95 TTFT" data-selected="0"></div>
+          <figcaption class="caption">Three matched closed-loop runs per request-count setting. The highlighted point advanced to production traffic.</figcaption>
+        </figure>
+        <figure class="chart amber">
+          <h3>Short-request calibration favored queue depth 8</h3>
+          <p class="takeaway">Queue depth 8 lowered p95 TTFT by 256 ms and throughput by 1.6%.</p>
+          <div class="sweep-chart" role="img" aria-label="Queue-depth calibration comparing steady throughput and p95 TTFT at depths 5 and 8." data-labels="Depth 5|Depth 8" data-throughput="47.6|46.817" data-latency="1863|1607" data-latency-label="p95 TTFT" data-selected="1"></div>
+          <figcaption class="caption">Three matched closed-loop runs per setting. Production traffic then compared request count with queue depths 2 and 5.</figcaption>
+        </figure>
+        <figure class="chart wide violet">
+          <h3>The request cap traded premium latency for standard wait</h3>
+          <p class="takeaway">Premium p95 TTFT was lowest at 48; standard p95 TTFT fell as the cap rose.</p>
+          <div class="sweep-chart" role="img" aria-label="Earlier two-tier request-concurrency tuning comparing premium and standard p95 TTFT in milliseconds on one shared logarithmic axis from caps 32 through 128." data-labels="32|48|64|96|128" data-throughput="568|461|582|761|907" data-latency="12722|7808|5207|3714|2697" data-throughput-label="Premium" data-latency-label="Standard" data-shared-axis="true" data-selected="1"></div>
+          <figcaption class="caption">Two 120-second noisy-traffic repeats per cap. This earlier two-tier study explains the tradeoff; the later production matrix selected request count 128.</figcaption>
+        </figure>
+        <figure class="chart amber">
+          <h3>KV-pressure calibration measured the cost of earlier activation</h3>
+          <p class="takeaway">Threshold 0.8 beat 0.75 but remained 4,621 ms above flow control off.</p>
+          <div class="sweep-chart" role="img" aria-label="KV-pressure calibration comparing absolute steady throughput in requests per second and p95 TTFT with flow control off and thresholds 0.75 and 0.8." data-labels="Off|0.75|0.8" data-throughput="1.111|1|0.867" data-latency="16938|28540|21559" data-throughput-label="Steady throughput (RPS)" data-latency-label="p95 TTFT" data-selected="2"></div>
+          <figcaption class="caption">Three matched runs per shown point. Single-run 0.9 and 1.0 screening points had lower TTFT and were not selection evidence. Throughput is absolute RPS; 0.8 is a pressure-calibration point, not a latency optimum.</figcaption>
+        </figure>
+        <figure class="chart teal">
+          <h3>Input-token admission handled mixed request sizes better than the output estimate</h3>
+          <p class="takeaway">Exact input tokens served 21.4 RPS; one output-estimate screening run served 6.8 RPS.</p>
+          <div class="heatmap" role="img" aria-label="Mixed-size admission calibration showing p95 TTFT for short, medium, and long requests across three admission methods."><span></span><span class="heat-head">Short</span><span class="heat-head">Medium</span><span class="heat-head">Long</span><span class="heat-label">Request count<small>18.8 RPS</small></span><span class="heat-cell" data-value="8419">8,419 ms</span><span class="heat-cell" data-value="5659">5,659 ms</span><span class="heat-cell" data-value="4163">4,163 ms</span><span class="heat-label">Input tokens<small>21.4 RPS</small></span><span class="heat-cell" data-value="6621">6,621 ms</span><span class="heat-cell" data-value="5213">5,213 ms</span><span class="heat-cell" data-value="6352">6,352 ms</span><span class="heat-label">Input + output estimate<small>6.8 RPS</small><span class="screening">one run</span></span><span class="heat-cell" data-value="41909">41,909 ms</span><span class="heat-cell" data-value="27952">27,952 ms</span><span class="heat-cell" data-value="13962">13,962 ms</span></div>
+          <div class="heat-legend"><span>4,163 ms</span><i class="heat-gradient"></i><span>41,909 ms</span></div>
+          <figcaption class="caption">Color shows p95 TTFT from lower to higher within this table. Request count and input tokens have three matched repeats.</figcaption>
+        </figure>
       </div>
-      <div class="boundary"><strong>Detector scope.</strong> Queue depths 2 and 5 remain utilization-detector comparison settings. Queue depth 8 led the short-request calibration, but it is not the production default.</div>
+      <details><summary>Selected settings</summary><div class="method"><table><thead><tr><th>Layer</th><th>Setting</th><th>Use</th></tr></thead><tbody><tr><td>vLLM engine</td><td>max sequences 128; maximum batched tokens 8,192</td><td>Limits concurrent sequences and scheduler-step token work</td></tr><tr><td>Endpoint Picker</td><td>Request count 128; 10% headroom</td><td>Default admission method for tiering, consolidation, and fairness</td></tr><tr><td>Batch isolation</td><td>Request count 128; 15% headroom</td><td>Reserves more request capacity during the batch surge</td></tr><tr><td>Size-aware option</td><td>Exact input tokens</td><td>Available when request sizes vary enough to make counts misleading</td></tr></tbody></table></div></details>
     </section>
 
     <section class="band white" id="production">
-      <div class="section-head">
-        <h2>Production traffic</h2>
-        <p>Open-loop Poisson arrivals used noisy sinusoidal phases, a timed surge, and recovery. Prefix caching was off.</p>
-      </div>
+      <div class="section-head"><h2>Four production scenarios</h2><p>Each chart shows median surge p95 TTFT across three repeats. Flow control was engaged and policy queues were active in every retained run.</p></div>
       <div class="scenario-grid">
-        <article class="scenario">
-          <h3>Priority tiers</h3>
-          <p class="takeaway">Higher-priority traffic kept lower p95 TTFT while batch absorbed the longest delay.</p>
-          <div class="dotplot">
-            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
-            <div class="dotrow"><span class="dotlabel">Platinum</span><div class="track"><i class="dot peer" data-ms="404"></i></div><span class="dotvalue">404</span></div>
-            <div class="dotrow"><span class="dotlabel">Gold</span><div class="track"><i class="dot peer" data-ms="511"></i></div><span class="dotvalue">511</span></div>
-            <div class="dotrow"><span class="dotlabel">Silver</span><div class="track"><i class="dot standard" data-ms="656"></i></div><span class="dotvalue">656</span></div>
-            <div class="dotrow"><span class="dotlabel">Batch</span><div class="track"><i class="dot batch" data-ms="13264"></i></div><span class="dotvalue">13,264</span></div>
-          </div>
-          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
-        </article>
-        <article class="scenario">
-          <h3>Batch isolation</h3>
-          <p class="takeaway">Median realtime and standard p95 TTFT stayed below 600 ms while batch remained deferrable.</p>
-          <div class="dotplot">
-            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
-            <div class="dotrow"><span class="dotlabel">Realtime</span><div class="track"><i class="dot peer" data-ms="442"></i></div><span class="dotvalue">442</span></div>
-            <div class="dotrow"><span class="dotlabel">Standard</span><div class="track"><i class="dot standard" data-ms="515"></i></div><span class="dotvalue">515</span></div>
-            <div class="dotrow"><span class="dotlabel">Batch</span><div class="track"><i class="dot batch" data-ms="13077"></i></div><span class="dotvalue">13,077</span></div>
-          </div>
-          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
-        </article>
-        <article class="scenario">
-          <h3>Consolidation</h3>
-          <p class="takeaway">Two realtime tenants stayed below 600 ms during the standard burst.</p>
-          <div class="dotplot">
-            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
-            <div class="dotrow"><span class="dotlabel">Realtime A</span><div class="track"><i class="dot peer" data-ms="509"></i></div><span class="dotvalue">509</span></div>
-            <div class="dotrow"><span class="dotlabel">Realtime B</span><div class="track"><i class="dot peer" data-ms="556"></i></div><span class="dotvalue">556</span></div>
-            <div class="dotrow"><span class="dotlabel">Standard</span><div class="track"><i class="dot standard" data-ms="25892"></i></div><span class="dotvalue">25,892</span></div>
-          </div>
-          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
-        </article>
-        <article class="scenario">
-          <h3>Same-priority fairness</h3>
-          <p class="takeaway">The overloaded tenant absorbed most of the delay while both peers kept their turns.</p>
-          <div class="dotplot">
-            <div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div>
-            <div class="dotrow"><span class="dotlabel">Burster A</span><div class="track"><i class="dot batch" data-ms="12097"></i></div><span class="dotvalue">12,097</span></div>
-            <div class="dotrow"><span class="dotlabel">Peer B</span><div class="track"><i class="dot peer" data-ms="527"></i></div><span class="dotvalue">527</span></div>
-            <div class="dotrow"><span class="dotlabel">Peer C</span><div class="track"><i class="dot peer" data-ms="570"></i></div><span class="dotvalue">570</span></div>
-          </div>
-          <p class="scale-note">Median surge p95 TTFT in milliseconds. Log scale.</p>
-        </article>
+        <figure class="chart scenario"><h3>Priority tiers</h3><p class="takeaway">Higher-priority tiers stayed lower while batch absorbed the longest wait.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Platinum</span><div class="bar-track"><i class="bar teal" data-value="404"></i></div><span class="bar-value">404 ms</span></div><div class="bar-row"><span class="bar-label">Gold</span><div class="bar-track"><i class="bar teal" data-value="511"></i></div><span class="bar-value">511 ms</span></div><div class="bar-row"><span class="bar-label">Silver</span><div class="bar-track"><i class="bar amber" data-value="656"></i></div><span class="bar-value">656 ms</span></div><div class="bar-row"><span class="bar-label">Batch</span><div class="bar-track"><i class="bar red" data-value="13264"></i></div><span class="bar-value">13,264 ms</span></div></div><figcaption class="caption">Log scale. Realtime ranges across three repeats: Platinum 368–486 ms; Gold 414–594 ms. Flow control was engaged.</figcaption></figure>
+        <figure class="chart scenario"><h3>Batch isolation</h3><p class="takeaway">Realtime and standard stayed below 600 ms while batch waited.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Realtime</span><div class="bar-track"><i class="bar teal" data-value="442"></i></div><span class="bar-value">442 ms</span></div><div class="bar-row"><span class="bar-label">Standard</span><div class="bar-track"><i class="bar amber" data-value="515"></i></div><span class="bar-value">515 ms</span></div><div class="bar-row"><span class="bar-label">Batch</span><div class="bar-track"><i class="bar red" data-value="13077"></i></div><span class="bar-value">13,077 ms</span></div></div><figcaption class="caption">Log scale. Realtime range across three repeats: 371–669 ms. Flow control was engaged.</figcaption></figure>
+        <figure class="chart scenario"><h3>Consolidation</h3><p class="takeaway">Both realtime tenants stayed below 600 ms during the standard burst.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Realtime A</span><div class="bar-track"><i class="bar teal" data-value="509"></i></div><span class="bar-value">509 ms</span></div><div class="bar-row"><span class="bar-label">Realtime B</span><div class="bar-track"><i class="bar teal" data-value="556"></i></div><span class="bar-value">556 ms</span></div><div class="bar-row"><span class="bar-label">Standard</span><div class="bar-track"><i class="bar amber" data-value="25892"></i></div><span class="bar-value">25,892 ms</span></div></div><figcaption class="caption">Log scale. Realtime ranges across three repeats: A 503–558 ms; B 505–599 ms. Flow control was engaged.</figcaption></figure>
+        <figure class="chart scenario"><h3>Same-priority fairness</h3><p class="takeaway">Both peers stayed below 700 ms while the burster absorbed most of the delay.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Burster A</span><div class="bar-track"><i class="bar red" data-value="12097"></i></div><span class="bar-value">12,097 ms</span></div><div class="bar-row"><span class="bar-label">Peer B</span><div class="bar-track"><i class="bar teal" data-value="527"></i></div><span class="bar-value">527 ms</span></div><div class="bar-row"><span class="bar-label">Peer C</span><div class="bar-track"><i class="bar teal" data-value="570"></i></div><span class="bar-value">570 ms</span></div></div><figcaption class="caption">Log scale. Peer ranges across three repeats: B 508–619 ms; C 563–675 ms. Flow control was engaged.</figcaption></figure>
       </div>
+      <section class="traffic-panel" aria-labelledby="traffic-title"><div class="traffic-head"><h3 id="traffic-title">Incoming request rate over time</h3><p>Requests sent to the service per second in selected repeat 2, averaged over 10-second windows.</p></div><div class="traffic-grid" id="traffic-grid"></div><p class="traffic-method">Open-loop Poisson arrivals followed noisy sinusoidal phases with a timed surge and recovery. The highlighted interval is the surge. Prefix caching was off.</p></section>
 
-      <div class="section-head" style="margin-top:54px">
-        <h2>Detector comparison</h2>
-        <p>Three matched repeats support consolidation and same-priority comparisons. The ranges do not overlap.</p>
-      </div>
-      <div class="compare-grid">
-        <div class="compare">
-          <h3>Consolidation</h3>
-          <p>Request-count admission kept both realtime tenants below 600 ms.</p>
-          <div class="comparison-row"><strong>Request count 128</strong><span>509 and 556 ms<small>Selected setting</small></span></div>
-          <div class="comparison-row"><strong>Queue depth 2</strong><span>4,711 and 4,567 ms</span></div>
-          <div class="comparison-row"><strong>Queue depth 5</strong><span>5,117 and 4,906 ms</span></div>
-        </div>
-        <div class="compare">
-          <h3>Same-priority peers</h3>
-          <p>Request-count admission kept peer p95 TTFT below 700 ms across all repeats.</p>
-          <div class="comparison-row"><strong>Request count 128</strong><span>527 and 570 ms<small>Selected setting</small></span></div>
-          <div class="comparison-row"><strong>Queue depth 2</strong><span>5,023 and 4,519 ms</span></div>
-        </div>
-      </div>
-      <div class="boundary"><strong>Calibration only.</strong> One queue-depth-5 fairness run produced peer p95 TTFT of 5,506 and 5,464 ms. It is not part of the matched comparison.</div>
-      <div class="boundary"><strong>Statistical scope.</strong> Three repeats support descriptive medians and ranges. The report does not claim formal statistical significance.</div>
+      <div class="comparison-set"><div class="section-head"><h2>Which detector kept realtime TTFT lower?</h2><p>Request count and queue depth used the same prompts, noisy-sinusoidal traffic schedule, model, GPU, and three-repeat structure.</p></div><div class="chart-grid">
+        <figure class="chart"><h3>Consolidation: request count kept both realtime tenants near 0.5 seconds</h3><p class="takeaway">Queue-depth detection produced median p95 TTFT between 4.6 and 5.1 seconds for the same tenants.</p><div class="range-chart" data-min="0" data-max="6000"><div class="range-axis"><span style="left:0">0</span><span style="left:50%">3,000 ms</span><span style="left:100%">6,000 ms</span></div><div class="range-group"><h4>Request count 128</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">509 ms</span><span hidden data-low="503" data-value="509" data-high="558"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">556 ms</span><span hidden data-low="505" data-value="556" data-high="599"></span></div></div><div class="range-group"><h4>Queue depth 2</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,711 ms</span><span hidden data-low="4102" data-value="4711" data-high="5360"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,567 ms</span><span hidden data-low="4024" data-value="4567" data-high="5057"></span></div></div><div class="range-group"><h4>Queue depth 5</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">5,117 ms</span><span hidden data-low="4729" data-value="5117" data-high="5254"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,906 ms</span><span hidden data-low="4657" data-value="4906" data-high="5498"></span></div></div></div><figcaption class="range-note">Dots show the median p95 TTFT. Lines show the observed minimum and maximum across three matched repeats. The request-count ranges remained separate from both queue-depth ranges.</figcaption></figure>
+        <figure class="chart teal"><h3>Same-priority fairness: request count kept both peers near 0.5 seconds</h3><p class="takeaway">Queue depth 2 raised both peers' median p95 TTFT above 4.5 seconds.</p><div class="range-chart" data-min="0" data-max="6000"><div class="range-axis"><span style="left:0">0</span><span style="left:50%">3,000 ms</span><span style="left:100%">6,000 ms</span></div><div class="range-group"><h4>Request count 128</h4><div class="range-row"><span class="range-label">Peer B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">527 ms</span><span hidden data-low="508" data-value="527" data-high="619"></span></div><div class="range-row peer"><span class="range-label">Peer C</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">570 ms</span><span hidden data-low="563" data-value="570" data-high="675"></span></div></div><div class="range-group"><h4>Queue depth 2</h4><div class="range-row"><span class="range-label">Peer B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">5,023 ms</span><span hidden data-low="4716" data-value="5023" data-high="5080"></span></div><div class="range-row peer"><span class="range-label">Peer C</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,519 ms</span><span hidden data-low="4464" data-value="4519" data-high="4769"></span></div></div></div><figcaption class="range-note">Dots show the median p95 TTFT. Lines show the observed minimum and maximum across three matched repeats. The request-count ranges remained separate from queue depth 2.</figcaption></figure>
+      </div></div>
     </section>
 
-    <section class="band" id="evidence">
-      <div class="section-head">
-        <h2>Workload and scale</h2>
-        <p>The selected settings were tested with different request shapes, mixed traffic, prefix reuse, repeated surges, and larger model pools.</p>
+    <section class="band" id="workloads">
+      <div class="section-head"><h2>Workload behavior</h2><p>These tests show where request shape and already-running work change the operating decision.</p></div>
+      <div class="chart-grid">
+        <figure class="chart red"><h3>Batch already running can block realtime work</h3><p class="takeaway">Realtime p95 TTFT rose from 133 ms to 15,378 ms after batch filled vLLM.</p><div class="latency-chart bar-chart" data-scale="log" data-min="100" data-max="20000"><div class="axis"><span style="left:0">100 ms</span><span style="left:43.5%">1 s</span><span style="left:87%">10 s</span><span style="left:100%">20 s</span></div><div class="bar-row"><span class="bar-label">Realtime only</span><div class="bar-track"><i class="bar teal" data-value="133"></i></div><span class="bar-value">133 ms</span></div><div class="bar-row"><span class="bar-label">Batch running</span><div class="bar-track"><i class="bar red" data-value="15378"></i></div><span class="bar-value">15,378 ms</span></div></div><figcaption class="caption">Log scale. Three matched repeats per condition. Reserved capacity and eviction are covered separately.</figcaption></figure>
+        <figure class="chart"><h3>Longer output raised TTFT while per-token latency stayed similar</h3><p class="takeaway">Agentic p95 TTFT was 1,352 ms; p95 TPOT differed by 4.6 ms/token.</p><div class="metric-split"><div><h4>Surge p95 TTFT (ms)</h4><div class="bar-chart" data-max="1500"><div class="bar-row"><span class="bar-label">Chat</span><div class="bar-track"><i class="bar teal" data-value="420"></i></div><span class="bar-value">420 ms</span></div><div class="bar-row"><span class="bar-label">Agentic</span><div class="bar-track"><i class="bar amber" data-value="1352"></i></div><span class="bar-value">1,352 ms</span></div></div></div><div><h4>Surge p95 TPOT (ms/token)</h4><div class="bar-chart" data-max="40"><div class="bar-row"><span class="bar-label">Chat</span><div class="bar-track"><i class="bar teal" data-value="34.988"></i></div><span class="bar-value">35.0 ms/token</span></div><div class="bar-row"><span class="bar-label">Agentic</span><div class="bar-track"><i class="bar amber" data-value="30.385"></i></div><span class="bar-value">30.4 ms/token</span></div></div></div></div><figcaption class="caption">Three single-tenant repeats per request shape; all requests completed.</figcaption></figure>
+        <figure class="chart violet"><h3>Admission method changed which priority absorbed the wait</h3><p class="takeaway">Request count lowered premium p95 TTFT; input-token admission produced more even latency across tiers.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--blue)"></i>Request count</span><span><i class="swatch" style="--key:var(--violet)"></i>Exact input tokens</span></div><div class="pair-axis"><span>1,500 ms</span><span>9,000 ms</span></div><div class="paired" data-min="1500" data-max="9000"><div class="pair-row"><span class="bar-label">Premium</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="1994"></i><i class="marker violet" data-value="2914"></i></div><span class="pair-values">1,994 / 2,914 ms</span></div><div class="pair-row"><span class="bar-label">Gold</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="2745"></i><i class="marker violet" data-value="2836"></i></div><span class="pair-values">2,745 / 2,836 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="5150"></i><i class="marker violet" data-value="3076"></i></div><span class="pair-values">5,150 / 3,076 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="8654"></i><i class="marker violet" data-value="2832"></i></div><span class="pair-values">8,654 / 2,832 ms</span></div></div><p class="decision-line">Use request count when premium latency is the first objective. Test input-token admission when more even service across request sizes matters.</p></figure>
+        <figure class="chart teal"><h3>Exact input-token admission did not consistently improve long-context TTFT</h3><p class="takeaway">Across eight paired seeds, neither admission method was consistently faster.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--blue)"></i>Request count</span><span><i class="swatch" style="--key:var(--teal)"></i>Exact input tokens</span></div><div class="pair-axis"><span>250 ms</span><span>500 ms</span></div><div class="paired" data-min="250" data-max="500"><div class="pair-row"><span class="bar-label">101</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="350.3"></i><i class="marker token" data-value="342.9"></i></div><span class="pair-values">350 / 343 ms</span></div><div class="pair-row"><span class="bar-label">102</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="340.5"></i><i class="marker token" data-value="341.4"></i></div><span class="pair-values">340 / 341 ms</span></div><div class="pair-row"><span class="bar-label">103</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="289.6"></i><i class="marker token" data-value="314.3"></i></div><span class="pair-values">290 / 314 ms</span></div><div class="pair-row"><span class="bar-label">104</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="350.6"></i><i class="marker token" data-value="323.7"></i></div><span class="pair-values">351 / 324 ms</span></div><div class="pair-row"><span class="bar-label">105</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="278.2"></i><i class="marker token" data-value="291.2"></i></div><span class="pair-values">278 / 291 ms</span></div><div class="pair-row"><span class="bar-label">106</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="382.3"></i><i class="marker token" data-value="355.5"></i></div><span class="pair-values">382 / 356 ms</span></div><div class="pair-row"><span class="bar-label">107</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="344.8"></i><i class="marker token" data-value="361.9"></i></div><span class="pair-values">345 / 362 ms</span></div><div class="pair-row"><span class="bar-label">108</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="492.2"></i><i class="marker token" data-value="366.1"></i></div><span class="pair-values">492 / 366 ms</span></div></div><figcaption class="caption">Paired p95 TTFT by seed. Mean difference: 16.4 ms; 95% confidence interval: -23.9 to 56.8 ms.</figcaption></figure>
+        <figure class="chart wide violet"><h3>Preview for v0.10.0: batch eviction restored realtime latency*</h3><p class="takeaway">Realtime p95 TTFT returned near 342 ms; evicted batch requests were retried.</p><div class="bar-chart" data-max="600"><div class="bar-row"><span class="bar-label">Realtime only</span><div class="bar-track"><i class="bar teal" data-value="342"></i></div><span class="bar-value">342 ms</span></div><div class="bar-row"><span class="bar-label">Batch, no protection</span><div class="bar-track"><i class="bar red" data-value="561"></i></div><span class="bar-value">561 ms</span></div><div class="bar-row"><span class="bar-label">Reserved capacity</span><div class="bar-track"><i class="bar teal" data-value="341"></i></div><span class="bar-value">341 ms</span></div><div class="bar-row"><span class="bar-label">Eviction + retry</span><div class="bar-track"><i class="bar violet" data-value="348"></i></div><span class="bar-value">348 ms</span></div></div><figcaption class="caption">Three matched repeats per condition. Evicted requests were retried, and each batch job produced one final result. <a href="../batch-eviction/single-model-replica/results.html">View the complete batch-eviction benchmark.</a></figcaption><p class="decision-line">* Batch eviction is planned for Endpoint Picker v0.10.0.</p></figure>
       </div>
-      <div class="evidence-grid">
-        <article class="evidence blue">
-          <h3>Request shape changes latency</h3>
-          <div class="mini-bars">
-            <div class="mini-row"><span>Chat</span><div class="mini-track"><div class="mini-fill" style="--w:31%"></div></div><span class="mini-value">420 ms</span></div>
-            <div class="mini-row"><span>Agentic</span><div class="mini-track"><div class="mini-fill amber" style="--w:100%"></div></div><span class="mini-value">1,352 ms</span></div>
-          </div>
-          <p>All six runs completed successfully. The longer output shape produced higher p95 TTFT.</p>
-        </article>
-        <article class="evidence">
-          <h3>Long-context difference was inconclusive</h3>
-          <span class="big">16.4 ms</span>
-          <p>Exact-token admission averaged 337.1 ms versus 353.6 ms for request-count admission. The paired result was not statistically significant.</p>
-        </article>
-        <article class="evidence violet">
-          <h3>Mixed traffic changes the tradeoff</h3>
-          <span class="big">919 ms</span>
-          <p>Request-count admission lowered premium p95 TTFT by 919 ms. Token admission produced more even latency across priorities.</p>
-        </article>
-        <article class="evidence blue">
-          <h3>Per-GPU throughput stayed near the one-replica result</h3>
-          <div class="mini-bars">
-            <div class="mini-row"><span>1 GPU</span><div class="mini-track"><div class="mini-fill" style="--w:99.4%"></div></div><span class="mini-value">4.293 RPS</span></div>
-            <div class="mini-row"><span>2 GPUs</span><div class="mini-track"><div class="mini-fill" style="--w:100%"></div></div><span class="mini-value">4.317 RPS</span></div>
-            <div class="mini-row"><span>4 GPUs</span><div class="mini-track"><div class="mini-fill" style="--w:99.7%"></div></div><span class="mini-value">4.302 RPS</span></div>
-          </div>
-          <p>Sparse 429 responses at one and two replicas prevent a rejection-free scale claim.</p>
-        </article>
-        <article class="evidence amber">
-          <h3>Repeated surges recovered</h3>
-          <span class="big">14,889 requests</span>
-          <p>Every request completed. Flow control engaged during both surges, the queue drained, and preemptions stayed at zero.</p>
-        </article>
-        <article class="evidence violet">
-          <h3>Prefix-aware routing needs more tuning</h3>
-          <div class="mini-bars">
-            <div class="mini-row"><span>Random</span><div class="mini-track"><div class="mini-fill amber" style="--w:100%"></div></div><span class="mini-value">1,195 ms</span></div>
-            <div class="mini-row"><span>Prefix-aware</span><div class="mini-track"><div class="mini-fill teal" style="--w:78.3%"></div></div><span class="mini-value">936 ms</span></div>
-          </div>
-          <p>Realtime median improved, but cache hit rate did not and route imbalance increased.</p>
-        </article>
-      </div>
+    </section>
 
-      <details>
-        <summary>Method and claim boundaries</summary>
-        <div class="method">
-          <table>
-            <thead><tr><th>Area</th><th>Method</th><th>Boundary</th></tr></thead>
-            <tbody>
-              <tr><td>Production scenarios</td><td>Open-loop Poisson, noisy sinusoidal phases, three repeats, cache off</td><td>Single NVIDIA H100 and one model replica</td></tr>
-              <tr><td>Calibration sweeps</td><td>Closed-loop fixed concurrency</td><td>Selects settings; does not prove an SLO</td></tr>
-              <tr><td>Scale</td><td>One Endpoint Picker with one, two, and four model replicas</td><td>Sparse 429 responses at smaller pools</td></tr>
-              <tr><td>Prefix routing</td><td>Two model replicas with cache on and shared-prefix traffic</td><td>Directional result with high repeat variance</td></tr>
-              <tr><td>Metrics</td><td>Request rows, policy queues, vLLM running and waiting, KV cache, preemptions, route counts</td><td>Absolute latency depends on model, hardware, request shape, and load</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
+    <section class="band white" id="scale">
+      <div class="section-head"><h2>Scale, recovery, and routing</h2><p>The selected configuration was tested across larger model pools, repeated surges, and cache-aware routing.</p></div>
+      <div class="chart-grid three">
+        <figure class="chart"><h3>Per-GPU throughput held as the model pool grew</h3><p class="takeaway">Served RPS per GPU varied by at most 0.6% across one, two, and four replicas.</p><div class="sweep-chart" role="img" aria-label="Model-pool scaling comparing served requests per second per GPU and premium surge p95 TTFT at one, two, and four replicas." data-labels="1 replica|2 replicas|4 replicas" data-throughput="4.293|4.317|4.302" data-latency="374|340|322" data-throughput-label="RPS per GPU" data-latency-label="p95 TTFT"></div><figcaption class="caption">Premium p95 TTFT ranges: 366–416 ms, 332–349 ms, and 306–349 ms. HTTP 429: 5/3,498, 1/7,014, and 0/13,950.</figcaption></figure>
+        <figure class="chart amber"><h3>The queue drained after both sustained surges</h3><p class="takeaway">Flow control engaged twice; final p95 TTFT returned to 290 ms with zero preemptions.</p><div class="phase-chart" role="img" aria-label="Premium p95 TTFT across baseline, two surge periods, two recoveries, and the final phase." data-labels="Baseline|Surge 1|Recovery 1|Surge 2|Recovery 2|Final" data-values="299|1760|127|1227|279|290"></div><figcaption class="caption">One 30-minute run, 14,889 completed requests, cache off.</figcaption></figure>
+        <figure class="chart violet"><h3>Prefix-aware routing did not improve overall TTFT consistently</h3><p class="takeaway">Median overall p95 TTFT changed by workload, with high variation across repeats.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--amber)"></i>Random</span><span><i class="swatch" style="--key:var(--violet)"></i>Prefix-aware</span></div><div class="pair-axis"><span>500 ms</span><span>60,000 ms · log scale</span></div><div class="paired" data-min="500" data-max="60000" data-scale="log"><div class="pair-row"><span class="bar-label">Realtime</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="1195"></i><i class="marker violet" data-value="936"></i></div><span class="pair-values">1,195 / 936 ms</span></div><div class="pair-row"><span class="bar-label">Agentic</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="4364"></i><i class="marker violet" data-value="3946"></i></div><span class="pair-values">4,364 / 3,946 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="10324"></i><i class="marker violet" data-value="12635"></i></div><span class="pair-values">10,324 / 12,635 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="49763"></i><i class="marker violet" data-value="44462"></i></div><span class="pair-values">49,763 / 44,462 ms</span></div></div><figcaption class="caption">Overall p95 TTFT by workload across three repeats per routing mode. Standard was 22% slower with prefix-aware routing. Cache hit rate did not increase, and median route imbalance rose from 0.9% to 19.1%.</figcaption><p class="decision-line">Keep random routing as the control configuration for this workload.</p></figure>
+      </div>
+      <details><summary>Method and claim boundaries</summary><div class="method"><table><thead><tr><th>Area</th><th>Method</th><th>Boundary</th></tr></thead><tbody><tr><td>Production scenarios</td><td>Open-loop Poisson traffic, noisy sinusoidal phases, three repeats, cache off</td><td>One H100 and one model replica</td></tr><tr><td>Detector comparison</td><td>Three matched repeats for request count and queue depth</td><td>Descriptive medians and ranges; queue-depth-5 fairness remains calibration-only</td></tr><tr><td>Calibration sweeps</td><td>Closed-loop fixed concurrency</td><td>Configuration selection; production traffic carries the latency claim</td></tr><tr><td>Scale</td><td>One Endpoint Picker with one, two, and four model replicas</td><td>Scope: one Endpoint Picker</td></tr><tr><td>Prefix routing</td><td>Two model replicas, cache on, shared-prefix traffic</td><td>High repeat variance; no default change</td></tr><tr><td>Metrics</td><td>Requests, policy queues, vLLM running and waiting, KV cache, preemptions, routes</td><td>Absolute latency depends on model, hardware, request shape, and load</td></tr></tbody></table></div></details>
     </section>
 
     <section class="band white" id="packages">
@@ -361,6 +356,7 @@
         <div class="package"><a href="mixed-production-workload/">Mixed production workload</a><span>four workload shapes together</span></div>
         <div class="package"><a href="long-context-admission/">Long-context admission</a><span>paired size-aware comparison</span></div>
         <div class="package"><a href="batch-interference/">Batch interference</a><span>batch already running in vLLM</span></div>
+        <div class="package"><a href="../batch-eviction/">Batch eviction*</a><span>reserved capacity, eviction, and retry</span></div>
         <div class="package"><a href="multi-replica-scaling/">Model pool scaling</a><span>one, two, and four replicas</span></div>
         <div class="package"><a href="long-stability/">Long stability</a><span>two surges and recovery</span></div>
         <div class="package"><a href="prefix-cache-routing/">Prefix-cache routing</a><span>cache-on routing comparison</span></div>
@@ -371,13 +367,152 @@
 
   <footer>Evidence captured August 2026. Endpoint Picker v0.9.0. No fixed service-level objective is claimed.</footer>
 
+  <script id="traffic-data" type="application/json">{"batch isolation":{"batch":[5.1,4.3,5.1,4.7,5.4,5.6,3.8,4.8,17.7,44.1,39.5,31.9,43.8,39.5,35.7,48.5,36.8,35.1,42.7,3.7,4.6,5.1,3.3,4.4],"realtime":[5.7,7.9,5.4,4.8,5.6,7.1,4.7,5.8,6.7,4.8,6.4,4.7,5.4,5.8,5.8,7.2,6.2,4.8,5.3,7.4,5.5,4.6,6.5,6.9],"standard":[8.5,5,7.2,11.2,10.2,5.4,6.3,7.6,9.6,7.6,6,6.9,10.4,9.3,8.5,6,9.8,8.3,8,6.5,8.6,8.9,9.4,7]},"consolidation":{"realtime tenant A":[7.4,5.2,5,6.3,6.4,6.7,4.7,6,6.3,4.9,5.9,6.2,8.1,4.9,5.7,6.2,6,4.7,5.2,6.8,6.7,5.2,6.9,6.5],"realtime tenant B":[7.4,4.5,6.4,6.2,5.8,6.2,5.9,6.4,6.7,5.8,4.8,6.7,6.9,5.5,5,5.9,6.2,6,5.5,5.2,7.1,6,5.9,6],"standard burst":[5.5,7.7,9.5,6.6,8.2,9,6.5,7.6,19.6,53.5,52,41.1,54.5,48.5,45,56.1,47.3,41.3,57.7,6.1,8.8,9.3,6.5,8.4]},"priority tiers":{"bronze batch":[4.8,4.7,4.9,6.5,4.6,3.9,4.6,6.6,9,19.1,21.5,16.5,16.8,24.9,17.5,18.6,20.7,18.6,17.4,3.6,4.5,5.6,4.2,5],"gold realtime":[6.3,6.1,6.5,7.3,6.9,7.9,4.5,8.3,7,7,5.8,5.9,7.8,8.3,7.8,6.9,7.4,7,7.9,5.7,7.5,8.4,7.6,6.3],"platinum realtime":[7,6,3.3,3.9,6.4,4.6,4.7,4.2,6.1,5,4.4,5.3,6.2,3.8,4.1,4.9,5,3.9,5.7,5.1,4.7,3.4,5,4.4],"silver standard":[6.2,8.1,10.3,8.5,6.4,10.3,9.1,7.9,6.2,17.8,25.2,19.6,19.4,24.8,18,21.9,22.2,15.6,20.1,7.9,7.7,9.1,7.1,7.5]},"same-priority fairness":{"realtime burster A":[6.5,5.3,3.8,6.4,6.3,3.4,6.3,5,26.1,46.9,38.7,54.9,43.8,41.9,53.1,41,41,56,38.9,5.3,4.3,4,5.3,6.1],"realtime peer B":[5.8,3.8,4.9,5.2,6.4,5,3.9,5.8,5.3,5,3.4,4.6,6.4,5.5,4.3,4.8,5.2,4.1,5.1,3.8,6.1,5.3,4.2,4.8],"realtime peer C":[4.3,5.4,7.2,5.5,4.5,3.5,5.1,4.5,5.9,4.4,5.5,4.4,6.4,6.2,2.8,5.1,5.9,6.9,4.5,4.2,5.6,5.7,3.8,2.6]}}</script>
   <script>
     "use strict";
-    const min = Math.log10(300);
-    const span = Math.log10(30000) - min;
-    document.querySelectorAll(".dot[data-ms]").forEach((dot) => {
-      const value = Math.max(300, Math.min(30000, Number(dot.dataset.ms)));
-      dot.style.setProperty("--x", `${((Math.log10(value) - min) / span) * 100}%`);
+
+    const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+    const parseSeries = (value) => value.split("|").map(Number);
+    const parseLabels = (value) => value.split("|");
+    const svgText = (x, y, value, className, anchor = "middle") => `<text x="${x}" y="${y}" class="${className}" text-anchor="${anchor}">${value}</text>`;
+
+    document.querySelectorAll(".sweep-chart").forEach((chart) => {
+      const labels = parseLabels(chart.dataset.labels);
+      const throughput = parseSeries(chart.dataset.throughput);
+      const latency = parseSeries(chart.dataset.latency);
+      const selected = chart.dataset.selected === undefined ? -1 : Number(chart.dataset.selected);
+      const sharedAxis = chart.dataset.sharedAxis === "true";
+      const width = 560, height = 270, left = 62, right = 68, top = 58, bottom = 44;
+      const plotWidth = width - left - right, plotHeight = height - top - bottom;
+      const x = (index) => labels.length === 1 ? left + plotWidth / 2 : left + (index / (labels.length - 1)) * plotWidth;
+      const throughputMax = Math.max(...throughput) * 1.1;
+      const latencyMax = Math.max(...latency) * 1.1;
+      const yThroughput = (value) => top + plotHeight - (value / throughputMax) * plotHeight;
+      const yLatency = (value) => top + plotHeight - (value / latencyMax) * plotHeight;
+      const points = (values, scale) => values.map((value, index) => `${x(index)},${scale(value)}`).join(" ");
+      const selectedBand = selected >= 0 ? `<rect class="plot-selected" x="${Math.max(left, x(selected) - 38)}" y="${top - 7}" width="76" height="${plotHeight + 20}"></rect>${svgText(x(selected), top - 13, "selected", "plot-selected-label")}` : "";
+      const xLabels = labels.map((value, index) => svgText(x(index), height - 14, value, "plot-axis")).join("");
+      if (sharedAxis) {
+        const min = 300, max = 15000;
+        const yShared = (value) => top + plotHeight - ((Math.log10(value) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * plotHeight;
+        const ticks = [300, 1000, 3000, 10000, 15000];
+        const grid = ticks.map((value) => `<line class="plot-grid" x1="${left}" y1="${yShared(value)}" x2="${width - right}" y2="${yShared(value)}"></line>${svgText(left - 7, yShared(value) + 3, number.format(value), "plot-axis", "end")}`).join("");
+        const premiumPoints = throughput.map((value, index) => `<circle class="plot-point premium" cx="${x(index)}" cy="${yShared(value)}" r="5"></circle>${svgText(x(index), yShared(value) - 11, number.format(value), "plot-value")}`).join("");
+        const standardPoints = latency.map((value, index) => `<circle class="plot-point latency" cx="${x(index)}" cy="${yShared(value)}" r="5"></circle>${svgText(x(index), yShared(value) + 19, number.format(value), "plot-value")}`).join("");
+        chart.innerHTML = `<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${svgText(left, 18, `${chart.dataset.throughputLabel} p95 TTFT`, "plot-axis", "start")}${svgText(width - right, 18, `${chart.dataset.latencyLabel} p95 TTFT`, "plot-axis latency", "end")}${svgText(width / 2, 18, "milliseconds · log scale", "plot-axis")}<polyline class="plot-line premium" points="${points(throughput, yShared)}"></polyline><polyline class="plot-line latency" points="${points(latency, yShared)}"></polyline>${premiumPoints}${standardPoints}${xLabels}</svg>`;
+      } else {
+        const tickRatios = [0, .5, 1];
+        const grid = tickRatios.map((ratio) => {
+          const y = top + ratio * plotHeight;
+          const throughputValue = throughputMax * (1 - ratio);
+          const latencyValue = latencyMax * (1 - ratio);
+          return `<line class="plot-grid" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"></line>${svgText(left - 7, y + 3, number.format(throughputValue), "plot-axis throughput", "end")}${svgText(width - right + 7, y + 3, number.format(latencyValue), "plot-axis latency", "start")}`;
+        }).join("");
+        const throughputPoints = throughput.map((value, index) => `<circle class="plot-point throughput" cx="${x(index)}" cy="${yThroughput(value)}" r="5"></circle>${svgText(x(index), yThroughput(value) - 11, number.format(value), "plot-value")}`).join("");
+        const latencyPoints = latency.map((value, index) => `<circle class="plot-point latency" cx="${x(index)}" cy="${yLatency(value)}" r="5"></circle>${svgText(x(index), yLatency(value) + 19, number.format(value), "plot-value")}`).join("");
+        chart.innerHTML = `<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${svgText(left, 18, chart.dataset.throughputLabel || "Steady throughput (RPS)", "plot-axis throughput", "start")}${svgText(width - right, 18, `${chart.dataset.latencyLabel} (ms)`, "plot-axis latency", "end")}<polyline class="plot-line throughput" points="${points(throughput, yThroughput)}"></polyline><polyline class="plot-line latency" points="${points(latency, yLatency)}"></polyline>${throughputPoints}${latencyPoints}${xLabels}</svg>`;
+      }
+    });
+
+    document.querySelectorAll(".range-chart").forEach((chart) => {
+      const min = Number(chart.dataset.min);
+      const max = Number(chart.dataset.max);
+      chart.querySelectorAll(".range-row").forEach((row) => {
+        const data = row.querySelector("[data-low]");
+        const position = (value) => `${((Number(value) - min) / (max - min)) * 100}%`;
+        row.style.setProperty("--low", position(data.dataset.low));
+        row.style.setProperty("--mid", position(data.dataset.value));
+        row.style.setProperty("--high", position(data.dataset.high));
+      });
+    });
+
+    document.querySelectorAll(".heatmap").forEach((chart) => {
+      const cells = [...chart.querySelectorAll(".heat-cell[data-value]")];
+      const max = Math.max(...cells.map((cell) => Number(cell.dataset.value)));
+      cells.forEach((cell) => {
+        const ratio = Number(cell.dataset.value) / max;
+        cell.style.backgroundColor = `rgba(197, 106, 0, ${0.1 + ratio * 0.75})`;
+        if (ratio > 0.58) cell.style.color = "#ffffff";
+      });
+    });
+
+    document.querySelectorAll(".phase-chart").forEach((chart) => {
+      const labels = parseLabels(chart.dataset.labels);
+      const values = parseSeries(chart.dataset.values);
+      const width = 560, height = 235, left = 45, right = 18, top = 36, bottom = 48;
+      const plotWidth = width - left - right, plotHeight = height - top - bottom;
+      const max = Math.ceil(Math.max(...values) / 500) * 500;
+      const x = (index) => left + (index / (labels.length - 1)) * plotWidth;
+      const y = (value) => top + plotHeight - (value / max) * plotHeight;
+      const grid = [0, max / 2, max].map((value) => `<line class="plot-grid" x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}"></line>${svgText(left - 6, y(value) + 3, number.format(value), "plot-axis", "end")}`).join("");
+      const surgeBands = [1, 3].map((index) => `<rect x="${x(index) - 34}" y="${top}" width="68" height="${plotHeight}" fill="#fff2dc"></rect>`).join("");
+      const points = values.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+      const dots = values.map((value, index) => `<circle class="plot-point ${index === 1 || index === 3 ? "latency" : "throughput"}" cx="${x(index)}" cy="${y(value)}" r="5"></circle>${svgText(x(index), y(value) - 11, number.format(value), "plot-value")}${svgText(x(index), height - 14, labels[index], "plot-axis")}`).join("");
+      chart.innerHTML = `<svg class="phase-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${surgeBands}${grid}${svgText(left, 18, "Premium p95 TTFT (ms)", "plot-axis latency", "start")}<polyline class="plot-line latency" points="${points}"></polyline>${dots}</svg>`;
+    });
+
+    document.querySelectorAll(".bar-chart").forEach((chart) => {
+      const min = Number(chart.dataset.min || 0);
+      const max = Number(chart.dataset.max);
+      const logarithmic = chart.dataset.scale === "log";
+      chart.querySelectorAll(".bar[data-value]").forEach((bar) => {
+        const raw = Number(bar.dataset.value);
+        const value = Math.max(min, Math.min(max, raw));
+        const ratio = logarithmic
+          ? (Math.log10(value) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))
+          : (value - min) / (max - min);
+        bar.style.width = `${Math.max(1.5, ratio * 100)}%`;
+      });
+    });
+
+    document.querySelectorAll(".paired").forEach((chart) => {
+      const min = Number(chart.dataset.min);
+      const max = Number(chart.dataset.max);
+      const logarithmic = chart.dataset.scale === "log";
+      chart.querySelectorAll(".pair-row").forEach((row) => {
+        const markers = [...row.querySelectorAll(".marker[data-value]")];
+        const positions = markers.map((marker) => {
+          const value = Number(marker.dataset.value);
+          const position = logarithmic
+            ? ((Math.log10(value) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 100
+            : ((value - min) / (max - min)) * 100;
+          marker.style.setProperty("--x", `${position}%`);
+          return position;
+        });
+        const line = row.querySelector(".pair-line");
+        line.style.setProperty("--left", `${Math.min(...positions)}%`);
+        line.style.setProperty("--width", `${Math.abs(positions[0] - positions[1])}%`);
+      });
+    });
+
+    const traffic = JSON.parse(document.getElementById("traffic-data").textContent);
+    const scenarioOrder = ["priority tiers", "batch isolation", "consolidation", "same-priority fairness"];
+    const colors = ["#087f72", "#2d6cdf", "#c56a00", "#b83232"];
+    const label = (value) => value.replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const trafficGrid = document.getElementById("traffic-grid");
+    scenarioOrder.forEach((scenarioName) => {
+      const series = traffic[scenarioName];
+      const names = Object.keys(series);
+      const peak = Math.max(...names.flatMap((name) => series[name]));
+      const maxY = Math.ceil(peak / 10) * 10;
+      const width = 420, height = 160, left = 44, right = 8, top = 18, bottom = 26;
+      const plotWidth = width - left - right, plotHeight = height - top - bottom;
+      const x = (index) => left + (index / 23) * plotWidth;
+      const y = (value) => top + plotHeight - (value / maxY) * plotHeight;
+      const gridlines = [0, maxY / 2, maxY].map((value) =>
+        `<line class="traffic-gridline" x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}"></line><text class="traffic-axis-label" x="${left - 5}" y="${y(value) + 3}" text-anchor="end">${value}</text>`
+      ).join("");
+      const paths = names.map((name, index) => {
+        const points = series[name].map((value, point) => `${x(point)},${y(value)}`).join(" ");
+        return `<polyline class="traffic-line" points="${points}" stroke="${colors[index]}"></polyline>`;
+      }).join("");
+      const surgeX = left + (100 / 240) * plotWidth;
+      const surgeWidth = (75 / 240) * plotWidth;
+      const legend = names.map((name, index) => `<span class="traffic-key"><i class="traffic-swatch" style="--key-color:${colors[index]}"></i>${label(name)}</span>`).join("");
+      const article = document.createElement("article");
+      article.className = "traffic-small";
+      article.innerHTML = `<h4>${label(scenarioName)}</h4><div class="traffic-legend">${legend}</div><svg class="traffic-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Requests sent to the service per second for ${scenarioName}, selected repeat 2"><text class="traffic-axis-label" x="1" y="10">requests/s</text><rect class="traffic-surge" x="${surgeX}" y="${top}" width="${surgeWidth}" height="${plotHeight}"></rect>${gridlines}${paths}<text class="traffic-axis-label" x="${left}" y="${height - 5}">0 s</text><text class="traffic-axis-label" x="${left + plotWidth / 2}" y="${height - 5}" text-anchor="middle">120 s</text><text class="traffic-axis-label" x="${width - right}" y="${height - 5}" text-anchor="end">240 s</text><text class="traffic-axis-label" x="${surgeX + 4}" y="${top + 11}">surge</text></svg>`;
+      trafficGrid.appendChild(article);
     });
   </script>
 </body>
