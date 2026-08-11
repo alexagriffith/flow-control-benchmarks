@@ -1,0 +1,17 @@
+run_name,admission_method,seed,data_quality_passed,proof_checks_passed,offered_schedule_passed,metric_capture_passed,flow_control_metrics_passed,headers_passed,route_evidence_passed,request_shapes_passed,stream_integrity_passed,flow_control_engaged,peak_endpoint_picker_queue_requests,peak_pool_saturation_ratio,prefix_cache_queries,prefix_cache_hits,vllm_preemptions,endpoint_picker_restarted
+request-count admission - seed 101,request-count admission,101,true,false,true,true,true,true,true,true,true,false,0.0,0.117188,0.0,0.0,0.0,false
+exact-token admission - seed 101,exact-token admission,101,true,true,true,true,true,true,true,true,true,true,2.0,1.0511,0.0,0.0,0.0,false
+request-count admission - seed 102,request-count admission,102,true,false,true,true,true,true,true,true,true,false,0.0,0.140625,0.0,0.0,0.0,false
+exact-token admission - seed 102,exact-token admission,102,true,true,true,true,true,true,true,true,true,true,3.0,1.499925,0.0,0.0,0.0,false
+request-count admission - seed 103,request-count admission,103,true,false,true,true,true,true,true,true,true,false,0.0,0.152344,0.0,0.0,0.0,false
+exact-token admission - seed 103,exact-token admission,103,true,true,true,true,true,true,true,true,true,true,3.0,1.5255,0.0,0.0,0.0,false
+request-count admission - seed 104,request-count admission,104,true,false,true,true,true,true,true,true,true,false,0.0,0.101562,0.0,0.0,0.0,false
+exact-token admission - seed 104,exact-token admission,104,true,true,true,true,true,true,true,true,true,true,2.0,1.57665,0.0,0.0,0.0,false
+request-count admission - seed 105,request-count admission,105,true,false,true,true,true,true,true,true,true,false,0.0,0.101562,0.0,0.0,0.0,false
+exact-token admission - seed 105,exact-token admission,105,true,true,true,true,true,true,true,true,true,true,2.0,1.127825,0.0,0.0,0.0,false
+request-count admission - seed 106,request-count admission,106,true,true,true,true,true,true,true,true,true,true,1.0,0.132812,0.0,0.0,0.0,false
+exact-token admission - seed 106,exact-token admission,106,true,true,true,true,true,true,true,true,true,true,4.0,2.025475,0.0,0.0,0.0,false
+request-count admission - seed 107,request-count admission,107,true,false,true,true,true,true,true,true,true,false,0.0,0.160156,0.0,0.0,0.0,false
+exact-token admission - seed 107,exact-token admission,107,true,true,true,true,true,true,true,true,true,true,3.0,1.5255,0.0,0.0,0.0,false
+request-count admission - seed 108,request-count admission,108,true,false,true,true,true,true,true,true,true,false,0.0,0.265625,0.0,0.0,0.0,false
+exact-token admission - seed 108,exact-token admission,108,true,true,true,true,true,true,true,true,true,true,7.0,1.551075,0.0,0.0,0.0,false

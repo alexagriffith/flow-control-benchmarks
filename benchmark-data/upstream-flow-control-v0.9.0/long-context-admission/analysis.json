@@ -1,0 +1,74 @@
+{
+  "schema": "stable-upstream-long-context-admission-analysis-v1",
+  "business_question": "Does exact input-token admission protect realtime latency from a burst of large requests better than request-count admission?",
+  "answer": "Exact-token admission activated flow-control queues in every run. Mean realtime burst p95 TTFT was 337 ms with exact-token admission and 354 ms with request-count admission. The 16 ms difference was not statistically significant.",
+  "decision": "Keep request-count admission at 128 requests with 10% headroom as the default. Use exact-token admission when request sizes vary enough to need size-aware queue activation.",
+  "claim_boundary": "The 95% confidence interval for the paired difference ranged from -24 ms to 57 ms and included zero. The data proves detector behavior, not a general latency advantage.",
+  "primary_metric": "premium burst p95 TTFT (ms)",
+  "difference_definition": "request-count minus exact-token",
+  "pairs": [
+    {
+      "seed": 101,
+      "request_p95_ms": 350.32200813293457,
+      "token_p95_ms": 342.93580055236816,
+      "difference_ms": 7.386207580566406
+    },
+    {
+      "seed": 102,
+      "request_p95_ms": 340.49081802368164,
+      "token_p95_ms": 341.38989448547363,
+      "difference_ms": -0.8990764617919922
+    },
+    {
+      "seed": 103,
+      "request_p95_ms": 289.6463871002197,
+      "token_p95_ms": 314.2857551574707,
+      "difference_ms": -24.639368057250977
+    },
+    {
+      "seed": 104,
+      "request_p95_ms": 350.62146186828613,
+      "token_p95_ms": 323.6865997314453,
+      "difference_ms": 26.93486213684082
+    },
+    {
+      "seed": 105,
+      "request_p95_ms": 278.1951427459717,
+      "token_p95_ms": 291.2442684173584,
+      "difference_ms": -13.049125671386719
+    },
+    {
+      "seed": 106,
+      "request_p95_ms": 382.265567779541,
+      "token_p95_ms": 355.5018901824951,
+      "difference_ms": 26.7636775970459
+    },
+    {
+      "seed": 107,
+      "request_p95_ms": 344.80834007263184,
+      "token_p95_ms": 361.89866065979004,
+      "difference_ms": -17.090320587158203
+    },
+    {
+      "seed": 108,
+      "request_p95_ms": 492.2347068786621,
+      "token_p95_ms": 366.0855293273926,
+      "difference_ms": 126.14917755126953
+    }
+  ],
+  "statistics": {
+    "paired_seeds": 8,
+    "request_count_mean_p95_ttft_ms": 353.573054,
+    "exact_token_mean_p95_ttft_ms": 337.12855,
+    "mean_difference_ms": 16.444504,
+    "mean_difference_percent": 4.65095,
+    "paired_t": 0.963378,
+    "degrees_of_freedom": 7,
+    "two_sided_p_value": 0.36745,
+    "confidence_interval_95_ms": [
+      -23.918753,
+      56.807762
+    ],
+    "claim_advances": false
+  }
+}

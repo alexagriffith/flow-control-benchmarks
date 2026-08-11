@@ -1,0 +1,17 @@
+run_name,admission_method,seed,offered_requests,http_200_requests,non_200_requests,realtime_baseline_p95_ttft_ms,realtime_burst_p95_ttft_ms,realtime_burst_p99_ttft_ms,realtime_burst_p95_tpot_ms_per_token,realtime_burst_p95_e2e_latency_ms,realtime_recovery_p95_ttft_ms,long_context_burst_p95_ttft_ms,peak_endpoint_picker_queue_requests,peak_pool_saturation_ratio,peak_vllm_waiting_requests,peak_kv_cache_usage_percent,vllm_preemptions,data_quality_passed,flow_control_engaged
+request-count admission - seed 101,request-count admission,101,2325,2325,0,125.108242,350.322008,723.203421,16.125964,2064.416647,125.484467,678.730249,0.0,0.117188,5.0,4.953133,0.0,true,false
+exact-token admission - seed 101,exact-token admission,101,2325,2325,0,127.367258,342.935801,415.52639,15.503893,1984.725714,131.392241,667.71698,2.0,1.0511,2.0,5.594747,0.0,true,true
+request-count admission - seed 102,request-count admission,102,2298,2298,0,125.847578,340.490818,664.788008,17.440841,2232.682705,125.4704,714.062214,0.0,0.140625,4.0,7.198458,0.0,true,false
+exact-token admission - seed 102,exact-token admission,102,2298,2298,0,128.235817,341.389894,430.649042,15.055463,1927.383661,131.518364,607.358694,3.0,1.499925,1.0,5.349826,0.0,true,true
+request-count admission - seed 103,request-count admission,103,2325,2325,0,126.709938,289.646387,437.087059,14.740568,1887.035131,126.0221,630.212307,0.0,0.152344,3.0,7.267504,0.0,true,false
+exact-token admission - seed 103,exact-token admission,103,2325,2325,0,129.401207,314.285755,432.950735,14.790645,1893.436432,135.77342,699.484825,3.0,1.5255,2.0,5.204568,0.0,true,true
+request-count admission - seed 104,request-count admission,104,2244,2244,0,127.432585,350.621462,655.315876,14.871512,1903.863668,124.691486,691.802263,0.0,0.101562,2.0,4.610504,0.0,true,false
+exact-token admission - seed 104,exact-token admission,104,2244,2244,0,129.316568,323.6866,402.959585,13.766136,1762.377501,129.752636,712.765217,2.0,1.57665,2.0,4.729056,0.0,true,true
+request-count admission - seed 105,request-count admission,105,2328,2328,0,123.675346,278.195143,408.329964,15.185639,1943.986654,129.582644,615.259886,0.0,0.101562,4.0,4.576632,0.0,true,false
+exact-token admission - seed 105,exact-token admission,105,2328,2328,0,129.858971,291.244268,426.918745,14.512256,1857.950211,131.85215,680.588961,2.0,1.127825,3.0,4.714726,0.0,true,true
+request-count admission - seed 106,request-count admission,106,2352,2352,0,125.977039,382.265568,825.178862,18.769208,2402.710915,123.566151,1025.083303,1.0,0.132812,2.0,8.307115,0.0,true,true
+exact-token admission - seed 106,exact-token admission,106,2352,2352,0,130.279064,355.50189,480.242014,16.218655,2076.196671,132.410526,723.256826,4.0,2.025475,2.0,5.771273,0.0,true,true
+request-count admission - seed 107,request-count admission,107,2315,2315,0,126.18804,344.80834,490.317822,14.534332,1860.684872,123.035192,674.334526,0.0,0.160156,2.0,5.235183,0.0,true,false
+exact-token admission - seed 107,exact-token admission,107,2315,2315,0,132.70092,361.898661,427.84214,16.6087,2126.361609,132.982016,734.200239,3.0,1.5255,2.0,4.71668,0.0,true,true
+request-count admission - seed 108,request-count admission,108,2266,2266,0,124.499559,492.234707,1319.70787,26.841976,3436.045885,120.817661,1057.070971,0.0,0.265625,5.0,15.764173,0.0,true,false
+exact-token admission - seed 108,exact-token admission,108,2266,2266,0,127.785921,366.085529,508.885622,15.902318,2035.788774,132.389069,725.408792,7.0,1.551075,3.0,4.564256,0.0,true,true

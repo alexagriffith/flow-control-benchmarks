@@ -1,0 +1,127 @@
+{
+  "schema": "stable-upstream-long-context-admission-benchmark-v1",
+  "date": "2026-08-10",
+  "topology": {
+    "endpoint_picker_replicas": 1,
+    "model_replicas": 2,
+    "gpus_per_model_replica": 1
+  },
+  "hardware": {
+    "gpu_per_model_replica": "NVIDIA H100"
+  },
+  "model_service": {
+    "model": "GPT-OSS 20B",
+    "runtime": "Red Hat AI Inference Server vLLM",
+    "tensor_parallel_size": 1,
+    "max_model_len": 32768,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 128,
+    "gpu_memory_utilization": 0.9,
+    "prefix_cache": "disabled"
+  },
+  "endpoint_picker": {
+    "version": "llm-d Endpoint Picker v0.9.0",
+    "flow_control_gate": "enabled",
+    "picker": "random",
+    "priority_bands": [
+      100,
+      0
+    ],
+    "fairness": "round-robin within each priority band",
+    "admission_arms": [
+      {
+        "name": "request-count admission",
+        "concurrency_mode": "requests",
+        "max_concurrency_per_model_replica": 128,
+        "headroom": 0.1
+      },
+      {
+        "name": "exact-token admission",
+        "concurrency_mode": "tokens",
+        "max_input_token_concurrency_per_model_replica": 20000,
+        "headroom": 0.25,
+        "tokenizer": "vLLM model tokenizer",
+        "estimated_output_tokens_included": false
+      }
+    ]
+  },
+  "traffic": {
+    "name": "realtime-with-long-context-burst",
+    "duration_s": 270,
+    "analysis_windows": [
+      {
+        "name": "baseline",
+        "start_s": 20,
+        "end_s": 55
+      },
+      {
+        "name": "burst",
+        "start_s": 100,
+        "end_s": 190
+      },
+      {
+        "name": "recovery",
+        "start_s": 230,
+        "end_s": 260
+      }
+    ],
+    "tenants": [
+      {
+        "fairness_id": "realtime-chat",
+        "priority": 100,
+        "input_tokens": 1024,
+        "output_tokens": 128,
+        "phases": [
+          {
+            "start_s": 0,
+            "duration_s": 270,
+            "rate_pattern": "noisy_sinusoidal",
+            "rate_center": 8,
+            "rate_amplitude": 1.5,
+            "period_s": 37,
+            "phase_offset": 0.0,
+            "rate_noise": 0.4,
+            "rate_spike_probability": 0.02
+          }
+        ]
+      },
+      {
+        "fairness_id": "standard-long-context",
+        "priority": 0,
+        "input_tokens": 20000,
+        "output_tokens": 128,
+        "phases": [
+          {
+            "start_s": 60,
+            "duration_s": 150,
+            "rate_pattern": "noisy_sinusoidal",
+            "rate_center": 1.0,
+            "rate_amplitude": 0.25,
+            "period_s": 29,
+            "phase_offset": 0.4,
+            "rate_noise": 0.05,
+            "rate_spike_probability": 0.02,
+            "ramp_s": 8
+          }
+        ]
+      }
+    ]
+  },
+  "execution": {
+    "arrival": "open-loop Poisson replay with noisy sinusoidal phases",
+    "duration_seconds": 270,
+    "paired_holdout_seeds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+    ],
+    "matched_trace_per_seed": true,
+    "load_generator": "GuideLLM",
+    "cache_mode": "off"
+  }
+}

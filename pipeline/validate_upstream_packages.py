@@ -10,6 +10,8 @@ import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from validate_long_context_package import validate_long_context_package
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "benchmark-data" / "upstream-flow-control-v0.9.0"
@@ -922,6 +924,7 @@ def main() -> int:
     validate_batch_interference(errors)
     validate_mixed_production_workload(errors)
     validate_prefix_cache_routing(errors)
+    validate_long_context_package(errors, ROOT)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -935,6 +938,7 @@ def main() -> int:
     print("- Batch interference: 6 runs, 3,600 request rows")
     print("- Mixed production workload: 6 runs, 9,132 request rows")
     print("- Prefix-cache routing: 6 runs, 44,880 request rows")
+    print("- Long-context admission: 16 runs, 36,906 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

@@ -13,6 +13,7 @@ traffic samples, system metrics, evidence gates, analysis, and claim boundary.
 | [Model pool scaling](multi-replica-scaling/) | Does priority protection remain stable as the model pool scales from one to four replicas? |
 | [Long stability](long-stability/) | Does the selected configuration recover after repeated production-shaped surges? |
 | [Prefix-cache routing](prefix-cache-routing/) | Does prefix-aware routing improve service under a saturated mixed workload when prefix caching is enabled? |
+| [Long-context admission](long-context-admission/) | Does exact input-token admission detect large-request pressure more reliably than request-count admission? |
 
 Rejected attempts and exploratory points are not included. Repository-level
 charts and conclusions are updated only after the individual packages pass
