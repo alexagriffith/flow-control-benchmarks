@@ -9,6 +9,7 @@ traffic samples, system metrics, evidence gates, analysis, and claim boundary.
 | [Selected workload shapes](selected-workload-shapes/) | Do the selected flow-control settings keep all requests served across chat-short-output and agentic-longer-output shapes under surge? |
 | [Request-concurrency priority tuning](request-concurrency-priority-tuning/) | How does the request cap trade realtime latency against lower-priority latency? |
 | [Request and token admission calibration](request-and-token-admission-calibration/) | When should request size affect how much work enters vLLM? |
+| [Production scenarios](production-scenarios/) | Does the selected configuration protect priority traffic across tiering, batch isolation, consolidation, and same-priority fairness? |
 | [Batch interference baseline](batch-interference/) | How much can batch work already running in vLLM increase realtime latency? |
 | [Mixed production workload](mixed-production-workload/) | Which admission method better protects realtime traffic when four workload shapes share one model server? |
 | [Model pool scaling](multi-replica-scaling/) | Does priority protection remain stable as the model pool scales from one to four replicas? |

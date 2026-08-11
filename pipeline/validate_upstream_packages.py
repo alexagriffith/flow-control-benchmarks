@@ -14,6 +14,7 @@ from validate_long_context_package import validate_long_context_package
 from validate_engine_configuration_package import validate_engine_configuration_package
 from validate_utilization_detector_package import validate_utilization_detector_package
 from validate_admission_detector_package import validate_admission_detector_package
+from validate_production_scenarios_package import validate_production_scenarios_package
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +28,10 @@ PREFIX_CACHE = DATA / "prefix-cache-routing"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
+    "forbidden customer identifier": re.compile(
+        r"ca" + r"pital[ _-]*o" + r"ne|ca" + r"pitalo" + r"ne",
+        re.IGNORECASE,
+    ),
     "local user path": re.compile(r"/Users/|\\Users\\"),
     "local username": re.compile(r"algriffi", re.IGNORECASE),
     "private namespace": re.compile(r"llm-test", re.IGNORECASE),
@@ -931,6 +936,7 @@ def main() -> int:
     validate_engine_configuration_package(errors, ROOT)
     validate_utilization_detector_package(errors, ROOT)
     validate_admission_detector_package(errors, ROOT)
+    validate_production_scenarios_package(errors, ROOT)
     scan_sensitive_text(errors)
     if errors:
         print("Stable-upstream promotion validation failed:")
@@ -948,6 +954,7 @@ def main() -> int:
     print("- Engine configuration: 25 runs, 179,278 request rows")
     print("- Utilization detector calibration: 23 runs, 78,674 request rows")
     print("- Request and token admission: 20 runs, 112,165 request rows")
+    print("- Production scenarios: 23 runs, 194,923 request rows")
     print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
     print("- Public-content scan: passed")
     return 0

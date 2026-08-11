@@ -1,0 +1,522 @@
+{
+  "experiment": "production-scenarios",
+  "selected_configuration_results": {
+    "priority tiers": {
+      "platinum realtime": {
+        "runs": 3,
+        "median_p95_ttft_ms": 404.415607,
+        "range_p95_ttft_ms": [
+          367.857456,
+          485.809803
+        ],
+        "median_p99_ttft_ms": 474.006891,
+        "median_p95_tpot_ms_per_token": 22.901006
+      },
+      "gold realtime": {
+        "runs": 3,
+        "median_p95_ttft_ms": 510.768414,
+        "range_p95_ttft_ms": [
+          414.258242,
+          594.352722
+        ],
+        "median_p99_ttft_ms": 571.871519,
+        "median_p95_tpot_ms_per_token": 23.541288
+      },
+      "silver standard": {
+        "runs": 3,
+        "median_p95_ttft_ms": 656.145811,
+        "range_p95_ttft_ms": [
+          592.422009,
+          777.571678
+        ],
+        "median_p99_ttft_ms": 795.123577,
+        "median_p95_tpot_ms_per_token": 24.416706
+      },
+      "bronze batch": {
+        "runs": 3,
+        "median_p95_ttft_ms": 13263.902187,
+        "range_p95_ttft_ms": [
+          11458.435297,
+          17728.231668
+        ],
+        "median_p99_ttft_ms": 13783.685684,
+        "median_p95_tpot_ms_per_token": 122.552954
+      }
+    },
+    "batch isolation": {
+      "realtime": {
+        "runs": 3,
+        "median_p95_ttft_ms": 441.851854,
+        "range_p95_ttft_ms": [
+          370.687008,
+          669.149399
+        ],
+        "median_p99_ttft_ms": 567.050695,
+        "median_p95_tpot_ms_per_token": 23.070568
+      },
+      "standard": {
+        "runs": 3,
+        "median_p95_ttft_ms": 515.385866,
+        "range_p95_ttft_ms": [
+          435.703516,
+          1017.155886
+        ],
+        "median_p99_ttft_ms": 641.850948,
+        "median_p95_tpot_ms_per_token": 23.372663
+      },
+      "batch": {
+        "runs": 3,
+        "median_p95_ttft_ms": 13077.339411,
+        "range_p95_ttft_ms": [
+          11424.613237,
+          15241.892099
+        ],
+        "median_p99_ttft_ms": 13491.666794,
+        "median_p95_tpot_ms_per_token": 119.545
+      }
+    },
+    "consolidation": {
+      "realtime tenant A": {
+        "runs": 3,
+        "median_p95_ttft_ms": 508.764744,
+        "range_p95_ttft_ms": [
+          503.305435,
+          558.259726
+        ],
+        "median_p99_ttft_ms": 753.200054,
+        "median_p95_tpot_ms_per_token": 23.284018
+      },
+      "realtime tenant B": {
+        "runs": 3,
+        "median_p95_ttft_ms": 555.970907,
+        "range_p95_ttft_ms": [
+          504.601955,
+          598.624945
+        ],
+        "median_p99_ttft_ms": 693.327188,
+        "median_p95_tpot_ms_per_token": 23.431359
+      },
+      "standard burst": {
+        "runs": 3,
+        "median_p95_ttft_ms": 25891.952991,
+        "range_p95_ttft_ms": [
+          22833.296537,
+          27306.847334
+        ],
+        "median_p99_ttft_ms": 26349.029064,
+        "median_p95_tpot_ms_per_token": 219.079442
+      }
+    },
+    "same-priority fairness": {
+      "realtime burster A": {
+        "runs": 3,
+        "median_p95_ttft_ms": 12096.770525,
+        "range_p95_ttft_ms": [
+          10248.920918,
+          14950.17004
+        ],
+        "median_p99_ttft_ms": 12892.339706,
+        "median_p95_tpot_ms_per_token": 111.665351
+      },
+      "realtime peer B": {
+        "runs": 3,
+        "median_p95_ttft_ms": 527.397871,
+        "range_p95_ttft_ms": [
+          508.270264,
+          618.970633
+        ],
+        "median_p99_ttft_ms": 613.160372,
+        "median_p95_tpot_ms_per_token": 23.142617
+      },
+      "realtime peer C": {
+        "runs": 3,
+        "median_p95_ttft_ms": 570.042372,
+        "range_p95_ttft_ms": [
+          563.451052,
+          675.481558
+        ],
+        "median_p99_ttft_ms": 750.711679,
+        "median_p95_tpot_ms_per_token": 23.346014
+      }
+    }
+  },
+  "matched_detector_comparisons": {
+    "consolidation": {
+      "queue depth 2": {
+        "realtime tenant A": {
+          "runs": 3,
+          "median_p95_ttft_ms": 4711.060524,
+          "range_p95_ttft_ms": [
+            4102.216721,
+            5359.943867
+          ],
+          "median_p99_ttft_ms": 5444.03863,
+          "median_p95_tpot_ms_per_token": 56.96732
+        },
+        "realtime tenant B": {
+          "runs": 3,
+          "median_p95_ttft_ms": 4566.735983,
+          "range_p95_ttft_ms": [
+            4023.555756,
+            5056.685448
+          ],
+          "median_p99_ttft_ms": 5422.817707,
+          "median_p95_tpot_ms_per_token": 56.07767
+        },
+        "standard burst": {
+          "runs": 3,
+          "median_p95_ttft_ms": 33176.121712,
+          "range_p95_ttft_ms": [
+            26404.836893,
+            45351.89867
+          ],
+          "median_p99_ttft_ms": 33886.860847,
+          "median_p95_tpot_ms_per_token": 279.401045
+        }
+      },
+      "queue depth 5": {
+        "realtime tenant A": {
+          "runs": 3,
+          "median_p95_ttft_ms": 5117.438555,
+          "range_p95_ttft_ms": [
+            4728.724957,
+            5253.631115
+          ],
+          "median_p99_ttft_ms": 5889.038086,
+          "median_p95_tpot_ms_per_token": 61.769705
+        },
+        "realtime tenant B": {
+          "runs": 3,
+          "median_p95_ttft_ms": 4906.474113,
+          "range_p95_ttft_ms": [
+            4656.904221,
+            5498.409033
+          ],
+          "median_p99_ttft_ms": 5921.866417,
+          "median_p95_tpot_ms_per_token": 62.690908
+        },
+        "standard burst": {
+          "runs": 3,
+          "median_p95_ttft_ms": 51462.030649,
+          "range_p95_ttft_ms": [
+            36753.162622,
+            60899.498701
+          ],
+          "median_p99_ttft_ms": 51885.482073,
+          "median_p95_tpot_ms_per_token": 424.249319
+        }
+      },
+      "request count 128, 10% headroom": {
+        "realtime tenant A": {
+          "runs": 3,
+          "median_p95_ttft_ms": 508.764744,
+          "range_p95_ttft_ms": [
+            503.305435,
+            558.259726
+          ],
+          "median_p99_ttft_ms": 753.200054,
+          "median_p95_tpot_ms_per_token": 23.284018
+        },
+        "realtime tenant B": {
+          "runs": 3,
+          "median_p95_ttft_ms": 555.970907,
+          "range_p95_ttft_ms": [
+            504.601955,
+            598.624945
+          ],
+          "median_p99_ttft_ms": 693.327188,
+          "median_p95_tpot_ms_per_token": 23.431359
+        },
+        "standard burst": {
+          "runs": 3,
+          "median_p95_ttft_ms": 25891.952991,
+          "range_p95_ttft_ms": [
+            22833.296537,
+            27306.847334
+          ],
+          "median_p99_ttft_ms": 26349.029064,
+          "median_p95_tpot_ms_per_token": 219.079442
+        }
+      }
+    },
+    "same-priority fairness": {
+      "queue depth 2": {
+        "realtime burster A": {
+          "runs": 3,
+          "median_p95_ttft_ms": 17303.201914,
+          "range_p95_ttft_ms": [
+            16603.911161,
+            17808.835745
+          ],
+          "median_p99_ttft_ms": 17860.060692,
+          "median_p95_tpot_ms_per_token": 154.847242
+        },
+        "realtime peer B": {
+          "runs": 3,
+          "median_p95_ttft_ms": 5022.908211,
+          "range_p95_ttft_ms": [
+            4716.146469,
+            5079.794407
+          ],
+          "median_p99_ttft_ms": 5747.056007,
+          "median_p95_tpot_ms_per_token": 58.738872
+        },
+        "realtime peer C": {
+          "runs": 3,
+          "median_p95_ttft_ms": 4519.311428,
+          "range_p95_ttft_ms": [
+            4463.540316,
+            4769.00506
+          ],
+          "median_p99_ttft_ms": 5593.36257,
+          "median_p95_tpot_ms_per_token": 55.305403
+        }
+      },
+      "request count 128, 10% headroom": {
+        "realtime burster A": {
+          "runs": 3,
+          "median_p95_ttft_ms": 12096.770525,
+          "range_p95_ttft_ms": [
+            10248.920918,
+            14950.17004
+          ],
+          "median_p99_ttft_ms": 12892.339706,
+          "median_p95_tpot_ms_per_token": 111.665351
+        },
+        "realtime peer B": {
+          "runs": 3,
+          "median_p95_ttft_ms": 527.397871,
+          "range_p95_ttft_ms": [
+            508.270264,
+            618.970633
+          ],
+          "median_p99_ttft_ms": 613.160372,
+          "median_p95_tpot_ms_per_token": 23.142617
+        },
+        "realtime peer C": {
+          "runs": 3,
+          "median_p95_ttft_ms": 570.042372,
+          "range_p95_ttft_ms": [
+            563.451052,
+            675.481558
+          ],
+          "median_p99_ttft_ms": 750.711679,
+          "median_p95_tpot_ms_per_token": 23.346014
+        }
+      }
+    }
+  },
+  "calibration_only": {
+    "batch queue depth 2": {
+      "realtime": {
+        "runs": 1,
+        "median_p95_ttft_ms": 4519.713402,
+        "range_p95_ttft_ms": [
+          4519.713402,
+          4519.713402
+        ],
+        "median_p99_ttft_ms": 4916.324377,
+        "median_p95_tpot_ms_per_token": 55.007748
+      },
+      "standard": {
+        "runs": 1,
+        "median_p95_ttft_ms": 4366.770983,
+        "range_p95_ttft_ms": [
+          4366.770983,
+          4366.770983
+        ],
+        "median_p99_ttft_ms": 4886.055946,
+        "median_p95_tpot_ms_per_token": 54.259107
+      },
+      "batch": {
+        "runs": 1,
+        "median_p95_ttft_ms": 11449.07999,
+        "range_p95_ttft_ms": [
+          11449.07999,
+          11449.07999
+        ],
+        "median_p99_ttft_ms": 11806.423903,
+        "median_p95_tpot_ms_per_token": 109.429313
+      }
+    },
+    "same-priority queue depth 5": {
+      "realtime burster A": {
+        "runs": 1,
+        "median_p95_ttft_ms": 33823.66395,
+        "range_p95_ttft_ms": [
+          33823.66395,
+          33823.66395
+        ],
+        "median_p99_ttft_ms": 35458.660841,
+        "median_p95_tpot_ms_per_token": 287.693106
+      },
+      "realtime peer B": {
+        "runs": 1,
+        "median_p95_ttft_ms": 5505.86009,
+        "range_p95_ttft_ms": [
+          5505.86009,
+          5505.86009
+        ],
+        "median_p99_ttft_ms": 6978.860855,
+        "median_p95_tpot_ms_per_token": 66.488888
+      },
+      "realtime peer C": {
+        "runs": 1,
+        "median_p95_ttft_ms": 5464.366436,
+        "range_p95_ttft_ms": [
+          5464.366436,
+          5464.366436
+        ],
+        "median_p99_ttft_ms": 7316.706657,
+        "median_p95_tpot_ms_per_token": 65.628899
+      }
+    }
+  },
+  "retained_run_inventory": [
+    {
+      "scenario": "batch isolation",
+      "detector": "queue depth 2",
+      "evidence_role": "single-run calibration",
+      "repeat": 1
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 1
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 2
+    },
+    {
+      "scenario": "batch isolation",
+      "detector": "request count 128, 15% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 3
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 5",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 5",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "queue depth 5",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "consolidation",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    },
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 1
+    },
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 2
+    },
+    {
+      "scenario": "priority tiers",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "selected three-repeat result",
+      "repeat": 3
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 2",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "queue depth 5",
+      "evidence_role": "single-run calibration",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 1
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 2
+    },
+    {
+      "scenario": "same-priority fairness",
+      "detector": "request count 128, 10% headroom",
+      "evidence_role": "matched three-repeat comparison",
+      "repeat": 3
+    }
+  ],
+  "saturation_metric_interpretation": "The pool saturation metric is a detector-normalized score. Request-count admission divides in-flight requests by the configured cap. Utilization admission uses the larger of queue depth divided by its threshold and KV-cache utilization divided by its threshold. Read 1.0 as the configured saturation boundary within each detector; raw magnitudes are not compared across detectors.",
+  "excluded_controls": [
+    "Priority-tier queue-depth controls failed route-count proof.",
+    "The queue-depth-5 batch control failed its response-outcome gate."
+  ],
+  "statistical_scope": "The consolidation and same-priority comparisons use three matched repeats. Their realtime p95 TTFT ranges do not overlap across the tested detectors. With three repeats, the report presents descriptive medians and ranges rather than a formal significance claim.",
+  "claim_boundary": "The four selected request-concurrency scenarios are production-shaped single-GPU evidence. Only consolidation and same-priority fairness have matched repeated detector comparisons."
+}
