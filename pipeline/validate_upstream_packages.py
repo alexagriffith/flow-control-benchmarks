@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+"""Validate stable-upstream benchmark packages before publication."""
+
+from __future__ import annotations
+
+import csv
+import json
+import re
+from collections import Counter, defaultdict
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "benchmark-data" / "upstream-flow-control-v0.9.0"
+SCALING = DATA / "multi-replica-scaling"
+TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
+DENYLIST = {
+    "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
+    "local user path": re.compile(r"/Users/|\\Users\\"),
+    "local username": re.compile(r"algriffi", re.IGNORECASE),
+    "private namespace": re.compile(r"llm-test", re.IGNORECASE),
+    "private run prefix": re.compile(r"fc-(?:upstream|scale|prod)", re.IGNORECASE),
+    "internal PR identifier": re.compile(r"pr[ -]?#?2093", re.IGNORECASE),
+    "private IP address": re.compile(r"\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b"),
+    "AWS account identifier": re.compile(r"\b\d{12}\.dkr\.ecr\b", re.IGNORECASE),
+    "internal Red Hat hostname": re.compile(r"\.corp\.redhat\.com", re.IGNORECASE),
+    "internal Quay path": re.compile(r"quay\.io/rh-aiservices", re.IGNORECASE),
+    "cluster UUID": re.compile(
+        r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
+        re.IGNORECASE,
+    ),
+}
+
+
+def read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open() as handle:
+        return list(csv.DictReader(handle))
+
+
+def is_true(value: str) -> bool:
+    return value.strip().lower() == "true"
+
+
+def require(condition: bool, message: str, errors: list[str]) -> None:
+    if not condition:
+        errors.append(message)
+
+
+def validate_scaling(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+    }
+    found = {path.name for path in SCALING.iterdir() if path.is_file()}
+    require(required <= found, "model-pool-scaling files missing", errors)
+
+    summary = read_csv(SCALING / "summary.csv")
+    requests = read_csv(SCALING / "request-results.csv")
+    traffic = read_csv(SCALING / "traffic-samples.csv")
+    metrics = read_csv(SCALING / "system-metrics.csv")
+    evidence = read_csv(SCALING / "run-evidence.csv")
+    analysis = json.loads((SCALING / "analysis.json").read_text())
+    config = json.loads((SCALING / "run-config.json").read_text())
+
+    expected_runs = {1: 3, 2: 3, 4: 3}
+    runs_by_topology = Counter(int(row["model_replicas"]) for row in summary)
+    require(runs_by_topology == expected_runs, "expected three repeats per topology", errors)
+    require(len(summary) == 9 and len(evidence) == 9, "expected nine accepted runs", errors)
+    require(len(requests) == 24462, "request row count changed", errors)
+    require(len(traffic) > 0, "traffic samples are empty", errors)
+    require(len(metrics) > 0, "system metrics are empty", errors)
+
+    request_counts = Counter(row["run_name"] for row in requests)
+    for row in summary:
+        require(
+            request_counts[row["run_name"]] == int(row["offered_requests"]),
+            f"request rows do not match summary for {row['run_name']}",
+            errors,
+        )
+
+    required_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+        "flow_control_engaged",
+    )
+    require(
+        all(is_true(row[field]) for row in evidence for field in required_gates),
+        "a data, route, metric, schedule, or flow-control gate failed",
+        errors,
+    )
+    require(
+        all(
+            row["prefix_cache_queries"] == "0.0"
+            and row["prefix_cache_hits"] == "0.0"
+            and row["vllm_preemptions"] == "0.0"
+            and not is_true(row["endpoint_picker_restarted"])
+            for row in evidence
+        ),
+        "cache, preemption, or Endpoint Picker restart evidence changed",
+        errors,
+    )
+
+    non_200_by_topology = defaultdict(int)
+    for row in summary:
+        non_200_by_topology[int(row["model_replicas"])] += int(
+            row["non_200_requests"]
+        )
+    require(
+        dict(non_200_by_topology) == {1: 5, 2: 1, 4: 0},
+        "the documented HTTP 429 boundary changed",
+        errors,
+    )
+
+    required_metrics = {
+        "endpoint_picker_inflight_requests",
+        "endpoint_picker_inflight_tokens",
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+        "vllm_prefix_cache_queries_total",
+        "vllm_prefix_cache_hits_total",
+    }
+    metric_names = {row["metric"] for row in metrics}
+    require(required_metrics <= metric_names, "required system metrics are missing", errors)
+    metric_models = defaultdict(set)
+    for row in metrics:
+        if row["model_replica"]:
+            metric_models[row["run_name"]].add(row["model_replica"])
+    for row in summary:
+        require(
+            len(metric_models[row["run_name"]]) == int(row["model_replicas"]),
+            f"per-model metrics incomplete for {row['run_name']}",
+            errors,
+        )
+
+    require(analysis["decision"]["data_publishable"], "analysis is not publishable", errors)
+    require(
+        not analysis["decision"]["scale_out_pass"],
+        "strict scale-out boundary must remain failed",
+        errors,
+    )
+    require(
+        config["topology"] == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas_tested": [1, 2, 4],
+            "gpus_per_model_replica": 1,
+        },
+        "model-pool topology changed",
+        errors,
+    )
+    require(
+        config["endpoint_picker"]["version"] == "llm-d Endpoint Picker v0.9.0"
+        and config["endpoint_picker"]["detector"] == "token-concurrency"
+        and config["endpoint_picker"]["max_token_concurrency"] == 20000
+        and config["endpoint_picker"]["headroom"] == 0.25,
+        "Endpoint Picker configuration changed",
+        errors,
+    )
+    require(
+        config["model_service"]["max_num_seqs"] == 128
+        and config["model_service"]["prefix_cache"] == "disabled",
+        "vLLM configuration changed",
+        errors,
+    )
+
+
+def scan_sensitive_text(errors: list[str]) -> None:
+    for path in DATA.rglob("*"):
+        if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
+            continue
+        text = path.read_text(errors="replace")
+        for label, pattern in DENYLIST.items():
+            if pattern.search(text):
+                errors.append(f"{label} found in {path.relative_to(ROOT)}")
+
+
+def main() -> int:
+    errors: list[str] = []
+    validate_scaling(errors)
+    scan_sensitive_text(errors)
+    if errors:
+        print("Stable-upstream promotion validation failed:")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+    print("Stable-upstream promotion validation passed.")
+    print("- Model pool scaling: 9 runs, 24,462 request rows")
+    print("- Traffic, queue, vLLM, cache, and evidence-gate data: complete")
+    print("- Public-content scan: passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

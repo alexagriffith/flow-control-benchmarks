@@ -16,6 +16,8 @@ such as `01-test4_batch_noisy-r01`.
    configuration, summary, and supporting evidence.
 2. Run the package validator. For batch eviction, use:
    `python3 pipeline/validate_batch_eviction_packages.py`.
+   For stable upstream packages, use:
+   `python3 pipeline/validate_upstream_packages.py`.
 3. Build the grouped HTML report after every run package is complete.
 4. Update the repository README and shared charts last.
 

@@ -1,0 +1,10 @@
+run_name,model_replicas,repeat,offered_requests,http_200_requests,non_200_requests,offered_requests_per_second_per_gpu,served_requests_per_second_per_gpu,premium_burst_p95_ttft_ms,premium_burst_p99_ttft_ms,premium_burst_p95_tpot_ms_per_token,standard_long_context_burst_p95_ttft_ms,peak_endpoint_picker_queue_requests,peak_vllm_waiting_requests,peak_kv_cache_usage_percent,vllm_preemptions,endpoint_picker_restarted
+1 model replica - repeat 1,1,1,1166,1164,2,4.319,4.293,415.733,713.929,17.185,716.118,5.0,1.0,4.695,0.0,false
+1 model replica - repeat 2,1,2,1166,1164,2,4.319,4.293,374.167,520.643,17.134,666.022,2.0,2.0,4.514,0.0,false
+1 model replica - repeat 3,1,3,1166,1165,1,4.319,4.296,366.486,501.625,16.156,679.059,2.0,1.0,4.507,0.0,false
+2 model replicas - repeat 1,2,1,2338,2337,1,4.33,4.317,332.381,508.074,14.055,737.231,5.0,2.0,6.026,0.0,false
+2 model replicas - repeat 2,2,2,2338,2338,0,4.33,4.319,340.03,456.038,14.667,761.285,1.0,2.0,5.029,0.0,false
+2 model replicas - repeat 3,2,3,2338,2338,0,4.33,4.317,348.581,451.98,14.026,646.192,2.0,2.0,4.936,0.0,false
+4 model replicas - repeat 1,4,1,4650,4650,0,4.306,4.303,348.565,711.494,14.296,885.665,1.0,3.0,6.473,0.0,false
+4 model replicas - repeat 2,4,2,4650,4650,0,4.306,4.302,321.926,538.0,14.008,736.757,0.0,4.0,4.966,0.0,false
+4 model replicas - repeat 3,4,3,4650,4650,0,4.306,4.301,306.126,426.212,14.78,714.948,1.0,2.0,8.006,0.0,false
