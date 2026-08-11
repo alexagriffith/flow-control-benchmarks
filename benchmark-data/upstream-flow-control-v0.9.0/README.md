@@ -6,6 +6,7 @@ traffic samples, system metrics, evidence gates, analysis, and claim boundary.
 
 | Package | Question |
 |---|---|
+| [Selected workload shapes](selected-workload-shapes/) | Do the selected flow-control settings keep all requests served across chat-short-output and agentic-longer-output shapes under surge? |
 | [Concurrency detector tuning](concurrency-detector-tuning/) | How does the request-concurrency cap trade realtime latency against lower-priority latency? |
 | [Batch interference baseline](batch-interference/) | How much can batch work already running in vLLM increase realtime latency? |
 | [Mixed production workload](mixed-production-workload/) | Which admission method better protects realtime traffic when four workload shapes share one model server? |

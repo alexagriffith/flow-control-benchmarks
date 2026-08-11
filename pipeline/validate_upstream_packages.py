@@ -16,6 +16,7 @@ SCALING = DATA / "multi-replica-scaling"
 STABILITY = DATA / "long-stability"
 BATCH = DATA / "batch-interference"
 MIXED = DATA / "mixed-production-workload"
+SHAPES = DATA / "selected-workload-shapes"
 TEXT_SUFFIXES = {".csv", ".html", ".json", ".md", ".txt", ".yaml", ".yml"}
 DENYLIST = {
     "customer name": re.compile(r"restricted-customer", re.IGNORECASE),
@@ -596,6 +597,128 @@ def validate_mixed_production_workload(errors: list[str]) -> None:
     )
 
 
+def validate_selected_workload_shapes(errors: list[str]) -> None:
+    required = {
+        "README.md",
+        "analysis.json",
+        "request-results.csv",
+        "run-config.json",
+        "run-evidence.csv",
+        "summary.csv",
+        "system-metrics.csv",
+        "traffic-samples.csv",
+    }
+    found = {path.name for path in SHAPES.iterdir() if path.is_file()}
+    require(required <= found, "selected-workload-shapes files missing", errors)
+
+    summary = read_csv(SHAPES / "summary.csv")
+    requests = read_csv(SHAPES / "request-results.csv")
+    traffic = read_csv(SHAPES / "traffic-samples.csv")
+    metrics = read_csv(SHAPES / "system-metrics.csv")
+    evidence = read_csv(SHAPES / "run-evidence.csv")
+    analysis = json.loads((SHAPES / "analysis.json").read_text())
+    config = json.loads((SHAPES / "run-config.json").read_text())
+
+    shapes = Counter(row["workload_shape"] for row in summary)
+    require(
+        shapes == {"chat short output": 3, "agentic longer output": 3},
+        "expected three repeats per selected workload shape",
+        errors,
+    )
+    require(len(summary) == 6 and len(evidence) == 6, "expected six selected-workload-shapes runs", errors)
+    require(len(requests) == 11403, "selected-workload-shapes request row count changed", errors)
+    require(len(traffic) > 0 and len(metrics) > 0, "selected-workload-shapes samples are empty", errors)
+    require(
+        all(row["http_status"] == "200" for row in requests),
+        "selected-workload-shapes request failed",
+        errors,
+    )
+    request_counts = Counter(row["run_name"] for row in requests)
+    require(
+        all(
+            request_counts[row["run_name"]] == int(row["offered_requests"])
+            and row["non_200_requests"] == "0"
+            for row in summary
+        ),
+        "selected-workload-shapes summaries do not match request evidence",
+        errors,
+    )
+
+    required_gates = (
+        "data_quality_passed",
+        "proof_checks_passed",
+        "offered_schedule_passed",
+        "metric_capture_passed",
+        "flow_control_metrics_passed",
+        "headers_passed",
+        "route_evidence_passed",
+        "request_shapes_passed",
+        "stream_integrity_passed",
+        "flow_control_engaged",
+    )
+    require(
+        all(is_true(row[field]) for row in evidence for field in required_gates),
+        "a selected-workload-shapes evidence gate failed",
+        errors,
+    )
+    require(
+        all(
+            row["prefix_cache_queries"] == "0.0"
+            and row["prefix_cache_hits"] == "0.0"
+            and row["vllm_preemptions"] == "0.0"
+            and not is_true(row["endpoint_picker_restarted"])
+            for row in evidence
+        ),
+        "selected-workload-shapes cache, preemption, or restart evidence changed",
+        errors,
+    )
+
+    chat_shape = analysis["by_workload_shape"]["chat short output"]
+    agentic_shape = analysis["by_workload_shape"]["agentic longer output"]
+    require(
+        round(chat_shape["median"]["surge_p95_ttft_ms"], 3) == 420.205
+        and round(agentic_shape["median"]["surge_p95_ttft_ms"], 3) == 1352.324,
+        "selected-workload-shapes median surge p95 TTFT changed",
+        errors,
+    )
+    require(
+        chat_shape["median"]["max_epp_queue"] == 11.0
+        and agentic_shape["median"]["max_epp_queue"] == 11.0,
+        "selected-workload-shapes median peak EPP queue changed",
+        errors,
+    )
+
+    required_metrics = {
+        "endpoint_picker_pool_saturation_ratio",
+        "endpoint_picker_policy_queue_requests",
+        "vllm_running_requests",
+        "vllm_waiting_requests",
+        "vllm_kv_cache_usage_ratio",
+        "vllm_preemptions_total",
+        "vllm_prefix_cache_queries_total",
+        "vllm_prefix_cache_hits_total",
+    }
+    require(
+        required_metrics <= {row["metric"] for row in metrics},
+        "selected-workload-shapes system metrics are incomplete",
+        errors,
+    )
+    require(
+        config["topology"] == {
+            "endpoint_picker_replicas": 1,
+            "model_replicas": 1,
+            "gpus_per_model_replica": 1,
+        }
+        and config["endpoint_picker"]["version"] == "llm-d Endpoint Picker v0.9.0"
+        and config["endpoint_picker"]["detector"] == "request-concurrency"
+        and config["endpoint_picker"]["max_concurrency"] == 128
+        and config["endpoint_picker"]["headroom"] == 0.10
+        and config["model_service"]["prefix_cache"] == "disabled",
+        "selected-workload-shapes configuration changed",
+        errors,
+    )
+
+
 def scan_sensitive_text(errors: list[str]) -> None:
     for path in DATA.rglob("*"):
         if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
@@ -608,6 +731,7 @@ def scan_sensitive_text(errors: list[str]) -> None:
 
 def main() -> int:
     errors: list[str] = []
+    validate_selected_workload_shapes(errors)
     validate_scaling(errors)
     validate_stability(errors)
     validate_batch_interference(errors)
@@ -619,6 +743,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
     print("Stable-upstream promotion validation passed.")
+    print("- Selected workload shapes: 6 runs, 11,403 request rows")
     print("- Model pool scaling: 9 runs, 24,462 request rows")
     print("- Long stability: 1 run, 14,889 request rows")
     print("- Batch interference: 6 runs, 3,600 request rows")

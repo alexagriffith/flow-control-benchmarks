@@ -1,0 +1,128 @@
+{
+  "schema": "stable-upstream-selected-workload-shapes-analysis-v1",
+  "business_question": "Do the selected flow-control settings keep all requests served across chat-short-output and agentic-longer-output workload shapes under surge load?",
+  "answer": "All requests completed with HTTP 200 in all six runs. Flow control engaged in every run. Median surge p95 TTFT was 420.2 ms for chat short output and 1352.3 ms for agentic longer output.",
+  "claim_boundary": "Each shape ran as a single-tenant single-replica workload. Results characterize per-shape behavior under the request-concurrency detector and do not represent mixed-tenant or multi-replica deployments.",
+  "by_workload_shape": {
+    "chat short output": {
+      "repeats": [
+        {
+          "run_name": "chat short output - repeat 1",
+          "repeat": 1,
+          "requests": 2947,
+          "http_200": 2947,
+          "surge_p95_ttft_ms": 420.205,
+          "surge_p99_ttft_ms": 723.664,
+          "surge_p95_tpot_ms": 34.933,
+          "surge_p95_e2e_latency_ms": 4471.998,
+          "surge_throughput_rps": 22.836364,
+          "max_epp_queue": 16.0,
+          "max_vllm_waiting": 0.0,
+          "max_kv_cache_usage_pct": 6.415493,
+          "preemptions": 0.0
+        },
+        {
+          "run_name": "chat short output - repeat 2",
+          "repeat": 2,
+          "requests": 2947,
+          "http_200": 2947,
+          "surge_p95_ttft_ms": 397.142,
+          "surge_p99_ttft_ms": 576.965,
+          "surge_p95_tpot_ms": 35.019,
+          "surge_p95_e2e_latency_ms": 4483.364,
+          "surge_throughput_rps": 22.836364,
+          "max_epp_queue": 8.0,
+          "max_vllm_waiting": 0.0,
+          "max_kv_cache_usage_pct": 6.394648,
+          "preemptions": 0.0
+        },
+        {
+          "run_name": "chat short output - repeat 3",
+          "repeat": 3,
+          "requests": 2947,
+          "http_200": 2947,
+          "surge_p95_ttft_ms": 439.089,
+          "surge_p99_ttft_ms": 590.647,
+          "surge_p95_tpot_ms": 34.988,
+          "surge_p95_e2e_latency_ms": 4479.473,
+          "surge_throughput_rps": 22.927273,
+          "max_epp_queue": 11.0,
+          "max_vllm_waiting": 1.0,
+          "max_kv_cache_usage_pct": 6.432429,
+          "preemptions": 0.0
+        }
+      ],
+      "median": {
+        "surge_p95_ttft_ms": 420.205,
+        "surge_p99_ttft_ms": 590.647,
+        "surge_p95_tpot_ms": 34.988,
+        "surge_p95_e2e_latency_ms": 4479.473,
+        "surge_throughput_rps": 22.836364,
+        "max_epp_queue": 11.0,
+        "max_vllm_waiting": 0.0,
+        "max_kv_cache_usage_pct": 6.415493,
+        "preemptions": 0.0
+      }
+    },
+    "agentic longer output": {
+      "repeats": [
+        {
+          "run_name": "agentic longer output - repeat 1",
+          "repeat": 1,
+          "requests": 854,
+          "http_200": 854,
+          "surge_p95_ttft_ms": 1466.602,
+          "surge_p99_ttft_ms": 1903.6,
+          "surge_p95_tpot_ms": 31.032,
+          "surge_p95_e2e_latency_ms": 15888.824,
+          "surge_throughput_rps": 7.727273,
+          "max_epp_queue": 11.0,
+          "max_vllm_waiting": 3.0,
+          "max_kv_cache_usage_pct": 23.695438,
+          "preemptions": 0.0
+        },
+        {
+          "run_name": "agentic longer output - repeat 2",
+          "repeat": 2,
+          "requests": 854,
+          "http_200": 854,
+          "surge_p95_ttft_ms": 1352.324,
+          "surge_p99_ttft_ms": 1925.6,
+          "surge_p95_tpot_ms": 30.385,
+          "surge_p95_e2e_latency_ms": 15557.651,
+          "surge_throughput_rps": 7.8,
+          "max_epp_queue": 11.0,
+          "max_vllm_waiting": 2.0,
+          "max_kv_cache_usage_pct": 23.86089,
+          "preemptions": 0.0
+        },
+        {
+          "run_name": "agentic longer output - repeat 3",
+          "repeat": 3,
+          "requests": 854,
+          "http_200": 854,
+          "surge_p95_ttft_ms": 1311.77,
+          "surge_p99_ttft_ms": 1876.531,
+          "surge_p95_tpot_ms": 30.211,
+          "surge_p95_e2e_latency_ms": 15468.449,
+          "surge_throughput_rps": 7.8,
+          "max_epp_queue": 11.0,
+          "max_vllm_waiting": 2.0,
+          "max_kv_cache_usage_pct": 23.700649,
+          "preemptions": 0.0
+        }
+      ],
+      "median": {
+        "surge_p95_ttft_ms": 1352.324,
+        "surge_p99_ttft_ms": 1903.6,
+        "surge_p95_tpot_ms": 30.385,
+        "surge_p95_e2e_latency_ms": 15557.651,
+        "surge_throughput_rps": 7.8,
+        "max_epp_queue": 11.0,
+        "max_vllm_waiting": 2.0,
+        "max_kv_cache_usage_pct": 23.700649,
+        "preemptions": 0.0
+      }
+    }
+  }
+}

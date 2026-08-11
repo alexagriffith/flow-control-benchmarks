@@ -1,0 +1,7 @@
+run_name,workload_shape,repeat,offered_requests,http_200_requests,non_200_requests,surge_p95_ttft_ms,surge_p99_ttft_ms,surge_p95_tpot_ms_per_token,surge_p95_e2e_latency_ms,peak_endpoint_picker_queue_requests,peak_vllm_waiting_requests,peak_kv_cache_usage_percent,vllm_preemptions,endpoint_picker_restarted
+chat short output - repeat 1,chat short output,1,2947,2947,0,420.205,723.664,34.933,4471.998,16.0,0.0,6.415,0.0,false
+chat short output - repeat 2,chat short output,2,2947,2947,0,397.142,576.965,35.019,4483.364,8.0,0.0,6.395,0.0,false
+chat short output - repeat 3,chat short output,3,2947,2947,0,439.089,590.647,34.988,4479.473,11.0,1.0,6.432,0.0,false
+agentic longer output - repeat 1,agentic longer output,1,854,854,0,1466.602,1903.6,31.032,15888.824,11.0,3.0,23.695,0.0,false
+agentic longer output - repeat 2,agentic longer output,2,854,854,0,1352.324,1925.6,30.385,15557.651,11.0,2.0,23.861,0.0,false
+agentic longer output - repeat 3,agentic longer output,3,854,854,0,1311.77,1876.531,30.211,15468.449,11.0,2.0,23.701,0.0,false
