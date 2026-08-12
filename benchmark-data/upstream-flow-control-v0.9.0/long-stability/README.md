@@ -5,6 +5,9 @@
 Does the selected priority-protection configuration recover after repeated
 production-shaped surges?
 
+**Answer.** Yes; the queue drained after both surges, realtime latency returned
+to its earlier range, and all 14,889 requests completed.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary

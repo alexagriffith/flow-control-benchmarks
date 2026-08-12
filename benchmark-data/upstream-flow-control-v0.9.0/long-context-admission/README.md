@@ -5,6 +5,10 @@
 Does exact input-token admission protect realtime latency from a burst of large
 requests better than request-count admission?
 
+**Answer.** Exact input-token admission detected large-request pressure in all
+eight runs, but it did not produce a statistically significant realtime
+latency improvement over request-count admission.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -123,4 +127,4 @@ for SEED in 101 102 103 104 105 106 107 108; do
 done
 ```
 
-[`scenario.json`](scenario.json) defines the matched traffic. [`run-config.json`](run-config.json) defines both admission arms without placeholders.
+[`scenario.json`](scenario.json) defines the matched traffic. [`run-config.json`](run-config.json) defines both admission configurations without placeholders.

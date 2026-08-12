@@ -4,6 +4,10 @@
 
 When should queue depth or KV-cache pressure activate flow control?
 
+**Answer.** Use queue depth to react to requests waiting inside vLLM and a KV
+threshold to react to memory pressure; both activation points must be calibrated
+because earlier intervention can add queueing latency.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
