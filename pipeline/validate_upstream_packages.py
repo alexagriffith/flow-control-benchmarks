@@ -65,6 +65,38 @@ def require(condition: bool, message: str, errors: list[str]) -> None:
         errors.append(message)
 
 
+def validate_business_question_answers(errors: list[str]) -> None:
+    """Require every capability README to answer its question immediately."""
+    readmes = sorted(DATA.rglob("README.md"))
+    checked = 0
+    for readme in readmes:
+        text = readme.read_text(errors="replace")
+        if "## Business question" not in text:
+            continue
+        checked += 1
+        section = text.split("## Business question", 1)[1].split("\n## ", 1)[0]
+        match = re.search(
+            r"\n\n(?P<question>.+?\?)\n\n\*\*Answer\.\*\*\s+(?P<answer>.+?)(?:\n\n|$)",
+            section,
+            flags=re.DOTALL,
+        )
+        require(
+            match is not None,
+            f"business question must be followed immediately by **Answer.** in {readme.relative_to(ROOT)}",
+            errors,
+        )
+        if match is None:
+            continue
+        answer = " ".join(match.group("answer").split())
+        sentences = [part for part in re.split(r"(?<=[.!?])\s+", answer) if part]
+        require(
+            len(sentences) == 1 and len(answer) <= 300,
+            f"business answer must be one concise sentence in {readme.relative_to(ROOT)}",
+            errors,
+        )
+    require(checked == 16, "business-question package inventory changed", errors)
+
+
 def nearest_rank_percentile(values: list[float], quantile: float) -> float | None:
     if not values:
         return None
@@ -1241,6 +1273,7 @@ def main() -> int:
     validate_utilization_detector_package(errors, ROOT)
     validate_admission_detector_package(errors, ROOT)
     validate_production_scenarios_package(errors, ROOT)
+    validate_business_question_answers(errors)
     validate_upstream_report(errors, ROOT)
     validate_package_visuals(errors)
     validate_reproduction_contract(errors)

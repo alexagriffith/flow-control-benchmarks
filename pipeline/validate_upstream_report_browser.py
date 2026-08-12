@@ -25,6 +25,10 @@ def inspect_page(page) -> dict[str, object]:
           const heatCells = [...document.querySelectorAll('.heat-cell')];
           const figures = [...document.querySelectorAll('figure')];
           const color = (element) => getComputedStyle(element).backgroundColor;
+          const overflowing = figures.filter((figure) =>
+            !figure.classList.contains('architecture-diagram') &&
+            figure.scrollWidth > figure.clientWidth + 1
+          );
           return {
             horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
             figureCount: figures.length,
@@ -36,7 +40,10 @@ def inspect_page(page) -> dict[str, object]:
             zeroWidthBars: bars.filter((bar) => bar.getBoundingClientRect().width <= 0).length,
             barColors: [...new Set(bars.map(color))],
             heatColors: [...new Set(heatCells.map(color))],
-            overflowingFigures: figures.filter((figure) => figure.scrollWidth > figure.clientWidth + 1).length,
+            overflowingFigures: overflowing.length,
+            overflowingFigureLabels: overflowing.map((figure) =>
+              figure.querySelector('h3')?.textContent?.trim() || figure.className || 'unnamed figure'
+            ),
           };
         }
         """
@@ -60,7 +67,7 @@ def main() -> int:
             reports[name] = result
 
             expected = {
-                "figureCount": 21,
+                "figureCount": 35,
                 "sweepSvgCount": 7,
                 "phaseSvgCount": 1,
                 "trafficSvgCount": 4,

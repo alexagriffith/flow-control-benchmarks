@@ -5,7 +5,7 @@
 Does flow control preserve dispatch order across four priority bands during a
 shared-model surge?
 
-**Answer.** Yes; p95 TTFT increased as priority decreased, with lower-priority
+**Answer.** p95 TTFT increased as priority decreased, with lower-priority
 batch absorbing most of the delay.
 
 <!-- generated:package-visuals -->

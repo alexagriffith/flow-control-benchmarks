@@ -121,7 +121,8 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require(parser.tags["main"] == 1, "grouped report must contain exactly one main element", errors)
     require(parser.tags["h1"] == 1, "grouped report must contain exactly one h1", errors)
     require(parser.classes["scenario"] == 4, "grouped report must contain four production-scenario visuals", errors)
-    require(parser.tags["figure"] == 21, "grouped report visual inventory changed", errors)
+    require(parser.tags["figure"] == 35, "grouped report visual inventory changed", errors)
+    require(parser.classes["evidence-card"] == 13, "grouped report evidence-card inventory changed", errors)
     require(parser.classes["sweep-chart"] == 7, "grouped report sweep-chart inventory changed", errors)
     require(parser.classes["range-chart"] == 2, "grouped report range-chart inventory changed", errors)
     require(parser.classes["heatmap"] == 1, "grouped report heatmap inventory changed", errors)
@@ -135,9 +136,27 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
             require((report.parent / href).exists(), f"grouped report link does not exist: {href}", errors)
     require("@media (max-width: 520px)" in text, "grouped report mobile breakpoint changed", errors)
     require("font-size: clamp(" not in text, "grouped report restored viewport-scaled typography", errors)
+    require_text(
+        text,
+        "Can one shared model pool protect priority traffic across different request shapes and a larger model pool?</p>\n      <p><strong>Answer:</strong> Flow control protected higher-priority realtime traffic",
+        "top business question is not followed by its direct answer",
+        errors,
+    )
+    require_text(
+        text,
+        "Which admission signal protected realtime latency sooner: in-flight requests or the vLLM waiting queue?",
+        "detector business question is not followed by its direct answer",
+        errors,
+    )
+    require_text(
+        text,
+        '<p class="comparison-answer"><strong>Answer:</strong> In both production comparisons, the in-flight request limit protected realtime latency sooner.',
+        "detector comparison answer moved or changed",
+        errors,
+    )
     require(".bar { display: block;" in text, "grouped report bars can collapse to zero width", errors)
     require(
-        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid { grid-template-columns: 1fr; }" in text,
+        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery, .headroom-guide { grid-template-columns: 1fr; }" in text,
         "grouped report responsive grid collapse changed",
         errors,
     )
@@ -179,9 +198,9 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     kv_pressure_latency = "|".join(str(round(value["p95_ttft_ms"])) for value in kv_pressure_values)
     require_text(text, f'data-throughput="{kv_pressure_throughput}"', "KV-pressure throughput changed", errors)
     require_text(text, f'data-latency="{kv_pressure_latency}"', "KV-pressure p95 TTFT changed", errors)
-    require_text(text, "Throughput is absolute RPS", "KV-pressure throughput unit changed", errors)
-    require_text(text, "Single-run 0.9 and 1.0 screening points had lower TTFT", "KV-pressure screening boundary changed", errors)
-    require_text(text, "4,621 ms above flow control off", "KV-pressure control comparison changed", errors)
+    require_text(text, 'data-throughput-label="Throughput (requests/s)"', "KV-pressure throughput unit changed", errors)
+    require_text(text, "The result is a safety calibration, not a latency optimum.", "KV-pressure screening boundary changed", errors)
+    require_text(text, "both thresholds were slower than the flow-control-off calibration", "KV-pressure control comparison changed", errors)
     priority_tuning = {
         "labels": "32|48|64|96|128",
         "premium": "568|461|582|761|907",
@@ -196,12 +215,12 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
             mixed_size_cells.append(round(result["p95_ttft_ms_by_request_size"][size]))
     for value in mixed_size_cells:
         require_text(text, f'data-value="{value}"', f"mixed-size calibration changed: {value} ms", errors)
-    require_text(text, "max sequences 128; maximum batched tokens 8,192", "selected engine settings changed", errors)
-    require_text(text, "Request count 128; 10% headroom", "selected admission setting changed", errors)
-    require_text(text, "Request count 128; 15% headroom", "batch-isolation headroom changed", errors)
-    require_text(text, "Exact input tokens", "size-aware option changed", errors)
+    require_text(text, "128 maximum sequences; 8,192 maximum batched tokens", "selected engine settings changed", errors)
+    require_text(text, "128 in-flight requests; 10% headroom", "selected admission setting changed", errors)
+    require_text(text, "128 in-flight requests; 15% headroom", "batch-isolation headroom changed", errors)
+    require_text(text, "Exact input-token count", "size-aware option changed", errors)
     require_text(text, 'data-shared-axis="true"', "priority-tuning latency chart lost its shared axis", errors)
-    require_text(text, "milliseconds · log scale", "priority-tuning latency scale disclosure changed", errors)
+    require_text(text, "Shared y-axis: p95 TTFT in milliseconds (log scale)", "priority-tuning latency scale disclosure changed", errors)
     require_text(text, '4,163 ms</span><i class="heat-gradient"></i><span>41,909 ms', "heatmap legend changed", errors)
 
     selected = production["selected_configuration_results"]
@@ -211,11 +230,11 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
             require_text(text, f'data-value="{value}"', f"{scenario} {workload} chart value changed", errors)
             require_text(text, f'>{value:,} ms<', f"{scenario} {workload} display value changed", errors)
     require_text(text, "Nine matched runs; HTTP 429: 5/3,498, 1/7,014, and 0/13,950", "scale evidence scope changed", errors)
-    require_text(text, "Incoming request rate over time", "production traffic title changed", errors)
+    require_text(text, "Traffic sent during each surge", "production traffic title changed", errors)
     require_text(text, "requests/s", "production traffic y-axis unit changed", errors)
     for expected_range in (
         "Platinum 368–486 ms; Gold 414–594 ms",
-        "Realtime range across three repeats: 371–669 ms",
+        "Realtime ranged from 371–669 ms",
         "A 503–558 ms; B 505–599 ms",
         "B 508–619 ms; C 563–675 ms",
     ):
@@ -307,14 +326,15 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         "long-stability/", "prefix-cache-routing/", "request-concurrency-priority-tuning/",
     )
     require(all(f'href="{link}"' in text for link in package_links), "grouped report package links changed", errors)
-    require_text(text, 'href="../batch-eviction/"', "batch-eviction package link changed", errors)
-    require_text(text, "Batch eviction is planned for Endpoint Picker v0.10.0.", "batch-eviction release note changed", errors)
+    require_text(text, 'href="../batch-eviction/single-model-replica/results.html"', "batch-eviction package link changed", errors)
+    require_text(text, "separate experimental batch-eviction build", "batch-eviction build boundary changed", errors)
 
     required_claims = (
-        "With flow control engaged, steady realtime tenants maintained low TTFT across four production-shaped scenarios.",
-        "Selected steady realtime tenants recorded median p95 time to first token (TTFT) between 404 and 570 ms.",
-        "Open-loop Poisson arrivals followed noisy sinusoidal phases",
-        "Request count and queue depth used the same prompts, noisy-sinusoidal traffic schedule, model, GPU, and three-repeat structure.",
+        "Higher-priority realtime traffic stayed faster across four production-shaped scenarios.",
+        "Across the three stable scenarios, retained realtime tenants recorded median p95 time to first token (TTFT) from 404 to 570 ms.",
+        "uses its own labeled y-axis range",
+        "every scenario used the same surge window so differences in latency reflect the traffic mix and policy behavior",
+        "The plots compare request count and queue depth with the same prompts, traffic, model, GPU, and three repeats.",
         "Flow control was engaged and policy queues were active in every retained run.",
         "Reserved capacity and eviction are covered separately.",
         "HTTP 429: 5/3,498 at one replica, 1/7,014 at two, and 0/13,950 at four.",
@@ -344,8 +364,8 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     ):
         require(link in root_readme, f"root README evidence link changed: {link}", errors)
     require(
-        "Most control tests disable prefix caching" in root_readme
-        and "prefix-routing package enables it explicitly" in root_readme,
+        "Most packages disable prefix caching" in root_readme
+        and "prefix-routing package enables caching" in root_readme,
         "root README cache boundary changed",
         errors,
     )

@@ -5,7 +5,7 @@
 Can two realtime tenants retain lower TTFT while standard traffic surges on the
 same model server?
 
-**Answer.** Yes with request-count admission; both realtime tenants stayed
+**Answer.** With request-count admission, both realtime tenants stayed
 below 600 ms p95 TTFT while the standard burst absorbed the delay.
 
 <!-- generated:package-visuals -->

@@ -5,7 +5,7 @@
 Do the selected request-concurrency flow-control settings keep all requests
 served across representative single-tenant workload shapes under surge load?
 
-**Answer.** Yes; every chat and agentic request completed, although the longer
+**Answer.** Every chat and agentic request completed, although the longer
 agentic output produced higher first-token latency.
 
 <!-- generated:package-visuals -->

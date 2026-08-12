@@ -7,6 +7,28 @@ Each capability folder also includes a tested architecture diagram and plots gen
 
 View the visual summary in [`results.html`](results.html).
 
+## How the tests build the answer
+
+1. **Calibrate capacity.** Engine, request-count, token, queue-depth, and KV-cache
+   sweeps establish the settings worth carrying forward.
+2. **Test production traffic.** Open-loop traffic tests priority, batch
+   isolation, consolidation, fairness, request shapes, and mixed workloads.
+3. **Test failure boundaries.** Batch interference shows what admission control
+   cannot fix after work enters vLLM.
+4. **Harden the result.** Longer runs, larger model pools, and cache-aware
+   routing test recovery and deployment boundaries.
+
+## Traffic methods
+
+- **Closed loop:** a fixed number of callers send another request only after
+  the prior request finishes. We used it to find capacity and configuration
+  limits.
+- **Open-loop Poisson:** requests arrive on schedule even when earlier requests
+  are still running. We used it to represent external production demand.
+- **Noisy sinusoidal phases:** the open-loop rate rises and falls through a
+  baseline, surge, and recovery. We used it to test protection during bursts
+  and recovery afterward.
+
 ## Runner and reproduction
 
 The current campaign runner is [`pipeline/benchmark.py`](../../pipeline/benchmark.py), SHA-256 `3811ec26c46bf3a26fa643698ec54bf569bb4bc99c3ea22ca18f805cb077b8e0`. Closed-loop sweeps ran it directly. Open-loop packages used GuideLLM 0.7.0 with traffic schedules compiled from the same runner.
@@ -17,30 +39,30 @@ The scenario, seed, and runner hash reproduce the issued GuideLLM traffic. Laten
 
 ## Configuration
 
-| Package | Question |
-|---|---|
-| [Engine configuration](engine-configuration/) | Which vLLM request and scheduling limits balance latency and throughput? |
-| [Utilization detector calibration](utilization-detector-calibration/) | Which queue-depth and KV-cache thresholds should advance into production traffic? |
-| [Request and token admission calibration](request-and-token-admission-calibration/) | When should request size affect how much work enters vLLM? |
-| [Earlier request-concurrency priority tuning](request-concurrency-priority-tuning/) | How does the request cap trade realtime latency against lower-priority latency in a two-tier short-request study? |
+| Business question | One-sentence answer | Evidence |
+|---|---|---|
+| Which vLLM limits balance latency and throughput? | The tested balance was 128 maximum running sequences and 8,192 maximum batched tokens. | [Engine configuration](engine-configuration/) |
+| When should utilization activate flow control? | Queue depth responds to requests waiting inside vLLM, while the KV-cache threshold responds to memory pressure. | [Utilization detector calibration](utilization-detector-calibration/) |
+| When should request size affect admission? | Request count was the stronger starting point for this one-GPU calibration, while input-token admission was useful when request sizes varied materially. | [Request and token admission calibration](request-and-token-admission-calibration/) |
+| How does the request cap trade realtime latency against lower-priority latency? | A cap of 48 produced the lowest premium p95 TTFT in the historical two-repeat study, while tighter caps delayed standard traffic. | [Earlier request-concurrency priority tuning](request-concurrency-priority-tuning/) |
 
 ## Production behavior
 
-| Package | Question |
-|---|---|
-| [Production scenarios](production-scenarios/) | Does the selected configuration protect priority traffic across tiering, batch isolation, consolidation, and same-priority fairness? |
-| [Batch interference baseline](batch-interference/) | How much can batch work already running in vLLM increase realtime latency? |
-| [Mixed production workload](mixed-production-workload/) | Which admission method better protects realtime traffic when four workload shapes share one model server? |
-| [Selected workload shapes](selected-workload-shapes/) | How do chat and agentic output shapes change the selected configuration's behavior? |
-| [Long-context admission](long-context-admission/) | Does exact input-token admission detect large-request pressure more reliably than request-count admission? |
+| Business question | One-sentence answer | Evidence |
+|---|---|---|
+| Does the selected configuration protect priority traffic? | Higher-priority realtime traffic stayed faster across all four traffic patterns; three scenarios met the repeat-stability gate, while batch isolation remained directional evidence. | [Production scenarios](production-scenarios/) |
+| How much can running batch increase realtime latency? | Under request-count admission, running batch increased realtime p95 TTFT from 133 ms to 15,378 ms. | [Batch interference baseline](batch-interference/) |
+| Which admission method better protects realtime traffic in a mixed workload? | Request-count admission produced lower realtime latency, while input-token admission lowered long-context and batch latency. | [Mixed production workload](mixed-production-workload/) |
+| How do chat and agentic output shapes change latency? | Every request completed, but the longer agentic output produced higher p95 TTFT. | [Selected workload shapes](selected-workload-shapes/) |
+| Did exact input-token admission improve long-context latency? | It detected large-request pressure in every paired run but did not produce a statistically significant realtime latency improvement. | [Long-context admission](long-context-admission/) |
 
 ## Scale and routing
 
-| Package | Question |
-|---|---|
-| [Model pool scaling](multi-replica-scaling/) | Does priority protection remain stable as the model pool scales from one to four replicas? |
-| [Long stability](long-stability/) | Does the selected configuration recover after repeated production-shaped surges? |
-| [Prefix-cache routing](prefix-cache-routing/) | Does prefix-aware routing improve service under a saturated mixed workload when prefix caching is enabled? |
+| Business question | One-sentence answer | Evidence |
+|---|---|---|
+| Does per-GPU throughput hold as the model pool grows? | Served throughput per GPU stayed within 0.6% from one to four model replicas. | [Model pool scaling](multi-replica-scaling/) |
+| Does the selected configuration recover after repeated surges? | The queue drained after both surges and every request completed. | [Long stability](long-stability/) |
+| Did prefix-aware routing improve every workload? | No; it helped realtime and batch latency but increased standard long-context latency, route imbalance, and HTTP 429 responses. | [Prefix-cache routing](prefix-cache-routing/) |
 
 Rejected attempts and exploratory points are not included. Repository-level
 charts use only packages that pass their validators.

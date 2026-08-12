@@ -5,7 +5,7 @@
 Can peer tenants keep receiving service while one tenant in the same priority
 band overloads the shared model?
 
-**Answer.** Yes; both peers stayed below 700 ms p95 TTFT while the overloaded
+**Answer.** Both peers stayed below 700 ms p95 TTFT while the overloaded
 tenant absorbed most of the delay under request-count admission.
 
 <!-- generated:package-visuals -->

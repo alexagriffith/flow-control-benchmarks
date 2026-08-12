@@ -25,14 +25,63 @@ def bar(title: str, unit: str, rows: list[tuple[str, float]], takeaway: str = ""
     return {"kind": "bar", "title": title, "unit": unit, "rows": rows, "takeaway": takeaway, "log": log}
 
 
+def dot(title: str, unit: str, rows: list[tuple[str, float]], takeaway: str = "", *, log: bool = False) -> dict:
+    return {"kind": "dot", "title": title, "unit": unit, "rows": rows, "takeaway": takeaway, "log": log}
+
+
 def grouped(title: str, unit: str, groups: list[str], rows: list[tuple[str, list[float]]], takeaway: str = "", *, log: bool = False) -> dict:
     return {"kind": "grouped", "title": title, "unit": unit, "groups": groups, "rows": rows, "takeaway": takeaway, "log": log}
 
 
-def line(title: str, unit: str, x: list[str], series: list[tuple[str, list[float]]], takeaway: str = "", *, highlight_peak: bool = False) -> dict:
+def paired(title: str, unit: str, groups: list[str], rows: list[tuple[str, list[float]]], takeaway: str = "", *, log: bool = False) -> dict:
+    return {"kind": "paired", "title": title, "unit": unit, "groups": groups, "rows": rows, "takeaway": takeaway, "log": log}
+
+
+def process(title: str, unit: str, stages: list[tuple[str, float]], takeaway: str = "") -> dict:
+    return {"kind": "process", "title": title, "unit": unit, "stages": stages, "takeaway": takeaway}
+
+
+def line(
+    title: str,
+    unit: str,
+    x: list[str],
+    series: list[tuple[str, list[float]]],
+    takeaway: str = "",
+    *,
+    highlight_peak: bool = False,
+    statuses: list[str] | None = None,
+) -> dict:
     return {
         "kind": "line", "title": title, "unit": unit, "x": x, "series": series,
         "takeaway": takeaway, "highlight_peak": highlight_peak,
+        "statuses": statuses,
+    }
+
+
+def combo(
+    title: str,
+    x: list[str],
+    line_name: str,
+    line_unit: str,
+    line_values: list[float],
+    bar_name: str,
+    bar_unit: str,
+    bar_values: list[float],
+    takeaway: str = "",
+) -> dict:
+    unit = f"{line_unit} · {bar_name.lower()} (%)" if bar_unit == "percent" else f"{line_unit} · {bar_unit}"
+    return {
+        "kind": "combo",
+        "title": title,
+        "unit": unit,
+        "x": x,
+        "line_name": line_name,
+        "line_unit": line_unit,
+        "line_values": line_values,
+        "bar_name": bar_name,
+        "bar_unit": bar_unit,
+        "bar_values": bar_values,
+        "takeaway": takeaway,
     }
 
 
@@ -59,8 +108,23 @@ def median_metric_window_peaks(root: Path, relative: str, metric: str, methods: 
     return labels, series
 
 
-def package(path: str, title: str, takeaway: str, architecture: tuple[str, str, str, str], panels: list[dict]) -> dict:
-    return {"path": path, "title": title, "takeaway": takeaway, "architecture": architecture, "panels": panels}
+def package(
+    path: str,
+    title: str,
+    takeaway: str,
+    architecture: tuple[str, str, str, str],
+    panels: list[dict],
+    *,
+    tone: str | None = None,
+) -> dict:
+    return {
+        "path": path,
+        "title": title,
+        "takeaway": takeaway,
+        "architecture": architecture,
+        "panels": panels,
+        "tone": tone,
+    }
 
 
 def engine(root: Path) -> dict:
@@ -69,13 +133,13 @@ def engine(root: Path) -> dict:
     tok = data["batched_token_results"]
     return package(
         str(UPSTREAM / "engine-configuration"), "Engine capacity and configuration",
-        "Sequence and batched-token limits were selected before production traffic tests.",
+        "Engine sweeps selected the latency-throughput baseline for production traffic.",
         ("Closed-loop load", "Endpoint Picker passes requests", "vLLM scheduler limits", "Throughput and latency"),
         [
-            bar("Throughput by maximum running sequences", "served requests/s", [(k, v["steady_throughput_rps"]) for k, v in seq.items()]),
-            bar("Generation cost by maximum running sequences", "p95 TPOT (ms/token)", [(k, v["p95_tpot_ms_per_token"]) for k, v in seq.items()], "Lower is better."),
-            bar("Throughput by batched-token limit", "served requests/s", [(f"{int(k):,}", v["steady_throughput_rps"]) for k, v in tok.items()]),
-            bar("Latency by batched-token limit", "p95 TTFT (ms)", [(f"{int(k):,}", v["p95_ttft_ms"]) for k, v in tok.items()], "8,192 tokens balanced the measured latency and throughput."),
+            line("Throughput as maximum running sequences increased", "served requests/s", list(seq), [("Served throughput", [v["steady_throughput_rps"] for v in seq.values()])], statuses=["good", "neutral", "neutral"]),
+            line("Output-token latency as maximum running sequences increased", "p95 TPOT (ms/token)", list(seq), [("Output-token latency", [v["p95_tpot_ms_per_token"] for v in seq.values()])], "Higher concurrency added little throughput and increased output-token latency.", statuses=["good", "neutral", "neutral"]),
+            line("Throughput as the batched-token limit increased", "served requests/s", [f"{int(k):,}" for k in tok], [("Served throughput", [v["steady_throughput_rps"] for v in tok.values()])], statuses=["neutral", "good", "neutral"]),
+            line("First-token latency as the batched-token limit increased", "p95 TTFT (ms)", [f"{int(k):,}" for k in tok], [("First-token latency", [v["p95_ttft_ms"] for v in tok.values()])], "8,192 tokens balanced the measured latency and throughput.", statuses=["neutral", "good", "neutral"]),
         ],
     )
 
@@ -89,9 +153,9 @@ def utilization(root: Path) -> dict:
         "Queue depth controls when policy starts; KV threshold tests memory-pressure activation.",
         ("Fixed request load", "Queue and KV signals", "Flow-control queue", "One vLLM replica"),
         [
-            bar("Queue-depth latency", "p95 TTFT (ms)", [(f"Queue depth {k}", v["p95_ttft_ms"]) for k, v in qd.items()]),
-            bar("Queue-depth throughput", "served requests/s", [(f"Queue depth {k}", v["steady_throughput_rps"]) for k, v in qd.items()]),
-            bar("KV-pressure calibration", "p95 TTFT (ms)", [(k.replace("_", " "), v["p95_ttft_ms"]) for k, v in kv.items()], "This deliberate memory-pressure test measures activation cost."),
+            line("First-token latency as queue depth increased", "p95 TTFT (ms)", list(qd), [("First-token latency", [v["p95_ttft_ms"] for v in qd.values()])]),
+            line("Throughput as queue depth increased", "served requests/s", list(qd), [("Served throughput", [v["steady_throughput_rps"] for v in qd.values()])]),
+            line("First-token latency across KV thresholds", "p95 TTFT (ms)", [k.replace("_", " ") for k in kv], [("First-token latency", [v["p95_ttft_ms"] for v in kv.values()])], "This deliberate memory-pressure test measures activation cost."),
         ],
     )
 
@@ -104,13 +168,13 @@ def request_and_token(root: Path) -> dict:
     sizes = ["short request", "medium request", "long request"]
     return package(
         str(UPSTREAM / "request-and-token-admission-calibration"), "Request and token admission",
-        "Request count is the general default; token admission changes the tradeoff for mixed sizes.",
+        "In this calibration, 128 requests preserved lower TTFT; token admission changed the tradeoff for mixed sizes.",
         ("Mixed request sizes", "Request or token admission", "Priority-aware queue", "One vLLM replica"),
         [
-            bar("Request-cap latency", "p95 TTFT (ms)", [(f"{k} requests", v["p95_ttft_ms"]) for k, v in request.items()]),
-            bar("Request-cap throughput", "served requests/s", [(f"{k} requests", v["steady_throughput_rps"]) for k, v in request.items()]),
-            grouped("Latency by request size", "p95 TTFT (ms)", [m[0] for m in methods], [(s.replace(" request", ""), [m[1]["p95_ttft_ms_by_request_size"][s] for m in methods]) for s in sizes]),
-            bar("Total throughput by admission method", "served requests/s", [("Request count 128", mixed["request_count_128"]["total_steady_throughput_rps"]), ("Input-token cap", mixed["input_token_1.2x"]["total_steady_throughput_rps"]), ("Input + output estimate", mixed["input_plus_output_estimate"]["total_steady_throughput_rps"])]),
+            line("First-token latency as the request cap increased", "p95 TTFT (ms)", list(request), [("First-token latency", [v["p95_ttft_ms"] for v in request.values()])]),
+            line("Throughput as the request cap increased", "served requests/s", list(request), [("Served throughput", [v["steady_throughput_rps"] for v in request.values()])]),
+            paired("How admission changed latency by request size", "p95 TTFT (ms)", [m[0] for m in methods], [(s.replace(" request", "").title(), [m[1]["p95_ttft_ms_by_request_size"][s] for m in methods]) for s in sizes]),
+            dot("Total throughput by admission method", "served requests/s", [("Request count 128", mixed["request_count_128"]["total_steady_throughput_rps"]), ("Input-token cap", mixed["input_token_1.2x"]["total_steady_throughput_rps"]), ("Input + output estimate", mixed["input_plus_output_estimate"]["total_steady_throughput_rps"])]),
         ],
     )
 
@@ -139,7 +203,12 @@ def scenario_package(root: Path, slug: str, title: str, traffic: str) -> dict:
     data = load_json(root, f"{rel}/analysis.json")
     selected = data["selected_configuration_results"]
     selected_rows = [(name.title(), values["median_p95_ttft_ms"]) for name, values in selected.items()]
-    panels = [bar("Latency during the surge", "median p95 TTFT (ms)", selected_rows, "Lower-priority or overloaded work absorbed more delay.", log=True)]
+    panel_note = "Lower-priority or overloaded work absorbed more delay."
+    package_takeaway = "Flow control kept dispatch policy active while the surge changed who queued."
+    if slug == "batch-isolation":
+        panel_note = "Directional medians: realtime ranged from 371–669 ms and standard from 436–1,017 ms, above the 1.5× repeat-stability gate."
+        package_takeaway = "Realtime stayed faster than batch in every repeat; latency spread was too wide for a stable point estimate."
+    panels = [dot("Who waited during the surge", "median p95 TTFT (ms)", selected_rows, panel_note, log=True)]
     matched = data.get("matched_detector_comparisons", {})
     if matched:
         comparison = matched
@@ -147,9 +216,9 @@ def scenario_package(root: Path, slug: str, title: str, traffic: str) -> dict:
         realtime_names = [name for name in selected if "batch" not in name and "standard" not in name and "burster" not in name]
         if realtime_names:
             rows = [(name.title(), [comparison[m][name]["median_p95_ttft_ms"] for m in methods]) for name in realtime_names]
-            panels.append(grouped("Detector comparison", "median p95 TTFT (ms)", [m.replace("request count 128, 10% headroom", "Request count") for m in methods], rows, "The same prompts, schedule, model, and GPU were used for each detector.", log=True))
+            panels.append(paired("How detector choice changed realtime latency", "median p95 TTFT (ms)", [m.replace("request count 128, 10% headroom", "Request count") for m in methods], rows, "The same prompts, schedule, model, and GPU were used for each detector.", log=True))
     return package(
-        str(rel), title, "Flow control kept dispatch policy active while the surge changed who queued.",
+        str(rel), title, package_takeaway,
         (traffic, "Priority and fairness queues", "Request-count admission", "One vLLM replica"), panels,
     )
 
@@ -159,10 +228,10 @@ def production_scenarios(root: Path) -> list[dict]:
     data = load_json(root, f"{rel}/analysis.json")
     panels = []
     for scenario, workloads in data["selected_configuration_results"].items():
-        panels.append(bar(scenario.title(), "median surge p95 TTFT (ms)", [(name.title(), values["median_p95_ttft_ms"]) for name, values in workloads.items()], log=True))
+        panels.append(dot(scenario.title(), "median surge p95 TTFT (ms)", [(name.title(), values["median_p95_ttft_ms"]) for name, values in workloads.items()], log=True))
     parent = package(
-        str(rel), "Four production traffic scenarios",
-        "Priority and fairness behavior was measured under four distinct traffic patterns.",
+        str(rel), "Realtime protection under production traffic",
+        "Higher-priority traffic stayed faster across four patterns; three met the repeat-stability gate.",
         ("Noisy sinusoidal traffic", "Priority and fairness queues", "Request count 128", "One shared vLLM replica"), panels,
     )
     children = [
@@ -183,9 +252,9 @@ def selected_shapes(root: Path) -> dict:
         "Longer generation raised time to first token under the same admission setting.",
         ("One workload shape per run", "Request-count admission", "Priority queue", "One vLLM replica"),
         [
-            bar("Latency by workload shape", "median surge p95 TTFT (ms)", [(n, v["surge_p95_ttft_ms"]) for n, v in rows]),
-            bar("Generation time by workload shape", "median surge p95 TPOT (ms/token)", [(n, v["surge_p95_tpot_ms"]) for n, v in rows]),
-            bar("Served rate by workload shape", "served requests/s", [(n, v["surge_throughput_rps"]) for n, v in rows]),
+            dot("First-token latency by workload shape", "median surge p95 TTFT (ms)", [(n, v["surge_p95_ttft_ms"]) for n, v in rows]),
+            dot("Output-token latency by workload shape", "median surge p95 TPOT (ms/token)", [(n, v["surge_p95_tpot_ms"]) for n, v in rows]),
+            dot("Served rate by workload shape", "served requests/s", [(n, v["surge_throughput_rps"]) for n, v in rows]),
         ],
     )
 
@@ -204,22 +273,22 @@ def mixed_workload(root: Path) -> dict:
     )
     return package(
         str(UPSTREAM / "mixed-production-workload"), "Mixed production workload",
-        "Request-count admission protected realtime latency by holding more work before vLLM. Input-token admission spread latency more evenly across the four workloads.",
+        "Request count protected realtime traffic; input tokens distributed latency more evenly across request sizes.",
         ("Chat, agentic, long context, and batch", "Request or token admission", "Four priority bands", "One vLLM replica"),
         [
-            grouped(
+            paired(
                 "Surge p95 TTFT by workload", "Median time to first token (ms)", labels,
                 [(label, [by[m][f"{key}_surge_p95_ttft_ms"]["median"] for m in methods]) for label, key in tiers],
-                "Request count gave realtime chat the lower TTFT; input tokens gave long-context and batch the lower TTFT.",
+                "Compared with input tokens, request count lowered Premium by 920 ms. Input tokens lowered Batch by 5,822 ms.",
                 log=True,
             ),
-            grouped(
+            paired(
                 "Where requests queued", "Median peak queue depth (requests)", labels,
                 [
                     ("Endpoint Picker", [by[m]["max_epp_queue"]["median"] for m in methods]),
                     ("Inside vLLM", [by[m]["max_vllm_waiting"]["median"] for m in methods]),
                 ],
-                "Request count held more work before vLLM; input tokens allowed more requests to wait inside vLLM.",
+                "Request count peaked at 27 requests in the Endpoint Picker; input tokens peaked at 43 requests waiting inside vLLM.",
             ),
             line(
                 "vLLM waiting requests over time", "Median 20-second peak (requests); elapsed time (s)",
@@ -227,7 +296,7 @@ def mixed_workload(root: Path) -> dict:
                 "The input-token setting reached a higher vLLM wait peak during drain after the traffic surge.",
                 highlight_peak=True,
             ),
-            grouped(
+            paired(
                 "Generation latency by workload", "Median surge p95 TPOT (ms/token)", labels,
                 [(label, [by[m][f"{key}_surge_p95_tpot_ms"]["median"] for m in methods]) for label, key in tiers],
                 "Request count favored realtime chat; input tokens favored the longer standard and batch work.",
@@ -254,8 +323,8 @@ def long_context(root: Path) -> dict:
         "Exact-token admission activated policy consistently; its latency difference was inconclusive.",
         ("Realtime plus 20k-token burst", "Request or exact-token admission", "Size-aware policy queue", "Two vLLM replicas"),
         [
-            grouped("Realtime latency across matched seeds", "burst p95 TTFT (ms)", ["Request count", "Exact tokens"], [(str(p["seed"]), [p["request_p95_ms"], p["token_p95_ms"]]) for p in pairs]),
-            bar(
+            paired("Realtime latency across matched seeds", "burst p95 TTFT (ms)", ["Request count", "Exact tokens"], [(f"Seed {p['seed']}", [p["request_p95_ms"], p["token_p95_ms"]]) for p in pairs]),
+            dot(
                 "Runs with an active policy queue", "runs",
                 [
                     ("Request count", active_queue_runs["request-count admission"]),
@@ -269,17 +338,23 @@ def long_context(root: Path) -> dict:
 
 def batch_interference(root: Path) -> dict:
     data = load_json(root, f"{UPSTREAM}/batch-interference/analysis.json")
-    arms = [("Realtime only", data["by_arm"]["realtime only"]), ("Batch already running", data["by_arm"]["realtime with batch already running"])]
+    arms = [
+        ("Realtime only", data["by_arm"]["realtime only"]),
+        ("Batch preloaded before realtime", data["by_arm"]["realtime with batch already running"]),
+    ]
     latency_factor = data["comparison"]["realtime_p95_ttft_factor"]
+    waiting_peak = arms[1][1]["max_vllm_waiting"]["median"]
+    kv_peak = arms[1][1]["max_vllm_kv_cache_usage_pct"]["median"]
     return package(
-        str(UPSTREAM / "batch-interference"), "Batch interference baseline",
-        f"Batch already running inside vLLM increased realtime latency by {latency_factor:.0f} times.",
-        ("Batch starts before realtime", "Flow-control queue", "Batch already running inside vLLM", "Realtime latency"),
+        str(UPSTREAM / "batch-interference"), "Batch interference",
+        "Running batch severely delayed newly arriving realtime requests.",
+        ("Batch starts before realtime", "Flow-control queue", "Batch preloaded inside vLLM", "Realtime latency"),
         [
-            bar("Realtime latency", "median p95 TTFT (ms)", [(n, v["realtime_surge_p95_ttft_ms"]["median"]) for n, v in arms], log=True),
-            bar("Requests waiting inside vLLM", "median peak requests", [(n, v["max_vllm_waiting"]["median"]) for n, v in arms]),
-            bar("KV-cache use", "median peak KV cache (%)", [(n, v["max_vllm_kv_cache_usage_pct"]["median"]) for n, v in arms]),
+            paired(f"Realtime p95 TTFT was {latency_factor:.0f} times the reference", "median p95 TTFT (ms)", ["Realtime only", "Batch already running"], [("Realtime", [arms[0][1]["realtime_surge_p95_ttft_ms"]["median"], arms[1][1]["realtime_surge_p95_ttft_ms"]["median"]])], log=True),
+            paired(f"vLLM peak waiting reached {waiting_peak:.0f} requests", "median peak requests", ["Realtime only", "Batch already running"], [("Waiting requests", [arms[0][1]["max_vllm_waiting"]["median"], arms[1][1]["max_vllm_waiting"]["median"]])]),
+            paired(f"Peak KV-cache use reached {kv_peak:.1f}%", "median peak KV cache (%)", ["Realtime only", "Batch already running"], [("KV-cache use", [arms[0][1]["max_vllm_kv_cache_usage_pct"]["median"], arms[1][1]["max_vllm_kv_cache_usage_pct"]["median"]])]),
         ],
+        tone="warning",
     )
 
 
@@ -290,12 +365,12 @@ def scaling(root: Path) -> dict:
     values = [topologies[n] for n in ["1", "2", "4"]]
     return package(
         str(UPSTREAM / "multi-replica-scaling"), "Model pool scaling",
-        "Per-GPU throughput held as the pool grew; smaller pools exposed a rejection boundary.",
+        "Per-GPU throughput held as the pool grew. Smaller pools reached the rejection boundary.",
         ("Matched load per GPU", "One Endpoint Picker", "One, two, or four vLLM replicas", "Per-GPU service"),
         [
-            bar("Served throughput per GPU", "served requests/s/GPU", [(labels[i], v["median_served_rps_per_gpu"]) for i, v in enumerate(values)]),
-            bar("Premium latency", "median burst p95 TTFT (ms)", [(labels[i], v["median_premium_burst_p95_ttft_ms"]) for i, v in enumerate(values)]),
-            bar("HTTP 429 responses", "responses across three repeats", [(labels[i], v["http_non_200"]) for i, v in enumerate(values)], "Four replicas completed the tested load without 429 responses."),
+            line("Per-GPU throughput as the model pool grew", "served requests/s/GPU", labels, [("Per-GPU throughput", [v["median_served_rps_per_gpu"] for v in values])]),
+            line("Premium latency as the model pool grew", "median burst p95 TTFT (ms)", labels, [("Premium latency", [v["median_premium_burst_p95_ttft_ms"] for v in values])]),
+            line("Rejected responses as the model pool grew", "responses across three repeats", labels, [("HTTP 429 responses", [v["http_non_200"] for v in values])], "Four replicas completed the tested load without 429 responses."),
         ],
     )
 
@@ -305,11 +380,19 @@ def stability(root: Path) -> dict:
     phases = list(data["premium_p95_ttft_ms"])
     return package(
         str(UPSTREAM / "long-stability"), "Long stability",
-        "The policy queue drained after both surges and premium latency recovered.",
+        "The run recovered after two sustained surges.",
         ("Thirty-minute mixed traffic", "Request-count admission", "Priority-aware queue", "One vLLM replica"),
         [
-            line("Premium latency by phase", "p95 TTFT (ms)", [p.replace("-", " ").title() for p in phases], [("Premium", [data["premium_p95_ttft_ms"][p] for p in phases])]),
-            line("Maximum policy queue by phase", "queued requests", [p.replace("-", " ").title() for p in phases], [("Queue", [data["queue_by_window"][p]["max"] for p in phases])]),
+            combo(
+                "Premium latency and queue activity",
+                [p.replace("-", " ").title() for p in phases],
+                "Premium latency",
+                "p95 TTFT (ms)",
+                [data["premium_p95_ttft_ms"][p] for p in phases],
+                "Samples with queued requests",
+                "percent",
+                [data["queue_by_window"][p]["active_sample_fraction"] * 100 for p in phases],
+            ),
         ],
     )
 
@@ -325,15 +408,15 @@ def prefix_routing(root: Path) -> dict:
     ]
     return package(
         str(UPSTREAM / "prefix-cache-routing"), "Prefix-cache routing",
-        "Prefix-aware routing changed latency and route balance without increasing cache hits.",
+        "Prefix-aware routing changed latency by workload while cache hit rate stayed flat.",
         ("Shared prefixes with unique suffixes", "Random or prefix-aware scoring", "Two cache-enabled vLLM replicas", "Latency and route balance"),
         [
-            grouped("Latency by workload", "median p95 TTFT (ms)", ["Random", "Prefix aware"], [(r["workload"].replace("-", " ").title(), [r["random_routing_median_ms"], r["prefix_aware_routing_median_ms"]]) for r in rows], log=True),
-            grouped(
+            paired("How prefix-aware routing changed latency", "median p95 TTFT (ms)", ["Random", "Prefix aware"], [(r["workload"].replace("-", " ").title(), [r["random_routing_median_ms"], r["prefix_aware_routing_median_ms"]]) for r in rows], log=True),
+            paired(
                 "Routing tradeoff", "percent", ["Random", "Prefix aware"],
                 [("Cache hit rate", cache_hit_rates), ("Route imbalance", route_imbalance)],
             ),
-            bar("HTTP 429 responses", "responses across three repeats", [("Random", data["by_arm"]["random routing"]["http_429_total"]), ("Prefix aware", data["by_arm"]["prefix-aware routing"]["http_429_total"])]),
+            dot("HTTP 429 responses", "responses across three repeats", [("Random", data["by_arm"]["random routing"]["http_429_total"]), ("Prefix aware", data["by_arm"]["prefix-aware routing"]["http_429_total"])]),
         ],
     )
 
@@ -346,9 +429,15 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         groups = {}
         for row in rows:
             groups.setdefault(row["scenario"], []).append(float(row["realtime_p95_ttft_ms"]))
-        plot_rows = [(name.replace("Realtime with ", "").title(), median(values)) for name, values in groups.items()]
-        retry_rows = [("Evicted", sum(int(r["evicted_batch_requests"]) for r in rows)), ("Retried", sum(int(r["async_retried_requests"]) for r in rows)), ("Duplicate results", sum(int(r["batch_duplicate_results"]) for r in rows))]
-        panels = [bar("Realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), bar("Batch retry outcome", "requests", retry_rows)]
+        display_names = {
+            "Realtime only": "Realtime only",
+            "Realtime with batch and no protection": "Batch with no protection",
+            "Realtime with reserved capacity": "Reserved capacity",
+            "Realtime with reserved capacity, batch eviction, and retry": "Reserved capacity + eviction",
+        }
+        plot_rows = [(display_names[name], median(values)) for name, values in groups.items()]
+        retry_rows = [("Evicted", sum(int(r["evicted_batch_requests"]) for r in rows)), ("Retried", sum(int(r["async_retried_requests"]) for r in rows)), ("One final result", sum(int(r["async_retried_requests"]) for r in rows))]
+        panels = [dot("Realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), process("Safe batch retry", "requests", retry_rows, "Evicted work was retried without duplicate results.")]
         takeaway = "Reserved capacity protected realtime latency while evicted batch requests were retried reliably."
         arch = ("Realtime and batch", "Reserved capacity and eviction", "One vLLM replica", "Retry owner completes batch")
     else:
@@ -361,13 +450,13 @@ def batch_eviction(root: Path, replicas: int) -> dict:
             f"the 95% interval ({confidence_interval[0]:.0f} to {confidence_interval[1]:.0f} ms) includes zero."
         )
         panels = [
-            bar(
+            dot(
                 "Realtime latency across production repeats", "p95 TTFT (ms)",
                 [(f"Repeat {i + 1}", float(r["realtime_p95_ttft_ms"])) for i, r in enumerate(production)],
                 latency_takeaway,
             ),
-            grouped("Model route share", "percent of requests", ["Model 1", "Model 2"], [(f"Repeat {i + 1}", [float(r["realtime_route_share_model_1"]) * 100, float(r["realtime_route_share_model_2"]) * 100]) for i, r in enumerate(production)]),
-            bar("Batch eviction and retry", "requests", [("Evicted", sum(int(r["evicted_batch_requests"]) for r in production)), ("Retried", sum(int(r["retried_batch_requests"]) for r in production)), ("Single final result", sum(int(r["single_final_result_matches"]) for r in production))]),
+            paired("Model route share", "percent of requests", ["Model 1", "Model 2"], [(f"Repeat {i + 1}", [float(r["realtime_route_share_model_1"]) * 100, float(r["realtime_route_share_model_2"]) * 100]) for i, r in enumerate(production)]),
+            process("Batch eviction and retry", "requests", [("Evicted", sum(int(r["evicted_batch_requests"]) for r in production)), ("Retried", sum(int(r["retried_batch_requests"]) for r in production)), ("Single final result", sum(int(r["single_final_result_matches"]) for r in production))]),
         ]
         takeaway = "Batch eviction and retry worked across two balanced model replicas."
         arch = ("Realtime and batch", "One Endpoint Picker", "Two vLLM replicas", "Retry owner completes batch")

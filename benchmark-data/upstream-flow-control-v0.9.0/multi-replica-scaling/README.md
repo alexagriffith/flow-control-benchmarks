@@ -5,7 +5,7 @@
 Can a model pool add replicas without losing per-GPU efficiency or worsening
 premium latency under the same offered load per GPU?
 
-**Answer.** Yes in the tested range; served throughput per GPU stayed within
+**Answer.** In the tested range, served throughput per GPU stayed within
 0.6% from one to four replicas, and four replicas served all offered requests.
 
 <!-- generated:package-visuals -->

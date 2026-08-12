@@ -5,8 +5,8 @@
 Can realtime and standard work retain lower TTFT while batch traffic shares the
 same model server?
 
-**Answer.** Yes; realtime and standard p95 TTFT stayed near 0.5 seconds while
-batch absorbed substantially more delay.
+**Answer.** Realtime stayed faster than batch in every repeat, but the
+realtime and standard results varied too much for stable point estimates.
 
 <!-- generated:package-visuals -->
 
@@ -31,8 +31,13 @@ batch absorbed substantially more delay.
 | Batch | 13,077 ms |
 
 Realtime and standard traffic retained lower TTFT while batch absorbed more of
-the queue. The selected result uses three repeats. Every request succeeded,
-flow control engaged during each run, and prefix caching remained off.
+the queue. Every request succeeded, flow control engaged during each run, and
+prefix caching remained off.
+
+The ordering was consistent, but realtime p95 TTFT ranged from 371 to 669 ms
+(1.81× spread) and standard ranged from 436 to 1,017 ms (2.33×). Both exceed
+the 1.5× repeat-stability gate. The medians remain visible as directional
+evidence and are not used as stable headline estimates.
 
 ## Run inventory
 

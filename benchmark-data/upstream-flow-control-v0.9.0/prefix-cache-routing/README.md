@@ -2,11 +2,13 @@
 
 ## Business question
 
-Does prefix-aware routing improve service under a saturated mixed workload when
-prefix caching is enabled?
+Where did prefix-aware routing help most in this saturated shared-prefix
+workload?
 
-**Answer.** Not consistently; it lowered realtime and batch latency but raised
-standard long-context latency, route imbalance, and HTTP 429 responses.
+**Answer.** Premium chat improved most, with 22% lower median p95 TTFT; broader
+gains were limited because both replicas already had about a 74% cache-hit
+rate, while affinity routing increased route imbalance and long-context
+latency.
 
 <!-- generated:package-visuals -->
 

@@ -5,9 +5,9 @@
 How many requests should enter vLLM, and when should request size affect that
 decision?
 
-**Answer.** Use a 128-request cap as the general default and consider
-input-token admission when request sizes vary enough for one-request-per-slot
-counting to hide their different costs.
+**Answer.** In this one-GPU calibration, a 128-request cap preserved lower
+first-token latency with a small throughput tradeoff; input-token admission
+became useful when request sizes varied materially.
 
 <!-- generated:package-visuals -->
 
@@ -25,7 +25,7 @@ counting to hide their different costs.
 
 ## Request-count result
 
-Request cap 128 is the default. Cap 160 served 3.0% more steady traffic, but its
+Request cap 128 was selected for the later production tests. Cap 160 served 3.0% more steady traffic, but its
 median p95 TTFT was 363 ms higher and its p99 TTFT was 543 ms higher.
 
 | Request cap | Repeats | Steady RPS | p95 TTFT | p99 TTFT | 429 rate |
@@ -48,10 +48,10 @@ TTFT in this mixed-size calibration. It also increased long-request p95 TTFT.
 | Input-token cap 148,480 | 3 | 21.40 | 6,621 ms | 5,213 ms | 6,352 ms |
 | Input plus output estimate | 1 | 6.78 | 41,909 ms | 27,952 ms | 13,962 ms |
 
-Use request count 128 as the general default. Input-token admission is a
-workload-specific option when request sizes vary enough to require size-aware
-control. The tested output estimator assumed too much future work and does not
-advance.
+Use request count 128 as the tested starting point for this one-GPU workload.
+Input-token admission is a workload-specific option when request sizes vary
+enough to require size-aware control. The tested output estimator assumed too
+much future work and does not advance.
 
 ## Important tradeoff
 

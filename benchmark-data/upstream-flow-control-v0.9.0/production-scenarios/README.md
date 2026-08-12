@@ -5,8 +5,9 @@
 Can one shared model server protect priority traffic across four production
 patterns while lower-priority or overloaded work absorbs the queue?
 
-**Answer.** Yes; higher-priority realtime traffic retained lower p95 TTFT while
-batch, standard bursts, or an overloaded peer absorbed most of the delay.
+**Answer.** Higher-priority realtime traffic stayed faster across all four
+traffic patterns; three scenarios met the repeat-stability gate, while batch
+isolation showed the same ordering in every repeat but remained directional.
 
 <!-- generated:package-visuals -->
 
@@ -34,21 +35,25 @@ aggregated across scenarios.
 
 ## Selected configuration
 
-The request-count detector kept median realtime p95 TTFT below 700 ms in the
-priority, batch-isolation, and consolidation scenarios. In the same-priority
-scenario, the overloaded tenant absorbed most of the delay. Peer median p95
-TTFT was 527 and 570 ms; repeat ranges extended to 619 and 675 ms.
+The request-count detector kept stable median realtime p95 TTFT below 700 ms
+in priority tiers, consolidation, and same-priority fairness. Batch isolation
+showed the same ordering, but its repeat spread was too wide for a stable point
+estimate.
+
+In same-priority fairness, peer medians were 527 and 570 ms, with ranges extended to 619 and 675 ms.
 
 | Scenario | Measured result during the surge |
 |---|---|
 | Priority tiers | Platinum 404 ms; Gold 511 ms; Silver 656 ms; Batch 13,264 ms p95 TTFT |
-| Batch isolation | Realtime 442 ms; Standard 515 ms; Batch 13,077 ms p95 TTFT |
+| Batch isolation | Directional medians: Realtime 442 ms; Standard 515 ms; Batch 13,077 ms p95 TTFT |
 | Consolidation | Realtime tenants 509 and 556 ms; Standard burst 25,892 ms p95 TTFT |
 | Same-priority fairness | Overloaded tenant 12,097 ms; peers 527 and 570 ms p95 TTFT |
 
-Each of the four selected scenario results uses three repeats. All requests
-succeeded, flow control engaged during every retained run, and the prefix cache
-remained off.
+Each selected scenario uses three repeats. All requests succeeded, flow
+control engaged during every retained run, and the prefix cache remained off.
+Batch-isolation realtime p95 TTFT ranged from 371 to 669 ms (1.81× spread),
+and standard ranged from 436 to 1,017 ms (2.33×). Both exceed the 1.5×
+repeat-stability gate, so those medians are directional evidence.
 
 ## Detector comparison
 
