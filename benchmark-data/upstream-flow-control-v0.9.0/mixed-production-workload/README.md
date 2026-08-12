@@ -5,6 +5,9 @@
 Which admission method better protects realtime traffic when chat, agentic,
 long-context, and batch work share one model server?
 
+**Answer.** Request-count admission produced lower realtime latency, while
+input-token admission produced lower long-context and batch latency.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -108,4 +111,4 @@ for REPEAT in 1 2 3; do
 done
 ```
 
-The four tenant shapes and rates are in [`scenario.json`](scenario.json). The two exact admission arms are in [`run-config.json`](run-config.json).
+The four tenant shapes and rates are in [`scenario.json`](scenario.json). The two exact admission configurations are in [`run-config.json`](run-config.json).

@@ -5,6 +5,10 @@
 Which vLLM limits provide a useful throughput and latency balance before flow
 control policy is evaluated under production traffic?
 
+**Answer.** The tested balance was 128 maximum running sequences and 8,192
+maximum batched tokens; higher sequence limits added little throughput and
+increased output-token latency.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -62,6 +66,14 @@ repeats.
   Prometheus metrics, route counts, cache counters, and configuration.
 
 The complete shared configuration is in [`run-config.json`](run-config.json).
+
+### What remained fixed
+
+The model, one H100 GPU, one Endpoint Picker v0.9.0, 32,768-token model limit,
+90% GPU-memory target, cache-off state, runner, seed, warmup, and metric cadence
+remained fixed. The sequence sweep held concurrency at 192 while changing
+`max-num-seqs`. The batched-token sweep held `max-num-seqs=128` while changing
+`max-num-batched-tokens`.
 
 ## Evidence
 

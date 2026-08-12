@@ -5,6 +5,9 @@
 Can realtime and standard work retain lower TTFT while batch traffic shares the
 same model server?
 
+**Answer.** Yes; realtime and standard p95 TTFT stayed near 0.5 seconds while
+batch absorbed substantially more delay.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -58,11 +61,13 @@ it as a matched detector comparison.
 
 ## Reproduce
 
-This scenario used GuideLLM 0.7.0 with request-count admission at 128 requests, 10% headroom, random routing, one model replica, and cache off. Three selected repeats used the same deterministic traffic schedule.
+This scenario used GuideLLM 0.7.0 with request-count admission at 128 requests,
+15% headroom, random routing, one model replica, and cache off. Three selected
+repeats used the same deterministic traffic schedule.
 
 ```bash
 python3 pipeline/guidellm_trace.py --scenario-file benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/scenario.json --scenario batch_isolation --out-dir /tmp/batch-isolation --traffic-seed 42
-python3 pipeline/run_guidellm_scenario.py --manifest /tmp/batch-isolation/manifest.json --run-dir results/batch-isolation --prefix batch-isolation --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.10 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
+python3 pipeline/run_guidellm_scenario.py --manifest /tmp/batch-isolation/manifest.json --run-dir results/batch-isolation --prefix batch-isolation --namespace "${NAMESPACE:-flow-control}" --runner-pod "${RUNNER_POD:-flow-control-benchmark-runner}" --expected-detector concurrency-detector --expected-concurrency-mode requests --expected-max-concurrency 128 --expected-headroom 0.15 --expected-picker random-picker --expected-prefix-cache off --expected-model-replicas 1 --http-version 1 --guidellm-worker-processes 4 --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
 ```
 
 [`scenario.json`](scenario.json) contains only the batch-isolation traffic. [`run-config.json`](run-config.json) records the tested images and settings.

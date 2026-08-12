@@ -4,13 +4,17 @@
 
 How much can batch work already running in vLLM increase realtime latency?
 
+**Answer.** Under request-count admission, running batch increased realtime
+median p95 TTFT from 133 ms to 15,378 ms, or 115 times the realtime-only
+reference.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
 
-![Batch interference baseline tested serving path](architecture.svg)
+![Batch interference tested serving path](architecture.svg)
 
-![Batch interference baseline benchmark results](results.svg)
+![Batch interference benchmark results](results.svg)
 
 [Tested configuration](tested-config.yaml)
 
@@ -36,14 +40,32 @@ batch work in its queue longer than realtime work, but it could not reclaim
 batch requests that were already running inside vLLM. During the interference
 runs, vLLM reached 128 running requests and 63 median peak waiting requests.
 
+## Why request-count admission was used
+
+The earlier admission sweep selected a cap of 128 requests as the general
+default. This test then held that setting constant to isolate one question:
+can priority queues protect realtime traffic after batch work has already
+entered vLLM?
+
+Request-count admission treats each request as one slot. In this test, a
+4,096-input realtime request and a 20,000-input batch request each consumed one
+admission slot. The policy could hold additional batch requests in the Endpoint
+Picker, but it could not account for their different sizes or reclaim batch
+requests already running in vLLM.
+
+Input-token admission was tested separately with matched mixed traffic. It
+lowered batch p95 TTFT from 8,654 ms to 2,832 ms, while realtime p95 TTFT
+increased from 1,994 ms to 2,914 ms. See the
+[mixed production workload](../mixed-production-workload/) for that comparison.
+
 ## Method
 
 - One Endpoint Picker served one vLLM model replica on one NVIDIA H100 GPU.
-- The realtime-only arm was configured for 4,096 input and 128 output tokens
+- The realtime-only test was configured for 4,096 input and 128 output tokens
   at a noisy sinusoidal rate centered on 3 requests/s.
-- The interference arm started 20,000-input, 128-output batch traffic first at
+- The interference test started 20,000-input, 128-output batch traffic first at
   a rate centered on 2.75 requests/s, then replayed the same realtime trace.
-- Each arm ran three matched 240-second repeats.
+- Each test ran three matched 240-second repeats.
 - The Endpoint Picker used request-concurrency detection with
   `maxConcurrency=128`, 10% headroom, and priority-aware queues.
 - Reserved capacity and batch eviction were not configured.
@@ -67,7 +89,8 @@ The complete configuration is in [`run-config.json`](run-config.json).
 
 This is an interference baseline. It shows why priority queues alone cannot
 reclaim capacity from batch work already running in vLLM. It does not test
-reserved capacity or batch eviction.
+reserved capacity or batch eviction. It also does not compare request-count and
+input-token admission under this exact batch-first traffic pattern.
 
 The evidence includes queue, saturation, vLLM running and waiting, KV cache,
 and preemption data. Exact Endpoint Picker in-flight plugin-state samples are
@@ -75,7 +98,7 @@ not part of this package.
 
 ## Reproduce
 
-This package used GuideLLM 0.7.0, one Endpoint Picker, one model replica, request-count admission at 128 requests, 10% headroom, random routing, and cache off. Each arm ran three times with the same realtime trace.
+This package used GuideLLM 0.7.0, one Endpoint Picker, one model replica, request-count admission at 128 requests, 10% headroom, random routing, and cache off. Each test ran three times with the same realtime trace.
 
 ```bash
 for scenario in batch_realtime_only_4k batch_realtime_with_batch_20k_no_holdback_rate_2_75; do

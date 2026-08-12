@@ -1,5 +1,12 @@
 # Request-concurrency priority tuning
 
+## Business question
+
+How does the request cap trade realtime latency against lower-priority latency?
+
+**Answer.** A cap of 48 produced the lowest premium p95 TTFT in this two-repeat
+study, while tighter caps made standard traffic wait longer.
+
 This package measures how `maxConcurrency` changes latency under one fixed
 traffic pattern on Endpoint Picker v0.9.0. The run metrics record build commit
 `5f4e762f341a5196393ce79f8a57c3e1900c4a6b`. The sweep used GPT-OSS 20B,

@@ -5,6 +5,9 @@
 Can two realtime tenants retain lower TTFT while standard traffic surges on the
 same model server?
 
+**Answer.** Yes with request-count admission; both realtime tenants stayed
+below 600 ms p95 TTFT while the standard burst absorbed the delay.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -96,4 +99,5 @@ for REPEAT in 1 2 3; do
 done
 ```
 
-[`scenario.json`](scenario.json) contains only the consolidation traffic. [`run-config.json`](run-config.json) defines the three detector arms.
+[`scenario.json`](scenario.json) contains only the consolidation traffic.
+[`run-config.json`](run-config.json) defines the three detector configurations.

@@ -5,6 +5,9 @@
 Does prefix-aware routing improve service under a saturated mixed workload when
 prefix caching is enabled?
 
+**Answer.** Not consistently; it lowered realtime and batch latency but raised
+standard long-context latency, route imbalance, and HTTP 429 responses.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -64,12 +67,12 @@ opportunity to increase cache reuse.
 - Four tenant tiers shared one model pool: premium chat (priority 100), agentic
   (priority 50), standard long context (priority 0), and batch (priority -10).
 - The same deterministic 7,480-request noisy sinusoidal trace was replayed in
-  both arms.
+  both configurations.
 - The Endpoint Picker used request-concurrency detection with `maxConcurrency=128`
-  and 10% headroom, with flow control and priority-aware queues in both arms.
-- Random arm: random picker ignores prefix scores. Prefix-aware arm: max-score
+  and 10% headroom, with flow control and priority-aware queues in both configurations.
+- Random configuration: random picker ignores prefix scores. Prefix-aware configuration: max-score
   picker selects the replica with the highest approximate prefix-match score.
-- Each arm ran three matched 180-second repeats.
+- Each configuration ran three matched 180-second repeats.
 
 The complete configuration is in [`run-config.json`](run-config.json).
 
@@ -83,7 +86,7 @@ The complete configuration is in [`run-config.json`](run-config.json).
 | [`system-metrics.csv`](system-metrics.csv) | Curated Endpoint Picker and vLLM metrics collected during every run. |
 | [`run-evidence.csv`](run-evidence.csv) | Schedule, header, route, metric, cache, flow-control, and data-quality gates. All six runs passed. |
 | [`routing-balance.csv`](routing-balance.csv) | Per-run request distribution across both model replicas. |
-| [`analysis.json`](analysis.json) | Three-repeat medians, ranges, arm comparison, and claim boundary. |
+| [`analysis.json`](analysis.json) | Three-repeat medians, ranges, configuration comparison, and claim boundary. |
 
 All six runs passed schedule, request-shape, header, metric, memory, and restart
 gates. Flow control engaged in every run.

@@ -5,13 +5,16 @@
 Can one shared model server protect priority traffic across four production
 patterns while lower-priority or overloaded work absorbs the queue?
 
+**Answer.** Yes; higher-priority realtime traffic retained lower p95 TTFT while
+batch, standard bursts, or an overloaded peer absorbed most of the delay.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
 
-![Four production traffic scenarios tested serving path](architecture.svg)
+![Realtime protection under production traffic tested serving path](architecture.svg)
 
-![Four production traffic scenarios benchmark results](results.svg)
+![Realtime protection under production traffic benchmark results](results.svg)
 
 [Tested configuration](tested-config.yaml)
 
@@ -106,7 +109,7 @@ Each scenario folder contains its own `summary.csv`, `window-summary.csv`,
 
 ## Reproduce
 
-All four scenarios used GuideLLM 0.7.0, open-loop Poisson arrivals, noisy sinusoidal phases, seed 42, one Endpoint Picker, one model replica, random routing, and cache off. The selected arm used request-count admission at 128 requests with 10% headroom. Consolidation and same-priority fairness also ran matched utilization-detector arms at queue depth 2; consolidation included queue depth 5.
+All four scenarios used GuideLLM 0.7.0, open-loop Poisson arrivals, noisy sinusoidal phases, seed 42, one Endpoint Picker, one model replica, random routing, and cache off. The selected configuration used request-count admission at 128 requests with 10% headroom. Consolidation and same-priority fairness also ran matched utilization-detector configurations at queue depth 2; consolidation included queue depth 5.
 
 ```bash
 for SCENARIO in priority_tiers batch_isolation consolidation same_priority_fairness; do

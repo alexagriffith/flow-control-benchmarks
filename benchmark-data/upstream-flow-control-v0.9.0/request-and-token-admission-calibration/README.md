@@ -5,6 +5,10 @@
 How many requests should enter vLLM, and when should request size affect that
 decision?
 
+**Answer.** Use a 128-request cap as the general default and consider
+input-token admission when request sizes vary enough for one-request-per-slot
+counting to hide their different costs.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary

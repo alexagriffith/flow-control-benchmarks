@@ -5,6 +5,9 @@
 Can peer tenants keep receiving service while one tenant in the same priority
 band overloads the shared model?
 
+**Answer.** Yes; both peers stayed below 700 ms p95 TTFT while the overloaded
+tenant absorbed most of the delay under request-count admission.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -118,4 +121,5 @@ python3 pipeline/run_guidellm_scenario.py \
   --drain-after-done --drain-timeout-s 300 --recover-multiline-sse
 ```
 
-[`scenario.json`](scenario.json) contains only the fairness traffic. [`run-config.json`](run-config.json) defines the matched detector arms.
+[`scenario.json`](scenario.json) contains only the fairness traffic.
+[`run-config.json`](run-config.json) defines the matched detector configurations.
