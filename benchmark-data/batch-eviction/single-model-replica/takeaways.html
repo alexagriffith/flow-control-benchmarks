@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>In-Flight Eviction — what the benchmark proved</title>
+  <title>In-flight eviction benchmark results</title>
   <style>
     :root {
       --canvas: #f7f8fa;
@@ -103,35 +103,35 @@
   <main>
     <header class="hero">
       <h1>In-flight eviction flow control benchmark results</h1>
-      <p class="lede">When batch work has filled the GPU, eviction clears room for higher-priority requests by stopping batch jobs already running. It reclaims a full GPU in seconds — but it does not, on its own, make higher-priority requests faster. What keeps them fast is holding capacity aside for them from the start.</p>
+      <p class="lede">When batch work fills the GPU, eviction stops running batch jobs to free slots for higher-priority requests. Reclaim took seconds in the measured runs. Median higher-priority TTFT stayed low only when capacity was reserved before the surge.</p>
       <ul class="results">
-        <li><b>Eviction responds the instant priority traffic is blocked by batch.</b> When higher-priority requests arrive and batch is holding the capacity, eviction frees it right away.</li>
-        <li><b>Holding capacity aside is what keeps higher-priority requests fast.</b> The setting that kept 50% aside was the fastest and never needed to evict anything.</li>
-        <li><b>Eviction's effect on speed was not consistent.</b> The same test, run three times, got faster twice and slower once.</li>
-        <li><b>Every eviction wastes work.</b> The stopped request has to be redone, and longer prompts waste more.</li>
-        <li><b>Only the setting that held the least aside turned requests away.</b> Holding 50% or 25% aside turned away none.</li>
+        <li><b>Eviction fired when priority traffic was blocked.</b> Batch held the GPU; higher-priority requests arrived; the Endpoint Picker stopped batch streams.</li>
+        <li><b>Reserved capacity set median TTFT.</b> Holding 50% aside was fastest and needed no evictions.</li>
+        <li><b>Eviction did not move TTFT the same way every run.</b> Three repeats: faster twice, slower once.</li>
+        <li><b>Each eviction redoes work.</b> Longer prompts lost more tokens on retry.</li>
+        <li><b>HTTP 429s appeared only at 25% reserve.</b> 50% and 75% reserve served every higher-priority request.</li>
       </ul>
     </header>
 
     <!-- ========== HOW IT WORKS ========== -->
     <section class="chapter">
       <h2>How the system is put together</h2>
-      <p class="lead">Every request takes the same path: through the gateway, to the router, into the model server. Higher-priority and batch traffic share one GPU. The router is where eviction lives — it is the point that decides, when the GPU is full and higher-priority traffic is waiting, to stop batch work already running.</p>
+      <p class="lead">Requests pass through the gateway, the Endpoint Picker, and one vLLM replica on a single H100. Realtime and batch share the same 48-slot concurrency cap. The Endpoint Picker stops running batch streams when higher-priority traffic cannot be admitted.</p>
 
       <div class="fig">
         <figure class="assetcard">
-          <div class="charttitle">Request path, and where eviction happens</div>
-          <div class="chartsub">One GPU · one model server · the router holds the priorities and makes the eviction call</div>
+          <div class="charttitle">Request path and eviction point</div>
+          <div class="chartsub">One GPU and one model server. The Endpoint Picker applies priorities and issues eviction.</div>
           <img class="arch-diagram" src="takeaways-architecture.svg" width="900" height="420" alt="Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on one vLLM replica on a single H100, and evicted batch work is retried by the Async Processor.">
         </figure>
-        <figcaption>Higher-priority traffic (priority 100) and batch (priority −10) enter the same door and land on the same GPU. The router reserves a share of the 48 slots for higher-priority traffic; when a surge does not fit, it stops running batch jobs to make room. A stopped batch job comes back as an error, so the client re-sends it.</figcaption>
+        <figcaption>Realtime traffic uses priority 100; batch uses priority −10. Both land on the same GPU. The Endpoint Picker reserves part of the 48 slots for higher-priority work. When a surge exceeds reserved capacity, it stops batch streams. The client retries stopped batch jobs.</figcaption>
       </div>
     </section>
 
     <!-- ========== 00 LIVE RECLAIM ========== -->
     <section class="chapter">
       <h2>Eviction's response to blocked priority traffic</h2>
-      <p class="lead">Batch work has filled the GPU. Higher-priority traffic arrives and is blocked — there is no room for it. That is the moment eviction responds: it immediately stops batch jobs and hands the capacity to the higher-priority requests. The chart follows one such clear-out from full back to nearly empty.</p>
+      <p class="lead">Batch filled the GPU. Higher-priority traffic arrived with no free slots. Eviction stopped nine batch streams. Running count fell from 48 toward zero as those jobs wound down. The chart covers one measured clear-out.</p>
 
       <div class="fig">
         <figure class="assetcard">
@@ -144,34 +144,34 @@
           </div>
           <svg id="c0" viewBox="0 0 680 320" role="img" aria-label="Requests running climb to 48 and the GPU fills completely, then batch work is stopped and the running count falls back toward empty."></svg>
         </figure>
-        <figcaption>Once the GPU is full and priority traffic is blocked, eviction responds at once — nine batch requests are stopped — and the number running falls from 48 back toward empty as those jobs wind down. The seconds on this chart are the batch jobs finishing their wind-down, not a wait anyone experienced.</figcaption>
+        <figcaption>Eviction stopped nine batch requests. Running count dropped from 48 as streams terminated. Elapsed time on the chart is wind-down after abort, not queue wait for higher-priority traffic.</figcaption>
       </div>
     </section>
 
     <!-- ========== 01 ========== -->
     <section class="chapter">
       <h2>When higher-priority requests are turned away</h2>
-      <p class="lead">Holding only 25% of the GPU aside was not enough for a surge of higher-priority traffic: a few requests were turned away — two in a sudden burst, one with long prompts. Holding 50% or 75% aside turned none away.</p>
+      <p class="lead">With 25% reserved, three higher-priority requests received HTTP 429 (two in a burst, one with long prompts). With 50% or 75% reserved, none were turned away.</p>
 
       <div class="fig">
         <figure class="assetcard">
           <div class="charttitle">Higher-priority requests turned away during a surge</div>
-          <div class="chartsub">The cost of holding less aside — weighed against the higher utilization it buys</div>
+          <div class="chartsub">Less reserved capacity vs higher batch utilization</div>
           <svg id="c1" viewBox="0 0 680 260" role="img" aria-label="Higher-priority requests turned away: a few when only 25 percent was held aside, none at 50 or 75 percent."></svg>
         </figure>
-        <figcaption>Requests were only turned away when the least was held aside — the setting that also gives batch the most GPU. Holding more aside serves every higher-priority request, but leaves that reserved capacity idle when priority isn't using it. Which side you want depends on the workload.</figcaption>
+        <figcaption>HTTP 429s appeared only at 25% reserve. More reserve serves every higher-priority request but leaves capacity idle when priority traffic is light. Pick the reserve level from expected surge size and prompt length.</figcaption>
       </div>
 
       <div class="note">
         <span class="lbl">The trade-off</span>
-        The less you hold aside for higher-priority traffic, the more often batch fills the GPU and has to be evicted when priority arrives — and eviction throws work away. Hold more aside and evictions stop, but batch gets squeezed into less of the GPU, so batch work finishes slower. The fastest batch and the safest priority pull in opposite directions; the job is to find the point that serves priority without starving batch. In this one-GPU test, holding half aside was that point.
+        Less reserve lets batch use more of the GPU and triggers more evictions. More reserve stops evictions but slows batch throughput. In the one-GPU test, 50% reserve balanced the two.
       </div>
     </section>
 
     <!-- ========== 02 ========== -->
     <section class="chapter">
       <h2>Latency across headroom settings</h2>
-      <p class="lead">Holding half the GPU aside for higher-priority traffic was the fastest setting — and it never had to stop any batch work to get there.</p>
+      <p class="lead">50% reserve had the lowest median higher-priority TTFT. No batch streams were stopped in those runs.</p>
 
       <div class="fig">
         <figure class="assetcard">
@@ -179,18 +179,18 @@
           <div class="chartsub">How long from sending a request to its first token · median of 3 runs</div>
           <svg id="c2" viewBox="0 0 680 300" role="img" aria-label="Time to first token: 1350 ms holding 25 percent aside with eviction off, 1055 with eviction on, 967 holding 50 percent aside, 1019 holding 75 percent aside."></svg>
         </figure>
-        <figcaption>Holding 50% aside was the fastest and stopped no batch work. Holding only 25% aside was faster with eviction on than off — but it was also the only setting that ever turned a request away.</figcaption>
+        <figcaption>50% reserve: lowest median TTFT, zero evictions. 25% reserve: lower TTFT with eviction on than off, and the only 429s in the sweep.</figcaption>
       </div>
     </section>
 
     <!-- ========== 03 ========== -->
     <section class="chapter">
       <h2>Eviction's effect on latency, run to run</h2>
-      <p class="lead">We ran the same test three times with eviction off, then on. Every stopped request was retried and finished, but speed went both ways — faster twice, slower once. That is why eviction on its own cannot be counted on to make things faster.</p>
+      <p class="lead">Three repeats compared eviction off and on at 25% reserve. All stopped requests retried to completion. Median TTFT was lower with eviction on in two runs and higher in one.</p>
 
       <div class="fig">
         <figure class="assetcard">
-          <div class="charttitle">Time to first token — eviction off vs on, same test three times</div>
+          <div class="charttitle">Time to first token: eviction off vs on, three repeats</div>
           <div class="chartsub">How long from sending a request to its first token</div>
           <div class="legend">
             <span><i class="lsw" style="background:var(--gray)"></i> eviction off</span>
@@ -200,7 +200,7 @@
           </div>
           <svg id="c3" viewBox="0 0 680 300" role="img" aria-label="Same test three times: run 1 got 37 percent faster, run 2 got 15 percent slower, run 3 got 47 percent faster with eviction on."></svg>
         </figure>
-        <figcaption>Two runs got faster, one got slower. The lines point in different directions — that inconsistency is the finding.</figcaption>
+        <figcaption>Run 1: 37% lower TTFT with eviction on. Run 2: 15% higher. Run 3: 47% lower.</figcaption>
       </div>
     </section>
 
@@ -221,15 +221,15 @@
 
     <!-- ========== MEANS ========== -->
     <section class="chapter">
-      <h2>The operating recommendation</h2>
+      <h2>Operating recommendation</h2>
       <div class="note">
-        <span class="lbl">The operating pattern</span>
-        Hold capacity aside for higher-priority traffic — that is what keeps it fast. Keep eviction turned on as a backup that frees the GPU when batch work has filled it. Don't rely on eviction alone to keep things fast.
+        <span class="lbl">Pattern from the test</span>
+        Reserve capacity for higher-priority traffic. Keep eviction enabled to reclaim slots when batch already runs. Do not treat eviction as a latency knob.
       </div>
       <ul class="recs">
-        <li><b>Match how much you hold aside to the size of the surge.</b> Set it against the expected burst of higher-priority traffic and how long the prompts are. Holding 50% aside was the reliable point in this one-GPU test; check it before promising any speed target.</li>
-        <li><b>Plan for the retry.</b> When a request is stopped, it is not automatically re-sent — the client has to retry it. Batch clients need a retry that is safe to repeat and backs off between attempts.</li>
-        <li><b>Still to prove.</b> More than one GPU, the real production traffic mix, a long endurance run, and smarter handling of very long prompts.</li>
+        <li><b>Size reserve to the surge.</b> Use expected burst rate and prompt length. 50% reserve worked in the single-GPU test; re-check before quoting a latency target.</li>
+        <li><b>Plan for retry.</b> The Endpoint Picker returns HTTP 429 on eviction. The batch client must retry with idempotency and backoff.</li>
+        <li><b>Still open.</b> Multi-GPU pools, full production mix, long endurance runs, and large-prompt admission.</li>
       </ul>
     </section>
 
@@ -239,7 +239,7 @@
       <p class="lead">Every counted run passed the evidence gate. Values are as measured; units are in each column header. Expand a test to see its table.</p>
 
       <details class="viewdata" open>
-        <summary>Test 0 — Live reclaim: key transitions in one eviction-on run</summary>
+        <summary>Test 0: live reclaim transitions in one eviction-on run</summary>
         <div class="tbl">
           <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">matched-treatment-eviction-on-v2-r1 · sampled every ~0.1 s · showing the reclaim window</p>
           <table>
@@ -268,7 +268,7 @@
       </details>
 
       <details class="viewdata">
-        <summary>Test 1 — Headroom sweep: higher-priority p95 TTFT by batch ceiling</summary>
+        <summary>Test 1: headroom sweep, higher-priority p95 TTFT by batch ceiling</summary>
         <div class="tbl">
           <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">Medium prompts · each row is the median of 3 gated runs · 48 concurrent slots</p>
           <table>
@@ -301,7 +301,7 @@
       </details>
 
       <details class="viewdata">
-        <summary>Test 2 — Matched pairs: eviction off vs on at 75% ceiling</summary>
+        <summary>Test 2: matched pairs, eviction off vs on at 75% ceiling</summary>
         <div class="tbl">
           <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">Identical config per pair · all runs valid, config-matched, and image-matched</p>
           <table>
@@ -325,7 +325,7 @@
       </details>
 
       <details class="viewdata">
-        <summary>Test 3 — Strongest evidence: three fully-audited series</summary>
+        <summary>Test 3: three audited series</summary>
         <div class="tbl">
           <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">13 audited waves · priority-100 realtime vs priority-−10 batch · all requests completed</p>
           <table>
@@ -350,9 +350,9 @@
       </details>
 
       <details class="viewdata">
-        <summary>Test 4 — Discarded compute after eviction</summary>
+        <summary>Test 4: discarded compute after eviction</summary>
         <div class="tbl">
-          <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">Tokens recomputed or lost — GPU work the client had to redo on retry</p>
+          <p style="margin:12px 16px 4px;font-size:12.5px;color:var(--txt2);font-weight:650">Tokens recomputed or lost on client retry</p>
           <table>
             <thead>
               <tr><th>Scenario</th><th>Validity</th><th class="num">Tokens recomputed / lost (count)</th></tr>
@@ -368,7 +368,7 @@
       </details>
 
       <details class="viewdata">
-        <summary>Fixed configuration — all tests</summary>
+        <summary>Fixed configuration for all tests</summary>
         <div class="tbl">
           <table>
             <thead><tr><th>Layer</th><th>Setting</th></tr></thead>

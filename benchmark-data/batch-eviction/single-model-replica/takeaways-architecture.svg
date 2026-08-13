@@ -83,7 +83,7 @@
   <rect x="428" y="190" width="236" height="88" fill="#fdeaea" stroke="#b83232" stroke-width="1.5"/>
   <text class="label" x="442" y="214">In-flight eviction controller</text>
   <text class="copy" x="442" y="234">Stops running batch streams when priority traffic is blocked</text>
-  <text class="callout" x="442" y="256">Eviction happens here  not in the queue</text>
+  <text class="callout" x="442" y="256">Eviction runs in the Endpoint Picker</text>
 
   <path d="M678 165 H718" fill="none" stroke="#15202b" stroke-width="2" marker-end="url(#arrow)"/>
   <text class="flow" x="698" y="154" text-anchor="middle">dispatch</text>

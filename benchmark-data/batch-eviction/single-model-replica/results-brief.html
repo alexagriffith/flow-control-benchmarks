@@ -641,8 +641,8 @@
     <section class="decision-band" aria-labelledby="decision-title">
       <div class="decision-grid">
         <div class="decision-copy">
-          <h2 id="decision-title">Flow control protects higher-priority realtime p95 TTFT through reserved capacity and batch eviction. When realtime demand needs capacity, lower-priority batch work is evicted, retried, and completed later.</h2>
-          <p>Batch workloads can use shared GPU capacity while flow control returns capacity to realtime traffic when demand arrives.</p>
+          <h2 id="decision-title">Reserved capacity held realtime p95 TTFT near the realtime-only baseline. When demand spiked, the Endpoint Picker evicted batch streams; the Async Processor retried them to one final result each.</h2>
+          <p>Batch and realtime shared one GPU. Median realtime p95 TTFT was 341–348 ms with protection vs 561 ms without.</p>
         </div>
         <div class="decision-stat">
           <strong>Realtime latency protected</strong>
@@ -659,7 +659,7 @@
     <section class="section" id="proof">
       <div class="section-head">
         <h2>The four matched scenarios</h2>
-        <p class="takeaway">The final test changed one protection mechanism at a time.</p>
+        <p class="takeaway">Each scenario changed one protection setting.</p>
       </div>
 
       <div class="arm-grid">
@@ -715,7 +715,7 @@
       <figure class="visual" aria-labelledby="ttft-title">
         <figcaption>
           <p class="visual-title" id="ttft-title">Realtime p95 time to first token</p>
-          <p class="visual-takeaway">Headroom returned realtime latency to the no-batch reference.</p>
+          <p class="visual-takeaway">Reserved capacity returned median p95 TTFT to the realtime-only level.</p>
         </figcaption>
         <div class="chart-row">
           <div class="chart-label">A. Realtime only</div>
@@ -762,13 +762,13 @@
           <div class="repeat-line"><span>Complete</span><div class="repeat-track"><div class="repeat-bar" style="width:50.5%"></div></div><span>324</span></div>
         </article>
       </div>
-      <div class="disclosure">Three matched repeats support a descriptive result. The complete-path p95 TTFT ranged from 324 to 472 ms, and the sample size does not support a statistical-significance claim.</div>
+      <div class="disclosure">Three matched repeats. Complete-path p95 TTFT ranged from 324 to 472 ms. Sample size is too small for a significance test.</div>
     </section>
 
     <section class="section" id="path">
       <div class="section-head">
-        <h2>The complete batch recovery path</h2>
-        <p class="takeaway">Every evicted batch request reached one final result.</p>
+        <h2>Batch recovery path</h2>
+        <p class="takeaway">38 evicted requests retried; 5,376 batch jobs finished with zero duplicate results.</p>
       </div>
       <div class="path" role="img" aria-label="Batch starts first, fills spare capacity, realtime arrives, Endpoint Picker evicts negative priority work, Async Processor retries it, and all batch work completes once.">
         <div class="path-step"><span class="step-number">01</span><strong>Batch starts first</strong><span>Persistent backlog enters vLLM before realtime traffic.</span><span class="metric">60 s early</span></div>
@@ -788,14 +788,14 @@
 
     <section class="section">
       <div class="section-head">
-        <h2>The operating trade-offs</h2>
-        <p class="takeaway">Headroom protects bursts; request counting misses some large-prompt pressure.</p>
+        <h2>Operating trade-offs</h2>
+        <p class="takeaway">More reserve reduced HTTP 429s and lowered batch throughput. Request-count admission missed large-prompt pressure.</p>
       </div>
       <div class="trade-grid">
         <figure class="visual mini-chart" aria-labelledby="headroom-title">
           <figcaption>
             <p class="visual-title" id="headroom-title">Abrupt surge: reserved capacity</p>
-            <p class="visual-takeaway">More headroom removed realtime rejections and reduced batch throughput.</p>
+            <p class="visual-takeaway">More reserved slots removed realtime rejections and reduced batch jobs completed.</p>
           </figcaption>
           <div class="headroom-row"><b>12 slots (c36)</b><div class="success-track"><div class="success-bar" style="width:99.89%"></div></div><span class="num">1,799 / 1,801</span><span class="num">3,397 batch</span></div>
           <div class="headroom-row"><b>18 slots (c30)</b><div class="success-track"><div class="success-bar" style="width:99.94%"></div></div><span class="num">1,800 / 1,801</span><span class="num">3,333 batch</span></div>
@@ -806,7 +806,7 @@
         <figure class="visual mini-chart warning" aria-labelledby="prompt-title">
           <figcaption>
             <p class="visual-title" id="prompt-title">Large prompts: request-count blind spot</p>
-            <p class="visual-takeaway">Latency increased before request-count flow control engaged.</p>
+            <p class="visual-takeaway">TTFT rose before request-count admission engaged.</p>
           </figcaption>
           <div class="gauge">
             <div class="gauge-side">
@@ -825,7 +825,7 @@
     <section class="section" id="scenarios">
       <div class="section-head">
         <h2>Every counted scenario</h2>
-        <p class="takeaway">Three test phases covered 75% and 50% batch ceilings.</p>
+        <p class="takeaway">Tests covered 75% and 50% batch ceilings across mechanism, production, and matched-proof phases.</p>
       </div>
       <ul class="method-strip" aria-label="Scenario phases" style="margin-bottom:16px">
         <li>Contained mechanism tests</li>
@@ -846,33 +846,33 @@
       <div class="scenario-list" id="scenario-list" aria-live="polite">
         <div class="scenario-row header"><div>Family</div><div>Scenario</div><div>Measured result</div><div>Business meaning</div><div>Evidence</div></div>
       </div>
-      <div class="disclosure">Rejected setup attempts remain in separate folders and do not contribute to these conclusions.</div>
+      <div class="disclosure">Rejected setup attempts are in separate folders and are excluded from the tables below.</div>
     </section>
 
     <section class="section" id="boundary">
       <div class="section-head">
         <h2>Capability boundary</h2>
-        <p class="takeaway">The evidence supports a production pattern and defines its operating limits.</p>
+        <p class="takeaway">Claims below passed the evidence gate for the single-replica build.</p>
       </div>
       <div class="capability-grid">
         <article class="capability">
-          <h3>Supported by these tests</h3>
+          <h3>Supported claims</h3>
           <ul>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Protect realtime with reserved headroom.</b> The median p95 TTFT returned from 561 ms to 341 ms.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Reclaim running negative-priority work.</b> Eviction terminated the selected vLLM streams.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Retry batch to completion.</b> All 38 evicted jobs completed with zero duplicate results.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Apply the priority boundary.</b> Standard work reclaimed batch; same-priority batch did not evict peers.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Recover queued batch after restart.</b> All 300 jobs completed once after an Async Processor restart.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Reserved capacity protected realtime TTFT.</b> Median p95 fell from 561 ms to 341 ms.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Eviction stopped running batch streams.</b> 38 vLLM streams terminated when capacity was needed.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Retries finished every evicted job.</b> 38 retries, zero duplicate batch results.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Priority rules held.</b> Standard traffic reclaimed batch; same-priority batch did not evict peers.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Queue survived Async Processor restart.</b> 300 jobs completed once after restart.</span></li>
           </ul>
         </article>
         <article class="capability boundary">
           <h3>Evidence limits</h3>
           <ul>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Eviction needs a retry owner.</b> The Endpoint Picker terminates the stream; the Async Processor resubmits it.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Eviction alone does not set a latency target.</b> Headroom produced the strongest realtime protection.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Request counts do not measure memory pressure.</b> Large prompts increased TTFT before the gate activated.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>An aggressive batch ceiling can reject realtime work.</b> The 75% ceiling was too high for two tested pressure shapes.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>The proof covers one model replica.</b> Cross-node queue recovery and multi-replica reclamation were outside this build test.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Retry owner required.</b> The Endpoint Picker aborts the stream; the Async Processor must resubmit.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Eviction is not a TTFT guarantee.</b> Reserved capacity drove the latency result.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Request count ignores prompt size.</b> Large prompts raised TTFT before the gate activated.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>High batch ceiling can reject realtime work.</b> The 75% ceiling failed two pressure shapes.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Single replica only.</b> Multi-replica reclamation and cross-node queue recovery were not tested.</span></li>
           </ul>
         </article>
       </div>
@@ -964,14 +964,14 @@
       {family:"Mechanism",name:"Same-priority batch",result:"No eviction occurred; p95 TTFT was 5,049 ms.",meaning:"Same-priority peers share capacity without reclaiming each other.",status:"supported"},
       {family:"Mechanism",name:"Poisson 20 requests/s",result:"Queues formed; capacity freed before eviction; p95 TTFT was 462 ms.",meaning:"Moderate pressure can resolve through natural completion.",status:"supported"},
       {family:"Mechanism",name:"Poisson 100 requests/s",result:"Five waves completed 100/100 realtime and 200/200 batch; 40 evictions.",meaning:"Sustained pressure exercised reclaim and bounded retry repeatedly.",status:"supported"},
-      {family:"Edge case",name:"Long prompts, 75% batch ceiling",result:"One realtime request failed; 7 retries recomputed 21,651 prompt tokens.",meaning:"The aggressive batch ceiling left too little room for this request shape.",status:"limit"},
+      {family:"Edge case",name:"Long prompts, 75% batch ceiling",result:"One realtime request failed; 7 retries recomputed 21,651 prompt tokens.",meaning:"75% batch ceiling left too little room for long prompts.",status:"limit"},
       {family:"Edge case",name:"Long prompts, 50% batch ceiling",result:"60/60 realtime and 120/120 batch completed; zero evictions.",meaning:"More reserved capacity handled the tested long-prompt pressure cleanly.",status:"supported"},
-      {family:"Production",name:"Low-load reference",result:"739/739 realtime at 311 ms p95 TTFT; 520/520 agentic completed.",meaning:"This establishes the mixed-service latency reference.",status:"supported"},
-      {family:"Production",name:"Mixed eviction comparison",result:"Enabled: 2,404/2,404 at 1,238 ms. Disabled: 2,402/2,404 at 1,317 ms.",meaning:"Eviction removed two rejections and improved p95 TTFT by 79 ms in this pair.",status:"boundary"},
+      {family:"Production",name:"Low-load reference",result:"739/739 realtime at 311 ms p95 TTFT; 520/520 agentic completed.",meaning:"Baseline mixed-service latency reference.",status:"supported"},
+      {family:"Production",name:"Mixed eviction comparison",result:"Enabled: 2,404/2,404 at 1,238 ms. Disabled: 2,402/2,404 at 1,317 ms.",meaning:"Eviction removed two rejections and lowered p95 TTFT by 79 ms in the paired run.",status:"boundary"},
       {family:"Production",name:"Async Processor restart",result:"300/300 batch jobs completed once after restart with 225 still queued.",meaning:"The tested single-node queue recovered without loss or duplicate results.",status:"supported"},
       {family:"Production",name:"30-minute stability",result:"7,252 realtime, 948 agentic, and 17,597 batch completed; realtime p95 TTFT 1,279 ms.",meaning:"Eviction and retry remained observable under sustained mixed traffic.",status:"supported"},
       {family:"Production",name:"Abrupt surge sweep",result:"Realtime success rose from 1,799/1,801 to 1,801/1,801 as reserved slots rose from 12 to 24.",meaning:"More headroom removed rejections while batch completions fell 8.3%.",status:"boundary"},
-      {family:"Edge case",name:"Large context, low count",result:"Realtime p95 TTFT reached 4,330 ms while Endpoint Picker saturation peaked at 0.52.",meaning:"Request-count admission did not detect this large-prompt pressure.",status:"limit"},
+      {family:"Edge case",name:"Large context, low count",result:"Realtime p95 TTFT reached 4,330 ms while Endpoint Picker saturation peaked at 0.52.",meaning:"Request-count admission missed large-prompt load.",status:"limit"},
       {family:"Edge case",name:"Five-second batch deadline",result:"222/222 realtime completed; 268 batch jobs reached one terminal result; queue drained.",meaning:"Expired batch work remained bounded and auditable.",status:"supported"},
       {family:"Final proof",name:"A. Realtime reference",result:"3,873/3,874 realtime; median p95 TTFT 342 ms.",meaning:"Defines realtime behavior without batch.",status:"supported"},
       {family:"Final proof",name:"B. Unprotected batch",result:"3,874/3,874 realtime; median p95 TTFT 561 ms; 7,480 batch completed.",meaning:"Measures interference when batch can fill model capacity.",status:"control"},
