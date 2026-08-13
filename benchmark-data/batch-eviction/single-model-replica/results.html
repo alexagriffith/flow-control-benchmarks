@@ -613,8 +613,8 @@
       .table-wrap { max-height: none; overflow: visible; }
       th { position: static; }
     }
-    /* Takeaways narrative (merged from takeaways.html) */
-    .takeaways {
+    /* Narrative evidence sections inside results.html */
+    .report-narrative {
       --tk-base: #ffffff;
       --tk-raised: #f1f2f6;
       --tk-inset: #eceef2;
@@ -632,51 +632,51 @@
       padding: 12px 0 0;
       border-bottom: 1px solid var(--line);
     }
-    .takeaways-summary { margin: 0 0 28px; padding-left: 22px; max-width: 760px; }
-    .takeaways-summary li { margin-bottom: 12px; color: var(--muted); font-size: 15px; line-height: 1.5; }
-    .takeaways-summary li b { color: var(--ink); }
-    .takeaways .chapter { padding: 48px 0 32px; border-bottom: 1px solid var(--tk-b1); }
-    .takeaways .chapter:last-of-type { border-bottom: 0; }
-    .takeaways h2 { font-size: clamp(22px, 3.2vw, 28px); font-weight: 680; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 10px; }
-    .takeaways .lead { color: var(--tk-txt2); max-width: 760px; margin: 0 0 20px; font-size: 15.5px; }
-    .takeaways .fig { margin: 0 0 18px; }
-    .takeaways .assetcard { background: var(--tk-base); border: 1px solid var(--tk-b1); border-radius: 14px; padding: 18px; overflow: hidden; position: relative; }
-    .takeaways .assetcard svg,
-    .takeaways .assetcard .arch-diagram { display: block; width: 100%; height: auto; }
-    .takeaways .charttitle { margin: 2px; font-size: 15px; font-weight: 700; color: var(--tk-txt); }
-    .takeaways .chartsub { margin: 0 2px 10px; font-size: 12px; color: var(--tk-txt2); }
-    .takeaways figcaption { margin-top: 10px; padding-left: 2px; font-size: 13.5px; color: var(--tk-txt2); line-height: 1.45; }
-    .takeaways .note { border-left: 3px solid var(--tk-green); background: var(--tk-green-soft); border-radius: 0 10px 10px 0; padding: 14px 16px; margin: 20px 0 0; font-size: 14px; color: var(--tk-txt2); }
-    .takeaways .note .lbl { display: block; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 800; color: var(--tk-green); margin-bottom: 6px; }
-    .takeaways .note b { color: var(--tk-txt); }
-    .takeaways .recs { margin: 18px 0 0; padding-left: 20px; color: var(--tk-txt2); max-width: 660px; }
-    .takeaways .recs li { margin-bottom: 10px; }
-    .takeaways .recs b { color: var(--tk-txt); }
-    .takeaways details.viewdata { margin: 10px 0 0; }
-    .takeaways details.viewdata > summary { cursor: pointer; display: block; width: 100%; font-size: 13.5px; font-weight: 650; color: var(--tk-txt); border: 1px solid var(--tk-b2); border-radius: 10px; padding: 12px 16px; background: var(--tk-base); list-style: none; user-select: none; }
-    .takeaways details.viewdata > summary::-webkit-details-marker { display: none; }
-    .takeaways details.viewdata > summary::before { content: "▸ "; color: var(--tk-txt3); }
-    .takeaways details.viewdata[open] > summary::before { content: "▾ "; }
-    .takeaways details.viewdata[open] > summary { border-radius: 10px 10px 0 0; border-bottom: 0; background: var(--tk-raised); }
-    .takeaways details.viewdata .tbl { margin-top: 0; overflow-x: auto; border: 1px solid var(--tk-b2); border-top: 0; border-radius: 0 0 10px 10px; background: var(--tk-base); }
-    .takeaways table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-    .takeaways th, .takeaways td { padding: 8px 12px; border-bottom: 1px solid var(--tk-b1); text-align: left; }
-    .takeaways th { color: var(--tk-txt3); background: var(--tk-raised); font-weight: 700; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; }
-    .takeaways td.num, .takeaways th.num { text-align: right; white-space: nowrap; }
-    .takeaways tr:last-child td { border-bottom: 0; }
-    .takeaways code { padding: 1px 4px; border-radius: 3px; background: var(--tk-inset); font-family: ui-monospace, Menlo, monospace; font-size: 0.92em; }
-    .takeaways .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--tk-txt2); margin: 0 2px 12px; }
-    .takeaways .legend span { display: inline-flex; align-items: center; gap: 7px; }
-    .takeaways .lsw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-    .takeaways .legend .tk-blue { background: var(--tk-blue); }
-    .takeaways .legend .tk-gold { background: var(--tk-gold); }
-    .takeaways .legend .tk-red { background: var(--tk-red); }
-    .takeaways .legend .tk-gray { background: var(--tk-gray); }
-    .takeaways .legend .tk-green { background: var(--tk-green); }
+    .key-findings { margin: 0 0 28px; padding-left: 22px; max-width: 760px; }
+    .key-findings li { margin-bottom: 12px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .key-findings li b { color: var(--ink); }
+    .report-narrative .chapter { padding: 48px 0 32px; border-bottom: 1px solid var(--tk-b1); }
+    .report-narrative .chapter:last-of-type { border-bottom: 0; }
+    .report-narrative h2 { font-size: clamp(22px, 3.2vw, 28px); font-weight: 680; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 10px; }
+    .report-narrative .lead { color: var(--tk-txt2); max-width: 760px; margin: 0 0 20px; font-size: 15.5px; }
+    .report-narrative .fig { margin: 0 0 18px; }
+    .report-narrative .assetcard { background: var(--tk-base); border: 1px solid var(--tk-b1); border-radius: 14px; padding: 18px; overflow: hidden; position: relative; }
+    .report-narrative .assetcard svg,
+    .report-narrative .assetcard .arch-diagram { display: block; width: 100%; height: auto; }
+    .report-narrative .charttitle { margin: 2px; font-size: 15px; font-weight: 700; color: var(--tk-txt); }
+    .report-narrative .chartsub { margin: 0 2px 10px; font-size: 12px; color: var(--tk-txt2); }
+    .report-narrative figcaption { margin-top: 10px; padding-left: 2px; font-size: 13.5px; color: var(--tk-txt2); line-height: 1.45; }
+    .report-narrative .note { border-left: 3px solid var(--tk-green); background: var(--tk-green-soft); border-radius: 0 10px 10px 0; padding: 14px 16px; margin: 20px 0 0; font-size: 14px; color: var(--tk-txt2); }
+    .report-narrative .note .lbl { display: block; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 800; color: var(--tk-green); margin-bottom: 6px; }
+    .report-narrative .note b { color: var(--tk-txt); }
+    .report-narrative .recs { margin: 18px 0 0; padding-left: 20px; color: var(--tk-txt2); max-width: 660px; }
+    .report-narrative .recs li { margin-bottom: 10px; }
+    .report-narrative .recs b { color: var(--tk-txt); }
+    .report-narrative details.viewdata { margin: 10px 0 0; }
+    .report-narrative details.viewdata > summary { cursor: pointer; display: block; width: 100%; font-size: 13.5px; font-weight: 650; color: var(--tk-txt); border: 1px solid var(--tk-b2); border-radius: 10px; padding: 12px 16px; background: var(--tk-base); list-style: none; user-select: none; }
+    .report-narrative details.viewdata > summary::-webkit-details-marker { display: none; }
+    .report-narrative details.viewdata > summary::before { content: "▸ "; color: var(--tk-txt3); }
+    .report-narrative details.viewdata[open] > summary::before { content: "▾ "; }
+    .report-narrative details.viewdata[open] > summary { border-radius: 10px 10px 0 0; border-bottom: 0; background: var(--tk-raised); }
+    .report-narrative details.viewdata .tbl { margin-top: 0; overflow-x: auto; border: 1px solid var(--tk-b2); border-top: 0; border-radius: 0 0 10px 10px; background: var(--tk-base); }
+    .report-narrative table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    .report-narrative th, .report-narrative td { padding: 8px 12px; border-bottom: 1px solid var(--tk-b1); text-align: left; }
+    .report-narrative th { color: var(--tk-txt3); background: var(--tk-raised); font-weight: 700; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .report-narrative td.num, .report-narrative th.num { text-align: right; white-space: nowrap; }
+    .report-narrative tr:last-child td { border-bottom: 0; }
+    .report-narrative code { padding: 1px 4px; border-radius: 3px; background: var(--tk-inset); font-family: ui-monospace, Menlo, monospace; font-size: 0.92em; }
+    .report-narrative .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--tk-txt2); margin: 0 2px 12px; }
+    .report-narrative .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .report-narrative .lsw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .report-narrative .legend .tk-blue { background: var(--tk-blue); }
+    .report-narrative .legend .tk-gold { background: var(--tk-gold); }
+    .report-narrative .legend .tk-red { background: var(--tk-red); }
+    .report-narrative .legend .tk-gray { background: var(--tk-gray); }
+    .report-narrative .legend .tk-green { background: var(--tk-green); }
     .tt { position: fixed; pointer-events: none; opacity: 0; transform: translate(-50%, -110%); background: #151515; color: #fff; font-size: 12px; line-height: 1.4; padding: 7px 10px; border-radius: 8px; white-space: nowrap; transition: opacity 0.08s; z-index: 30; }
     .tt b { color: #fff; }
     .tt .mut { color: #b9bfc9; }
-    .takeaways svg .hit { cursor: pointer; }
+    .report-narrative svg .hit { cursor: pointer; }
 
   </style>
 </head>
@@ -686,7 +686,6 @@
       <div class="report-name">Batch eviction benchmark</div>
       <nav aria-label="Report sections">
         <a href="#result">Result</a>
-        <a href="#takeaways">Takeaways</a>
         <a href="#proof">Matched proof</a>
         <a href="#path">Retry path</a>
         <a href="#scenarios">Scenarios</a>
@@ -721,8 +720,8 @@
       </div>
     </section>
 
-    <div class="takeaways" id="takeaways">
-      <ul class="takeaways-summary results">
+    <div class="report-narrative" id="overview">
+      <ul class="key-findings results">
         <li><b>Eviction fired when priority traffic was blocked.</b> Batch held the GPU; higher-priority requests arrived; the Endpoint Picker stopped batch streams.</li>
         <li><b>Reserved capacity set median TTFT.</b> Holding 50% aside was fastest and needed no evictions.</li>
         <li><b>Eviction did not move TTFT the same way every run.</b> Three repeats: faster twice, slower once.</li>
@@ -739,7 +738,7 @@
         <figure class="assetcard">
           <div class="charttitle">Request path and eviction point</div>
           <div class="chartsub">One GPU and one model server. The Endpoint Picker applies priorities and issues eviction.</div>
-          <img class="arch-diagram" src="takeaways-architecture.svg" width="960" height="450" alt="Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.">
+          <img class="arch-diagram" src="request-path-architecture.svg" width="960" height="450" alt="Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.">
         </figure>
         <figcaption>Realtime traffic uses priority 100; batch uses priority −10. Both land on the same GPU. The Endpoint Picker reserves part of the 48 slots for higher-priority work. When a surge exceeds reserved capacity, it stops batch streams. The client retries stopped batch jobs.</figcaption>
       </div>

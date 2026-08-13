@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450" role="img" aria-labelledby="takeaways-arch-title takeaways-arch-desc">
-  <title id="takeaways-arch-title">Batch eviction request path</title>
-  <desc id="takeaways-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450" role="img" aria-labelledby="request-path-arch-title request-path-arch-desc">
+  <title id="request-path-arch-title">Batch eviction request path</title>
+  <desc id="request-path-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.</desc>
   <style>
     text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0; }
     .kicker { fill: #5f6c7b; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
