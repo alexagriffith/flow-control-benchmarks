@@ -121,7 +121,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require(parser.tags["main"] == 1, "grouped report must contain exactly one main element", errors)
     require(parser.tags["h1"] == 1, "grouped report must contain exactly one h1", errors)
     require(parser.classes["scenario"] == 4, "grouped report must contain four production-scenario visuals", errors)
-    require(parser.tags["figure"] == 35, "grouped report visual inventory changed", errors)
+    require(parser.tags["figure"] == 36, "grouped report visual inventory changed", errors)
     require(parser.classes["evidence-card"] == 13, "grouped report evidence-card inventory changed", errors)
     require(parser.classes["sweep-chart"] == 7, "grouped report sweep-chart inventory changed", errors)
     require(parser.classes["range-chart"] == 2, "grouped report range-chart inventory changed", errors)
@@ -157,7 +157,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     )
     require(".bar { display: block;" in text, "grouped report bars can collapse to zero width", errors)
     require(
-        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery, .headroom-guide { grid-template-columns: 1fr; }" in text,
+        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery { grid-template-columns: 1fr; }" in text,
         "grouped report responsive grid collapse changed",
         errors,
     )
@@ -217,8 +217,8 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     for value in mixed_size_cells:
         require_text(text, f'data-value="{value}"', f"mixed-size calibration changed: {value} ms", errors)
     require_text(text, "128 maximum sequences; 8,192 maximum batched tokens", "selected engine settings changed", errors)
-    require_text(text, "128 in-flight requests; 10% headroom", "selected admission setting changed", errors)
-    require_text(text, "128 in-flight requests; 15% headroom", "batch-isolation headroom changed", errors)
+    require_text(text, "128 in-flight requests; 10% detector headroom", "selected admission setting changed", errors)
+    require_text(text, "128 in-flight requests; 15% detector headroom", "batch-isolation headroom changed", errors)
     require_text(text, "Exact input-token count", "size-aware option changed", errors)
     require_text(text, 'data-shared-axis="true"', "priority-tuning latency chart lost its shared axis", errors)
     require_text(text, "Shared y-axis: p95 TTFT in milliseconds (log scale)", "priority-tuning latency scale disclosure changed", errors)

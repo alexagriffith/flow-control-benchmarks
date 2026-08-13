@@ -92,14 +92,9 @@
     .decision-table strong { font-size: 13px; }
     .decision-table span { color: var(--muted); font-size: 12px; line-height: 1.45; }
     .decision-table .signal { color: var(--ink); font-weight: 750; }
-    .headroom-guide { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: center; margin-top: 18px; padding: 22px; border: 1px solid var(--line); background: var(--surface); }
-    .headroom-guide h4 { margin: 0 0 6px; font-size: 18px; }
-    .headroom-guide p { margin: 0; color: var(--muted); line-height: 1.5; }
-    .headroom-boundary { margin-top: 10px !important; font-size: 12px; }
-    .headroom-options { display: grid; gap: 10px; }
-    .headroom-options > div:not(.capacity-note) { display: grid; grid-template-columns: minmax(0, 1fr) 112px 32px; gap: 8px; align-items: center; font-size: 11px; }
-    .headroom-options i { display: block; height: 10px; background: linear-gradient(to right, #dfe6ee 0 calc(100% - var(--headroom)), var(--teal) calc(100% - var(--headroom)) 100%); }
-    .headroom-options b { text-align: right; }
+    .headroom-guide { margin: 18px 0 0; border: 1px solid var(--line); background: var(--surface); }
+    .headroom-guide img { display: block; width: 100%; height: auto; }
+    .headroom-guide figcaption { padding: 12px 18px 14px; color: var(--muted); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); }
     .capacity-note { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.4; }
     .section-evidence { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .band { padding: 62px 0; border-bottom: 1px solid var(--line); }
@@ -253,9 +248,8 @@
       .topbar-inner { align-items: flex-start; padding: 14px 0; }
       nav { display: none; }
       .hero h1 { font-size: 48px; }
-      .result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery, .headroom-guide { grid-template-columns: 1fr; }
+      .result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery { grid-template-columns: 1fr; }
       .decision-table { grid-template-columns: 120px 145px 1fr; overflow-x: auto; }
-      .headroom-options > div:not(.capacity-note) { grid-template-columns: minmax(0, 1fr) 96px 32px; }
       .detector-map { grid-template-columns: 1fr; }
       .detector-map > div { border-right: 0; border-bottom: 1px solid var(--line); }
       .detector-map > div:last-child { border-bottom: 0; }
@@ -512,7 +506,7 @@
           <figcaption class="caption">Token-count admission is <code>concurrencyMode: tokens</code>: it estimates load from prompt size instead of treating every request equally. Request count and exact input tokens have three matched repeats.</figcaption>
         </figure>
       </div>
-      <details><summary>Selected settings</summary><div class="method"><table><thead><tr><th>Layer</th><th>Setting</th><th>Use</th></tr></thead><tbody><tr><td>vLLM execution</td><td>128 maximum sequences; 8,192 maximum batched tokens</td><td>Limits active requests and the token budget per scheduler step</td></tr><tr><td>Endpoint Picker admission</td><td>128 in-flight requests; 10% headroom</td><td>Selected for priority tiers, consolidation, and fairness</td></tr><tr><td>Batch isolation</td><td>128 in-flight requests; 15% headroom</td><td>Keeps more admission capacity available during the batch surge</td></tr><tr><td>Size-aware option</td><td>Exact input-token count</td><td>Accounts for prompt size when request counts misstate load</td></tr></tbody></table></div></details>
+      <details><summary>Selected settings</summary><div class="method"><table><thead><tr><th>Layer</th><th>Setting</th><th>Use</th></tr></thead><tbody><tr><td>vLLM execution</td><td>128 maximum sequences; 8,192 maximum batched tokens</td><td>Limits active requests and the token budget per scheduler step</td></tr><tr><td>Endpoint Picker admission</td><td>128 in-flight requests; 10% detector headroom</td><td>Uses a relaxed endpoint-filter boundary above the 128-request saturation reference</td></tr><tr><td>Batch isolation</td><td>128 in-flight requests; 15% detector headroom</td><td>Uses a larger endpoint-filter cushion; it does not reserve capacity by priority</td></tr><tr><td>Size-aware option</td><td>Exact input-token count</td><td>Accounts for prompt size when request counts misstate load</td></tr></tbody></table></div></details>
       <section class="admission-guide" id="admission-guide" aria-labelledby="admission-guide-title">
         <h3 id="admission-guide-title">Choosing an admission signal</h3>
         <p>The admission signal determines when the Endpoint Picker stops sending more work. The right signal depends on whether request count, prompt size, backend queueing, or model-memory pressure best represents the workload.</p>
@@ -522,19 +516,16 @@
           <div role="row"><strong role="cell">Waiting queue</strong><span class="signal" role="cell">UtilizationDetector: queue-depth signal</span><span role="cell">Use as a reactive signal for backend queue growth. In the matched production comparisons it reacted later than request count and produced higher realtime TTFT.</span></div>
           <div role="row"><strong role="cell">KV-cache pressure</strong><span class="signal" role="cell">UtilizationDetector: KV-cache signal</span><span role="cell">Use as a memory-pressure guardrail for long prompts and large KV-cache demand. The sweep calibrated activation thresholds; it did not establish a latency-optimal default.</span></div>
         </div>
-        <div class="headroom-guide" id="headroom-guide">
-          <div>
-            <h4>Headroom protects burst access</h4>
-            <p>Headroom withholds part of the configured request or token limit from lower-priority work. Increase it when higher-priority bursts need more immediate admission; the tradeoff is less capacity for lower-priority work. The accepted packages tested 0%, 10%, 15%, and 25% for different workloads, so none is a universal default.</p>
-            <p class="headroom-boundary">Headroom is the standard v0.9 admission margin. The separate experimental eviction benchmark used a different reserved-capacity policy.</p>
-          </div>
-          <div class="headroom-options" role="img" aria-label="Headroom settings tested across accepted benchmark packages">
-            <div><span>Mixed workload token comparison</span><i style="--headroom:0%"></i><b>0%</b></div>
-            <div><span>Main request-count tests</span><i style="--headroom:10%"></i><b>10%</b></div>
-            <div><span>Batch isolation</span><i style="--headroom:15%"></i><b>15%</b></div>
-            <div><span>Long-context and scale hardening</span><i style="--headroom:25%"></i><b>25%</b></div>
-            <div class="capacity-note">Measured settings for these workloads, not recommended defaults.</div>
-          </div>
+        <figure class="headroom-guide" id="headroom-guide">
+          <img src="../headroom-vs-reserved-capacity.svg" alt="Headroom adds tolerance above an admission limit, while reserved capacity gives batch and realtime different dispatch ceilings and eviction recovers batch already running in vLLM.">
+          <figcaption>The first two columns show the tested configurations. The combined column explains how the implementation composes both controls; that exact combination was not a benchmark arm. The percentages and limits are measured settings, not universal defaults.</figcaption>
+        </figure>
+        <p class="section-evidence"><strong>When both are enabled:</strong> batch still stops dispatching at 50% saturation, standard at 75%, and realtime at 100%. A 10% detector-headroom setting keeps an endpoint eligible through the 110% filter boundary; it does not raise any priority ceiling.</p>
+        <div class="decision-table" role="table" aria-label="Capacity controls and their effect">
+          <div role="row"><strong role="cell">Detector headroom</strong><span class="signal" role="cell"><code>saturationDetector.headroom</code></span><span role="cell">Relaxes the endpoint filter above the detector's request or token limit. It tolerates brief overshoot but does not reserve capacity by priority.</span></div>
+          <div role="row"><strong role="cell">Uniform reserve</strong><span class="signal" role="cell"><code>static-usage-limit-policy.threshold</code></span><span role="cell">Sets one dispatch ceiling for every priority. A value below 1.0 holds the same fraction of capacity back from all traffic.</span></div>
+          <div role="row"><strong role="cell">Priority reserve</strong><span class="signal" role="cell"><code>priority-holdback-policy</code></span><span role="cell">Sets lower ceilings for lower priorities. In the eviction benchmark, three ranks mapped to 50% for batch, 75% for standard, and 100% for realtime.</span></div>
+          <div role="row"><strong role="cell">Batch eviction</strong><span class="signal" role="cell"><code>flowControl.enableEviction</code></span><span role="cell">Acts after dispatch. It stops eligible negative-priority batch already running in vLLM; a retry owner must resubmit that work.</span></div>
         </div>
       </section>
     </section>

@@ -75,6 +75,8 @@
   .card p { color: var(--muted); font-size: 12.5px; line-height: 1.45; margin: 0; }
   svg { width: 100%; height: auto; display: block; }
   .figure { border: 1px solid var(--line); border-radius: 14px; background: var(--plate); padding: 10px; margin: 14px 0 4px; }
+  .figure img { display: block; width: 100%; height: auto; }
+  .figure figcaption { color: var(--muted); font-size: 12px; line-height: 1.5; padding: 10px 4px 2px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
   th { text-align: left; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); background: var(--soft); }
   th, td { border-bottom: 1px solid var(--line); padding: 8px 9px; vertical-align: top; }
@@ -650,25 +652,38 @@
 
 <section>
   <h2>The configuration surface</h2>
-  <p>Default is what runs when you set nothing; benchmarked is what the measured configuration set. The cap that actually binds is the per-band 1&nbsp;GB, never the 10&nbsp;GiB global.</p>
+  <p>Default is what runs when a setting is omitted. Tested examples identify the benchmark packages that exercised each control; they are not universal defaults.</p>
   <table>
-    <thead><tr><th>Setting</th><th>Default</th><th>Benchmarked</th></tr></thead>
+    <thead><tr><th>Setting</th><th>Default</th><th>Tested examples</th><th>What it changes</th></tr></thead>
     <tbody>
-      <tr><td><code>priorityBands[].priority</code></td><td>—</td><td>100 / 0 / −10</td></tr>
-      <tr><td><code>fairnessPolicyRef</code> (per band)</td><td><code>global-strict</code></td><td><code>round-robin</code></td></tr>
-      <tr><td><code>orderingPolicyRef</code> (per band)</td><td><code>fcfs</code></td><td><code>fcfs</code></td></tr>
-      <tr><td><code>maxBytes</code> (per band)</td><td>1 GB each — the cap that binds</td><td>unset → 1 GB × 3 bands</td></tr>
-      <tr><td><code>maxBytes</code> (global)</td><td>—</td><td>10 GiB · never binds</td></tr>
-      <tr><td><code>maxRequests</code></td><td>unlimited</td><td>unset</td></tr>
-      <tr><td><code>defaultRequestTTL</code></td><td>0 · client context only</td><td>60s</td></tr>
-      <tr><td><code>expiryCleanupInterval</code></td><td>1s</td><td>1s</td></tr>
-      <tr><td><code>saturationDetector.queueDepthThreshold</code></td><td>—</td><td>4</td></tr>
-      <tr><td><code>saturationDetector.kvCacheUtilThreshold</code></td><td>—</td><td>0.80</td></tr>
-      <tr><td><code>usageLimitPolicy</code> threshold</td><td>1.0 · no gating</td><td>1.0</td></tr>
-      <tr><td><code>flowGCTimeout</code> · <code>priorityBandGCTimeout</code></td><td>idle flows and bands collected</td><td>defaults</td></tr>
+      <tr><td><code>priorityBands[].priority</code></td><td>—</td><td>100 / 0 / −10</td><td>Sets which priority band is considered first.</td></tr>
+      <tr><td><code>fairnessPolicyRef</code> (per band)</td><td><code>global-strict</code></td><td><code>round-robin</code></td><td>Decides which tenant gets the next turn inside a priority band.</td></tr>
+      <tr><td><code>orderingPolicyRef</code> (per band)</td><td><code>fcfs</code></td><td><code>fcfs</code></td><td>Orders requests inside one tenant's queue.</td></tr>
+      <tr><td><code>maxBytes</code> (per band)</td><td>1 GB each — the cap that binds</td><td>unset → 1 GB × 3 bands</td><td>Bounds queued request data in each band.</td></tr>
+      <tr><td><code>maxBytes</code> (global)</td><td>—</td><td>10 GiB · never binds</td><td>Bounds queued request data across all bands.</td></tr>
+      <tr><td><code>maxRequests</code></td><td>unlimited</td><td>unset</td><td>Bounds the number of queued requests.</td></tr>
+      <tr><td><code>defaultRequestTTL</code></td><td>0 · client context only</td><td>60s</td><td>Limits how long a request may wait in the Endpoint Picker.</td></tr>
+      <tr><td><code>expiryCleanupInterval</code></td><td>1s</td><td>1s</td><td>Sets how often expired queued requests are removed.</td></tr>
+      <tr><td><code>saturationDetector.queueDepthThreshold</code></td><td>—</td><td>4</td><td>Signals pressure after requests begin waiting inside vLLM.</td></tr>
+      <tr><td><code>saturationDetector.kvCacheUtilThreshold</code></td><td>—</td><td>0.80</td><td>Signals pressure from model-memory use.</td></tr>
+      <tr><td><code>saturationDetector.headroom</code></td><td>0.0</td><td>0.10 main v0.9 scenarios; 0.15 batch isolation</td><td>Relaxes the endpoint filter above the detector limit. It does not reserve capacity by priority.</td></tr>
+      <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0 · no reserve</td><td>1.0 in v0.9 scenarios</td><td>Sets one dispatch ceiling for every priority; values below 1.0 create a uniform reserve.</td></tr>
+      <tr><td><code>priority-holdback-policy</code> ceilings</td><td>not enabled</td><td>0.50–1.0 in the eviction benchmark</td><td>Sets lower dispatch ceilings for lower priorities, reserving capacity for higher priorities.</td></tr>
+      <tr><td><code>flowControl.enableEviction</code></td><td>false</td><td>true in the experimental eviction-and-retry tests</td><td>Stops eligible negative-priority batch already running in vLLM; the client must retry it.</td></tr>
+      <tr><td><code>flowGCTimeout</code> · <code>priorityBandGCTimeout</code></td><td>idle flows and bands collected</td><td>defaults</td><td>Removes inactive flow-control state.</td></tr>
     </tbody>
   </table>
-  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/config.go">flowcontrol/controller/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/config.go">flowcontrol/registry/config.go</a></div>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/config.go">flowcontrol/controller/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/config.go">flowcontrol/registry/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/README.md">concurrency detector</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/usagelimits/priorityholdback/README.md">priority holdback</a></div>
+</section>
+
+<section id="capacity-controls">
+  <h2>Headroom and reserved capacity apply at different boundaries</h2>
+  <p>Reserved capacity limits how much work each priority may send into vLLM. Detector headroom controls when an endpoint is removed from consideration. When both are enabled, the priority ceilings still decide what may enter vLLM; headroom only adds a filtering cushion outside those ceilings.</p>
+  <p><strong>Combined example:</strong> batch still stops at 50% saturation, standard at 75%, and realtime at 100%. With 10% detector headroom, the endpoint filter remains open through 110%; that extra tolerance does not let batch or standard cross their dispatch ceilings.</p>
+  <figure class="figure">
+    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Detector headroom alone, priority reserved capacity alone, and both controls enabled together, followed by the order in which flow control applies them.">
+    <figcaption>The first two columns are measured benchmark configurations. The combined column shows implementation behavior and was not tested as a separate benchmark arm. Eviction is independent: it acts later, after eligible batch work is already running in vLLM.</figcaption>
+  </figure>
 </section>
 
 <section>
@@ -716,7 +731,7 @@
       <p class="costs"><strong>Costs</strong> a burster wins share by volume; no isolation anywhere.</p>
     </div>
   </div>
-  <div class="note">Policies compose per band — a premium band can run <code>slodeadline</code> while batch runs <code>fcfs</code>. A usage-limit threshold below 1.0 reserves headroom in any posture.</div>
+  <div class="note">Policies compose per band — a premium band can run <code>slodeadline</code> while batch runs <code>fcfs</code>. A static usage-limit threshold below 1.0 creates a uniform reserve. Priority holdback creates different reserves by priority. Neither setting changes detector headroom.</div>
 </section>
 
 <section>

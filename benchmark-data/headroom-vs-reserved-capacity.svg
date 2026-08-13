@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="860" viewBox="0 0 1440 860" role="img" aria-labelledby="title desc">
+  <title id="title">How detector headroom and reserved capacity compose</title>
+  <desc id="desc">Three configurations compare detector headroom alone, priority reserved capacity alone, and both enabled together. Detector headroom relaxes the endpoint filtering boundary. Reserved capacity sets different dispatch ceilings by priority. When both are enabled, the priority ceilings still control dispatch and headroom remains an outer filter cushion. Eviction acts after dispatch on eligible batch requests already running in vLLM.</desc>
+  <style>
+    text { font-family: Inter, Arial, sans-serif; letter-spacing: 0; }
+    .ink { fill: #15202b; }
+    .muted { fill: #5f6c7b; }
+    .body { font-size: 17px; }
+    .small { font-size: 14px; }
+    .tiny { font-size: 12px; }
+    .label { font-size: 15px; font-weight: 700; }
+    .panel-title { font-size: 24px; font-weight: 800; }
+    .value { font-size: 17px; font-weight: 800; }
+  </style>
+
+  <rect width="1440" height="860" fill="#f5f7f9"/>
+  <text x="48" y="56" class="ink" font-size="32" font-weight="800">Two controls, two boundaries</text>
+  <text x="48" y="88" class="muted body">Reserved capacity controls how much work each priority may send into vLLM. Headroom controls when an endpoint is filtered out.</text>
+
+  <!-- Headroom only -->
+  <rect x="48" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
+  <rect x="48" y="126" width="424" height="6" fill="#2d6cdf"/>
+  <text x="74" y="172" class="ink panel-title">Detector headroom only</text>
+  <text x="74" y="200" class="muted small">Actual v0.9 production configuration</text>
+  <text x="74" y="238" class="ink label">Maximum sent into vLLM</text>
+  <text x="74" y="259" class="ink value">100% for every priority</text>
+  <rect x="74" y="274" width="346" height="32" fill="#dfe6ee"/>
+  <rect x="74" y="274" width="314" height="32" fill="#087f72"/>
+  <text x="231" y="295" fill="#ffffff" class="label" text-anchor="middle">shared policy ceiling</text>
+  <text x="74" y="338" class="ink label">Endpoint filter boundary</text>
+  <rect x="74" y="356" width="346" height="28" fill="#dfe6ee"/>
+  <rect x="74" y="356" width="314" height="28" fill="#2d6cdf"/>
+  <rect x="388" y="356" width="32" height="28" fill="#9fc1ff"/>
+  <line x1="388" y1="346" x2="388" y2="396" stroke="#15202b" stroke-width="2"/>
+  <text x="382" y="408" class="small ink" text-anchor="end">limit 100%</text>
+  <text x="420" y="430" class="small ink" text-anchor="end">filter 110%</text>
+  <text x="74" y="455" class="muted body">A brief overshoot does not immediately remove</text>
+  <text x="74" y="480" class="muted body">the endpoint. No capacity is reserved by priority.</text>
+
+  <!-- Reserve only -->
+  <rect x="508" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
+  <rect x="508" y="126" width="424" height="6" fill="#087f72"/>
+  <text x="534" y="172" class="ink panel-title">Reserved capacity only</text>
+  <text x="534" y="200" class="muted small">Actual batch-eviction benchmark configuration</text>
+  <text x="534" y="245" class="ink label">Dispatch ceilings: sent into vLLM</text>
+  <rect x="534" y="266" width="346" height="34" fill="#dfe6ee"/>
+  <rect x="534" y="266" width="173" height="34" fill="#6550a5"/>
+  <text x="548" y="288" fill="#ffffff" class="label">Batch</text>
+  <text x="694" y="288" fill="#ffffff" class="value" text-anchor="end">50%</text>
+  <rect x="534" y="308" width="346" height="34" fill="#dfe6ee"/>
+  <rect x="534" y="308" width="260" height="34" fill="#c56a00"/>
+  <text x="548" y="330" fill="#ffffff" class="label">Standard</text>
+  <text x="781" y="330" fill="#ffffff" class="value" text-anchor="end">75%</text>
+  <rect x="534" y="350" width="346" height="34" fill="#087f72"/>
+  <text x="548" y="372" fill="#ffffff" class="label">Realtime</text>
+  <text x="866" y="372" fill="#ffffff" class="value" text-anchor="end">100%</text>
+  <text x="534" y="416" class="ink label">Endpoint filter boundary: 100%</text>
+  <text x="534" y="455" class="muted body">Lower-priority work stops earlier, leaving capacity</text>
+  <text x="534" y="480" class="muted body">that higher-priority work may still use.</text>
+
+  <!-- Both -->
+  <rect x="968" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
+  <rect x="968" y="126" width="212" height="6" fill="#087f72"/>
+  <rect x="1180" y="126" width="212" height="6" fill="#2d6cdf"/>
+  <text x="994" y="172" class="ink panel-title">Both enabled</text>
+  <text x="994" y="200" class="muted small">Implementation behavior; not a benchmark arm</text>
+  <text x="994" y="245" class="ink label">Dispatch ceilings stay the same</text>
+  <rect x="994" y="266" width="346" height="34" fill="#dfe6ee"/>
+  <rect x="994" y="266" width="173" height="34" fill="#6550a5"/>
+  <text x="1008" y="288" fill="#ffffff" class="label">Batch</text>
+  <text x="1154" y="288" fill="#ffffff" class="value" text-anchor="end">50%</text>
+  <rect x="994" y="308" width="346" height="34" fill="#dfe6ee"/>
+  <rect x="994" y="308" width="260" height="34" fill="#c56a00"/>
+  <text x="1008" y="330" fill="#ffffff" class="label">Standard</text>
+  <text x="1241" y="330" fill="#ffffff" class="value" text-anchor="end">75%</text>
+  <rect x="994" y="350" width="346" height="34" fill="#087f72"/>
+  <text x="1008" y="372" fill="#ffffff" class="label">Realtime</text>
+  <text x="1326" y="372" fill="#ffffff" class="value" text-anchor="end">100%</text>
+  <text x="994" y="416" class="ink label">Endpoint filter boundary moves to 110%</text>
+  <text x="994" y="455" class="muted body">Reserved capacity still decides who dispatches.</text>
+  <text x="994" y="480" class="muted body">Headroom only adds an outer filtering cushion.</text>
+
+  <!-- Combined flow -->
+  <text x="48" y="574" class="ink" font-size="25" font-weight="800">When both are on</text>
+  <text x="48" y="604" class="muted body">The controls apply at different points, in this order.</text>
+
+  <rect x="48" y="640" width="224" height="92" fill="#ffffff" stroke="#cdd5df"/>
+  <text x="70" y="674" class="ink label">1. Measure saturation</text>
+  <text x="70" y="700" class="muted small">in-flight work / configured limit</text>
+  <line x1="272" y1="686" x2="316" y2="686" stroke="#7c8996" stroke-width="2"/>
+  <path d="M 316 686 l -11 -7 v 14 z" fill="#7c8996"/>
+
+  <rect x="318" y="640" width="250" height="92" fill="#ffffff" stroke="#087f72" stroke-width="2"/>
+  <text x="340" y="674" class="ink label">2. Apply priority ceilings</text>
+  <text x="340" y="700" class="muted small">batch gates before realtime</text>
+  <line x1="568" y1="686" x2="612" y2="686" stroke="#7c8996" stroke-width="2"/>
+  <path d="M 612 686 l -11 -7 v 14 z" fill="#7c8996"/>
+
+  <rect x="614" y="640" width="250" height="92" fill="#ffffff" stroke="#2d6cdf" stroke-width="2"/>
+  <text x="636" y="674" class="ink label">3. Filter endpoints</text>
+  <text x="636" y="700" class="muted small">headroom allows brief overshoot</text>
+  <line x1="864" y1="686" x2="908" y2="686" stroke="#7c8996" stroke-width="2"/>
+  <path d="M 908 686 l -11 -7 v 14 z" fill="#7c8996"/>
+
+  <rect x="910" y="640" width="200" height="92" fill="#ffffff" stroke="#cdd5df"/>
+  <text x="932" y="674" class="ink label">4. Run in vLLM</text>
+  <text x="932" y="700" class="muted small">work is now in the engine</text>
+  <line x1="1110" y1="686" x2="1154" y2="686" stroke="#7c8996" stroke-width="2"/>
+  <path d="M 1154 686 l -11 -7 v 14 z" fill="#7c8996"/>
+
+  <rect x="1156" y="640" width="236" height="92" fill="#fff8ec" stroke="#c56a00"/>
+  <text x="1178" y="674" class="ink label">5. Evict only if needed</text>
+  <text x="1178" y="700" class="muted small">stop eligible batch, then retry</text>
+
+  <rect x="48" y="770" width="1344" height="54" fill="#102033"/>
+  <text x="72" y="803" fill="#ffffff" font-size="16" font-weight="700">The boundaries do not add together: reserve controls dispatch, headroom controls endpoint eligibility, and eviction handles work already running.</text>
+</svg>
