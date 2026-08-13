@@ -24,11 +24,15 @@
   <rect x="920" y="108" width="220" height="62" fill="#fff" stroke="#2d6cdf" stroke-width="2"/>
   <text x="1030" y="135" class="ink actor" text-anchor="middle">vLLM</text><text x="1030" y="155" fill="#2d6cdf" class="phase" text-anchor="middle">ACTIVE GENERATION</text>
 
+  <!-- Phase backgrounds are drawn before the lifelines so actor ownership remains visible. -->
+  <rect x="30" y="354" width="1140" height="216" fill="#fff2f1" stroke="#e7c5c1"/>
+  <rect x="30" y="590" width="1140" height="194" fill="#edf8f5" stroke="#b9ddd4"/>
+
   <!-- Lifelines -->
-  <line x1="160" y1="170" x2="160" y2="784" stroke="#c9d3df" stroke-width="2" stroke-dasharray="6 6"/>
-  <line x1="450" y1="170" x2="450" y2="784" stroke="#c9d3df" stroke-width="2" stroke-dasharray="6 6"/>
-  <line x1="740" y1="170" x2="740" y2="784" stroke="#c9d3df" stroke-width="2" stroke-dasharray="6 6"/>
-  <line x1="1030" y1="170" x2="1030" y2="784" stroke="#c9d3df" stroke-width="2" stroke-dasharray="6 6"/>
+  <line x1="160" y1="170" x2="160" y2="784" stroke="#c56a00" stroke-opacity=".42" stroke-width="3" stroke-dasharray="7 6"/>
+  <line x1="450" y1="170" x2="450" y2="784" stroke="#738190" stroke-opacity=".50" stroke-width="3" stroke-dasharray="7 6"/>
+  <line x1="740" y1="170" x2="740" y2="784" stroke="#087f72" stroke-opacity=".42" stroke-width="3" stroke-dasharray="7 6"/>
+  <line x1="1030" y1="170" x2="1030" y2="784" stroke="#2d6cdf" stroke-opacity=".42" stroke-width="3" stroke-dasharray="7 6"/>
 
   <!-- Initial request -->
   <text x="40" y="202" fill="#2d6cdf" class="phase">BATCH IS RUNNING</text>
@@ -42,7 +46,6 @@
   <text x="740" y="321" class="small ink" text-anchor="middle">Envoy forwards request stream</text>
 
   <!-- Eviction -->
-  <rect x="30" y="354" width="1140" height="216" fill="#fff2f1" stroke="#e7c5c1"/>
   <text x="48" y="378" fill="#b83232" class="phase">HIGHER-PRIORITY WORK IS BLOCKED</text>
   <circle cx="740" cy="408" r="9" fill="#b83232"/>
   <text x="760" y="413" class="ink step">Endpoint Picker selects lower-priority batch</text>
@@ -54,7 +57,6 @@
   <text x="305" y="527" class="ink step" text-anchor="middle">Envoy sends HTTP 429</text>
 
   <!-- Retry -->
-  <rect x="30" y="590" width="1140" height="194" fill="#edf8f5" stroke="#b9ddd4"/>
   <text x="48" y="614" fill="#087f72" class="phase">ASYNC PROCESSOR STARTS A NEW REQUEST</text>
   <line x1="160" y1="640" x2="450" y2="640" stroke="#087f72" stroke-width="4" marker-end="url(#green)"/>
   <text x="305" y="631" class="ink step" text-anchor="middle">retry batch job</text>

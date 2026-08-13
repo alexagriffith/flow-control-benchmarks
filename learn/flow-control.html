@@ -80,6 +80,7 @@
   table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
   th { text-align: left; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); background: var(--soft); }
   th, td { border-bottom: 1px solid var(--line); padding: 8px 9px; vertical-align: top; }
+  .config-group th { color: var(--ink); background: var(--raised); border-top: 2px solid var(--line-strong); font-size: 11.5px; }
   td code, p code { font-size: 11.5px; color: var(--red-dark); background: var(--code-bg); padding: 1px 4px; border-radius: 4px; }
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
   .tile { border: 1px solid var(--line); border-radius: 12px; background: var(--raised); padding: 13px 15px; }
@@ -650,12 +651,13 @@
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/types/outcomes.go">flowcontrol/types/outcomes.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/admission.go">requestcontrol/admission.go</a></div>
 </section>
 
-<section>
+<section id="config">
   <h2>The configuration surface</h2>
-  <p>Default is what runs when a setting is omitted. Tested examples identify the benchmark packages that exercised each control; they are not universal defaults.</p>
+  <p>The default column describes stable v0.9 behavior. Rows marked experimental describe the batch-eviction build. Tested examples show which values the benchmarks exercised.</p>
   <table>
-    <thead><tr><th>Setting</th><th>Default</th><th>Tested examples</th><th>What it changes</th></tr></thead>
+    <thead><tr><th>Setting</th><th>v0.9 default or feature state</th><th>Tested examples</th><th>What it changes</th></tr></thead>
     <tbody>
+      <tr class="config-group"><th colspan="4">Queue, priority, and fairness</th></tr>
       <tr><td><code>priorityBands[].priority</code></td><td>—</td><td>100 / 0 / −10</td><td>Sets which priority band is considered first.</td></tr>
       <tr><td><code>fairnessPolicyRef</code> (per band)</td><td><code>global-strict</code></td><td><code>round-robin</code></td><td>Decides which tenant gets the next turn inside a priority band.</td></tr>
       <tr><td><code>orderingPolicyRef</code> (per band)</td><td><code>fcfs</code></td><td><code>fcfs</code></td><td>Orders requests inside one tenant's queue.</td></tr>
@@ -664,28 +666,40 @@
       <tr><td><code>maxRequests</code></td><td>unlimited</td><td>unset</td><td>Bounds the number of queued requests.</td></tr>
       <tr><td><code>defaultRequestTTL</code></td><td>0 · client context only</td><td>60s</td><td>Limits how long a request may wait in the Endpoint Picker.</td></tr>
       <tr><td><code>expiryCleanupInterval</code></td><td>1s</td><td>1s</td><td>Sets how often expired queued requests are removed.</td></tr>
-      <tr><td><code>saturationDetector.queueDepthThreshold</code></td><td>—</td><td>4</td><td>Signals pressure after requests begin waiting inside vLLM.</td></tr>
-      <tr><td><code>saturationDetector.kvCacheUtilThreshold</code></td><td>—</td><td>0.80</td><td>Signals pressure from model-memory use.</td></tr>
-      <tr><td><code>saturationDetector.headroom</code></td><td>0.0</td><td>0.10 main v0.9 scenarios; 0.15 batch isolation</td><td>Relaxes the endpoint filter above the detector limit. It does not reserve capacity by priority.</td></tr>
-      <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0 · no reserve</td><td>1.0 in v0.9 scenarios</td><td>Sets one dispatch ceiling for every priority; values below 1.0 create a uniform reserve.</td></tr>
-      <tr><td><code>priority-holdback-policy</code> ceilings</td><td>not enabled</td><td>0.50–1.0 in the eviction benchmark</td><td>Sets lower dispatch ceilings for lower priorities, reserving capacity for higher priorities.</td></tr>
-      <tr><td><code>flowControl.enableEviction</code></td><td>false</td><td>true in the experimental eviction-and-retry tests</td><td>Stops eligible negative-priority batch already running in vLLM; the client must retry it.</td></tr>
       <tr><td><code>flowGCTimeout</code> · <code>priorityBandGCTimeout</code></td><td>idle flows and bands collected</td><td>defaults</td><td>Removes inactive flow-control state.</td></tr>
+      <tr class="config-group"><th colspan="4">Saturation detector and per-replica headroom</th></tr>
+      <tr><td><code>flowControl.saturationDetector.pluginRef</code></td><td><code>utilization-detector</code></td><td>utilization and concurrency</td><td>Selects how model-replica pressure is measured. Both detector types produce the pool-saturation signal.</td></tr>
+      <tr><td><code>utilization-detector.queueDepthThreshold</code></td><td>5 requests</td><td>2 / 5 / 8 requests</td><td>Sets the ideal waiting-queue depth for each model replica.</td></tr>
+      <tr><td><code>utilization-detector.kvCacheUtilThreshold</code></td><td>0.80 · 80%</td><td>0.50–0.90</td><td>Sets the ideal KV-cache use for each model replica.</td></tr>
+      <tr><td><code>concurrency-detector.concurrencyMode</code></td><td><code>requests</code></td><td>requests and tokens</td><td>Chooses whether pressure is counted as in-flight requests or estimated in-flight tokens.</td></tr>
+      <tr><td><code>concurrency-detector.maxConcurrency</code></td><td>100 requests</td><td>48–160 requests</td><td>Sets ideal in-flight request capacity per model replica when mode is <code>requests</code>.</td></tr>
+      <tr><td><code>concurrency-detector.maxTokenConcurrency</code></td><td>1,000,000 tokens</td><td>20,000–75,000 tokens</td><td>Sets ideal in-flight token capacity per model replica when mode is <code>tokens</code>.</td></tr>
+      <tr><td><code>headroom</code> on either detector</td><td>0.0 · 0%</td><td>0–25%</td><td>Raises that detector's per-replica filtering boundary above its ideal limit. It does not reserve capacity by priority.</td></tr>
+      <tr class="config-group"><th colspan="4">Reserved capacity by priority · experimental beyond the v0.9 static policy</th></tr>
+      <tr><td><code>flowControl.usageLimitPolicyPluginRef</code></td><td>static policy at 1.0</td><td>static and experimental priority holdback</td><td>Selects the pool-admission policy that decides whether a priority may dispatch.</td></tr>
+      <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0 · no reserve</td><td>1.0 in v0.9 scenarios</td><td>Sets one pool-saturation ceiling for every priority.</td></tr>
+      <tr><td><code>priority-holdback-policy.minCeiling</code> / <code>maxCeiling</code></td><td>not available in stable v0.9</td><td>0.50 / 1.0</td><td>Sets lower saturation ceilings for lower priorities, keeping capacity available for higher priorities.</td></tr>
+      <tr><td><code>priority-holdback-policy.shape</code> / <code>domain</code></td><td>not available in stable v0.9</td><td><code>linear</code> / <code>rank</code></td><td>Controls how ceilings are distributed across the configured priorities.</td></tr>
+      <tr class="config-group"><th colspan="4">Batch eviction and retry · experimental</th></tr>
+      <tr><td><code>flowControl.enableEviction</code></td><td>not available in stable v0.9</td><td>true in the experimental eviction-and-retry tests</td><td>Lets the Endpoint Picker stop negative-priority work already running in vLLM when higher-priority work is blocked.</td></tr>
+      <tr><td>Eviction eligibility</td><td>request priority must be below 0</td><td>batch priority −10</td><td>Limits reclamation to work explicitly marked as lower-priority and sheddable.</td></tr>
+      <tr><td>Retry owner</td><td>not configured in the Endpoint Picker</td><td>Async Processor</td><td>The client handles the HTTP 429, starts a new request, and prevents duplicate final results.</td></tr>
     </tbody>
   </table>
+  <div class="note">Eviction pacing is derived from the selected saturation detector. Confirmation grace and timeout exist internally but are not public configuration fields.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/config.go">flowcontrol/controller/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/config.go">flowcontrol/registry/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/README.md">concurrency detector</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/usagelimits/priorityholdback/README.md">priority holdback</a></div>
 </section>
 
 <section id="capacity-controls">
   <h2>Two controls protect capacity at different levels</h2>
-  <p>Reserved capacity controls whether work leaves the queue. Headroom controls which model replica may receive it.</p>
+  <p><strong>Headroom is not a detector.</strong> It changes the per-replica filtering boundary of whichever saturation detector is selected: utilization or concurrency. Reserved capacity separately controls whether work leaves the queue.</p>
   <figure class="figure">
-    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and detector headroom filtering each model replica against its safety boundary.">
-    <figcaption>Reserved capacity asks whether this priority may dispatch. Detector headroom asks which replica may receive the request.</figcaption>
+    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and saturation-detector headroom filtering each model replica against its safety boundary. Utilization uses queue and KV-cache pressure; concurrency uses in-flight requests or tokens.">
+    <figcaption>Reserved capacity asks whether this priority may dispatch. Saturation-detector headroom asks which replica may receive the request.</figcaption>
   </figure>
   <details>
     <summary>Version and configuration details</summary>
-    <p><strong>Stable v0.9:</strong> the static usage-limit policy provides one pool-wide ceiling for all priorities; its default threshold is 1.0, which reserves no capacity. Detector headroom defaults to 0.0 and applies the same configured tolerance to each replica. Priority-specific reserve belongs to the newer experimental priority-holdback policy.</p>
+    <p><strong>Stable v0.9:</strong> the static usage-limit policy provides one pool-wide ceiling for all priorities; its default threshold is 1.0, which reserves no capacity. Both the utilization and concurrency saturation detectors support headroom, which defaults to 0.0 and applies the same configured tolerance to each replica. Priority-specific reserve belongs to the newer experimental priority-holdback policy.</p>
   </details>
 </section>
 
@@ -734,6 +748,26 @@
       <p class="costs"><strong>Costs</strong> the capped band rejects earlier, by design.</p>
     </div>
     <div class="card">
+      <h3>Protect realtime before batch dispatches <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">priority</span><span class="val">realtime above batch</span></div>
+        <div class="chip det"><span class="lab">admission</span><span class="val">priority holdback ceilings</span></div>
+        <div class="chip cap"><span class="lab">reserve</span><span class="val">lower priorities stop sooner</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> predictable access for realtime by keeping part of the shared capacity unavailable to lower-priority work.</p>
+      <p class="costs"><strong>Costs</strong> batch uses less of the GPU during quiet periods; the ceilings must be calibrated for the model and hardware.</p>
+    </div>
+    <div class="card">
+      <h3>Recover capacity after batch starts <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
+      <div class="stack">
+        <div class="chip band"><span class="lab">eligibility</span><span class="val">negative-priority batch</span></div>
+        <div class="chip det"><span class="lab">eviction</span><span class="val">ImmediateResponse → stream reset</span></div>
+        <div class="chip cap"><span class="lab">retry</span><span class="val">client-owned + idempotent</span></div>
+      </div>
+      <p class="buys"><strong>Buys</strong> a way to stop lower-priority generation when realtime demand needs capacity that batch already occupies.</p>
+      <p class="costs"><strong>Costs</strong> interrupted tokens are recomputed, capacity is not visible instantly, and the retry owner must prevent duplicate final results.</p>
+    </div>
+    <div class="card">
       <h3>Max throughput, minimum machinery</h3>
       <div class="stack">
         <div class="chip band"><span class="lab">bands</span><span class="val">global-strict + fcfs · defaults</span></div>
@@ -744,7 +778,7 @@
       <p class="costs"><strong>Costs</strong> a burster wins share by volume; no isolation anywhere.</p>
     </div>
   </div>
-  <div class="note">Policies compose per band — a premium band can run <code>slodeadline</code> while batch runs <code>fcfs</code>. A static usage-limit threshold below 1.0 creates a uniform reserve. Priority holdback creates different reserves by priority. Neither setting changes detector headroom.</div>
+  <div class="note">Use reserved capacity first: it protects realtime before lower-priority work enters vLLM. Add eviction only when the system must also reclaim eligible batch that is already running. Detector headroom remains a separate per-replica filtering tolerance.</div>
 </section>
 
 <section>
