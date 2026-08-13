@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="400" viewBox="0 0 960 400" role="img" aria-labelledby="takeaways-arch-title takeaways-arch-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450" role="img" aria-labelledby="takeaways-arch-title takeaways-arch-desc">
   <title id="takeaways-arch-title">Batch eviction request path</title>
   <desc id="takeaways-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.</desc>
   <style>
@@ -12,25 +12,26 @@
     .lane-batch { fill: #2d6cdf; font-size: 10.5px; font-weight: 800; }
     .callout { fill: #b83232; font-size: 10px; font-weight: 800; }
     .pill { fill: #fff; stroke: #e2e8f0; stroke-width: 1; }
+    .route { fill: none; stroke-linecap: square; stroke-linejoin: miter; }
   </style>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5563"/>
     </marker>
-    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#087f72"/>
     </marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#b83232"/>
     </marker>
-    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#c56a00"/>
     </marker>
   </defs>
 
-  <rect width="960" height="400" fill="#f7f8fa" rx="8"/>
+  <rect width="960" height="450" fill="#f7f8fa" rx="8"/>
 
-  <!-- Clients: 20,48 → 170 -->
+  <!-- Clients -->
   <g id="clients">
     <rect x="20" y="48" width="150" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
     <text class="kicker" x="36" y="72">Incoming work</text>
@@ -43,7 +44,7 @@
     <text class="copy" x="48" y="192">lower priority</text>
   </g>
 
-  <!-- Envoy: 190,48 → 348 -->
+  <!-- Envoy -->
   <g id="envoy">
     <rect x="190" y="48" width="158" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
     <text class="kicker" x="206" y="72">Edge</text>
@@ -56,7 +57,7 @@
     <text class="label" x="218" y="202">Fairness ID</text>
   </g>
 
-  <!-- Endpoint Picker: 368,32 → 668, bottom 244 -->
+  <!-- Endpoint Picker -->
   <g id="epp">
     <rect x="368" y="32" width="300" height="212" fill="#fff" stroke="#087f72" stroke-width="2" rx="8"/>
     <text class="kicker" x="384" y="56">Admission and eviction</text>
@@ -72,7 +73,7 @@
     <text class="copy" x="396" y="202">stops running batch when priority work is blocked</text>
   </g>
 
-  <!-- vLLM: 688,48 → 856, running 704,148 → 840,202 -->
+  <!-- vLLM -->
   <g id="vllm">
     <rect x="688" y="48" width="168" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
     <text class="kicker" x="704" y="72">Model execution</text>
@@ -84,53 +85,40 @@
     <text class="copy" x="716" y="186">shared GPU capacity</text>
   </g>
 
-  <!-- Async: 368,272 → 668, top 272 -->
+  <!-- Async Processor -->
   <g id="async">
-    <rect x="368" y="272" width="300" height="68" fill="#fff" stroke="#c56a00" stroke-width="1.6" rx="8"/>
-    <text class="kicker" x="384" y="296">Retry owner</text>
-    <text class="title" x="384" y="318">Async Processor</text>
-    <text class="copy" x="384" y="332">requeues evicted batch with bounded retry</text>
+    <rect x="368" y="312" width="300" height="68" fill="#fff" stroke="#c56a00" stroke-width="1.6" rx="8"/>
+    <text class="kicker" x="384" y="336">Retry owner</text>
+    <text class="title" x="384" y="358">Async Processor</text>
+    <text class="copy" x="384" y="372">requeues evicted batch with bounded retry</text>
   </g>
 
-  <!-- Main path -->
-  <path d="M170 132 H190" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
-  <path d="M348 132 H368" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
-  <path d="M668 132 H688" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <!-- Routing lanes (on top so arrowheads meet box borders) -->
+  <g id="routes">
+    <path class="route" d="M170 132 H190" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+    <path class="route" d="M348 132 H368" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+    <path class="route" d="M668 132 H688" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+    <path class="route" d="M520 220 V286 H697 V175 H703" stroke="#b83232" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
+    <path class="route" d="M772 202 V404 H518 V380" stroke="#c56a00" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-amber)"/>
+    <path class="route" d="M368 346 H56 V178 H170" stroke="#087f72" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
+  </g>
 
-  <!-- Abort: eviction → running sequences (lane y=252) -->
-  <path d="M520 220 V252 H704 V175" fill="none" stroke="#b83232" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
-
-  <!-- Evicted retry: running box → below async (lane y=348) -->
-  <path d="M840 202 V348 H518 V272" fill="none" stroke="#c56a00" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-amber)"/>
-
-  <!-- Resubmit: async left → clients (lane y=308, left margin x=108) -->
-  <path d="M368 306 H108 V132 H170" fill="none" stroke="#087f72" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
-
-  <!-- Main-flow labels (above arrows) -->
-  <g>
+  <!-- Flow labels (offset from strokes) -->
+  <g id="labels">
     <rect class="pill" x="162" y="110" width="38" height="16" rx="4"/>
     <text class="flow" x="181" y="121" text-anchor="middle">HTTP</text>
     <rect class="pill" x="340" y="110" width="46" height="16" rx="4"/>
     <text class="flow" x="363" y="121" text-anchor="middle">route</text>
     <rect class="pill" x="658" y="110" width="58" height="16" rx="4"/>
     <text class="flow" x="687" y="121" text-anchor="middle">dispatch</text>
-  </g>
 
-  <!-- Abort label: whitespace above abort lane, clear of EPP border -->
-  <g>
-    <rect class="pill" x="556" y="226" width="108" height="16" rx="4"/>
-    <text class="callout" x="610" y="237" text-anchor="middle">abort batch stream</text>
-  </g>
+    <rect class="pill" x="572" y="256" width="108" height="16" rx="4"/>
+    <text class="callout" x="626" y="267" text-anchor="middle">abort batch stream</text>
 
-  <!-- Evicted label: right margin, clear of both dashed paths -->
-  <g>
-    <rect class="pill" x="872" y="268" width="76" height="16" rx="4"/>
-    <text class="flow" x="910" y="279" text-anchor="middle" fill="#c56a00">evicted &#8594; retry</text>
-  </g>
+    <rect class="pill" x="612" y="386" width="76" height="16" rx="4"/>
+    <text class="flow" x="650" y="397" text-anchor="middle" fill="#c56a00">evicted &#8594; retry</text>
 
-  <!-- Resubmit label: left margin, below horizontal lane -->
-  <g>
-    <rect class="pill" x="52" y="318" width="58" height="16" rx="4"/>
-    <text class="flow" x="81" y="329" text-anchor="middle" fill="#087f72">resubmit</text>
+    <rect class="pill" x="18" y="300" width="58" height="16" rx="4"/>
+    <text class="flow" x="47" y="311" text-anchor="middle" fill="#087f72">resubmit</text>
   </g>
 </svg>
