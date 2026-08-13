@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">Queues cannot evict batch already running in vLLM</title>
+  <desc id="desc">When batch is already generating inside the engine, flow control can reorder the queue but cannot free GPU capacity. Measured realtime median p95 TTFT rose from 133 ms to 15,378 ms.</desc>
+  <rect width="1200" height="480" fill="#ffffff"/>
+
+  <text x="600" y="52" text-anchor="middle" font-family="Inter, ui-sans-serif, sans-serif" font-size="42" font-weight="800" fill="#111820" letter-spacing="-0.03em">The queue cannot evict</text>
+  <text x="600" y="98" text-anchor="middle" font-family="Inter, ui-sans-serif, sans-serif" font-size="42" font-weight="800" fill="#b83232" letter-spacing="-0.03em">what is already running.</text>
+  <text x="600" y="132" text-anchor="middle" font-family="Inter, ui-sans-serif, sans-serif" font-size="16" fill="#5d6873">Batch started first inside vLLM. Realtime arrived. Flow control reordered the wait — it did not stop in-flight batch.</text>
+
+  <!-- Step 1: batch in engine -->
+  <rect x="48" y="168" width="340" height="220" rx="8" fill="#f7f9fb" stroke="#d7dde3"/>
+  <text x="68" y="198" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" font-weight="800" fill="#5d6873" letter-spacing="0.06em">1 · BATCH STARTS FIRST</text>
+  <text x="68" y="224" font-family="Inter, ui-sans-serif, sans-serif" font-size="16" font-weight="750" fill="#111820">vLLM engine fills with batch</text>
+  <g transform="translate(68, 244)">
+    <rect width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="32" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="64" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="96" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="128" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="160" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="192" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/><rect x="224" width="28" height="28" rx="3" fill="#6650a4" opacity="0.9"/>
+    <rect y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="32" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="64" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="96" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="128" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="160" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="192" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/><rect x="224" y="36" width="28" height="28" rx="3" fill="#6650a4" opacity="0.75"/>
+    <rect y="72" width="28" height="28" rx="3" fill="#6650a4" opacity="0.55"/><rect x="32" y="72" width="28" height="28" rx="3" fill="#6650a4" opacity="0.55"/><rect x="64" y="72" width="28" height="28" rx="3" fill="#6650a4" opacity="0.55"/><rect x="96" y="72" width="28" height="28" rx="3" fill="#eef1f4" stroke="#d7dde3"/><rect x="128" y="72" width="28" height="28" rx="3" fill="#eef1f4" stroke="#d7dde3"/>
+  </g>
+  <text x="68" y="368" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" fill="#5d6873">Batch streams already generating tokens</text>
+
+  <!-- Step 2: queue prioritizes -->
+  <rect x="430" y="168" width="340" height="220" rx="8" fill="#f7f9fb" stroke="#d7dde3"/>
+  <text x="450" y="198" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" font-weight="800" fill="#5d6873" letter-spacing="0.06em">2 · REALTIME ARRIVES</text>
+  <text x="450" y="224" font-family="Inter, ui-sans-serif, sans-serif" font-size="16" font-weight="750" fill="#111820">Queue puts realtime first</text>
+  <rect x="450" y="244" width="300" height="36" rx="4" fill="#eaf0ff" stroke="#2f6fed"/>
+  <text x="466" y="267" font-family="Inter, ui-sans-serif, sans-serif" font-size="13" font-weight="700" fill="#2f6fed">Realtime (priority 100)</text>
+  <rect x="450" y="288" width="300" height="36" rx="4" fill="#f3f0f8" stroke="#d7cfea"/>
+  <text x="466" y="311" font-family="Inter, ui-sans-serif, sans-serif" font-size="13" font-weight="650" fill="#6650a4">Batch (held longer in queue)</text>
+  <path d="M 600 332 L 600 352" stroke="#5d6873" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="450" y="368" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" fill="#5d6873">Upstream ordering works — engine is still the bottleneck</text>
+
+  <!-- Step 3: still blocked -->
+  <rect x="812" y="168" width="340" height="220" rx="8" fill="#fdeaea" stroke="#e8b4b4"/>
+  <text x="832" y="198" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" font-weight="800" fill="#b83232" letter-spacing="0.06em">3 · ENGINE STILL FULL</text>
+  <text x="832" y="224" font-family="Inter, ui-sans-serif, sans-serif" font-size="16" font-weight="750" fill="#111820">Realtime waits behind running batch</text>
+  <g transform="translate(832, 244)">
+    <rect width="28" height="28" rx="3" fill="#6650a4"/><rect x="32" width="28" height="28" rx="3" fill="#6650a4"/><rect x="64" width="28" height="28" rx="3" fill="#6650a4"/><rect x="96" width="28" height="28" rx="3" fill="#6650a4"/><rect x="128" width="28" height="28" rx="3" fill="#6650a4"/><rect x="160" width="28" height="28" rx="3" fill="#6650a4"/><rect x="192" width="28" height="28" rx="3" fill="#6650a4"/><rect x="224" width="28" height="28" rx="3" fill="#6650a4"/>
+    <rect y="36" width="28" height="28" rx="3" fill="#6650a4"/><rect x="32" y="36" width="28" height="28" rx="3" fill="#6650a4"/><rect x="64" y="36" width="28" height="28" rx="3" fill="#2f6fed" stroke="#111820" stroke-width="2"/><text x="78" y="55" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">RT</text>
+    <rect x="96" y="36" width="28" height="28" rx="3" fill="#6650a4"/><rect x="128" y="36" width="28" height="28" rx="3" fill="#6650a4"/>
+  </g>
+  <text x="832" y="330" font-family="Inter, ui-sans-serif, sans-serif" font-size="28" font-weight="800" fill="#b83232">15,378 ms</text>
+  <text x="832" y="356" font-family="Inter, ui-sans-serif, sans-serif" font-size="12" fill="#5d6873">median realtime p95 TTFT (vs 133 ms alone)</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#5d6873"/>
+    </marker>
+  </defs>
+
+  <rect x="48" y="408" width="1104" height="52" rx="6" fill="#111820"/>
+  <text x="72" y="442" font-family="Inter, ui-sans-serif, sans-serif" font-size="15" font-weight="700" fill="#ffffff">This is why reserved capacity and eviction matter — they act inside the engine, not only in the queue.</text>
+</svg>

@@ -43,6 +43,12 @@ p.lede{color:var(--txt2);margin:0 0 40px}
 p.subtext{margin:20px 2px 0;font-size:13px;line-height:1.7;color:var(--txt3)}
 p.subtext a{color:var(--txt2);text-decoration:none;border-bottom:1px solid var(--b2)}
 p.subtext a:hover{color:var(--txt);border-color:var(--brand)}
+.sections-btn{
+  display:inline-flex;align-items:center;gap:8px;margin-top:8px;
+  padding:10px 16px;border-radius:10px;border:1px solid var(--b1);
+  background:transparent;color:var(--txt2);font-size:13px;font-weight:600;
+  text-decoration:none;transition:border-color .15s,color .15s,background .15s}
+.sections-btn:hover{color:var(--txt);border-color:var(--brand);background:rgba(91,108,240,.08)}
 footer{margin-top:28px;font-size:12.5px;color:var(--txt3)}
 footer a{color:var(--txt3)}
 </style>
@@ -95,6 +101,10 @@ footer a{color:var(--txt3)}
       </div>
     </div>
   </div>
+
+  <p class="subtext">
+    <a class="sections-btn" href="sections.html">All evidence sections</a>
+  </p>
 
   <p class="subtext">
     See the <a href="https://github.com/alexagriffith/flow-control-benchmarks">full GitHub repo</a> for data, runner, and charts.<br>

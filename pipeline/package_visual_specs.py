@@ -438,8 +438,9 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         plot_rows = [(display_names[name], median(values)) for name, values in groups.items()]
         retry_rows = [("Evicted", sum(int(r["evicted_batch_requests"]) for r in rows)), ("Retried", sum(int(r["async_retried_requests"]) for r in rows)), ("One final result", sum(int(r["async_retried_requests"]) for r in rows))]
         panels = [dot("Realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), process("Safe batch retry", "requests", retry_rows, "Evicted work was retried without duplicate results.")]
-        takeaway = "Reserved capacity protected realtime latency while evicted batch requests were retried reliably."
+        takeaway = "One pool. Protected latency. Completed batch."
         arch = ("Realtime and batch", "Reserved capacity and eviction", "One vLLM replica", "Retry owner completes batch")
+        results_template = "batch_eviction_single"
     else:
         production = [r for r in rows if r["evidence_role"] == "production evidence"]
         analysis = load_json(root, f"{rel}/analysis.json")
@@ -460,7 +461,10 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         ]
         takeaway = "Batch eviction and retry worked across two balanced model replicas."
         arch = ("Realtime and batch", "One Endpoint Picker", "Two vLLM replicas", "Retry owner completes batch")
-    return package(str(rel), f"Batch eviction: {replicas} model replica{'s' if replicas > 1 else ''}", takeaway, arch, panels)
+    spec = package(str(rel), f"Batch eviction: {replicas} model replica{'s' if replicas > 1 else ''}", takeaway, arch, panels)
+    if replicas == 1:
+        spec["results_template"] = results_template
+    return spec
 
 
 def build_specs(root: Path) -> list[dict]:

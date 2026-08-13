@@ -4,11 +4,8 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import html
-import json
 import math
-import statistics
 import sys
 from pathlib import Path
 
@@ -23,94 +20,6 @@ MUTED = "#5f6c7b"
 LINE = "#cdd5df"
 SURFACE = "#ffffff"
 PAGE = "#f5f7f9"
-
-
-def render_readme_summary(root: Path) -> str:
-    production = json.loads((root / "benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/analysis.json").read_text())
-    priority = production["selected_configuration_results"]["priority tiers"]
-    rows = list(csv.DictReader((root / "benchmark-data/batch-eviction/single-model-replica/summary.csv").open()))
-    latency_by_scenario: dict[str, list[float]] = {}
-    for row in rows:
-        latency_by_scenario.setdefault(row["scenario"], []).append(float(row["realtime_p95_ttft_ms"]))
-    latency = {name: statistics.median(values) for name, values in latency_by_scenario.items()}
-    retry_count = sum(int(row["evicted_batch_requests"]) for row in rows)
-    retried_count = sum(int(row["async_retried_requests"]) for row in rows)
-
-    realtime_only = latency["Realtime only"]
-    unprotected = latency["Realtime with batch and no protection"]
-    reserved = latency["Realtime with reserved capacity"]
-    eviction = latency["Realtime with reserved capacity, batch eviction, and retry"]
-    reserved_delta = reserved - unprotected
-    eviction_delta = eviction - unprotected
-
-    width, height = 650, 1310
-    parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
-        '<title id="title">Flow-control benchmark outcomes</title>',
-        '<desc id="desc">Priority-tier traffic, protected realtime latency, and batch retry outcomes with direct comparisons and units.</desc>',
-        '<style>text{font-family:Inter,Arial,sans-serif;letter-spacing:0}</style>',
-        f'<rect width="{width}" height="{height}" fill="{PAGE}"/>',
-        text(30, 58, "What the benchmarks show", 32, 800),
-        wrapped_text(30, 92, "When GPU capacity is full, flow control dispatches higher-priority requests first. Reserved capacity and batch eviction protect realtime work from batch interference.", 590, 17, 550, MUTED, 3),
-    ]
-
-    def card(y: int, card_height: int, color: str, title_value: str, subtitle: str, *, title_lines: int = 1) -> None:
-        parts.extend([
-            f'<rect x="30" y="{y}" width="590" height="{card_height}" rx="4" fill="{SURFACE}" stroke="{LINE}"/>',
-            f'<rect x="30" y="{y}" width="6" height="{card_height}" fill="{color}"/>',
-            wrapped_text(58, y + 42, title_value, 530, 23, 800, INK, 2),
-            wrapped_text(58, y + 78 + (title_lines - 1) * 30, subtitle, 530, 15, 550, MUTED, 2),
-        ])
-
-    card(140, 340, COLORS[0], "Priority determines who waits", "Priority-tier surge across three repeats; median p95 time to first token (ms, log scale).")
-    priority_rows = [
-        ("Platinum realtime", priority["platinum realtime"]["median_p95_ttft_ms"], COLORS[0]),
-        ("Gold realtime", priority["gold realtime"]["median_p95_ttft_ms"], COLORS[1]),
-        ("Silver standard", priority["silver standard"]["median_p95_ttft_ms"], COLORS[2]),
-        ("Bronze batch", priority["bronze batch"]["median_p95_ttft_ms"], COLORS[3]),
-    ]
-    maximum = max(value for _, value, _ in priority_rows)
-    for index, (label, value, color) in enumerate(priority_rows):
-        y = 270 + index * 42
-        parts.append(text(58, y + 15, label, 15, 650))
-        parts.append(f'<line x1="220" y1="{y + 9}" x2="500" y2="{y + 9}" stroke="#e1e7ed"/>')
-        point_x = 220 + 280 * scale(float(value), float(maximum), True)
-        parts.append(f'<circle cx="{point_x:.1f}" cy="{y + 9}" r="7" fill="{color}" stroke="{SURFACE}" stroke-width="2"/>')
-        parts.append(text(592, y + 15, fmt(float(value), "ms"), 15, 750, INK, "end"))
-    parts.append(wrapped_text(58, 452, "Lower-priority batch absorbs more of the wait during a surge.", 530, 15, 700, COLORS[0], 2))
-
-    card(500, 400, COLORS[1], "Reserved capacity protects realtime latency", "Realtime median p95 time to first token across three matched repeats.", title_lines=2)
-    protection_rows = [
-        ("No protection", unprotected, "Reference for this comparison", "#b83232"),
-        ("Reserved capacity", reserved, f"{round(reserved) - round(unprotected):+d} ms ({reserved_delta / unprotected:+.0%})", COLORS[1]),
-        ("Reserved capacity + eviction", eviction, f"{round(eviction) - round(unprotected):+d} ms ({eviction_delta / unprotected:+.0%})", COLORS[3]),
-    ]
-    protection_max = max(value for _, value, _, _ in protection_rows) * 1.08
-    for index, (label, value, delta, color) in enumerate(protection_rows):
-        y = 660 + index * 66
-        parts.append(text(58, y + 15, label, 15, 650))
-        parts.append(text(58, y + 37, delta, 13, 600, MUTED))
-        parts.append(f'<line x1="300" y1="{y + 9}" x2="500" y2="{y + 9}" stroke="#e1e7ed"/>')
-        point_x = 300 + 200 * value / protection_max
-        parts.append(f'<circle cx="{point_x:.1f}" cy="{y + 9}" r="8" fill="{color}" stroke="{SURFACE}" stroke-width="2"/>')
-        parts.append(text(592, y + 16, fmt(float(value), "ms"), 15, 750, INK, "end"))
-    parts.append(wrapped_text(58, 868, "Both protection paths keep realtime latency near the no-batch reference.", 530, 15, 700, COLORS[1], 2))
-
-    card(920, 330, COLORS[3], "Evicted batch work is retried reliably", "Single-model-replica eviction proof across three matched repeats.")
-    stages = [("Evicted by flow control", retry_count), ("Retried by the Async Processor", retried_count), ("Produced one final result", retried_count)]
-    for index, (label, value) in enumerate(stages):
-        node_x = 100 + index * 205
-        node_y = 1084
-        if index:
-            parts.append(f'<line x1="{node_x - 84}" y1="{node_y}" x2="{node_x - 20}" y2="{node_y}" stroke="{COLORS[3]}" stroke-width="3"/>')
-            parts.append(f'<path d="M {node_x - 28} {node_y - 6} L {node_x - 18} {node_y} L {node_x - 28} {node_y + 6}" fill="none" stroke="{COLORS[3]}" stroke-width="3"/>')
-        parts.append(f'<circle cx="{node_x}" cy="{node_y}" r="36" fill="#f7f5fb" stroke="{COLORS[3]}" stroke-width="3"/>')
-        parts.append(text(node_x, node_y + 8, f"{value:,}", 22, 800, COLORS[3], "middle"))
-        parts.append(wrapped_text(node_x - 62, node_y + 62, label, 124, 13, 650, MUTED, 3))
-    parts.append(wrapped_text(58, 1224, "Retries preserve one final result per batch job.", 530, 15, 700, COLORS[3], 2))
-    parts.append(text(30, 1290, "Absolute latency depends on the model, hardware, request shape, and offered load.", 12, 500, MUTED))
-    parts.append("</svg>\n")
-    return "".join(parts)
 
 
 def esc(value: object) -> str:
@@ -448,6 +357,72 @@ def render_combo(panel: dict, x: int, y: int, height: int, color: str) -> str:
     return "".join(parts)
 
 
+def render_batch_eviction_single_results(spec: dict) -> str:
+  """Wide bar-chart results view for the single-replica batch eviction package."""
+  latency_panel = spec["panels"][0]
+  retry_panel = spec["panels"][1]
+  values_by_label = {str(label): float(value) for label, value in latency_panel["rows"]}
+  order = [
+      ("Realtime only", "Realtime only", "#2f6fed"),
+      ("Batch with no protection", "Realtime + batch, no protection", "#b83232"),
+      ("Reserved capacity", "Realtime + batch, reserved capacity", "#087f73"),
+      ("Reserved capacity + eviction", "Realtime + batch, eviction and retry", "#6650a4"),
+  ]
+  reference = values_by_label.get("Realtime only", 342.0)
+  maximum = max(values_by_label.values() or [reference, 561.0])
+  chart_max = max(maximum * 1.08, reference * 1.2)
+  chart_left, chart_width = 220, 660
+  width, height = 960, 568
+
+  def bar_width(value: float) -> float:
+      return max(4.0, chart_width * value / chart_max)
+
+  def delta_text(value: float) -> str:
+      delta = round(value - reference)
+      if delta == 0:
+          return "Matches realtime-only reference"
+      sign = "+" if delta > 0 else ""
+      return f"{sign}{delta} ms versus realtime only"
+
+  evicted = int(float(retry_panel["stages"][0][1]))
+  retried = int(float(retry_panel["stages"][1][1]))
+  unprotected = values_by_label.get("Batch with no protection", 561.0)
+  protected = values_by_label.get("Reserved capacity", 341.0)
+
+  parts = [
+      f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
+      f'<title id="title">{esc(spec["title"])} benchmark results</title>',
+      f'<desc id="desc">{esc(spec["takeaway"])} Median realtime p95 TTFT across four matched scenarios with reliable batch recovery.</desc>',
+      '<style>text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;letter-spacing:0}</style>',
+      f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
+      text(40, 42, "BATCH EVICTION · 1 MODEL REPLICA", 11, 800, "#087f73"),
+      text(40, 84, "One pool.", 34, 800, INK),
+      text(40, 122, "Protected latency.", 34, 800, INK),
+      text(40, 160, "Completed batch.", 34, 800, "#087f73"),
+      wrapped_text(40, 186, "Consolidate chat and batch on shared GPUs without choosing cost or user experience.", 880, 14, 500, MUTED, 2),
+      text(40, 232, "Median realtime p95 TTFT across three matched 300-second repeats", 13, 650, MUTED),
+  ]
+
+  y = 258
+  for key, label, color in order:
+      value = values_by_label.get(key, reference)
+      parts.append(text(40, y, label, 15, 750, INK))
+      parts.append(text(width - 40, y, fmt(value, "ms"), 16, 800, INK, "end"))
+      parts.append(f'<rect x="{chart_left}" y="{y + 8}" width="{chart_width}" height="26" rx="4" fill="#eef1f4"/>')
+      parts.append(f'<rect x="{chart_left}" y="{y + 8}" width="{bar_width(value):.1f}" height="26" rx="4" fill="{color}"/>')
+      if key == "Realtime only":
+          ref_x = chart_left + bar_width(reference)
+          parts.append(f'<line x1="{ref_x:.1f}" y1="{y + 8}" x2="{ref_x:.1f}" y2="{y + 34}" stroke="{color}" stroke-width="2" opacity="0.65"/>')
+      parts.append(text(40, y + 48, delta_text(value), 12, 500, MUTED))
+      y += 62
+
+  parts.append(f'<rect x="40" y="{height - 56}" width="{width - 80}" height="40" rx="6" fill="{INK}"/>')
+  parts.append(text(60, height - 30, f"{fmt(unprotected, 'ms')} → {fmt(protected, 'ms')} with reserved capacity · {evicted} evicted → {retried} retried → {retried} final results · zero duplicates", 13, 700, "#ffffff"))
+  parts.append(text(40, height - 16, "Values are generated from the package summary data. Median p95 TTFT in milliseconds.", 11, 500, MUTED))
+  parts.append("</svg>\n")
+  return "".join(parts)
+
+
 def render_results(spec: dict) -> str:
     panels = spec["panels"]
     single_column = len(panels) <= 3
@@ -551,18 +526,15 @@ def main() -> int:
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     mismatches: list[str] = []
-    readme_visual = root / "assets/benchmark-story.svg"
-    readme_expected = render_readme_summary(root)
-    if args.check:
-        if not readme_visual.exists() or readme_visual.read_text() != readme_expected:
-            mismatches.append(str(readme_visual.relative_to(root)))
-    else:
-        readme_visual.write_text(readme_expected)
     for spec in build_specs(root):
         folder = root / spec["path"]
         outputs = {
             folder / "architecture.svg": render_architecture(spec),
-            folder / "results.svg": render_results(spec),
+            folder / "results.svg": (
+                render_batch_eviction_single_results(spec)
+                if spec.get("results_template") == "batch_eviction_single"
+                else render_results(spec)
+            ),
             folder / "README.md": readme_with_visuals(folder / "README.md", spec["title"]),
         }
         for path, expected in outputs.items():

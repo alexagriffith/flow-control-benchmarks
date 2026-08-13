@@ -435,12 +435,12 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
           </g>
         </g>
 
-        <!-- page-2 overlay: measured knee -->
+        <!-- page-2 overlay: measured capacity boundary -->
         <g id="ov-knee" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
           <g id="kneeScene" transform="translate(-132 -42) scale(1.25)">
           <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Where control starts</text>
-          <text x="130" y="110" font-size="11" fill="var(--txt3)">below the knee there is headroom; past it, policy decides the wait</text>
+          <text x="130" y="110" font-size="11" fill="var(--txt3)">below the capacity boundary there is headroom; past it, policy decides the wait</text>
           <g id="kneeViz"></g>
           </g>
         </g>
@@ -944,7 +944,7 @@ function kneeEnsure(){
   viz.appendChild(svgEl('rect',{x:kneeX,y:left.y+48,width:left.x+left.w-34-kneeX,height:left.h-86,fill:'var(--danger)',opacity:.09}));
   viz.appendChild(svgEl('line',{x1:kneeX,y1:left.y+46,x2:kneeX,y2:left.y+left.h-38,stroke:'var(--danger)','stroke-dasharray':'4 4'}));
   const kt=svgEl('text',{x:kneeX,y:left.y+38,'font-size':10.5,'font-weight':760,fill:'var(--danger)','text-anchor':'middle'});
-  kt.textContent='the knee';viz.appendChild(kt);
+  kt.textContent='capacity boundary';viz.appendChild(kt);
   const tp=KNEE_DATA.map(d=>[sx(d.c),syT(d.r)]);
   const lp=KNEE_DATA.map(d=>[sx(d.c),syL(d.ttft)]);
   const tpath=svgEl('path',{id:'kneeThroughput',d:kneePath(tp),fill:'none',stroke:'var(--ok)','stroke-width':2.4,'stroke-linejoin':'round'});
@@ -1443,7 +1443,7 @@ const PAGES=[
 /* ---- 2 · WHY: the operating point ---- */
 {title:'Where control starts',group:0,rail:'Threshold',steps:[
  {lit:['ov-knee'],dwell:1.15,
-  n:'This is why the mechanism matters: once the pool crosses the knee, flow control decides whose work waits.',
+  n:'Once demand crosses the capacity boundary, flow control decides whose work waits.',
   run(){kneeRun();}}
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
