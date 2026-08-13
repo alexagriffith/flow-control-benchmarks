@@ -406,6 +406,42 @@
       node.addEventListener("mouseleave", () => { tip.style.opacity=0; });
     }
 
+    /* ---------- ARCH: request path ---------- */
+    (function(){
+      const svg = document.getElementById("arch");
+      const defs = el("defs");
+      const marker = el("marker", { id: "arch-arrow", markerWidth: 8, markerHeight: 8, refX: 7, refY: 3, orient: "auto" });
+      marker.appendChild(el("path", { d: "M0,0 L0,6 L8,3 Z", fill: C.axis }));
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+
+      function stage(x, y, w, h, title, lines, accent, highlight) {
+        svg.appendChild(el("rect", { x, y, width: w, height: h, rx: 10, fill: "#fff", stroke: highlight ? C.green : "#d7dde3", "stroke-width": highlight ? 2.5 : 1.5 }));
+        svg.appendChild(el("rect", { x, y, width: w, height: 5, rx: 10, fill: accent }));
+        svg.appendChild(el("text", { x: x + 14, y: y + 30, fill: C.txt, "font-size": 13, "font-weight": 700, "font-family": F }, title));
+        lines.forEach((line, index) => {
+          svg.appendChild(el("text", { x: x + 14, y: y + 50 + index * 16, fill: C.txt2, "font-size": 11, "font-family": F }, line));
+        });
+      }
+
+      function arrow(x1, x2, y) {
+        svg.appendChild(el("line", { x1, y1: y, x2, y2: y, stroke: C.axis, "stroke-width": 2, "marker-end": "url(#arch-arrow)" }));
+      }
+
+      const y = 78, h = 148, mid = y + h / 2;
+      stage(24, y, 104, h, "Clients", ["Priority 100", "Batch −10"], C.blue, false);
+      arrow(128, 148, mid);
+      stage(148, y, 104, h, "Envoy gateway", ["OpenAI route", "Priority headers"], C.gray, false);
+      arrow(252, 268, mid);
+      stage(268, y, 124, h, "llm-d router", ["Endpoint Picker", "Eviction here"], C.green, true);
+      arrow(392, 412, mid);
+      stage(412, y, 244, h, "vLLM on one H100", ["GPT-OSS 20B", "48 concurrent slots", "Shared by all traffic"], C.blue, false);
+
+      svg.appendChild(el("rect", { x: 280, y: 236, width: 100, height: 22, rx: 5, fill: C.red, opacity: 0.12 }));
+      svg.appendChild(el("text", { x: 330, y: 251, "text-anchor": "middle", fill: C.red, "font-size": 10.5, "font-weight": 800, "font-family": F }, "stops batch when full"));
+      svg.appendChild(el("text", { x: 340, y: 44, "text-anchor": "middle", fill: C.txt3, "font-size": 10.5, "font-family": F }, "one request path · one GPU"));
+    })();
+
     /* ---------- C0: live reclaim time-series (from targeted_metrics.csv) ---------- */
     (function(){
       const svg=document.getElementById("c0"), W=680,H=320, L=54,R=54,T=18,B=54;
