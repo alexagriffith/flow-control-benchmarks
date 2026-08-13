@@ -517,8 +517,8 @@
           <div role="row"><strong role="cell">KV-cache pressure</strong><span class="signal" role="cell">UtilizationDetector: KV-cache signal</span><span role="cell">Use as a memory-pressure guardrail for long prompts and large KV-cache demand. The sweep calibrated activation thresholds; it did not establish a latency-optimal default.</span></div>
         </div>
         <figure class="headroom-guide" id="headroom-guide">
-          <img src="../headroom-vs-reserved-capacity.svg" alt="Architecture diagram showing reserved capacity as a shared model pool dispatch gate and detector headroom as a per-model-replica eligibility check.">
-          <figcaption>Reserved capacity determines whether a request may leave the shared Endpoint Picker queue. Headroom determines which model replica may receive it. When both are enabled, the pool dispatch gate runs first.</figcaption>
+          <img src="../headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and detector headroom filtering each model replica against its safety boundary.">
+          <figcaption>Reserved capacity asks whether this priority may dispatch. Detector headroom asks which replica may receive the request.</figcaption>
         </figure>
         <p class="section-evidence"><strong>Version boundary:</strong> stable v0.9 provides a uniform pool-level usage limit and per-replica detector headroom. Priority-specific reserve and batch eviction were measured separately on the experimental eviction build.</p>
         <div class="decision-table" role="table" aria-label="Capacity controls and their effect">

@@ -680,8 +680,8 @@
   <h2>Two controls protect capacity at different levels</h2>
   <p>Reserved capacity controls whether work leaves the queue. Headroom controls which model replica may receive it.</p>
   <figure class="figure">
-    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Architecture diagram showing reserved capacity as a shared model pool dispatch gate and detector headroom as a per-model-replica eligibility check.">
-    <figcaption>When both are enabled, the shared-pool gate runs first and the per-replica check runs second.</figcaption>
+    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and detector headroom filtering each model replica against its safety boundary.">
+    <figcaption>Reserved capacity asks whether this priority may dispatch. Detector headroom asks which replica may receive the request.</figcaption>
   </figure>
   <details>
     <summary>Version and configuration details</summary>
@@ -693,8 +693,8 @@
   <h2>Batch eviction frees capacity, then retries the interrupted job</h2>
   <p>When realtime demand needs capacity, the Endpoint Picker can end lower-priority batch generation. The Async Processor retries that job as a new request and preserves one final result.</p>
   <figure class="figure">
-    <img src="../benchmark-data/batch-eviction/single-model-replica/request-path-architecture.svg" alt="Sequence diagram showing the Endpoint Picker selecting lower-priority running batch, sending Envoy an immediate HTTP 429 response, Envoy resetting the vLLM stream, and the Async Processor retrying the job through the normal path.">
-    <figcaption>Cancellation ends the active stream through Envoy. Retry is a separate client-owned request.</figcaption>
+    <img src="../benchmark-data/batch-eviction/single-model-replica/request-path-architecture.svg" alt="Actor-aligned sequence showing the Endpoint Picker instructing Envoy to return HTTP 429, Envoy resetting the upstream vLLM stream and sending the response, and the Async Processor retrying the batch job.">
+    <figcaption>The Endpoint Picker creates the eviction instruction. Envoy sends the HTTP response and resets the upstream stream. The Async Processor owns retry.</figcaption>
   </figure>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/handlers/server.go">handlers/server.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/eviction/request_evictor.go">eviction/request_evictor.go</a> · <a href="../benchmark-data/batch-eviction/single-model-replica/eviction-retry-correlation.csv">eviction and retry evidence</a></div>
 </section>

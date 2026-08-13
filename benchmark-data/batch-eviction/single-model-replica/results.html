@@ -738,9 +738,9 @@
         <figure class="assetcard">
           <div class="charttitle">Request path and eviction point</div>
           <div class="chartsub">One GPU and one model server. The Endpoint Picker applies priorities and issues eviction.</div>
-          <img class="arch-diagram" src="request-path-architecture.svg" width="960" height="610" alt="Architecture diagram showing the normal request path, three-step batch cancellation, and client-owned retry path.">
+          <img class="arch-diagram" src="request-path-architecture.svg" width="1200" height="810" alt="Actor-aligned sequence showing the Endpoint Picker instructing Envoy to return HTTP 429, Envoy resetting the upstream vLLM stream and sending the response, and the Async Processor retrying the batch job through the complete routing path.">
         </figure>
-        <figcaption>Realtime traffic uses priority 100; batch uses priority −10. When higher-priority demand is blocked, the Endpoint Picker sends Envoy an immediate HTTP 429 response for selected batch. Envoy resets the upstream stream so vLLM aborts it; the Async Processor then retries the job as a new request.</figcaption>
+        <figcaption>Realtime traffic uses priority 100; batch uses priority −10. The Endpoint Picker instructs Envoy to return HTTP 429 for selected batch. Envoy resets the upstream stream so vLLM aborts it and sends the 429 downstream; the Async Processor then retries the job as a new request.</figcaption>
       </div>
     </section>
 
