@@ -677,13 +677,26 @@
 </section>
 
 <section id="capacity-controls">
-  <h2>Headroom and reserved capacity apply at different boundaries</h2>
-  <p>Reserved capacity limits how much work each priority may send into vLLM. Detector headroom controls when an endpoint is removed from consideration. When both are enabled, the priority ceilings still decide what may enter vLLM; headroom only adds a filtering cushion outside those ceilings.</p>
-  <p><strong>Combined example:</strong> batch still stops at 50% saturation, standard at 75%, and realtime at 100%. With 10% detector headroom, the endpoint filter remains open through 110%; that extra tolerance does not let batch or standard cross their dispatch ceilings.</p>
+  <h2>Two controls protect capacity at different levels</h2>
+  <p>Reserved capacity controls whether work leaves the queue. Headroom controls which model replica may receive it.</p>
   <figure class="figure">
-    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Detector headroom alone, priority reserved capacity alone, and both controls enabled together, followed by the order in which flow control applies them.">
-    <figcaption>The first two columns are measured benchmark configurations. The combined column shows implementation behavior and was not tested as a separate benchmark arm. Eviction is independent: it acts later, after eligible batch work is already running in vLLM.</figcaption>
+    <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Architecture diagram showing reserved capacity as a shared model pool dispatch gate and detector headroom as a per-model-replica eligibility check.">
+    <figcaption>When both are enabled, the shared-pool gate runs first and the per-replica check runs second.</figcaption>
   </figure>
+  <details>
+    <summary>Version and configuration details</summary>
+    <p><strong>Stable v0.9:</strong> the static usage-limit policy provides one pool-wide ceiling for all priorities; its default threshold is 1.0, which reserves no capacity. Detector headroom defaults to 0.0 and applies the same configured tolerance to each replica. Priority-specific reserve belongs to the newer experimental priority-holdback policy.</p>
+  </details>
+</section>
+
+<section id="batch-eviction-flow">
+  <h2>Batch eviction frees capacity, then retries the interrupted job</h2>
+  <p>When realtime demand needs capacity, the Endpoint Picker can end lower-priority batch generation. The Async Processor retries that job as a new request and preserves one final result.</p>
+  <figure class="figure">
+    <img src="../benchmark-data/batch-eviction/single-model-replica/request-path-architecture.svg" alt="Sequence diagram showing the Endpoint Picker selecting lower-priority running batch, sending Envoy an immediate HTTP 429 response, Envoy resetting the vLLM stream, and the Async Processor retrying the job through the normal path.">
+    <figcaption>Cancellation ends the active stream through Envoy. Retry is a separate client-owned request.</figcaption>
+  </figure>
+  <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/handlers/server.go">handlers/server.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/eviction/request_evictor.go">eviction/request_evictor.go</a> · <a href="../benchmark-data/batch-eviction/single-model-replica/eviction-retry-correlation.csv">eviction and retry evidence</a></div>
 </section>
 
 <section>

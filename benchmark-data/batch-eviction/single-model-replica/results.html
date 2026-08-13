@@ -738,9 +738,9 @@
         <figure class="assetcard">
           <div class="charttitle">Request path and eviction point</div>
           <div class="chartsub">One GPU and one model server. The Endpoint Picker applies priorities and issues eviction.</div>
-          <img class="arch-diagram" src="request-path-architecture.svg" width="960" height="460" alt="Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.">
+          <img class="arch-diagram" src="request-path-architecture.svg" width="960" height="610" alt="Architecture diagram showing the normal request path, three-step batch cancellation, and client-owned retry path.">
         </figure>
-        <figcaption>Realtime traffic uses priority 100; batch uses priority −10. Both land on the same GPU. The Endpoint Picker reserves part of the 48 slots for higher-priority work. When a surge exceeds reserved capacity, it stops batch streams. The client retries stopped batch jobs.</figcaption>
+        <figcaption>Realtime traffic uses priority 100; batch uses priority −10. When higher-priority demand is blocked, the Endpoint Picker sends Envoy an immediate HTTP 429 response for selected batch. Envoy resets the upstream stream so vLLM aborts it; the Async Processor then retries the job as a new request.</figcaption>
       </div>
     </section>
 

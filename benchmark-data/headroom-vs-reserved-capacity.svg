@@ -1,117 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="860" viewBox="0 0 1440 860" role="img" aria-labelledby="title desc">
-  <title id="title">How detector headroom and reserved capacity compose</title>
-  <desc id="desc">Three configurations compare detector headroom alone, priority reserved capacity alone, and both enabled together. Detector headroom relaxes the endpoint filtering boundary. Reserved capacity sets different dispatch ceilings by priority. When both are enabled, the priority ceilings still control dispatch and headroom remains an outer filter cushion. Eviction acts after dispatch on eligible batch requests already running in vLLM.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">Reserved capacity is one pool gate; headroom is checked on every model replica</title>
+  <desc id="desc">Incoming requests wait outside a shared model pool. Reserved capacity is the gate that decides whether a request may enter the pool. Inside the pool, the Endpoint Picker checks the load of each model replica against its headroom-adjusted boundary. Replicas below the boundary remain eligible; a replica at the boundary is filtered temporarily.</desc>
   <style>
     text { font-family: Inter, Arial, sans-serif; letter-spacing: 0; }
-    .ink { fill: #15202b; }
-    .muted { fill: #5f6c7b; }
-    .body { font-size: 17px; }
-    .small { font-size: 14px; }
-    .tiny { font-size: 12px; }
-    .label { font-size: 15px; font-weight: 700; }
-    .panel-title { font-size: 24px; font-weight: 800; }
-    .value { font-size: 17px; font-weight: 800; }
+    .ink { fill: #14202d; }
+    .muted { fill: #5b6877; }
+    .title { font-size: 32px; font-weight: 800; }
+    .subtitle { font-size: 17px; }
+    .label { font-size: 16px; font-weight: 800; }
+    .small { font-size: 13px; font-weight: 650; }
+    .level { font-size: 12px; font-weight: 850; }
+    .question { font-size: 20px; font-weight: 800; }
   </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#738190"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#2d6cdf"/></marker>
+  </defs>
 
-  <rect width="1440" height="860" fill="#f5f7f9"/>
-  <text x="48" y="56" class="ink" font-size="32" font-weight="800">Two controls, two boundaries</text>
-  <text x="48" y="88" class="muted body">Reserved capacity controls how much work each priority may send into vLLM. Headroom controls when an endpoint is filtered out.</text>
+  <rect width="1440" height="760" fill="#f4f7fa"/>
+  <text x="48" y="55" class="ink title">One pool gate. One check per replica.</text>
+  <text x="48" y="87" class="muted subtitle">The controls protect capacity at different levels of the serving path.</text>
 
-  <!-- Headroom only -->
-  <rect x="48" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
-  <rect x="48" y="126" width="424" height="6" fill="#2d6cdf"/>
-  <text x="74" y="172" class="ink panel-title">Detector headroom only</text>
-  <text x="74" y="200" class="muted small">Actual v0.9 production configuration</text>
-  <text x="74" y="238" class="ink label">Maximum sent into vLLM</text>
-  <text x="74" y="259" class="ink value">100% for every priority</text>
-  <rect x="74" y="274" width="346" height="32" fill="#dfe6ee"/>
-  <rect x="74" y="274" width="314" height="32" fill="#087f72"/>
-  <text x="231" y="295" fill="#ffffff" class="label" text-anchor="middle">shared policy ceiling</text>
-  <text x="74" y="338" class="ink label">Endpoint filter boundary</text>
-  <rect x="74" y="356" width="346" height="28" fill="#dfe6ee"/>
-  <rect x="74" y="356" width="314" height="28" fill="#2d6cdf"/>
-  <rect x="388" y="356" width="32" height="28" fill="#9fc1ff"/>
-  <line x1="388" y1="346" x2="388" y2="396" stroke="#15202b" stroke-width="2"/>
-  <text x="382" y="408" class="small ink" text-anchor="end">limit 100%</text>
-  <text x="420" y="430" class="small ink" text-anchor="end">filter 110%</text>
-  <text x="74" y="455" class="muted body">A brief overshoot does not immediately remove</text>
-  <text x="74" y="480" class="muted body">the endpoint. No capacity is reserved by priority.</text>
+  <!-- Incoming queue -->
+  <text x="52" y="155" class="muted level">ENDPOINT PICKER QUEUE</text>
+  <rect x="52" y="176" width="156" height="228" fill="#ffffff" stroke="#c9d3df" stroke-width="2"/>
+  <circle cx="92" cy="218" r="13" fill="#2d6cdf"/><circle cx="132" cy="218" r="13" fill="#087f72"/><circle cx="172" cy="218" r="13" fill="#6550a5"/>
+  <circle cx="92" cy="260" r="13" fill="#2d6cdf"/><circle cx="132" cy="260" r="13" fill="#087f72"/><circle cx="172" cy="260" r="13" fill="#6550a5"/>
+  <circle cx="92" cy="302" r="13" fill="#2d6cdf"/><circle cx="132" cy="302" r="13" fill="#087f72"/><circle cx="172" cy="302" r="13" fill="#6550a5"/>
+  <text x="130" y="354" class="ink label" text-anchor="middle">Waiting requests</text>
+  <text x="130" y="379" class="muted small" text-anchor="middle">multiple priorities</text>
 
-  <!-- Reserve only -->
-  <rect x="508" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
-  <rect x="508" y="126" width="424" height="6" fill="#087f72"/>
-  <text x="534" y="172" class="ink panel-title">Reserved capacity only</text>
-  <text x="534" y="200" class="muted small">Actual batch-eviction benchmark configuration</text>
-  <text x="534" y="245" class="ink label">Dispatch ceilings: sent into vLLM</text>
-  <rect x="534" y="266" width="346" height="34" fill="#dfe6ee"/>
-  <rect x="534" y="266" width="173" height="34" fill="#6550a5"/>
-  <text x="548" y="288" fill="#ffffff" class="label">Batch</text>
-  <text x="694" y="288" fill="#ffffff" class="value" text-anchor="end">50%</text>
-  <rect x="534" y="308" width="346" height="34" fill="#dfe6ee"/>
-  <rect x="534" y="308" width="260" height="34" fill="#c56a00"/>
-  <text x="548" y="330" fill="#ffffff" class="label">Standard</text>
-  <text x="781" y="330" fill="#ffffff" class="value" text-anchor="end">75%</text>
-  <rect x="534" y="350" width="346" height="34" fill="#087f72"/>
-  <text x="548" y="372" fill="#ffffff" class="label">Realtime</text>
-  <text x="866" y="372" fill="#ffffff" class="value" text-anchor="end">100%</text>
-  <text x="534" y="416" class="ink label">Endpoint filter boundary: 100%</text>
-  <text x="534" y="455" class="muted body">Lower-priority work stops earlier, leaving capacity</text>
-  <text x="534" y="480" class="muted body">that higher-priority work may still use.</text>
+  <!-- Reserved capacity gate -->
+  <line x1="208" y1="290" x2="252" y2="290" stroke="#738190" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="260" y="150" width="130" height="280" fill="#e9f7f4" stroke="#087f72" stroke-width="3"/>
+  <rect x="280" y="190" width="90" height="14" fill="#087f72"/>
+  <rect x="280" y="220" width="90" height="14" fill="#087f72"/>
+  <rect x="280" y="250" width="90" height="14" fill="#087f72"/>
+  <line x1="325" y1="282" x2="325" y2="338" stroke="#087f72" stroke-width="4"/>
+  <circle cx="325" cy="355" r="10" fill="#087f72"/>
+  <text x="325" y="388" fill="#087f72" class="label" text-anchor="middle">Reserved</text>
+  <text x="325" y="410" fill="#087f72" class="label" text-anchor="middle">capacity</text>
+  <text x="325" y="137" fill="#087f72" class="level" text-anchor="middle">POOL GATE</text>
 
-  <!-- Both -->
-  <rect x="968" y="126" width="424" height="392" fill="#ffffff" stroke="#cdd5df"/>
-  <rect x="968" y="126" width="212" height="6" fill="#087f72"/>
-  <rect x="1180" y="126" width="212" height="6" fill="#2d6cdf"/>
-  <text x="994" y="172" class="ink panel-title">Both enabled</text>
-  <text x="994" y="200" class="muted small">Implementation behavior; not a benchmark arm</text>
-  <text x="994" y="245" class="ink label">Dispatch ceilings stay the same</text>
-  <rect x="994" y="266" width="346" height="34" fill="#dfe6ee"/>
-  <rect x="994" y="266" width="173" height="34" fill="#6550a5"/>
-  <text x="1008" y="288" fill="#ffffff" class="label">Batch</text>
-  <text x="1154" y="288" fill="#ffffff" class="value" text-anchor="end">50%</text>
-  <rect x="994" y="308" width="346" height="34" fill="#dfe6ee"/>
-  <rect x="994" y="308" width="260" height="34" fill="#c56a00"/>
-  <text x="1008" y="330" fill="#ffffff" class="label">Standard</text>
-  <text x="1241" y="330" fill="#ffffff" class="value" text-anchor="end">75%</text>
-  <rect x="994" y="350" width="346" height="34" fill="#087f72"/>
-  <text x="1008" y="372" fill="#ffffff" class="label">Realtime</text>
-  <text x="1326" y="372" fill="#ffffff" class="value" text-anchor="end">100%</text>
-  <text x="994" y="416" class="ink label">Endpoint filter boundary moves to 110%</text>
-  <text x="994" y="455" class="muted body">Reserved capacity still decides who dispatches.</text>
-  <text x="994" y="480" class="muted body">Headroom only adds an outer filtering cushion.</text>
+  <!-- Shared model pool -->
+  <rect x="430" y="124" width="958" height="334" fill="#ffffff" stroke="#087f72" stroke-width="3"/>
+  <rect x="430" y="124" width="958" height="42" fill="#087f72"/>
+  <text x="458" y="151" fill="#ffffff" class="level">SHARED MODEL POOL</text>
 
-  <!-- Combined flow -->
-  <text x="48" y="574" class="ink" font-size="25" font-weight="800">When both are on</text>
-  <text x="48" y="604" class="muted body">The controls apply at different points, in this order.</text>
+  <!-- Endpoint Picker selection -->
+  <rect x="474" y="214" width="190" height="154" fill="#f4f7fa" stroke="#9aa8b6" stroke-width="2"/>
+  <text x="569" y="253" class="ink label" text-anchor="middle">Endpoint Picker</text>
+  <circle cx="535" cy="300" r="9" fill="#2d6cdf"/><circle cx="569" cy="300" r="9" fill="#2d6cdf"/><circle cx="603" cy="300" r="9" fill="#c56a00"/>
+  <text x="569" y="337" class="muted small" text-anchor="middle">candidate replicas</text>
 
-  <rect x="48" y="640" width="224" height="92" fill="#ffffff" stroke="#cdd5df"/>
-  <text x="70" y="674" class="ink label">1. Measure saturation</text>
-  <text x="70" y="700" class="muted small">in-flight work / configured limit</text>
-  <line x1="272" y1="686" x2="316" y2="686" stroke="#7c8996" stroke-width="2"/>
-  <path d="M 316 686 l -11 -7 v 14 z" fill="#7c8996"/>
+  <line x1="390" y1="290" x2="466" y2="290" stroke="#738190" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="664" y1="290" x2="730" y2="290" stroke="#2d6cdf" stroke-width="3" marker-end="url(#arrow-blue)"/>
 
-  <rect x="318" y="640" width="250" height="92" fill="#ffffff" stroke="#087f72" stroke-width="2"/>
-  <text x="340" y="674" class="ink label">2. Apply priority ceilings</text>
-  <text x="340" y="700" class="muted small">batch gates before realtime</text>
-  <line x1="568" y1="686" x2="612" y2="686" stroke="#7c8996" stroke-width="2"/>
-  <path d="M 612 686 l -11 -7 v 14 z" fill="#7c8996"/>
+  <!-- Per-replica headroom checks -->
+  <text x="1042" y="196" fill="#2d6cdf" class="level" text-anchor="middle">HEADROOM CHECKED SEPARATELY ON EACH REPLICA</text>
 
-  <rect x="614" y="640" width="250" height="92" fill="#ffffff" stroke="#2d6cdf" stroke-width="2"/>
-  <text x="636" y="674" class="ink label">3. Filter endpoints</text>
-  <text x="636" y="700" class="muted small">headroom allows brief overshoot</text>
-  <line x1="864" y1="686" x2="908" y2="686" stroke="#7c8996" stroke-width="2"/>
-  <path d="M 908 686 l -11 -7 v 14 z" fill="#7c8996"/>
+  <rect x="748" y="218" width="176" height="170" fill="#eef4ff" stroke="#2d6cdf" stroke-width="2"/>
+  <text x="836" y="249" class="ink label" text-anchor="middle">Replica A</text>
+  <rect x="774" y="274" width="124" height="72" fill="#dce6f4"/>
+  <rect x="774" y="310" width="124" height="36" fill="#2d6cdf"/>
+  <line x1="766" y1="288" x2="906" y2="288" stroke="#14202d" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="836" y="373" fill="#17663f" class="small" text-anchor="middle">ELIGIBLE</text>
 
-  <rect x="910" y="640" width="200" height="92" fill="#ffffff" stroke="#cdd5df"/>
-  <text x="932" y="674" class="ink label">4. Run in vLLM</text>
-  <text x="932" y="700" class="muted small">work is now in the engine</text>
-  <line x1="1110" y1="686" x2="1154" y2="686" stroke="#7c8996" stroke-width="2"/>
-  <path d="M 1154 686 l -11 -7 v 14 z" fill="#7c8996"/>
+  <rect x="958" y="218" width="176" height="170" fill="#eef4ff" stroke="#2d6cdf" stroke-width="2"/>
+  <text x="1046" y="249" class="ink label" text-anchor="middle">Replica B</text>
+  <rect x="984" y="274" width="124" height="72" fill="#dce6f4"/>
+  <rect x="984" y="292" width="124" height="54" fill="#2d6cdf"/>
+  <line x1="976" y1="288" x2="1116" y2="288" stroke="#14202d" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="1046" y="373" fill="#17663f" class="small" text-anchor="middle">ELIGIBLE</text>
 
-  <rect x="1156" y="640" width="236" height="92" fill="#fff8ec" stroke="#c56a00"/>
-  <text x="1178" y="674" class="ink label">5. Evict only if needed</text>
-  <text x="1178" y="700" class="muted small">stop eligible batch, then retry</text>
+  <rect x="1168" y="218" width="176" height="170" fill="#fff6ea" stroke="#c56a00" stroke-width="2"/>
+  <text x="1256" y="249" class="ink label" text-anchor="middle">Replica C</text>
+  <rect x="1194" y="274" width="124" height="72" fill="#f1dfc8"/>
+  <rect x="1194" y="274" width="124" height="72" fill="#c56a00"/>
+  <line x1="1186" y1="288" x2="1326" y2="288" stroke="#14202d" stroke-width="2" stroke-dasharray="5 4"/>
+  <path d="M1237 303 L1275 341 M1275 303 L1237 341" stroke="#ffffff" stroke-width="5"/>
+  <text x="1256" y="373" fill="#9a4f00" class="small" text-anchor="middle">FILTERED</text>
 
-  <rect x="48" y="770" width="1344" height="54" fill="#102033"/>
-  <text x="72" y="803" fill="#ffffff" font-size="16" font-weight="700">The boundaries do not add together: reserve controls dispatch, headroom controls endpoint eligibility, and eviction handles work already running.</text>
+  <!-- Comparison -->
+  <rect x="52" y="510" width="646" height="154" fill="#ffffff" stroke="#087f72" stroke-width="2"/>
+  <rect x="52" y="510" width="12" height="154" fill="#087f72"/>
+  <text x="88" y="545" fill="#087f72" class="level">SHARED POOL</text>
+  <text x="88" y="583" class="ink question">May this request leave the queue?</text>
+  <text x="88" y="618" class="muted label">Reserved capacity</text>
+
+  <rect x="742" y="510" width="646" height="154" fill="#ffffff" stroke="#2d6cdf" stroke-width="2"/>
+  <rect x="742" y="510" width="12" height="154" fill="#2d6cdf"/>
+  <text x="778" y="545" fill="#2d6cdf" class="level">EACH MODEL REPLICA</text>
+  <text x="778" y="583" class="ink question">May this replica receive the request?</text>
+  <text x="778" y="618" class="muted label">Detector headroom</text>
+
+  <rect x="52" y="694" width="1336" height="38" fill="#142538"/>
+  <text x="720" y="719" fill="#ffffff" font-size="15px" font-weight="750" text-anchor="middle">When both are enabled: pool gate first → replica eligibility second</text>
 </svg>

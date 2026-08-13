@@ -517,10 +517,10 @@
           <div role="row"><strong role="cell">KV-cache pressure</strong><span class="signal" role="cell">UtilizationDetector: KV-cache signal</span><span role="cell">Use as a memory-pressure guardrail for long prompts and large KV-cache demand. The sweep calibrated activation thresholds; it did not establish a latency-optimal default.</span></div>
         </div>
         <figure class="headroom-guide" id="headroom-guide">
-          <img src="../headroom-vs-reserved-capacity.svg" alt="Headroom adds tolerance above an admission limit, while reserved capacity gives batch and realtime different dispatch ceilings and eviction recovers batch already running in vLLM.">
-          <figcaption>The first two columns show the tested configurations. The combined column explains how the implementation composes both controls; that exact combination was not a benchmark arm. The percentages and limits are measured settings, not universal defaults.</figcaption>
+          <img src="../headroom-vs-reserved-capacity.svg" alt="Architecture diagram showing reserved capacity as a shared model pool dispatch gate and detector headroom as a per-model-replica eligibility check.">
+          <figcaption>Reserved capacity determines whether a request may leave the shared Endpoint Picker queue. Headroom determines which model replica may receive it. When both are enabled, the pool dispatch gate runs first.</figcaption>
         </figure>
-        <p class="section-evidence"><strong>When both are enabled:</strong> batch still stops dispatching at 50% saturation, standard at 75%, and realtime at 100%. A 10% detector-headroom setting keeps an endpoint eligible through the 110% filter boundary; it does not raise any priority ceiling.</p>
+        <p class="section-evidence"><strong>Version boundary:</strong> stable v0.9 provides a uniform pool-level usage limit and per-replica detector headroom. Priority-specific reserve and batch eviction were measured separately on the experimental eviction build.</p>
         <div class="decision-table" role="table" aria-label="Capacity controls and their effect">
           <div role="row"><strong role="cell">Detector headroom</strong><span class="signal" role="cell"><code>saturationDetector.headroom</code></span><span role="cell">Relaxes the endpoint filter above the detector's request or token limit. It tolerates brief overshoot but does not reserve capacity by priority.</span></div>
           <div role="row"><strong role="cell">Uniform reserve</strong><span class="signal" role="cell"><code>static-usage-limit-policy.threshold</code></span><span role="cell">Sets one dispatch ceiling for every priority. A value below 1.0 holds the same fraction of capacity back from all traffic.</span></div>
