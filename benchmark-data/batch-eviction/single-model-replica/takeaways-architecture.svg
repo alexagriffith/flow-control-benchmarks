@@ -1,128 +1,136 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="takeaways-arch-title takeaways-arch-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="400" viewBox="0 0 960 400" role="img" aria-labelledby="takeaways-arch-title takeaways-arch-desc">
   <title id="takeaways-arch-title">Batch eviction request path</title>
-  <desc id="takeaways-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on one vLLM replica on a single H100, and evicted batch work is retried by the Async Processor.</desc>
+  <desc id="takeaways-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.</desc>
   <style>
     text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: 0; }
-    .kicker { fill: #5f6c7b; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-    .title { fill: #15202b; font-size: 18px; font-weight: 800; }
-    .label { fill: #15202b; font-size: 12px; font-weight: 750; }
-    .copy { fill: #5f6c7b; font-size: 11px; }
-    .value { fill: #087f72; font-size: 11px; font-weight: 800; }
-    .flow { fill: #5f6c7b; font-size: 10px; font-weight: 700; }
-    .lane-realtime { fill: #087f72; font-size: 10px; font-weight: 800; }
-    .lane-batch { fill: #2d6cdf; font-size: 10px; font-weight: 800; }
-    .callout { fill: #b83232; font-size: 10.5px; font-weight: 800; }
+    .kicker { fill: #5f6c7b; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .title { fill: #15202b; font-size: 16px; font-weight: 800; }
+    .label { fill: #15202b; font-size: 11.5px; font-weight: 700; }
+    .copy { fill: #5f6c7b; font-size: 10.5px; }
+    .flow { fill: #4a5563; font-size: 10px; font-weight: 700; }
+    .lane-realtime { fill: #087f72; font-size: 10.5px; font-weight: 800; }
+    .lane-batch { fill: #2d6cdf; font-size: 10.5px; font-weight: 800; }
+    .callout { fill: #b83232; font-size: 10px; font-weight: 800; }
+    .pill { fill: #fff; stroke: #e2e8f0; stroke-width: 1; }
   </style>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#15202b"/>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5563"/>
     </marker>
-    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#087f72"/>
     </marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#b83232"/>
     </marker>
-    <linearGradient id="slot-realtime" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#087f72"/>
-      <stop offset="100%" stop-color="#3aa896"/>
-    </linearGradient>
-    <linearGradient id="slot-batch" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#2d6cdf"/>
-      <stop offset="100%" stop-color="#5b8def"/>
-    </linearGradient>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c56a00"/>
+    </marker>
   </defs>
 
-  <rect width="900" height="420" fill="#f7f8fa"/>
+  <rect width="960" height="400" fill="#f7f8fa" rx="8"/>
 
-  <!-- Clients -->
-  <rect x="18" y="58" width="148" height="214" fill="#fff" stroke="#cdd5df" stroke-width="1.5"/>
-  <text class="kicker" x="34" y="82">Incoming work</text>
-  <text class="title" x="34" y="108">Clients</text>
-  <rect x="34" y="124" width="116" height="54" fill="#e7f5f2" stroke="#087f72" stroke-width="1.2" rx="4"/>
-  <text class="lane-realtime" x="46" y="144">Realtime</text>
-  <text class="copy" x="46" y="162">priority 100</text>
-  <text class="copy" x="46" y="176">burst + Poisson</text>
-  <rect x="34" y="188" width="116" height="54" fill="#edf3ff" stroke="#2d6cdf" stroke-width="1.2" rx="4"/>
-  <text class="lane-batch" x="46" y="208">Batch</text>
-  <text class="copy" x="46" y="226">priority 10</text>
-  <text class="copy" x="46" y="240">Async backlog</text>
+  <!-- Clients: 20,48 â†’ 170 -->
+  <g id="clients">
+    <rect x="20" y="48" width="150" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
+    <text class="kicker" x="36" y="72">Incoming work</text>
+    <text class="title" x="36" y="94">Clients</text>
+    <rect x="36" y="108" width="118" height="42" fill="#e7f5f2" stroke="#087f72" stroke-width="1.2" rx="6"/>
+    <text class="lane-realtime" x="48" y="128">Realtime</text>
+    <text class="copy" x="48" y="142">higher priority</text>
+    <rect x="36" y="158" width="118" height="42" fill="#edf3ff" stroke="#2d6cdf" stroke-width="1.2" rx="6"/>
+    <text class="lane-batch" x="48" y="178">Batch</text>
+    <text class="copy" x="48" y="192">lower priority</text>
+  </g>
 
-  <path d="M166 165 H206" fill="none" stroke="#15202b" stroke-width="2" marker-end="url(#arrow)"/>
-  <text class="flow" x="186" y="154" text-anchor="middle">HTTP</text>
+  <!-- Envoy: 190,48 â†’ 348 -->
+  <g id="envoy">
+    <rect x="190" y="48" width="158" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
+    <text class="kicker" x="206" y="72">Edge</text>
+    <text class="title" x="206" y="94">Envoy gateway</text>
+    <rect x="206" y="110" width="126" height="30" fill="#f3f6f8" stroke="#dde3ea" rx="4"/>
+    <text class="label" x="218" y="130">OpenAI route</text>
+    <rect x="206" y="146" width="126" height="30" fill="#f3f6f8" stroke="#dde3ea" rx="4"/>
+    <text class="label" x="218" y="166">Priority headers</text>
+    <rect x="206" y="182" width="126" height="30" fill="#f3f6f8" stroke="#dde3ea" rx="4"/>
+    <text class="label" x="218" y="202">Fairness ID</text>
+  </g>
 
-  <!-- Envoy -->
-  <rect x="214" y="58" width="148" height="214" fill="#fff" stroke="#cdd5df" stroke-width="1.5"/>
-  <text class="kicker" x="230" y="82">Edge</text>
-  <text class="title" x="230" y="108">Envoy gateway</text>
-  <rect x="230" y="128" width="116" height="34" fill="#f3f6f8" stroke="#cdd5df"/>
-  <text class="label" x="244" y="150">OpenAI route</text>
-  <rect x="230" y="172" width="116" height="34" fill="#f3f6f8" stroke="#cdd5df"/>
-  <text class="label" x="244" y="194">Priority headers</text>
-  <rect x="230" y="216" width="116" height="34" fill="#f3f6f8" stroke="#cdd5df"/>
-  <text class="label" x="244" y="238">Fairness ID</text>
+  <!-- Endpoint Picker: 368,32 â†’ 668, bottom 244 -->
+  <g id="epp">
+    <rect x="368" y="32" width="300" height="212" fill="#fff" stroke="#087f72" stroke-width="2" rx="8"/>
+    <text class="kicker" x="384" y="56">Admission and eviction</text>
+    <text class="title" x="384" y="78">Endpoint Picker</text>
+    <rect x="384" y="92" width="132" height="60" fill="#f3f6f8" stroke="#dde3ea" rx="6"/>
+    <text class="label" x="396" y="114">Concurrency gate</text>
+    <text class="copy" x="396" y="132">admit or queue</text>
+    <rect x="524" y="92" width="132" height="60" fill="#e7f5f2" stroke="#087f72" stroke-width="1.2" rx="6"/>
+    <text class="label" x="536" y="114">Reserved capacity</text>
+    <text class="copy" x="536" y="132">hold slots for realtime</text>
+    <rect x="384" y="162" width="272" height="58" fill="#fdeaea" stroke="#b83232" stroke-width="1.2" rx="6"/>
+    <text class="label" x="396" y="184">In-flight eviction</text>
+    <text class="copy" x="396" y="202">stops running batch when priority work is blocked</text>
+  </g>
 
-  <path d="M362 165 H402" fill="none" stroke="#15202b" stroke-width="2" marker-end="url(#arrow)"/>
-  <text class="flow" x="382" y="154" text-anchor="middle">route</text>
+  <!-- vLLM: 688,48 â†’ 856, running 704,148 â†’ 840,202 -->
+  <g id="vllm">
+    <rect x="688" y="48" width="168" height="168" fill="#fff" stroke="#cdd5df" stroke-width="1.5" rx="8"/>
+    <text class="kicker" x="704" y="72">Model execution</text>
+    <text class="title" x="704" y="94">vLLM</text>
+    <rect x="704" y="108" width="136" height="30" fill="#f3f6f8" stroke="#dde3ea" rx="4"/>
+    <text class="label" x="716" y="128">Waiting queue</text>
+    <rect x="704" y="148" width="136" height="54" fill="#edf3ff" stroke="#2d6cdf" stroke-width="1.2" rx="4"/>
+    <text class="label" x="716" y="170">Running sequences</text>
+    <text class="copy" x="716" y="186">shared GPU capacity</text>
+  </g>
 
-  <!-- Endpoint Picker -->
-  <rect x="410" y="34" width="268" height="262" fill="#fff" stroke="#087f72" stroke-width="2.5"/>
-  <text class="kicker" x="428" y="58">Admission and eviction</text>
-  <text class="title" x="428" y="84">Endpoint Picker</text>
+  <!-- Async: 368,272 â†’ 668, top 272 -->
+  <g id="async">
+    <rect x="368" y="272" width="300" height="68" fill="#fff" stroke="#c56a00" stroke-width="1.6" rx="8"/>
+    <text class="kicker" x="384" y="296">Retry owner</text>
+    <text class="title" x="384" y="318">Async Processor</text>
+    <text class="copy" x="384" y="332">requeues evicted batch with bounded retry</text>
+  </g>
 
-  <rect x="428" y="100" width="112" height="78" fill="#f3f6f8" stroke="#cdd5df"/>
-  <text class="label" x="442" y="122">Concurrency detector</text>
-  <text class="copy" x="442" y="142">maxConcurrency 48</text>
-  <text class="value" x="442" y="164">request-count mode</text>
+  <!-- Main path -->
+  <path d="M170 132 H190" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path d="M348 132 H368" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path d="M668 132 H688" fill="none" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
 
-  <rect x="552" y="100" width="112" height="78" fill="#e7f5f2" stroke="#087f72" stroke-width="1.5"/>
-  <text class="label" x="566" y="122">Priority holdback</text>
-  <text class="copy" x="566" y="142">minCeiling 0.50</text>
-  <text class="value" x="566" y="164">24 slots reserved</text>
+  <!-- Abort: eviction â†’ running sequences (lane y=252) -->
+  <path d="M520 220 V252 H704 V175" fill="none" stroke="#b83232" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
 
-  <rect x="428" y="190" width="236" height="88" fill="#fdeaea" stroke="#b83232" stroke-width="1.5"/>
-  <text class="label" x="442" y="214">In-flight eviction controller</text>
-  <text class="copy" x="442" y="234">Stops running batch streams when priority traffic is blocked</text>
-  <text class="callout" x="442" y="256">Eviction runs in the Endpoint Picker</text>
+  <!-- Evicted retry: running box â†’ below async (lane y=348) -->
+  <path d="M840 202 V348 H518 V272" fill="none" stroke="#c56a00" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-amber)"/>
 
-  <path d="M678 165 H718" fill="none" stroke="#15202b" stroke-width="2" marker-end="url(#arrow)"/>
-  <text class="flow" x="698" y="154" text-anchor="middle">dispatch</text>
+  <!-- Resubmit: async left â†’ clients (lane y=308, left margin x=108) -->
+  <path d="M368 306 H108 V132 H170" fill="none" stroke="#087f72" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
 
-  <!-- vLLM -->
-  <rect x="726" y="58" width="156" height="214" fill="#fff" stroke="#cdd5df" stroke-width="1.5"/>
-  <text class="kicker" x="742" y="82">Model execution</text>
-  <text class="title" x="742" y="108">vLLM</text>
-  <text class="copy" x="742" y="128">GPT-OSS 20B · 1× H100</text>
+  <!-- Main-flow labels (above arrows) -->
+  <g>
+    <rect class="pill" x="162" y="110" width="38" height="16" rx="4"/>
+    <text class="flow" x="181" y="121" text-anchor="middle">HTTP</text>
+    <rect class="pill" x="340" y="110" width="46" height="16" rx="4"/>
+    <text class="flow" x="363" y="121" text-anchor="middle">route</text>
+    <rect class="pill" x="658" y="110" width="58" height="16" rx="4"/>
+    <text class="flow" x="687" y="121" text-anchor="middle">dispatch</text>
+  </g>
 
-  <rect x="742" y="142" width="124" height="22" fill="#f3f6f8" stroke="#cdd5df"/>
-  <text class="label" x="754" y="157">Waiting queue</text>
+  <!-- Abort label: whitespace above abort lane, clear of EPP border -->
+  <g>
+    <rect class="pill" x="556" y="226" width="108" height="16" rx="4"/>
+    <text class="callout" x="610" y="237" text-anchor="middle">abort batch stream</text>
+  </g>
 
-  <rect x="742" y="172" width="124" height="36" fill="#edf3ff" stroke="#2d6cdf"/>
-  <text class="label" x="754" y="190">Running sequences</text>
-  <text class="value" x="754" y="204">up to 48 active</text>
+  <!-- Evicted label: right margin, clear of both dashed paths -->
+  <g>
+    <rect class="pill" x="872" y="268" width="76" height="16" rx="4"/>
+    <text class="flow" x="910" y="279" text-anchor="middle" fill="#c56a00">evicted &#8594; retry</text>
+  </g>
 
-  <!-- slot bar -->
-  <rect x="742" y="218" width="124" height="14" fill="#e5eaf0" rx="2"/>
-  <rect x="742" y="218" width="82" height="14" fill="url(#slot-batch)" rx="2"/>
-  <rect x="824" y="218" width="20" height="14" fill="url(#slot-realtime)" rx="2"/>
-  <text class="copy" x="742" y="248">batch owns most slots at surge</text>
-  <text class="copy" x="742" y="262">prefix cache off</text>
-
-  <!-- Eviction signal -->
-  <path d="M546 278 C546 318 620 318 620 292" fill="none" stroke="#b83232" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
-  <text class="callout" x="548" y="312">abort batch stream</text>
-
-  <!-- Async Processor -->
-  <rect x="410" y="318" width="268" height="84" fill="#fff" stroke="#c56a00" stroke-width="1.8"/>
-  <text class="kicker" x="428" y="340">Retry owner</text>
-  <text class="title" x="428" y="364">Async Processor</text>
-  <text class="copy" x="428" y="384">Requeues evicted batch requests · bounded retry · one final result</text>
-
-  <path d="M804 272 C804 350 678 350 678 318" fill="none" stroke="#c56a00" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-  <text class="flow" x="760" y="346" text-anchor="middle">evicted ’ retry</text>
-
-  <path d="M410 360 H318 C286 360 286 330 362 330" fill="none" stroke="#087f72" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
-  <text class="flow" x="330" y="352" text-anchor="middle">resubmit</text>
-
-  <text class="copy" x="18" y="406">Measured topology: one Endpoint Picker, one model replica, Redis-backed Async Processor queue, prefix caching disabled.</text>
+  <!-- Resubmit label: left margin, below horizontal lane -->
+  <g>
+    <rect class="pill" x="52" y="318" width="58" height="16" rx="4"/>
+    <text class="flow" x="81" y="329" text-anchor="middle" fill="#087f72">resubmit</text>
+  </g>
 </svg>

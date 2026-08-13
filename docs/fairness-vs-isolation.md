@@ -95,4 +95,4 @@ Three levers sit between the two layouts. The priority holdback policy lowers a 
 
 None of the three adds capacity. Replicas do that. Flow control governs who absorbs the wait during the seconds before autoscaling catches up, and keeps generation speed predictable for the requests already running.
 
-*Left panel: `probe-s3-p7`, 2026-07-28. Right panel: Test 4 of the clean pressure pass, 2026-07-21. Both on one GPU serving GPT-OSS 20B behind the llm-d inference gateway.*
+*Left panel: `probe-s3-p7`, 2026-07-28. Right panel: Test 4 batch isolation, three counted repeats in [`benchmark-data/rhaii-3.4-flow-control/batch-gate-on`](../benchmark-data/rhaii-3.4-flow-control/batch-gate-on). Both on one GPU serving GPT-OSS 20B behind the llm-d inference gateway.*

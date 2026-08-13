@@ -75,12 +75,9 @@ The complete configuration is in [`run-config.json`](run-config.json).
 - [`batch-completion-index.csv`](batch-completion-index.csv) contains one
   sanitized row for each of the 5,376 batch jobs in the eviction-and-retry
   runs.
-- [`results-brief.html`](results-brief.html) is the full visual report: matched
-  proof, retry path, 20-scenario inventory, capability boundary, run database,
-  filtering, and CSV export.
-- [`takeaways.html`](takeaways.html) is a shorter narrative with architecture,
-  reclaim timing, and ceiling-sweep charts.
-- [`results.html`](results.html) mirrors `results-brief.html` for older links.
+- [`results.html`](results.html) is the full report: takeaways narrative,
+  matched proof, retry path, 20-scenario inventory, capability boundary, run
+  database, filtering, and CSV export.
 - [`run-config.json`](run-config.json) records the fixed traffic, vLLM,
   Endpoint Picker, and Async Processor settings.
 

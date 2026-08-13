@@ -133,7 +133,8 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         if href.startswith("#"):
             require(href[1:] in parser.ids, f"grouped report target does not exist: {href}", errors)
         elif "://" not in href:
-            require((report.parent / href).exists(), f"grouped report link does not exist: {href}", errors)
+            path_href = href.split("#", 1)[0]
+            require(path_href and (report.parent / path_href).exists(), f"grouped report link does not exist: {href}", errors)
     require("@media (max-width: 520px)" in text, "grouped report mobile breakpoint changed", errors)
     require("font-size: clamp(" not in text, "grouped report restored viewport-scaled typography", errors)
     require_text(
@@ -330,7 +331,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         "long-stability/", "prefix-cache-routing/", "request-concurrency-priority-tuning/",
     )
     require(all(f'href="{link}"' in text for link in package_links), "grouped report package links changed", errors)
-    require_text(text, 'href="../batch-eviction/single-model-replica/results-brief.html"', "batch-eviction package link changed", errors)
+    require_text(text, 'href="../batch-eviction/single-model-replica/results.html"', "batch-eviction package link changed", errors)
     require_text(text, "separate experimental batch-eviction build", "batch-eviction build boundary changed", errors)
 
     required_claims = (

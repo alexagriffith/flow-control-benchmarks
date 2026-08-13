@@ -470,8 +470,3 @@ visuals deterministically from the accepted package data.
 
 The public benchmark folders contain accepted evidence. Exploratory runs remain
 outside this repository.
-
-
-## Other resources
-
-- [First pressure campaign report](report/flow-control-under-pressure.html) — the 2026-07-21 run, kept for the progression. It ran with prefix caching on, so its latencies reflect a warm cache; the report carries that note at the top. The verified numbers on this page supersede it.
