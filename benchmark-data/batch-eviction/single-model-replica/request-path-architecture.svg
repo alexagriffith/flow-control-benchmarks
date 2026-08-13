@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="450" viewBox="0 0 960 450" role="img" aria-labelledby="request-path-arch-title request-path-arch-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460" role="img" aria-labelledby="request-path-arch-title request-path-arch-desc">
   <title id="request-path-arch-title">Batch eviction request path</title>
   <desc id="request-path-arch-desc">Realtime and batch traffic enter through Envoy, are admitted by the Endpoint Picker with reserved capacity and in-flight eviction, run on vLLM, and evicted batch work is retried by the Async Processor.</desc>
   <style>
@@ -29,7 +29,7 @@
     </marker>
   </defs>
 
-  <rect width="960" height="450" fill="#f7f8fa" rx="8"/>
+  <rect width="960" height="460" fill="#f7f8fa" rx="8"/>
 
   <!-- Clients -->
   <g id="clients">
@@ -100,7 +100,7 @@
     <path class="route" d="M668 132 H688" stroke="#4a5563" stroke-width="1.75" marker-end="url(#arrow)"/>
     <path class="route" d="M520 220 V286 H697 V175 H703" stroke="#b83232" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)"/>
     <path class="route" d="M772 202 V404 H518 V380" stroke="#c56a00" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-amber)"/>
-    <path class="route" d="M368 346 H56 V178 H170" stroke="#087f72" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
+    <path class="route" d="M518 380 V428 H269 V216" stroke="#087f72" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow-teal)"/>
   </g>
 
   <!-- Flow labels (offset from strokes) -->
@@ -118,7 +118,7 @@
     <rect class="pill" x="612" y="386" width="76" height="16" rx="4"/>
     <text class="flow" x="650" y="397" text-anchor="middle" fill="#c56a00">evicted &#8594; retry</text>
 
-    <rect class="pill" x="18" y="300" width="58" height="16" rx="4"/>
-    <text class="flow" x="47" y="311" text-anchor="middle" fill="#087f72">resubmit</text>
+    <rect class="pill" x="248" y="416" width="58" height="16" rx="4"/>
+    <text class="flow" x="277" y="427" text-anchor="middle" fill="#087f72">resubmit</text>
   </g>
 </svg>
