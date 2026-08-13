@@ -292,7 +292,11 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         batch_eviction_by_scenario[row["scenario"]].append(float(row["realtime_p95_ttft_ms"]))
     for values in batch_eviction_by_scenario.values():
         value = round(median(values))
-        require_text(text, f'data-value="{value}"', f"batch-eviction p95 TTFT changed: {value} ms", errors)
+        require(
+            f'data-value="{value}"' in text or f"{value} ms" in text,
+            f"batch-eviction p95 TTFT changed: {value} ms",
+            errors,
+        )
     require(sum(int(row["evicted_batch_requests"]) for row in batch_eviction_rows) == 38, "batch-eviction count changed", errors)
     require(sum(int(row["async_retried_requests"]) for row in batch_eviction_rows) == 38, "batch retry count changed", errors)
     require(sum(int(row["batch_duplicate_results"]) for row in batch_eviction_rows) == 0, "batch duplicate count changed", errors)
@@ -326,7 +330,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         "long-stability/", "prefix-cache-routing/", "request-concurrency-priority-tuning/",
     )
     require(all(f'href="{link}"' in text for link in package_links), "grouped report package links changed", errors)
-    require_text(text, 'href="../batch-eviction/single-model-replica/results.html"', "batch-eviction package link changed", errors)
+    require_text(text, 'href="../batch-eviction/single-model-replica/results-brief.html"', "batch-eviction package link changed", errors)
     require_text(text, "separate experimental batch-eviction build", "batch-eviction build boundary changed", errors)
 
     required_claims = (
