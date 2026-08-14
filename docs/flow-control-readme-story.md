@@ -5,7 +5,7 @@ vLLM and dispatches higher-priority work first. The benchmark campaign measures
 how flow control protects realtime traffic, how admission settings affect
 latency, and how reserved capacity and eviction handle running batch work.
 
-## The story in four takeaways
+## Takeaways
 
 ### Share one GPU pool across tenants and workload classes
 
@@ -14,13 +14,6 @@ model pool. The policy separates who receives capacity when demand exceeds what
 the pool can serve immediately.
 
 <img src="../assets/v09-tuning/consolidation.svg" width="100%" alt="Tenant consolidation benchmark showing higher-priority realtime tenants retaining lower p95 time to first token than overloaded standard traffic">
-
-### Let policy decide who waits when the pool saturates
-
-Higher-priority realtime traffic retains preferential access. Deferrable batch
-and overloaded lower-priority traffic absorb more of the queueing delay.
-
-<img src="../assets/v09-tuning/05-production.svg" width="100%" alt="Production priority benchmark showing realtime tiers remaining responsive while lower-priority batch waits during the surge">
 
 ### Keep one tenant's surge from starving its peers
 
