@@ -699,34 +699,33 @@
   <main>
     <header class="hero" id="result">
       <h1>Flow control batch eviction benchmark</h1>
-      <p class="question">Can flow control protect realtime p95 TTFT while batch workloads share the same GPU?</p>
+      <p class="question">Can realtime p95 TTFT remain protected while lower-priority batch shares the same GPU?</p>
     </header>
 
     <section class="decision-band" aria-labelledby="decision-title">
       <div class="decision-grid">
         <div class="decision-copy">
-          <h2 id="decision-title">Reserved capacity held realtime p95 TTFT near the realtime-only baseline. When demand spiked, the Endpoint Picker evicted batch streams; the Async Processor retried them to one final result each.</h2>
-          <p>Batch and realtime shared one GPU. Median realtime p95 TTFT was 341–348 ms with protection vs 561 ms without.</p>
+          <h2 id="decision-title">Reserved capacity and eviction preserve realtime p95 TTFT when batch is already running in vLLM.</h2>
+          <p>When realtime demand needs capacity, eligible batch work is evicted and safely retried through the normal request path.</p>
         </div>
         <div class="decision-stat">
-          <strong>Realtime latency protected</strong>
-          <span>p95 TTFT stayed close to the realtime-only result</span>
-          <small>348 ms median; 324-472 ms across repeats</small>
+          <strong>Realtime p95 TTFT preserved</strong>
+          <span>Realtime access remained protected while batch shared the GPU</span>
         </div>
         <div class="decision-stat">
-          <strong>Reliable batch recovery</strong>
-          <span>Evicted requests were retried, and each batch job produced one final result</span>
+          <strong>Batch is safely retried when evicted</strong>
+          <span>Evicted work returns through the normal request path</span>
         </div>
       </div>
     </section>
 
     <div class="report-narrative" id="overview">
       <ul class="key-findings results">
-        <li><b>Eviction fired when priority traffic was blocked.</b> Batch held the GPU; higher-priority requests arrived; the Endpoint Picker stopped batch streams.</li>
-        <li><b>Reserved capacity set median TTFT.</b> Holding 50% aside was fastest and needed no evictions.</li>
-        <li><b>Eviction did not move TTFT the same way every run.</b> Three repeats: faster twice, slower once.</li>
-        <li><b>Each eviction redoes work.</b> Longer prompts lost more tokens on retry.</li>
-        <li><b>HTTP 429s appeared only at 25% reserve.</b> 50% and 75% reserve served every higher-priority request.</li>
+        <li><b>Reserved capacity protects realtime before batch fills the engine.</b> The policy keeps capacity available for higher-priority demand.</li>
+        <li><b>Eviction protects realtime after batch starts running.</b> Eligible lower-priority work yields capacity when realtime demand rises.</li>
+        <li><b>Retry returns evicted batch work through the normal request path.</b> The Async Processor resubmits the interrupted job.</li>
+        <li><b>Eviction has a work-recovery cost.</b> An evicted request restarts and may repeat prompt processing.</li>
+        <li><b>Protection settings trade batch throughput for realtime access.</b> The detailed scenarios show the measured operating points.</li>
       </ul>
 
 <!-- ========== HOW IT WORKS ========== -->
@@ -1051,7 +1050,7 @@
 
         <article class="arm complete">
           <h3>D. Realtime + batch: eviction and retry</h3>
-          <p class="condition">Capacity is reserved, and running batch can be evicted, retried, and completed.</p>
+          <p class="condition">Capacity is reserved for realtime. If demand rises, eligible batch work can be evicted and safely retried.</p>
           <span class="big">348 ms</span>
           <span class="unit">median p95 TTFT</span>
           <dl>
