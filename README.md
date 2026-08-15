@@ -117,23 +117,38 @@ can release capacity from eligible batch work that has already entered vLLM.
 
 ## Configurations
 
-The benchmark set the replica limit first, then compared admission signals, and
-then tested protection for batch work that had already entered vLLM.
+The benchmark set the replica limit first, then tested how much work vLLM
+should run, when the Endpoint Picker should start queuing, and which admission
+signal fit each request shape.
 
 <img src="assets/operating-point-sweep.svg" width="100%" alt="Two single-tenant concurrency-sweep passes show served throughput peaking near 128 concurrent requests while p95 time to first token rises beyond that point">
 
 <sub>Operating-point sweep: median of two single-tenant passes.</sub>
 
-- **Replica capacity:** 128 concurrent requests was the operating point for
-  production traffic.
-- **Admission signal:** request-count admission kept real-time latency lower
-  than queue-depth detection in the direct comparison.
-- **Prompt shape:** token-count admission helped long-context and batch work
-  when prompt sizes varied.
-- **Batch already running:** reserved capacity protected room before dispatch;
-  eviction released eligible batch work after dispatch.
+| Configuration sweep | What it showed | Evidence |
+|---|---|---|
+| Replica capacity | Throughput reached its knee at the selected request limit, while higher limits added latency faster than throughput. | [Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) |
+| vLLM running sequences | More running sequences added little throughput and increased token delay in the engine sweep. | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
+| Endpoint Picker request cap | Request-count admission became the baseline because it held new work before the vLLM queue built. | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
+| Queue-depth threshold | Queue-depth detection reacts after requests are already queued inside vLLM, so it lagged request-count admission in the direct comparison. | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) · [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) |
+| Prompt size | Token-count admission helped the larger batch and long-context shapes; request-count admission kept real-time latency lower in the mixed workload. | [Mixed workload](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) · [Long-context admission](benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/) |
+| Batch already running | Reserved capacity protected room before dispatch; eviction released eligible batch work after dispatch. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) · [Batch eviction](benchmark-data/batch-eviction/) |
 
-[Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) · [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) · [Mixed workload](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) · [Batch eviction](benchmark-data/batch-eviction/)
+<img src="assets/v09-tuning/01-engine.svg" width="100%" alt="Engine sweep showing that increasing maximum sequences added little throughput and increased time per output token">
+
+<sub>Engine sweep: vLLM running-sequence limit.</sub>
+
+<img src="assets/v09-tuning/02-utilization.svg" width="100%" alt="Utilization-detector sweep showing first-token latency as queue-depth threshold changed">
+
+<sub>Utilization detector sweep: waiting-queue threshold.</sub>
+
+<img src="assets/v09-tuning/03-admission.svg" width="100%" alt="Admission calibration showing first-token latency as the Endpoint Picker request cap changed">
+
+<sub>Admission sweep: Endpoint Picker request cap.</sub>
+
+<img src="assets/v09-tuning/04-cap-tradeoff.svg" width="100%" alt="Priority tuning sweep showing premium first-token latency across request caps">
+
+<sub>Priority tuning sweep: request cap and headroom tradeoff.</sub>
 
 ## Production scenarios
 

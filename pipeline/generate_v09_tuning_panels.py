@@ -759,7 +759,7 @@ def render_flow_control_architecture_svg() -> str:
     ]
     components = [
         (30, 58, 150, 146, "Requests", "traffic classes", "#fbfcfd", LINE),
-        (208, 70, 126, 122, "Gateway", "labels", "#fbfcfd", LINE),
+        (208, 70, 126, 122, "Gateway", "adds headers", "#fbfcfd", LINE),
         (374, 50, 302, 162, "Endpoint Picker", "flow control", "#f8fcfb", teal),
         (730, 58, 120, 146, "vLLM", "model pool", "#fbfcfd", LINE),
     ]
@@ -773,10 +773,10 @@ def render_flow_control_architecture_svg() -> str:
     for y, label, color in traffic:
         parts.append(f'<circle cx="52" cy="{y - 4}" r="5" fill="{color}"/>')
         parts.append(text(66, y, label, 8.5, 700, INK))
-    for index, label in enumerate(("tenant", "priority", "class")):
-        y = 112 + index * 24
-        parts.append(f'<rect x="226" y="{y}" width="90" height="17" rx="4" fill="#ffffff" stroke="{LINE}"/>')
-        parts.append(text(271, y + 12, label, 7.5, 720, MUTED, "middle"))
+    for index, label in enumerate(("tenant", "priority")):
+        y = 122 + index * 28
+        parts.append(f'<rect x="224" y="{y}" width="94" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>')
+        parts.append(text(271, y + 14, label, 8.5, 760, MUTED, "middle"))
     queues = [(112, "Platinum", teal, 2), (138, "Gold", teal, 3), (164, "Silver", blue, 4), (190, "Bronze", orange, 6)]
     for y, label, color, count in queues:
         parts.append(f'<rect x="392" y="{y - 14}" width="264" height="22" rx="4" fill="#ffffff" stroke="{color}"/>')
@@ -1004,7 +1004,12 @@ def render_workload_shape_takeaway_svg() -> str:
             body += f'<line x1="{track_x}" y1="{row_y}" x2="{track_x + track_w}" y2="{row_y}" stroke="#edf1f4" stroke-width="16" stroke-linecap="round"/>'
             bw = max(8, track_w * value / maximum)
             body += f'<line x1="{track_x}" y1="{row_y}" x2="{track_x + bw:.1f}" y2="{row_y}" stroke="{color}" stroke-width="16" stroke-linecap="round"/>'
-            value_label = f"{value:.0f} ms" if unit == "ms" else f"{value:.1f}"
+            if unit == "ms":
+                value_label = f"{value:.0f} ms"
+            elif unit == "ms/token":
+                value_label = f"{value:.1f} ms/token"
+            else:
+                value_label = f"{value:.1f}"
             body += text(x + w - 20, row_y + 4, value_label, 10, 800, color, "end")
         return body
 
@@ -1061,8 +1066,6 @@ def render_stability_takeaway_svg() -> str:
         text(left, 72, "Latency (ms)", 9, 750, orange),
         text(right, 72, "Queue (requests)", 9, 750, blue, "end"),
     ]
-    for index in [2, 4, 5]:
-        parts.append(f'<rect x="{x(index)-48:.1f}" y="{top}" width="96" height="{bottom-top}" fill="{green}" opacity="0.10"/>')
     for value in [0, 1000, 2000]:
         yp = y_latency(value)
         parts.append(f'<line x1="{left}" y1="{yp:.1f}" x2="{right}" y2="{yp:.1f}" stroke="#e7ebef"/>')
@@ -1089,9 +1092,13 @@ def render_stability_takeaway_svg() -> str:
             label_anchor = "start"
         elif index in (2, 4):
             label_y -= 4
+        latency_y = y_latency(latency[index])
+        queue_y = y_queue(queue[index])
+        if index in (2, 4, 5):
+            parts.append(f'<circle cx="{xp:.1f}" cy="{latency_y:.1f}" r="10" fill="none" stroke="{green}" stroke-width="3"/>')
         parts.extend([
-            f'<circle cx="{xp:.1f}" cy="{y_latency(latency[index]):.1f}" r="6" fill="{orange}"/>',
-            f'<circle cx="{xp:.1f}" cy="{y_queue(queue[index]):.1f}" r="5" fill="{blue}"/>',
+            f'<circle cx="{xp:.1f}" cy="{latency_y:.1f}" r="6" fill="{orange}"/>',
+            f'<circle cx="{xp:.1f}" cy="{queue_y:.1f}" r="5" fill="{blue}"/>',
             text(label_x, label_y, f"{latency[index]:,} ms", 8, 800, orange, label_anchor),
             text(xp, 228, label, 8, 650, INK, "middle"),
         ])
