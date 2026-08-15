@@ -67,7 +67,7 @@ def main() -> int:
             reports[name] = result
 
             expected = {
-                "figureCount": 35,
+                "figureCount": 36,
                 "sweepSvgCount": 7,
                 "phaseSvgCount": 1,
                 "trafficSvgCount": 4,

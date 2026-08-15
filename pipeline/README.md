@@ -97,7 +97,7 @@ python3 pipeline/run_guidellm_scenario.py \
   --recover-multiline-sse
 ```
 
-Detector, headroom, token-counting, routing, and replica arguments differ by package. Each package README states the exact values. Its `run-config.json` records the deployment contract, and its scenario file is the executable traffic definition.
+Detector, headroom, token-counting, routing, and replica arguments differ by package. Each package README states the exact values. Its `run-config.json` records the deployment contract. Upstream packages also include the executable traffic scenario.
 
 ## Metrics-only capture
 
@@ -122,7 +122,7 @@ Counted flow-control runs must not use `--allow-missing`.
 
 ## Validation and publication
 
-1. Put each accepted capability set under `benchmark-data/` with its own README, scenario, configuration, analysis, request data, traffic samples, system metrics, and proof gates.
+1. Put each accepted capability set under `benchmark-data/` with its own README, configuration, analysis, request data, traffic samples, system metrics, and proof gates. Include the executable scenario and traffic command when the public runner supports the test.
 2. Generate each public-safe tested configuration with `python3 pipeline/generate_package_configs.py`.
 3. Generate the data-bound architecture and result visuals with `python3 pipeline/generate_package_visuals.py`.
 4. Confirm both generated asset sets are current with their `--check` commands.
@@ -130,6 +130,8 @@ Counted flow-control runs must not use `--allow-missing`.
 6. Build the grouped HTML report after the packages pass.
 7. Update the repository README and shared charts last.
 
-The scenario file, seed, runner hash, image, and tested configuration reproduce the issued traffic contract. GuideLLM creates the requests again; it does not feed saved model responses back into the run. GPU timing and model output are not expected to match bit-for-bit on another cluster; compare the repeated latency and throughput distributions under the same hardware and software contract.
+For upstream packages, the scenario file, seed, runner hash, image, and tested configuration reproduce the issued traffic contract. GuideLLM creates the requests again; it does not feed saved model responses back into the run. GPU timing and model output are not expected to match bit-for-bit on another cluster; compare the repeated latency and throughput distributions under the same hardware and software contract.
+
+The batch-eviction packages publish the tested configuration, accepted data, and deterministic artifact-validation commands. Their original Async Processor traffic harness is not yet part of this public pipeline.
 
 Rejected and partial attempts remain outside `benchmark-data/`. Public packages contain no customer names, credentials, private cluster identifiers, or local paths.

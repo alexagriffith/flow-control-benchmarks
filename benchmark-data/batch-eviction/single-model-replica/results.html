@@ -213,6 +213,19 @@
       padding: 20px;
       box-shadow: 0 3px 12px rgba(17,24,32,.04);
     }
+    .visual.asset-visual { padding: 0; overflow: hidden; }
+    .visual.asset-visual img { display: block; width: 100%; height: auto; }
+    .visual-caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .visual-caption strong { color: var(--ink); }
+    .followup-links { white-space: nowrap; }
     .visual-title { margin: 0; font-size: 15px; font-weight: 760; }
     .visual-takeaway { margin: 3px 0 18px; color: var(--muted); font-size: 13px; }
     .chart-row {
@@ -602,6 +615,8 @@
       .scenario-row > div:nth-child(4) { display: block; grid-column: 1 / -1; grid-row: 4; color: var(--muted); }
       .scenario-row > div:nth-child(5) { grid-column: 2; grid-row: 1 / span 2; }
       .dictionary, .method-content { grid-template-columns: 1fr; }
+      .visual-caption { flex-direction: column; }
+      .followup-links { white-space: normal; }
     }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     @media print {
@@ -688,6 +703,7 @@
         <a href="#result">Result</a>
         <a href="#proof">Matched proof</a>
         <a href="#path">Retry path</a>
+        <a href="#two-model">Two-model follow-up</a>
         <a href="#scenarios">Scenarios</a>
         <a href="#boundary">Capability boundary</a>
         <a href="#data">Run database</a>
@@ -720,13 +736,6 @@
     </section>
 
     <div class="report-narrative" id="overview">
-      <ul class="key-findings results">
-        <li><b>Reserved capacity protects realtime before batch fills the engine.</b> The policy keeps capacity available for higher-priority demand.</li>
-        <li><b>Eviction protects realtime after batch starts running.</b> Eligible lower-priority work yields capacity when realtime demand rises.</li>
-        <li><b>Retry returns evicted batch work through the normal request path.</b> The Async Processor resubmits the interrupted job.</li>
-        <li><b>Eviction has a work-recovery cost.</b> An evicted request restarts and may repeat prompt processing.</li>
-        <li><b>Protection settings trade batch throughput for realtime access.</b> The detailed scenarios show the measured operating points.</li>
-      </ul>
 
 <!-- ========== HOW IT WORKS ========== -->
     <section class="chapter">
@@ -753,13 +762,13 @@
           <div class="charttitle">One clear-out: how full the GPU was, moment to moment</div>
           <div class="chartsub">Left: requests running (out of 48) · right: how full the GPU is · ● = batch work stopped to make room</div>
           <div class="legend">
-            <span><i class="lsw" class="lsw tk-blue" style="background:var(--tk-blue)"></i> requests running</span>
-            <span><i class="lsw" class="lsw tk-gold" style="background:var(--tk-gold)"></i> how full the GPU is</span>
-            <span><i class="lsw" class="lsw tk-red" style="background:var(--tk-red)"></i> batch work stopped</span>
+            <span><i class="lsw tk-blue" style="background:var(--tk-blue)"></i> requests running</span>
+            <span><i class="lsw tk-gold" style="background:var(--tk-gold)"></i> how full the GPU is</span>
+            <span><i class="lsw tk-red" style="background:var(--tk-red)"></i> batch work stopped</span>
           </div>
           <svg id="c0" viewBox="0 0 680 320" role="img" aria-label="Requests running climb to 48 and the GPU fills completely, then batch work is stopped and the running count falls back toward empty."></svg>
         </figure>
-        <figcaption>Eviction stopped nine batch requests. Running count dropped from 48 as streams terminated. Elapsed time on the chart is wind-down after abort, not queue wait for higher-priority traffic.</figcaption>
+        <figcaption>Eviction stopped nine batch requests. Running count dropped from 48 as streams terminated. Elapsed time measures stream wind-down after abort.</figcaption>
       </div>
     </section>
 
@@ -801,17 +810,17 @@
     <!-- ========== 03 ========== -->
     <section class="chapter">
       <h2>Eviction's effect on latency, run to run</h2>
-      <p class="lead">Three repeats compared eviction off and on at 25% reserve. All stopped requests retried to completion. Median TTFT was lower with eviction on in two runs and higher in one.</p>
+      <p class="lead">Three repeats compared eviction off and on at 25% reserve. Every evicted batch request was retried and produced one final result. Median TTFT was lower with eviction on in two runs and higher in one.</p>
 
       <div class="fig">
         <figure class="assetcard">
           <div class="charttitle">Time to first token: eviction off vs on, three repeats</div>
           <div class="chartsub">How long from sending a request to its first token</div>
           <div class="legend">
-            <span><i class="lsw" class="lsw tk-gray" style="background:var(--tk-gray)"></i> eviction off</span>
-            <span><i class="lsw" class="lsw tk-blue" style="background:var(--tk-blue)"></i> eviction on</span>
-            <span><i class="lsw" class="lsw tk-green" style="background:var(--tk-green)"></i> got faster</span>
-            <span><i class="lsw" class="lsw tk-red" style="background:var(--tk-red)"></i> got slower</span>
+            <span><i class="lsw tk-gray" style="background:var(--tk-gray)"></i> eviction off</span>
+            <span><i class="lsw tk-blue" style="background:var(--tk-blue)"></i> eviction on</span>
+            <span><i class="lsw tk-green" style="background:var(--tk-green)"></i> got faster</span>
+            <span><i class="lsw tk-red" style="background:var(--tk-red)"></i> got slower</span>
           </div>
           <svg id="c3" viewBox="0 0 680 300" role="img" aria-label="Same test three times: run 1 got 37 percent faster, run 2 got 15 percent slower, run 3 got 47 percent faster with eviction on."></svg>
         </figure>
@@ -839,12 +848,12 @@
       <h2>Operating recommendation</h2>
       <div class="note">
         <span class="lbl">Pattern from the test</span>
-        Reserve capacity for higher-priority traffic. Keep eviction enabled to reclaim slots when batch already runs. Do not treat eviction as a latency knob.
+        Reserved capacity protects higher-priority latency. Eviction reclaims slots from eligible batch work already running in vLLM.
       </div>
       <ul class="recs">
         <li><b>Size reserve to the surge.</b> Use expected burst rate and prompt length. 50% reserve worked in the single-GPU test; re-check before quoting a latency target.</li>
         <li><b>Plan for retry.</b> The Endpoint Picker returns HTTP 429 on eviction. The batch client must retry with idempotency and backoff.</li>
-        <li><b>Still open.</b> Multi-GPU pools, full production mix, long endurance runs, and large-prompt admission.</li>
+        <li><b>Still open.</b> Coordination across multiple Endpoint Picker replicas and scheduler-step attribution for large-prompt behavior.</li>
       </ul>
     </section>
 
@@ -978,7 +987,7 @@
               <tr><td>One failed wave · long-context prompts · 75% ceiling</td><td>negative evidence</td><td class="num">21,814</td></tr>
             </tbody>
           </table>
-          <p style="margin:8px 16px 14px;font-size:12px;color:var(--tk-txt3)">Eviction returns a terminal <code>429</code>; the router does not requeue, so this work is recomputed by the client's bounded retry. Source: <code>README.md</code>, <code>analysis/matched-pairs.md</code>.</p>
+          <p style="margin:8px 16px 14px;font-size:12px;color:var(--tk-txt3)">Eviction returns HTTP <code>429</code>. The batch client owns bounded retry, so the interrupted request repeats its prompt processing. Source: <code>README.md</code>, <code>analysis/matched-pairs.md</code>.</p>
         </div>
       </details>
 
@@ -1007,8 +1016,8 @@
 
     <section class="section" id="proof">
       <div class="section-head">
-        <h2>The four matched scenarios</h2>
-        <p class="takeaway">Each scenario changed one protection setting.</p>
+        <h2>Four tests isolate the protection mechanisms</h2>
+        <p class="takeaway">Each test changes one protection mechanism while the traffic pattern remains comparable.</p>
       </div>
 
       <div class="arm-grid">
@@ -1117,22 +1126,29 @@
     <section class="section" id="path">
       <div class="section-head">
         <h2>Batch recovery path</h2>
-        <p class="takeaway">38 evicted requests retried; 5,376 batch jobs finished with zero duplicate results.</p>
+        <p class="takeaway">When capacity is needed, eligible batch work is interrupted and returns through the normal request path.</p>
       </div>
-      <div class="path" role="img" aria-label="Batch starts first, fills spare capacity, realtime arrives, Endpoint Picker evicts negative priority work, Async Processor retries it, and all batch work completes once.">
-        <div class="path-step"><span class="step-number">01</span><strong>Batch starts first</strong><span>Persistent backlog enters vLLM before realtime traffic.</span><span class="metric">60 s early</span></div>
-        <div class="path-step"><span class="step-number">02</span><strong>Realtime arrives</strong><span>A 32-request burst is followed by noisy Poisson traffic.</span><span class="metric">priority 100</span></div>
-        <div class="path-step"><span class="step-number">03</span><strong>Policy protects capacity</strong><span>The Endpoint Picker reserves half the request slots.</span><span class="metric">50%</span></div>
-        <div class="path-step"><span class="step-number">04</span><strong>Batch is reclaimed</strong><span>Running negative-priority streams terminate when capacity is needed.</span><span class="metric">38 evictions</span></div>
-        <div class="path-step"><span class="step-number">05</span><strong>Async retries</strong><span>The batch client owns bounded retry and idempotency.</span><span class="metric">38 retries</span></div>
-        <div class="path-step"><span class="step-number">06</span><strong>Batch completes</strong><span>Each accepted job produces one final result.</span><span class="metric">5,376 / 5,376</span></div>
+      <figure class="visual asset-visual">
+        <img src="batch-recovery-flow.svg" alt="Batch recovery sequence from the Async Processor through the Gateway and Endpoint Picker to vLLM, followed by stream termination, HTTP 429, and resubmission." width="1000" height="470">
+        <figcaption class="visual-caption">
+          <span><strong>Observed:</strong> every evicted request was retried and produced one final result in the matched proof.</span>
+          <span><a href="batch-recovery-flow.svg">Open image</a> · See the <a href="#data">run database</a>.</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="section" id="two-model">
+      <div class="section-head">
+        <h2>Two-model-replica follow-up</h2>
+        <p class="takeaway">Eviction and retry continued across both model replicas; the latency comparison remains inconclusive.</p>
       </div>
-      <div class="durability-band" aria-label="Thirty-minute mixed-load durability result">
-        <div class="durability-item"><strong>30 minutes</strong><span>Separate mixed-load stability scenario</span></div>
-        <div class="durability-item"><strong>327</strong><span>Eviction attempts observed end to end</span></div>
-        <div class="durability-item"><strong>326</strong><span>Unique batch jobs affected; one was evicted twice</span></div>
-        <div class="durability-item"><strong>All completed once</strong><span>Async retry preserved one final result per job</span></div>
-      </div>
+      <figure class="visual asset-visual">
+        <img src="two-model-followup.svg" alt="One Endpoint Picker serving two balanced model replicas, with eviction and retry working across both replicas." width="1000" height="350">
+        <figcaption class="visual-caption">
+          <span>The follow-up doubled aggregate traffic to preserve the same per-GPU load used in the single-model proof.</span>
+          <span class="followup-links"><a href="two-model-followup.svg">Open image</a> · <a href="../two-model-replicas/README.md">Method and evidence</a> · <a href="../two-model-replicas/results.svg">Full visual summary</a></span>
+        </figcaption>
+      </figure>
     </section>
 
     <section class="section">
@@ -1201,7 +1217,7 @@
     <section class="section" id="boundary">
       <div class="section-head">
         <h2>Capability boundary</h2>
-        <p class="takeaway">Claims below passed the evidence gate for the single-replica build.</p>
+        <p class="takeaway">The matched proof covers one model replica; a separate follow-up checks the same mechanism across two model replicas.</p>
       </div>
       <div class="capability-grid">
         <article class="capability">
@@ -1209,7 +1225,7 @@
           <ul>
             <li><span class="mark" aria-hidden="true"></span><span><b>Reserved capacity protected realtime TTFT.</b> Median p95 fell from 561 ms to 341 ms.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Eviction stopped running batch streams.</b> 38 vLLM streams terminated when capacity was needed.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Retries finished every evicted job.</b> 38 retries, zero duplicate batch results.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Evicted batch work was retried reliably.</b> Each retried batch job produced one final result.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Priority rules held.</b> Standard traffic reclaimed batch; same-priority batch did not evict peers.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Queue survived Async Processor restart.</b> 300 jobs completed once after restart.</span></li>
           </ul>
@@ -1218,10 +1234,10 @@
           <h3>Evidence limits</h3>
           <ul>
             <li><span class="mark" aria-hidden="true"></span><span><b>Retry owner required.</b> The Endpoint Picker aborts the stream; the Async Processor must resubmit.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Eviction is not a TTFT guarantee.</b> Reserved capacity drove the latency result.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Reserved capacity produced the latency result.</b> Eviction recovered batch work already running in vLLM.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Request count ignores prompt size.</b> Large prompts raised TTFT before the gate activated.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>High batch ceiling can reject realtime work.</b> The 75% ceiling failed two pressure shapes.</span></li>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Single replica only.</b> Multi-replica reclamation and cross-node queue recovery were not tested.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Multiple Endpoint Picker replicas remain untested.</b> The two-model follow-up used one Endpoint Picker.</span></li>
           </ul>
         </article>
       </div>
@@ -1327,7 +1343,7 @@
       {family:"Final proof",name:"A. Realtime reference",result:"3,873/3,874 realtime; median p95 TTFT 342 ms.",meaning:"Defines realtime behavior without batch.",status:"supported"},
       {family:"Final proof",name:"B. Unprotected batch",result:"3,874/3,874 realtime; median p95 TTFT 561 ms; 7,480 batch completed.",meaning:"Measures interference when batch can fill model capacity.",status:"control"},
       {family:"Final proof",name:"C. Reserved headroom",result:"3,873/3,874 realtime; median p95 TTFT 341 ms; 4,943 batch completed.",meaning:"Reserved capacity restored p95 TTFT at a batch-throughput cost.",status:"supported"},
-      {family:"Final proof",name:"D. Headroom + eviction + retry",result:"3,874/3,874 realtime; median p95 TTFT 348 ms; 5,376 batch and 38/38 retries completed.",meaning:"The complete path protected realtime and finished reclaimed batch later.",status:"supported"}
+      {family:"Final proof",name:"D. Headroom + eviction + retry",result:"3,874/3,874 realtime; median p95 TTFT 348 ms; 5,376 batch and 38/38 retries completed.",meaning:"The complete path protected realtime access and safely retried evicted batch work.",status:"supported"}
     ];
 
     const runColumns = [

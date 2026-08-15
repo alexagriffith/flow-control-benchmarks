@@ -396,10 +396,9 @@ def render_batch_eviction_single_results(spec: dict) -> str:
       '<style>text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;letter-spacing:0}</style>',
       f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
       text(40, 42, "BATCH EVICTION · 1 MODEL REPLICA", 11, 800, "#087f73"),
-      text(40, 84, "One pool.", 34, 800, INK),
-      text(40, 122, "Protected latency.", 34, 800, INK),
-      text(40, 160, "Completed batch.", 34, 800, "#087f73"),
-      wrapped_text(40, 186, "Consolidate chat and batch on shared GPUs without choosing cost or user experience.", 880, 14, 500, MUTED, 2),
+      text(40, 84, "Protect realtime traffic", 34, 800, INK),
+      text(40, 122, "while batch shares the GPU", 34, 800, INK),
+      wrapped_text(40, 160, "Batch is safely retried after eviction.", 880, 14, 500, MUTED, 2),
       text(40, 232, "Median realtime p95 TTFT across three matched 300-second repeats", 13, 650, MUTED),
   ]
 

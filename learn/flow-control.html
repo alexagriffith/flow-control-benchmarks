@@ -169,9 +169,9 @@
 <main>
 
 <div class="hero">
-  <h1>Flow control makes shared inference predictable.</h1>
-  <p class="lede">Flow control is the Endpoint Picker's policy layer for multi-tenant inference. When workers are saturated, flow control utilizes queues to enforce priority, fairness, and tenant policies.</p>
-  <p class="lede">This page explains the mechanism end to end. What breaks without it, how a request travels through it, what the scheduling pattern guarantees, what it costs, and how to operate it.</p>
+  <h1>How llm-d flow control schedules shared inference</h1>
+  <p class="lede">Flow control is the Endpoint Picker's policy layer for multi-tenant inference. When model workers are saturated, Endpoint Picker queues enforce priority, fairness, and tenant policies.</p>
+  <p class="lede">The guide covers request classification, queueing, dispatch, capacity controls, batch eviction, configuration, and operating metrics.</p>
 </div>
 
 <section>
@@ -188,14 +188,14 @@
     <rect x="330" y="84" width="560" height="18" rx="9" fill="var(--blue, #1c78d8)"/>
     <text x="336" y="98" font-size="11" font-weight="700" fill="var(--on-accent, #ffffff)">occupies compute and KV cache for the whole decode loop</text>
     <text x="18" y="140" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Measured on one GPU at 160 concurrent requests, the short shape cleared 165 requests per second and the long shape cleared 27.</text>
-    <text x="18" y="160" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">A request-per-second limit cannot see this difference. Physical capacity can.</text>
+    <text x="18" y="160" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Request rate treats both requests equally. Measured GPU time differs.</text>
   </svg>
   </div>
   <div class="grid4" style="margin-top:12px">
-    <div class="card"><h3>Noisy neighbor</h3><p>There is a risk that a single tenant or request with large prompts can occupy the prefill stage, consume key-value (KV) cache, fill queue space, and increase waits for others.</p></div>
-    <div class="card"><h3>Scheduling regret</h3><p>Once a request enters a server's local queue it cannot move, even when a better endpoint frees up.</p></div>
+    <div class="card"><h3>Tenant interference</h3><p>Large prompts from one tenant can occupy the prefill stage, consume key-value (KV) cache, fill queue space, and increase queue time for other tenants.</p></div>
+    <div class="card"><h3>Requests cannot move after dispatch</h3><p>Once a request enters a model server's local queue, the Endpoint Picker cannot route the request to another replica.</p></div>
     <div class="card"><h3>Priority inversion</h3><p>A first-come, first-served model scheduler can place realtime work behind batch requests that arrived earlier.</p></div>
-    <div class="card"><h3>Resource asymmetry</h3><p>One huge-context request can outweigh hundreds of small ones. Request counts miss it.</p></div>
+    <div class="card"><h3>Request sizes vary</h3><p>A long-context request can use much more compute and memory than a short request, although each request adds one to a request count.</p></div>
   </div>
   <p style="margin-top:12px">Flow control provides tunable queue-depth and KV-cache settings for a given traffic pattern and operating goal.</p>
 </section>
@@ -203,7 +203,7 @@
 <section>
   <h2>What flow control does at the pool</h2>
   <table>
-    <thead><tr><th style="width:50%">What it does</th><th>Where its reach ends</th></tr></thead>
+    <thead><tr><th style="width:50%">Flow-control behavior</th><th>System boundary</th></tr></thead>
     <tbody><tr>
       <td><p>When model workers are saturated, flow control uses Endpoint Picker queues to enforce priority, fairness, and tenant policies.</p><p style="margin-top:8px">When capacity is available, requests dispatch immediately.</p><p style="margin-top:8px;margin-bottom:0">The Endpoint Picker manages the queues and routes each request to a model replica based on the scores available at dispatch time.</p></td>
       <td><p>Flow control changes when and in what order requests dispatch. Total model capacity still comes from the workers.</p><p style="margin-top:8px;margin-bottom:0">When demand exceeds that capacity, lower-priority work absorbs more of the wait so higher-priority work can dispatch first.</p></td>
@@ -211,7 +211,7 @@
   </table>
   <div class="figure">
   <svg viewBox="0 0 920 235" role="img" aria-label="Two regimes of one saturation gradient: under the ceiling, requests pass straight through; at or over it, priority bands decide who waits">
-    <text x="18" y="24" font-size="14" font-weight="700" fill="var(--ink, #151515)">One gradient, two regimes</text>
+    <text x="18" y="24" font-size="14" font-weight="700" fill="var(--ink, #151515)">How pool saturation changes dispatch</text>
     <rect x="18" y="42" width="430" height="140" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="34" y="66" font-size="12" font-weight="800" fill="var(--green, #1f8a5f)">SATURATION UNDER THE CEILING · dispatching</text>
     <circle cx="60" cy="106" r="7" fill="var(--green, #1f8a5f)"/><circle cx="86" cy="106" r="7" fill="var(--gold, #d59a00)"/><circle cx="112" cy="106" r="7" fill="var(--blue, #1c78d8)"/>
@@ -230,12 +230,12 @@
     <rect x="806" y="88" width="78" height="40" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
     <text x="845" y="112" font-size="11" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">vLLM</text>
     <text x="488" y="164" font-size="11.5" fill="var(--muted, #5f6368)">New work queues by band. The policy decides who goes next.</text>
-    <text x="460" y="216" font-size="12" fill="var(--ink-soft, #4a4a4a)" text-anchor="middle">Saturation is a measured gradient, not a switch. Each dispatch cycle re-measures it and compares it to the ceiling.</text>
+    <text x="460" y="216" font-size="12" fill="var(--ink-soft, #4a4a4a)" text-anchor="middle">Each dispatch cycle measures pool saturation and compares the value with the configured ceiling.</text>
   </svg>
   </div>
-  <div class="note">That trade is the honest core of the system. Enabling flow control is an explicit choice to protect time per output token, the reading pace of every stream already in flight, at the price of queue time for new arrivals when the pool is full.</div>
-  <h3 style="margin-top:22px">Where the gradient comes from</h3>
-  <p>The saturation number both regimes compare against the ceiling is computed per endpoint, then averaged across the pool. The more constrained resource wins.</p>
+  <div class="note">Flow control can protect time per output token for streams already running by holding new requests in Endpoint Picker queues when the pool is full.</div>
+  <h3 style="margin-top:22px">How pool saturation is calculated</h3>
+  <p>Each model replica reports a saturation value. The Endpoint Picker averages the replica values across the pool. For the utilization detector, the higher of queue-depth pressure and KV-cache pressure determines each replica's value.</p>
   <div class="figure">
   <svg viewBox="0 0 920 252" role="img" aria-label="Roofline: an endpoint's score is the larger of queue depth over its threshold and KV-cache use over its limit; pool saturation is the average of endpoint scores">
     <rect x="30" y="30" width="256" height="64" rx="11" fill="var(--gold-tint, #fdf6e6)" stroke="var(--gold-tint-line, #e0c98a)"/>
@@ -263,10 +263,10 @@
 </section>
 
 <section>
-  <h2>The journey of a request</h2>
-  <p>Five stops between the client and the GPU. The first two classify, the middle two decide, the last one routes.</p>
+  <h2>Request path</h2>
+  <p>The gateway classifies the request. The Endpoint Picker resolves its flow, queues it when required, applies the dispatch policy, and selects a model replica.</p>
   <div class="figure">
-  <svg viewBox="0 0 920 470" role="img" aria-label="Request journey: tag at the gateway, FlowKey assignment, banded queues with fairness, saturation gate, late-binding scheduler, model servers">
+  <svg viewBox="0 0 920 470" role="img" aria-label="Request path: tag at the gateway, FlowKey assignment, banded queues with fairness, saturation gate, late-binding scheduler, model servers">
     <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
     <!-- 1 tag -->
     <rect x="14" y="20" width="270" height="108" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
@@ -319,17 +319,17 @@
     <!-- vllm -->
     <rect x="332" y="392" width="574" height="58" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="348" y="416" font-size="13.5" font-weight="700" fill="var(--ink, #151515)">vLLM model servers</text>
-    <text x="348" y="432" font-size="11.5" fill="var(--muted, #5f6368)">Local queues stay a small healthy buffer, deep enough that continuous batching never starves,</text><text x="348" y="446" font-size="11.5" fill="var(--muted, #5f6368)">shallow enough that the real queue stays where policy lives.</text>
+    <text x="348" y="432" font-size="11.5" fill="var(--muted, #5f6368)">The detector threshold limits how much work reaches each model replica</text><text x="348" y="446" font-size="11.5" fill="var(--muted, #5f6368)">before the Endpoint Picker begins queueing new requests.</text>
     <line x1="793" y1="380" x2="793" y2="388" stroke="var(--arrow, #9a9a9a)" stroke-width="1.6" marker-end="url(#a)"/>
-    <text x="14" y="290" font-size="11.5" fill="var(--faint, #8a8a8a)">Trust boundary: clients never</text>
-    <text x="14" y="306" font-size="11.5" fill="var(--faint, #8a8a8a)">self-assert these headers. The</text>
-    <text x="14" y="322" font-size="11.5" fill="var(--faint, #8a8a8a)">gateway injects them from identity.</text>
+    <text x="14" y="290" font-size="11.5" fill="var(--faint, #8a8a8a)">Trust boundary: the gateway</text>
+    <text x="14" y="306" font-size="11.5" fill="var(--faint, #8a8a8a)">injects headers from identity.</text>
+    <text x="14" y="322" font-size="11.5" fill="var(--faint, #8a8a8a)">Client values do not set them.</text>
   </svg>
   </div>
   <div class="note"><code>x-llm-d-inference-objective</code> and <code>x-llm-d-inference-fairness-id</code> are the canonical header names. The older <code>x-gateway-inference-objective</code> and <code>x-gateway-inference-fairness-id</code> forms are accepted as deprecated aliases.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/director.go">requestcontrol/director.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/admission.go">requestcontrol/admission.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/controller.go">flowcontrol/controller/controller.go</a></div>
-  <h3 style="margin-top:22px">Where priority comes from</h3>
-  <p>The priority half of the FlowKey is resolved, never asserted. The header names an <code>InferenceObjective</code>, and every lookup failure lands on the same silent default.</p>
+  <h3 style="margin-top:22px">How priority is assigned</h3>
+  <p>The request header names an <code>InferenceObjective</code>. The Endpoint Picker resolves that objective to the priority stored in the <code>FlowKey</code>. A missing or invalid objective receives the configured default priority.</p>
   <div class="figure">
   <svg viewBox="0 0 920 232" role="img" aria-label="Priority resolution: the header name is looked up as an InferenceObjective; found yields its declared priority, missing or nil silently yields the default of zero, one flat band">
     <defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
@@ -339,7 +339,7 @@
     <line x1="282" y1="116" x2="332" y2="116" stroke="var(--arrow, #9a9a9a)" stroke-width="1.6" marker-end="url(#pf)"/>
     <rect x="334" y="82" width="236" height="68" rx="11" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="452" y="110" font-size="12.5" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">InferenceObjective lookup</text>
-    <text x="452" y="130" font-size="11" fill="var(--muted, #5f6368)" text-anchor="middle">bound to this pool?</text>
+    <text x="452" y="130" font-size="11" fill="var(--muted, #5f6368)" text-anchor="middle">bound to the model pool?</text>
     <line x1="570" y1="100" x2="636" y2="62" stroke="var(--green, #1f8a5f)" stroke-width="1.6" marker-end="url(#pf)"/>
     <text x="598" y="66" font-size="10.5" fill="var(--green, #1f8a5f)">found</text>
     <line x1="570" y1="132" x2="636" y2="176" stroke="var(--red-deep, #b23b3b)" stroke-width="1.6" marker-end="url(#pf)"/>
@@ -351,14 +351,14 @@
     <text x="771" y="172" font-size="12" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">defaultPriority</text>
     <text x="771" y="192" font-size="11" font-family="ui-monospace, Menlo, Consolas, monospace" fill="var(--red-deep, #b23b3b)" text-anchor="middle">0 · one flat band, silently</text>
     <text x="18" y="200" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">The fallback is silent. A request with an unbound objective still flows,</text>
-    <text x="18" y="217" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">classified at priority 0 alongside everything else that named nothing.</text>
+    <text x="18" y="217" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">classified at the default priority of 0.</text>
   </svg>
   </div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/requestcontrol/director.go#L206-L255">requestcontrol/director.go:206–255</a></div>
 </section>
 
 <section>
-  <h2>The architecture, one level up</h2>
+  <h2>Flow-control architecture</h2>
   <p>The Endpoint Picker layer manages the queues and routing to each pod, which is scored at dispatch time.</p>
   <div class="figure">
   <svg viewBox="0 0 920 300" role="img" aria-label="Architecture: clients through the gateway to the Endpoint Picker, whose scheduler routes each dispatched request to the best of several model servers">
@@ -387,20 +387,20 @@
     <text x="718" y="82" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">Server 1 · saturated</text>
     <text x="718" y="100" font-size="10.5" fill="var(--muted, #5f6368)">batch full, local queue full</text>
     <rect x="702" y="164" width="204" height="58" rx="10" fill="var(--green-tint, #f2faf6)" stroke="var(--green-tint-line, #9fceb8)"/>
-    <text x="718" y="188" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">Server 2 · has room ✓</text>
+    <text x="718" y="188" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">Server 2 · has room</text>
     <text x="718" y="206" font-size="10.5" fill="var(--muted, #5f6368)">holds this prompt's prefix cache</text>
     <rect x="702" y="238" width="204" height="52" rx="10" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="718" y="260" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">Server 3 · nearly full</text>
     <text x="718" y="278" font-size="10.5" fill="var(--muted, #5f6368)">batch full, queue draining</text>
-    <text x="382" y="272" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Held requests are never locked to a server.</text>
-    <text x="382" y="289" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">The pick happens when the answer is knowable.</text>
+    <text x="382" y="272" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Held requests remain unassigned while queued.</text>
+    <text x="382" y="289" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Endpoint selection occurs when a request leaves the queue.</text>
   </svg>
   </div>
 </section>
 
 <section>
-  <h2>The three-tier decision</h2>
-  <p>Each dispatch cycle answers three questions in strict order. One is fixed, two are pluggable.</p>
+  <h2>Priority, fairness, and ordering</h2>
+  <p>Each dispatch cycle checks priority, then fairness, then ordering. Priority selection is fixed. Fairness and ordering use policy plugins.</p>
   <table>
     <thead><tr><th>Tier</th><th>Question</th><th>Who decides</th><th>Options</th></tr></thead>
     <tbody>
@@ -409,10 +409,10 @@
       <tr><td style="white-space:nowrap"><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or a deadline from a service-level-objective (SLO) header</td></tr>
     </tbody>
   </table>
-  <div class="note">When the pool of workers is saturated, requests are dispatched in order of priority, with lower-priority bands absorbing the wait.<br><br>If two workloads should compete, put them in the same band. If one should never wait for the other, put them in different bands.</div>
+  <div class="note">When the pool of workers is saturated, requests are dispatched in order of priority, with lower-priority bands absorbing the wait.<br><br>Place workloads in the same band when they should share dispatch turns. Use separate bands when one requires priority over another.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness">plugins/flowcontrol/fairness</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a></div>
   <h3 style="margin-top:22px">The dispatch cycle</h3>
-  <p>The three tiers run inside a loop that moves exactly one request per pass. The ceiling check comes first, and it can stop everything.</p>
+  <p>The dispatch loop moves one request per pass. A saturation value at or above the applicable ceiling pauses dispatch for the current cycle.</p>
   <div class="figure">
   <svg viewBox="0 0 920 286" role="img" aria-label="Dispatch cycle: measure the saturation gradient, check it against the ceiling, walk the bands highest priority first, dispatch one item, then loop; at or over the ceiling the whole cycle halts and every band waits">
     <defs><marker id="dc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
@@ -440,16 +440,16 @@
     <text x="238" y="226" font-size="12" font-weight="800" fill="var(--ink, #151515)">halt the whole cycle</text>
     <text x="238" y="246" font-size="11" fill="var(--muted, #5f6368)">every band waits, by design</text>
     <text x="516" y="224" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">The halt prevents priority inversion. Dispatching lower-priority</text>
-    <text x="516" y="241" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">work would only deepen the saturation a blocked high band is waiting out.</text>
+    <text x="516" y="241" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">work would deepen the saturation a blocked high band is waiting out.</text>
   </svg>
   </div>
-  <div class="note">One dispatch per cycle, highest band first. In the benchmarked configuration the ceilings are uniform across bands, so that traversal order is the entire prioritization mechanism.</div>
+  <div class="note">Each cycle dispatches one request from the highest eligible priority band. The benchmarked v0.9 configuration used the same saturation ceiling for every band.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/internal/processor.go#L343-L400">flowcontrol/controller/internal/processor.go:343–400</a></div>
 </section>
 
 <section>
   <h2>Fairness policies under the same burst</h2>
-  <p>Round-robin's unit of fairness is the dispatch turn. Global-strict has no unit at all; it melts the band into one arrival-ordered queue.</p>
+  <p>Round-robin assigns dispatch turns across tenants. Global-strict orders all requests in the priority band by arrival time.</p>
   <div class="figure">
   <svg viewBox="0 0 920 220" role="img" aria-label="Round-robin fairness: a bursting tenant's queue grows long, but a rotating cursor gives each of three tenants equal dispatch turns">
     <text x="18" y="24" font-size="14" font-weight="700" fill="var(--ink, #151515)">Round-robin · turns rotate across tenants</text>
@@ -478,16 +478,16 @@
     <circle cx="42" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="60" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="78" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="96" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="114" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="132" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="150" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="168" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="186" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="204" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="222" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="240" cy="59" r="5" fill="var(--red-mid, #e4837f)"/>
     <text x="596" y="63" font-size="11" fill="var(--muted, #5f6368)">one merged queue, pure arrival order</text>
     <rect x="18" y="96" width="560" height="32" rx="9" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
-    <text x="32" y="116" font-size="11" font-weight="700" fill="var(--ink, #151515)">served share: proportional to volume — the burster wins</text>
+    <text x="32" y="116" font-size="11" font-weight="700" fill="var(--ink, #151515)">served share follows request volume; the burster receives more turns</text>
     <text x="596" y="116" font-size="11" fill="var(--muted, #5f6368)">lowest overhead · no isolation</text>
   </svg>
   </div>
-  <div class="note">Same tenants, opposite outcome. Round-robin bounds the burster's share of dispatches; global-strict hands the band to it. To see fairness in data, measure per-tenant served share — latency alone hides it.<br><br>A third registered policy, <code>program-aware-fairness</code>, exists but is not covered here.</div>
+  <div class="note">Round-robin limits the share of dispatch turns received by a tenant that sends more requests. Global-strict gives earlier requests precedence across the whole band. Per-tenant served share measures the difference. A third registered policy, <code>program-aware-fairness</code>, is outside the scope of the guide.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/roundrobin">plugins/flowcontrol/fairness/roundrobin</a> · <a href="https://github.com/llm-d/llm-d-router/tree/main/pkg/epp/framework/plugins/flowcontrol/fairness/globalstrict">plugins/flowcontrol/fairness/globalstrict</a></div>
 </section>
 
 <section>
-  <h2>The three ordering policies, same queue</h2>
+  <h2>Ordering policies on the same queue</h2>
   <p>The same four waiting requests can be served in three different orders, depending on which signal the policy reads.</p>
   <div class="figure">
   <svg viewBox="0 0 920 320" role="img" aria-label="The same four queued requests served in three different orders by fcfs, edf, and slodeadline">
@@ -498,7 +498,7 @@
     <rect x="262" y="40" width="112" height="28" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/><text x="318" y="58" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">C · 3rd</text>
     <rect x="384" y="40" width="112" height="28" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/><text x="440" y="58" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">D · 4th</text>
     <line x1="510" y1="54" x2="546" y2="54" stroke="var(--arrow, #9a9a9a)" stroke-width="1.5" marker-end="url(#op)"/>
-    <text x="558" y="51" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves A B C D — arrival is the only signal</text>
+    <text x="558" y="51" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves A B C D using arrival order</text>
     <text x="558" y="67" font-size="10.5" fill="var(--faint, #8a8a8a)">permits: predictability · ignores: urgency</text>
 
     <text x="18" y="126" font-size="12.5" font-weight="700" fill="var(--ink, #151515)"><tspan fill="var(--red-dark, #5f0000)" font-family="ui-monospace, Menlo, monospace" font-size="11.5">edf</tspan> · earliest deadline first</text>
@@ -507,7 +507,7 @@
     <rect x="262" y="138" width="112" height="28" rx="8" fill="var(--gold-tint, #fdf6e6)" stroke="var(--gold-tint-line, #e0c98a)"/><text x="318" y="156" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">C · deadline 2s</text>
     <rect x="384" y="138" width="112" height="28" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/><text x="440" y="156" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">D · deadline 15s</text>
     <line x1="510" y1="152" x2="546" y2="152" stroke="var(--arrow, #9a9a9a)" stroke-width="1.5" marker-end="url(#op)"/>
-    <text x="558" y="149" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves C D B, then A — closest deadline wins</text>
+    <text x="558" y="149" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves C D B, then A using the closest deadline</text>
     <text x="558" y="165" font-size="10.5" fill="var(--faint, #8a8a8a)">permits: rescuing expiring work · deadline-less requests yield</text>
 
     <text x="18" y="224" font-size="12.5" font-weight="700" fill="var(--ink, #151515)"><tspan fill="var(--red-dark, #5f0000)" font-family="ui-monospace, Menlo, monospace" font-size="11.5">slodeadline</tspan> · deadline from an SLO header</text>
@@ -516,7 +516,7 @@
     <rect x="262" y="236" width="112" height="28" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/><text x="318" y="254" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">C · ttft 2s</text>
     <rect x="384" y="236" width="112" height="28" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/><text x="440" y="254" font-size="10.5" fill="var(--ink, #151515)" text-anchor="middle">D · ttft 1s</text>
     <line x1="510" y1="250" x2="546" y2="250" stroke="var(--arrow, #9a9a9a)" stroke-width="1.5" marker-end="url(#op)"/>
-    <text x="558" y="247" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves B D C, then A — the client states its urgency</text>
+    <text x="558" y="247" font-size="11" fill="var(--ink-soft, #4a4a4a)">serves B D C, then A using the client SLO</text>
     <text x="558" y="263" font-size="10.5" fill="var(--faint, #8a8a8a)">permits: per-request targets · requires: header discipline</text>
     <text x="18" y="305" font-size="11" fill="var(--faint, #8a8a8a)">ttft = time to first token, the deadline the SLO header expresses</text>
   </svg>
@@ -527,7 +527,7 @@
 
 <section>
   <h2>Tenants inside a band</h2>
-  <p>A tenant's queue is born on its first request, held open by a lease, and collected when idle. There is no tenant registry to maintain.</p>
+  <p>The first request creates a tenant queue. A lease keeps the queue active, and the Endpoint Picker removes the queue after the configured idle period.</p>
   <div class="figure">
   <svg viewBox="0 0 920 200" role="img" aria-label="Flow lifecycle: created on first request, leased while active, idle starts a garbage-collection timer, collected after the timeout; a new request re-pins an idle flow">
     <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
@@ -557,42 +557,43 @@
 
 <section>
   <h2>Where the waiting goes</h2>
-  <p>When demand exceeds capacity, the wait has to land somewhere. There are only two places, and only one of them obeys policy.</p>
+  <p>Excess requests wait in Endpoint Picker policy queues or inside vLLM. Priority and fairness apply while requests remain in the Endpoint Picker.</p>
   <div class="figure">
   <svg viewBox="0 0 920 240" role="img" aria-label="Two places a request can wait: the EPP policy queue, governed by priority and fairness, and the GPU batch, governed by physics">
-    <text x="18" y="26" font-size="14" font-weight="700" fill="var(--ink, #151515)">Two waits, one budget</text>
+    <text x="18" y="26" font-size="14" font-weight="700" fill="var(--ink, #151515)">Where requests wait</text>
     <rect x="18" y="46" width="430" height="150" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="34" y="72" font-size="12.5" font-weight="800" fill="var(--green, #1f8a5f)">THE EPP QUEUE · policy decides</text>
-    <text x="34" y="94" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Time here is assigned. Priority picks the band, fairness picks</text>
-    <text x="34" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">the tenant, and the tenant that caused the pressure carries</text>
-    <text x="34" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">the most of it. Measurable per tenant and per band.</text>
+    <text x="34" y="72" font-size="12.5" font-weight="800" fill="var(--green, #1f8a5f)">ENDPOINT PICKER QUEUE</text>
+    <text x="34" y="94" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Priority selects the band. Fairness selects the tenant.</text>
+    <text x="34" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Ordering selects the request. Queue time is measured per</text>
+    <text x="34" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">tenant and priority band.</text>
     <text x="34" y="156" font-size="11" fill="var(--faint, #8a8a8a)">llm_d_epp_flow_control_request_queue_duration_seconds</text>
     <rect x="472" y="46" width="430" height="150" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="488" y="72" font-size="12.5" font-weight="800" fill="var(--blue, #1c78d8)">THE RUNNING BATCH · physics decides</text>
+    <text x="488" y="72" font-size="12.5" font-weight="800" fill="var(--blue, #1c78d8)">vLLM RUNNING BATCH</text>
     <text x="488" y="94" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Once dispatched, a request computes inside the shared batch.</text>
-    <text x="488" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">A full batch produces first tokens more slowly for every request</text>
-    <text x="488" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">in it, whoever sent them. No scheduler reaches inside.</text>
+    <text x="488" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">A full batch can increase first-token latency for requests that</text>
+    <text x="488" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">arrive later. The Endpoint Picker cannot reorder running work.</text>
     <text x="488" y="156" font-size="11" fill="var(--faint, #8a8a8a)">vllm:num_requests_running, vllm:num_requests_waiting</text>
-    <text x="18" y="216" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Tuning the saturation thresholds moves the wait between these two places. That is the dial. Let the batch fill for maximum</text><text x="18" y="234" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">utilization, or hold work upstream for maximum isolation, and choose per pool.</text>
+    <text x="18" y="216" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Saturation thresholds determine how much work enters vLLM before the Endpoint Picker starts queueing new requests.</text>
+    <text x="18" y="234" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Higher thresholds favor vLLM utilization. Lower thresholds move more queueing into the Endpoint Picker.</text>
   </svg>
   </div></section>
 
 <section>
-  <h2>What the policy guarantees</h2>
-  <p>Each tier leaves a fingerprint you can measure on your own pool.</p>
+  <h2>Scheduling behavior to verify</h2>
+  <p>Measure dispatch order, served share, queue time, and rejection behavior under saturation.</p>
   <div class="tiles">
     <div class="tile"><div class="k">Priority</div><div class="why" style="margin-top:2px;font-size:12.5px">When the pool of workers is saturated, requests are dispatched in order of priority, with lower-priority bands absorbing the wait.</div></div>
-    <div class="tile"><div class="k">Fairness</div><div class="why" style="margin-top:2px;font-size:12.5px">Tenants at equal load within a band are treated identically, without anyone tuning per-tenant rate limits.</div></div>
-    <div class="tile"><div class="k">Cost assignment</div><div class="why" style="margin-top:2px;font-size:12.5px">The tenant that creates the pressure carries the most queue time. The wait is assigned, not ambient.</div></div>
-    <div class="tile"><div class="k">Sheddable isolation</div><div class="why" style="margin-top:2px;font-size:12.5px">Batch traffic can dominate arrivals and still absorb the waiting instead of causing it, inside a bounded queue.</div></div>
+    <div class="tile"><div class="k">Fairness</div><div class="why" style="margin-top:2px;font-size:12.5px">Round-robin gives tenants in the same priority band equal dispatch turns while each tenant has queued work.</div></div>
+    <div class="tile"><div class="k">Queue time</div><div class="why" style="margin-top:2px;font-size:12.5px">Queue-duration metrics identify which tenant and priority band absorbed the delay.</div></div>
+    <div class="tile"><div class="k">Batch limits</div><div class="why" style="margin-top:2px;font-size:12.5px">A bounded low-priority band limits queued batch work. Requests beyond the limit receive an HTTP 429 response.</div></div>
   </div>
-  <div class="note">Absolute latencies always track your hardware, model, and tuning. The guarantee is the scheduling pattern, not a fixed latency number.<br><br>Targets hold while capacity lasts. Past capacity the policy, not arrival order, decides who waits.</div>
+  <div class="note">Latency depends on the model, hardware, traffic shape, and configuration. The policy controls dispatch order, tenant selection, request ordering, and queue limits when demand exceeds capacity.</div>
 </section>
 
 <section>
   <h2>When requests are refused</h2>
-  <p>Flow control fails loudly and specifically. Every refusal carries a reason on the wire in the <code>x-llm-d-request-dropped-reason</code> header.</p>
-  <p>Inside the Endpoint Picker, every request ends in one of six terminal outcomes. The wire table below is how those outcomes reach the client.</p>
+  <p>The Endpoint Picker adds the refusal reason to the <code>x-llm-d-request-dropped-reason</code> response header.</p>
+  <p>Endpoint Picker outcomes map to the client responses shown in the table.</p>
   <div class="figure">
   <svg viewBox="0 0 920 372" role="img" aria-label="Fate map: a request passes a capacity check or is rejected before enqueue; once queued it is dispatched, expires by its time-to-live, is cancelled by the client, or is evicted another way">
     <defs><marker id="fm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
@@ -606,7 +607,7 @@
     <line x1="262" y1="150" x2="262" y2="88" stroke="var(--red-deep, #b23b3b)" stroke-width="1.5" marker-end="url(#fm)"/>
     <rect x="152" y="26" width="248" height="58" rx="11" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
     <text x="276" y="50" font-size="12" font-weight="800" font-family="ui-monospace, Menlo, Consolas, monospace" fill="var(--ink, #151515)" text-anchor="middle">RejectedCapacity</text>
-    <text x="276" y="70" font-size="10.5" fill="var(--muted, #5f6368)" text-anchor="middle">queue limits hit · never enqueued</text>
+    <text x="276" y="70" font-size="10.5" fill="var(--muted, #5f6368)" text-anchor="middle">queue limits hit · rejected before queueing</text>
     <rect x="430" y="26" width="226" height="58" rx="11" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
     <text x="543" y="50" font-size="12" font-weight="800" font-family="ui-monospace, Menlo, Consolas, monospace" fill="var(--ink, #151515)" text-anchor="middle">RejectedOther</text>
     <text x="543" y="70" font-size="10.5" fill="var(--muted, #5f6368)" text-anchor="middle">pre-enqueue failure</text>
@@ -632,9 +633,9 @@
     <rect x="322" y="290" width="258" height="56" rx="11" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
     <text x="451" y="314" font-size="12" font-weight="800" font-family="ui-monospace, Menlo, Consolas, monospace" fill="var(--ink, #151515)" text-anchor="middle">EvictedOther</text>
     <text x="451" y="334" font-size="10.5" fill="var(--muted, #5f6368)" text-anchor="middle">e.g. shutdown while queued</text>
-    <text x="14" y="290" font-size="11" fill="var(--faint, #8a8a8a)">After dispatch, a separate evictor</text>
-    <text x="14" y="306" font-size="11" fill="var(--faint, #8a8a8a)">tracks in-flight requests. It never</text>
-    <text x="14" y="322" font-size="11" fill="var(--faint, #8a8a8a)">displaces queued work.</text>
+    <text x="14" y="290" font-size="11" fill="var(--faint, #8a8a8a)">After dispatch, the evictor tracks</text>
+    <text x="14" y="306" font-size="11" fill="var(--faint, #8a8a8a)">eligible in-flight requests. Queue</text>
+    <text x="14" y="322" font-size="11" fill="var(--faint, #8a8a8a)">policies continue to manage queued work.</text>
   </svg>
   </div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/types/outcomes.go">flowcontrol/types/outcomes.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/eviction/request_evictor.go">flowcontrol/eviction/request_evictor.go</a></div>
@@ -653,16 +654,16 @@
 
 <section id="config">
   <h2>The configuration surface</h2>
-  <p>The default column describes stable v0.9 behavior. Rows marked experimental describe the batch-eviction build. Tested examples show which values the benchmarks exercised.</p>
+  <p>The default column describes stable v0.9 behavior. Experimental rows cover priority holdback and batch eviction. The tested-examples column lists values exercised by the published benchmarks.</p>
   <table>
     <thead><tr><th>Setting</th><th>v0.9 default or feature state</th><th>Tested examples</th><th>What it changes</th></tr></thead>
     <tbody>
       <tr class="config-group"><th colspan="4">Queue, priority, and fairness</th></tr>
-      <tr><td><code>priorityBands[].priority</code></td><td>—</td><td>100 / 0 / −10</td><td>Sets which priority band is considered first.</td></tr>
+      <tr><td><code>priorityBands[].priority</code></td><td>configured per band</td><td>100 / 0 / −10</td><td>Sets which priority band is considered first.</td></tr>
       <tr><td><code>fairnessPolicyRef</code> (per band)</td><td><code>global-strict</code></td><td><code>round-robin</code></td><td>Decides which tenant gets the next turn inside a priority band.</td></tr>
       <tr><td><code>orderingPolicyRef</code> (per band)</td><td><code>fcfs</code></td><td><code>fcfs</code></td><td>Orders requests inside one tenant's queue.</td></tr>
-      <tr><td><code>maxBytes</code> (per band)</td><td>1 GB each — the cap that binds</td><td>unset → 1 GB × 3 bands</td><td>Bounds queued request data in each band.</td></tr>
-      <tr><td><code>maxBytes</code> (global)</td><td>—</td><td>10 GiB · never binds</td><td>Bounds queued request data across all bands.</td></tr>
+      <tr><td><code>maxBytes</code> (per band)</td><td>1 GB each; effective cap</td><td>unset → 1 GB × 3 bands</td><td>Bounds queued request data in each band.</td></tr>
+      <tr><td><code>maxBytes</code> (global)</td><td>unset</td><td>10 GiB; did not bind</td><td>Bounds queued request data across all bands.</td></tr>
       <tr><td><code>maxRequests</code></td><td>unlimited</td><td>unset</td><td>Bounds the number of queued requests.</td></tr>
       <tr><td><code>defaultRequestTTL</code></td><td>0 · client context only</td><td>60s</td><td>Limits how long a request may wait in the Endpoint Picker.</td></tr>
       <tr><td><code>expiryCleanupInterval</code></td><td>1s</td><td>1s</td><td>Sets how often expired queued requests are removed.</td></tr>
@@ -674,48 +675,49 @@
       <tr><td><code>concurrency-detector.concurrencyMode</code></td><td><code>requests</code></td><td>requests and tokens</td><td>Chooses whether pressure is counted as in-flight requests or estimated in-flight tokens.</td></tr>
       <tr><td><code>concurrency-detector.maxConcurrency</code></td><td>100 requests</td><td>48–160 requests</td><td>Sets ideal in-flight request capacity per model replica when mode is <code>requests</code>.</td></tr>
       <tr><td><code>concurrency-detector.maxTokenConcurrency</code></td><td>1,000,000 tokens</td><td>20,000–75,000 tokens</td><td>Sets ideal in-flight token capacity per model replica when mode is <code>tokens</code>.</td></tr>
-      <tr><td><code>headroom</code> on either detector</td><td>0.0 · 0%</td><td>0–25%</td><td>Raises that detector's per-replica filtering boundary above its ideal limit. It does not reserve capacity by priority.</td></tr>
+      <tr><td><code>headroom</code> on either detector</td><td>0.0 · 0%</td><td>0–25%</td><td>Raises the selected detector's per-replica filtering boundary above its ideal limit. Priority-specific capacity uses the usage-limit policy.</td></tr>
       <tr class="config-group"><th colspan="4">Reserved capacity by priority · experimental beyond the v0.9 static policy</th></tr>
       <tr><td><code>flowControl.usageLimitPolicyPluginRef</code></td><td>static policy at 1.0</td><td>static and experimental priority holdback</td><td>Selects the pool-admission policy that decides whether a priority may dispatch.</td></tr>
-      <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0 · no reserve</td><td>1.0 in v0.9 scenarios</td><td>Sets one pool-saturation ceiling for every priority.</td></tr>
-      <tr><td><code>priority-holdback-policy.minCeiling</code> / <code>maxCeiling</code></td><td>not available in stable v0.9</td><td>0.50 / 1.0</td><td>Sets lower saturation ceilings for lower priorities, keeping capacity available for higher priorities.</td></tr>
-      <tr><td><code>priority-holdback-policy.shape</code> / <code>domain</code></td><td>not available in stable v0.9</td><td><code>linear</code> / <code>rank</code></td><td>Controls how ceilings are distributed across the configured priorities.</td></tr>
+      <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0; full ceiling</td><td>1.0 in v0.9 scenarios</td><td>Sets one pool-saturation ceiling for every priority.</td></tr>
+      <tr><td><code>priority-holdback-policy.minCeiling</code> / <code>maxCeiling</code></td><td>experimental build</td><td>0.50 / 1.0</td><td>Sets lower saturation ceilings for lower priorities, keeping capacity available for higher priorities.</td></tr>
+      <tr><td><code>priority-holdback-policy.shape</code> / <code>domain</code></td><td>experimental build</td><td><code>linear</code> / <code>rank</code></td><td>Controls how ceilings are distributed across the configured priorities.</td></tr>
       <tr class="config-group"><th colspan="4">Batch eviction and retry · experimental</th></tr>
-      <tr><td><code>flowControl.enableEviction</code></td><td>not available in stable v0.9</td><td>true in the experimental eviction-and-retry tests</td><td>Lets the Endpoint Picker stop negative-priority work already running in vLLM when higher-priority work is blocked.</td></tr>
+      <tr><td><code>flowControl.enableEviction</code></td><td>experimental build</td><td>true in the experimental eviction-and-retry tests</td><td>Lets the Endpoint Picker stop negative-priority work already running in vLLM when higher-priority work is blocked.</td></tr>
       <tr><td>Eviction eligibility</td><td>request priority must be below 0</td><td>batch priority −10</td><td>Limits reclamation to work explicitly marked as lower-priority and sheddable.</td></tr>
-      <tr><td>Retry owner</td><td>not configured in the Endpoint Picker</td><td>Async Processor</td><td>The client handles the HTTP 429, starts a new request, and prevents duplicate final results.</td></tr>
+      <tr><td>Retry owner</td><td>external client or processor</td><td>Async Processor</td><td>The client handles the HTTP 429, starts a new request, and prevents duplicate final results.</td></tr>
     </tbody>
   </table>
-  <div class="note">Eviction pacing is derived from the selected saturation detector. Confirmation grace and timeout exist internally but are not public configuration fields.</div>
+  <div class="note">Eviction pacing is derived from the selected saturation detector. Confirmation grace and timeout are internal implementation values.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/config.go">flowcontrol/controller/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/registry/config.go">flowcontrol/registry/config.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/README.md">concurrency detector</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/framework/plugins/flowcontrol/usagelimits/priorityholdback/README.md">priority holdback</a></div>
 </section>
 
 <section id="capacity-controls">
   <h2>Two controls protect capacity at different levels</h2>
-  <p><strong>Headroom is not a detector.</strong> It changes the per-replica filtering boundary of whichever saturation detector is selected: utilization or concurrency. Reserved capacity separately controls whether work leaves the queue.</p>
+  <p>Headroom changes the per-replica filtering boundary of the selected saturation detector. Both utilization and concurrency detectors support headroom. Reserved capacity sets a separate pool-saturation ceiling for each priority.</p>
   <figure class="figure">
     <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and saturation-detector headroom filtering each model replica against its safety boundary. Utilization uses queue and KV-cache pressure; concurrency uses in-flight requests or tokens.">
-    <figcaption>Reserved capacity asks whether this priority may dispatch. Saturation-detector headroom asks which replica may receive the request.</figcaption>
+    <figcaption>Reserved capacity determines whether a priority may dispatch. Saturation-detector headroom determines which model replicas remain eligible.</figcaption>
   </figure>
   <details>
     <summary>Version and configuration details</summary>
-    <p><strong>Stable v0.9:</strong> the static usage-limit policy provides one pool-wide ceiling for all priorities; its default threshold is 1.0, which reserves no capacity. Both the utilization and concurrency saturation detectors support headroom, which defaults to 0.0 and applies the same configured tolerance to each replica. Priority-specific reserve belongs to the newer experimental priority-holdback policy.</p>
+    <p><strong>Stable v0.9:</strong> the static usage-limit policy provides one pool-wide ceiling for all priorities. The default threshold is 1.0. Headroom defaults to 0.0 for both saturation detectors. The experimental priority-holdback policy adds priority-specific ceilings.</p>
   </details>
 </section>
 
 <section id="batch-eviction-flow">
-  <h2>Batch eviction frees capacity, then retries the interrupted job</h2>
-  <p>When realtime demand needs capacity, the Endpoint Picker can end lower-priority batch generation. The Async Processor retries that job as a new request and preserves one final result.</p>
+  <h2>Batch eviction interrupts lower-priority work for retry</h2>
+  <p>When realtime demand needs capacity, the Endpoint Picker issues an eviction for eligible batch work. Envoy resets the vLLM stream and returns HTTP 429. The Async Processor retries the batch job as a new request.</p>
   <figure class="figure">
     <img src="../benchmark-data/batch-eviction/single-model-replica/request-path-architecture.svg" alt="Actor-aligned sequence showing the Endpoint Picker instructing Envoy to return HTTP 429, Envoy resetting the upstream vLLM stream and sending the response, and the Async Processor retrying the batch job.">
     <figcaption>The Endpoint Picker creates the eviction instruction. Envoy sends the HTTP response and resets the upstream stream. The Async Processor owns retry.</figcaption>
   </figure>
+  <div class="note"><strong>Benchmark evidence.</strong> All 38 observed evictions completed through retry in the one-model-replica tests. All 57 observed evictions completed through retry across two model replicas. Every retried batch job produced one final result. The three-run TTFT scaling comparison for two model replicas was inconclusive.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/handlers/server.go">handlers/server.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/eviction/request_evictor.go">eviction/request_evictor.go</a> · <a href="../benchmark-data/batch-eviction/single-model-replica/eviction-retry-correlation.csv">eviction and retry evidence</a></div>
 </section>
 
 <section>
-  <h2>Choosing knobs together</h2>
-  <p>No knob acts alone. You choose a posture, and the posture implies the stack.</p>
+  <h2>Configuration patterns</h2>
+  <p>Combine queue limits, admission policy, detector settings, and eviction according to the workload requirement.</p>
   <div class="grid2" style="margin-top:12px">
     <div class="card">
       <h3>Multi-tenant isolation <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
@@ -724,8 +726,8 @@
         <div class="chip det"><span class="lab">detector</span><span class="val">utilization · 4 / 0.80</span></div>
         <div class="chip cap"><span class="lab">queue</span><span class="val">TTL 60s · ~1 GB per band</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> per-tenant turns in every band, floods absorbed with zero rejections.</p>
-      <p class="costs"><strong>Costs</strong> no latency help among equals; memory held while work waits.</p>
+      <p class="buys"><strong>Effect</strong> Round-robin gives each active tenant dispatch turns within the priority band.</p>
+      <p class="costs"><strong>Tradeoff</strong> Requests consume Endpoint Picker queue memory while they wait.</p>
     </div>
     <div class="card">
       <h3>SLO-driven interactive</h3>
@@ -734,8 +736,8 @@
         <div class="chip det"><span class="lab">detector</span><span class="val">concurrency · maxConcurrency</span></div>
         <div class="chip cap"><span class="lab">queue</span><span class="val">short TTL</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> the only in-flight cap — the latency lever — plus per-request time-to-first-token targets from headers.</p>
-      <p class="costs"><strong>Costs</strong> throughput sacrificed to the cap; clients must set the SLO header.</p>
+      <p class="buys"><strong>Effect</strong> An in-flight request limit controls how much work reaches vLLM. SLO deadlines can order queued requests.</p>
+      <p class="costs"><strong>Tradeoff</strong> Lower in-flight limits can reduce throughput. Clients must provide the SLO header.</p>
     </div>
     <div class="card">
       <h3>Batch-heavy consolidation</h3>
@@ -744,8 +746,8 @@
         <div class="chip det"><span class="lab">detector</span><span class="val">utilization</span></div>
         <div class="chip cap"><span class="lab">queue</span><span class="val">long TTL on the batch band</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> a bounded appetite — batch cannot eat the shared queue budget.</p>
-      <p class="costs"><strong>Costs</strong> the capped band rejects earlier, by design.</p>
+      <p class="buys"><strong>Effect</strong> Per-band limits bound queued batch request count or bytes.</p>
+      <p class="costs"><strong>Tradeoff</strong> The Endpoint Picker returns HTTP 429 after the batch band reaches its configured limit.</p>
     </div>
     <div class="card">
       <h3>Protect realtime before batch dispatches <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
@@ -754,8 +756,8 @@
         <div class="chip det"><span class="lab">admission</span><span class="val">priority holdback ceilings</span></div>
         <div class="chip cap"><span class="lab">reserve</span><span class="val">lower priorities stop sooner</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> predictable access for realtime by keeping part of the shared capacity unavailable to lower-priority work.</p>
-      <p class="costs"><strong>Costs</strong> batch uses less of the GPU during quiet periods; the ceilings must be calibrated for the model and hardware.</p>
+      <p class="buys"><strong>Effect</strong> Lower-priority work stops dispatching at a lower pool-saturation ceiling, leaving capacity for higher-priority requests.</p>
+      <p class="costs"><strong>Tradeoff</strong> Batch may use less GPU capacity during quiet periods. Calibrate the ceilings for each model and hardware configuration.</p>
     </div>
     <div class="card">
       <h3>Recover capacity after batch starts <span style="color:var(--green);font-weight:600;font-size:11px">· benchmarked</span></h3>
@@ -764,8 +766,8 @@
         <div class="chip det"><span class="lab">eviction</span><span class="val">ImmediateResponse → stream reset</span></div>
         <div class="chip cap"><span class="lab">retry</span><span class="val">client-owned + idempotent</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> a way to stop lower-priority generation when realtime demand needs capacity that batch already occupies.</p>
-      <p class="costs"><strong>Costs</strong> interrupted tokens are recomputed, capacity is not visible instantly, and the retry owner must prevent duplicate final results.</p>
+      <p class="buys"><strong>Effect</strong> Eviction stops eligible lower-priority generation when realtime demand needs capacity occupied by batch.</p>
+      <p class="costs"><strong>Tradeoff</strong> Retry recomputes interrupted tokens. Engine metrics may report the released capacity after a delay. The retry owner must prevent duplicate final results.</p>
     </div>
     <div class="card">
       <h3>Max throughput, minimum machinery</h3>
@@ -774,27 +776,27 @@
         <div class="chip det"><span class="lab">detector</span><span class="val">utilization · defaults</span></div>
         <div class="chip cap"><span class="lab">ceiling</span><span class="val">usage-limit 1.0 · no gating</span></div>
       </div>
-      <p class="buys"><strong>Buys</strong> strict arrival order at the lowest overhead.</p>
-      <p class="costs"><strong>Costs</strong> a burster wins share by volume; no isolation anywhere.</p>
+      <p class="buys"><strong>Effect</strong> First-come, first-served ordering preserves request arrival order with minimal policy work.</p>
+      <p class="costs"><strong>Tradeoff</strong> A tenant that sends more requests receives a larger share of dispatches under global-strict fairness.</p>
     </div>
   </div>
-  <div class="note">Use reserved capacity first: it protects realtime before lower-priority work enters vLLM. Add eviction only when the system must also reclaim eligible batch that is already running. Detector headroom remains a separate per-replica filtering tolerance.</div>
+  <div class="note">Reserved capacity protects realtime before lower-priority work enters vLLM. Eviction reclaims eligible batch work that is already running. Detector headroom changes per-replica eligibility.</div>
 </section>
 
 <section>
-  <h2>Operating it</h2>
+  <h2>Operating flow control</h2>
   <div class="grid2">
     <div class="card">
-      <h3>The knobs that matter</h3>
-      <p><strong>Band priorities</strong> in <code>InferenceObjective</code> map business tiers to dispatch order. <strong>Per-band limits</strong> bound how much low-priority work can queue.</p><p style="margin-top:8px"><strong>Request TTL</strong> caps how stale queued work can get.</p><p style="margin-top:8px"><strong>The saturation detector's threshold</strong> sets the healthy buffer, deep enough that batching never starves, shallow enough that the queue stays where policy lives. It is a trigger, not a queue cap.</p>
+      <h3>Configuration to tune</h3>
+      <p><strong>Band priorities</strong> in <code>InferenceObjective</code> map business tiers to dispatch order. <strong>Per-band limits</strong> bound how much low-priority work can queue.</p><p style="margin-top:8px"><strong>Request TTL</strong> limits queue time.</p><p style="margin-top:8px"><strong>The saturation detector threshold</strong> sets the point where the Endpoint Picker starts holding new requests. <code>maxRequests</code> and <code>maxBytes</code> cap the Endpoint Picker queue.</p>
     </div>
     <div class="card">
       <h3>What to watch</h3>
-      <p><code>pool_saturation</code> is the detector's gradient; dispatch halts when it reaches the ceiling.</p><p style="margin-top:8px"><code>queue_size</code> per tenant and band tells you who is waiting and how much. The same depth is a true-demand signal an autoscaler can act on.</p>
+      <p><code>pool_saturation</code> reports the detector's pool-wide pressure value. Dispatch pauses when the value reaches the applicable ceiling.</p><p style="margin-top:8px"><code>queue_size</code> reports queued requests per tenant and priority band. Autoscaling systems can use sustained queue growth as a demand signal.</p>
     </div>
   </div>
-  <h3 style="margin-top:18px">Proving it is on</h3>
-  <p>Two metric checks make the queueing visible. Anything less measures light load.</p>
+  <h3 style="margin-top:18px">How to verify flow control is active</h3>
+  <p>Verify Endpoint Picker routing, Endpoint Picker queueing, and vLLM pressure during the same saturated interval.</p>
   <table>
     <thead><tr><th>Check</th><th>Where</th><th>Pass when</th></tr></thead>
     <tbody>
@@ -805,7 +807,7 @@
   </table>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/metrics/metrics.go">metrics/metrics.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/internal/processor.go">flowcontrol/controller/internal/processor.go</a></div>
   <p style="margin-top:12px">Sweep each hardware and model pair to find where throughput stops improving and queueing begins. Use that capacity boundary to size the pool and tune where flow control starts holding new work.</p>
-  <p>That is the operating model: measure the capacity envelope, tune the admission boundary, and verify which work waits under pressure. The <a href="../benchmark-data/results.html">published benchmark evidence</a> shows the configuration sweeps, production traffic, scale tests, and claim boundaries.</p>
+  <p>The <a href="../benchmark-data/results.html">published benchmark evidence</a> includes configuration sweeps, production traffic, scale tests, and claim boundaries.</p>
 </section>
 
 </main>

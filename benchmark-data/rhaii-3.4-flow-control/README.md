@@ -5,6 +5,9 @@ main README. The runs used the Red Hat AI Inference 3.4 Tech Preview scheduler
 image from `registry.redhat.io/rhoai/odh-llm-d-inference-scheduler-rhel9` with
 its utilization detector.
 
+[Read the original campaign overview](campaign-overview.md). It preserves the
+README narrative and generated visuals published with this benchmark package.
+
 The primary scenarios use a queue-depth threshold of 4, GPT-OSS 20B on one
 H100, and prefix caching off. Each run directory includes its benchmark
 configuration and measured output.

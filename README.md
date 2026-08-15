@@ -1,472 +1,381 @@
 # Flow control benchmarks for llm-d
 
-These benchmarks ask whether realtime and batch workloads can share GPUs
-without batch delaying realtime requests.
+Flow control is the Endpoint Picker's policy layer for multi-tenant inference.
+While the GPU has capacity, requests pass straight through. When the pool
+saturates, flow control activates: new work waits in policy-aware queues in
+front of vLLM, so priority, fairness, and traffic class decide what runs next
+instead of arrival order.
 
-## Protect realtime access on a shared GPU
+This repo hosts measured evidence, generated charts, per-request data, and the
+runner code that produced it. The benchmark campaigns ran GPT-OSS 20B on NVIDIA
+H100 GPUs behind the llm-d inference gateway.
 
-When the pool of workers is saturated, requests are dispatched in order of
-priority, with lower-priority bands absorbing the wait. Reserved capacity
-limits how much batch work can enter vLLM. If batch work is already running,
-eviction stops it and the Async Processor resubmits it.
+- **[Utilization detector](benchmark-data/rhaii-3.4-flow-control/):** established
+  the operating point and tested priority, batch queuing, shared pools, and
+  peer fairness.
+- **[Concurrency detector](benchmark-data/upstream-flow-control-v0.9.0/):**
+  tested request-count and token-count admission with production and advanced
+  traffic patterns.
+- **[Batch eviction](benchmark-data/batch-eviction/):** tested reserved capacity,
+  eviction, and retry after batch work entered vLLM.
 
-## Business questions answered
+The takeaway figures are headline cuts. Later sections use package-level
+results and evidence links.
 
-| Question | Answer | Evidence |
-|---|---|---|
-| Can realtime and batch safely share the same GPU? | Yes, when capacity is reserved for realtime traffic. Without that protection, batch delayed realtime requests. Eviction recovered capacity after batch was already running. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) and [batch eviction](benchmark-data/batch-eviction/single-model-replica/) |
-| What happens when workers are saturated? | Requests are dispatched in priority order. Lower-priority bands spend more time queued. | [Production scenarios](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/) |
-| Do same-priority tenants continue receiving turns? | Yes. Round-robin dispatch prevented starvation in the tested fairness scenario. Their latency still depended on shared vLLM capacity. | [Same-priority fairness](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/) |
-| What protects realtime traffic before and after batch starts? | Reserved capacity keeps room available before batch starts. Eviction stops running batch work and the Async Processor retries it. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) and [eviction](benchmark-data/batch-eviction/) |
-| Can evicted batch work be retried reliably? | Every evicted request was retried and each batch job produced one final result in the single-model-replica proof. The retry path also worked with two model replicas. | [Single-model-replica proof](benchmark-data/batch-eviction/single-model-replica/) and [two-model-replica proof](benchmark-data/batch-eviction/two-model-replicas/) |
-| Which admission method produced lower realtime latency? | Request-count admission produced lower realtime latency in the tested mixed workload. Input-token admission lowered batch latency and raised realtime latency. | [Mixed production workload](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) |
-| Were long-context, agentic, and batch workloads tested together? | Yes. The mixed test ran all three with realtime chat traffic. Request-count admission protected realtime traffic best in that workload. | [Mixed production workload](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) |
-| How should the vLLM limits be chosen? | Sweep the limits with the target request shape. In this campaign, a higher running-request limit added little throughput and increased output-token latency. | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
-| Does the service recover after sustained surges? | Yes. The queue drained after both surges, realtime latency returned to its earlier range, and every request completed. | [Long stability](benchmark-data/upstream-flow-control-v0.9.0/long-stability/) |
-| Does adding model replicas preserve per-GPU throughput? | Served throughput per GPU stayed stable from one to four replicas. Only the four-replica runs served all offered traffic. | [Model-pool scaling](benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/) |
-| Did prefix-aware routing improve every workload? | It lowered realtime and batch latency, but increased standard long-context latency, route imbalance, and HTTP 429 responses. | [Prefix-cache routing](benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/) |
-| Were the main results dependent on cache reuse? | No. The main control and production tests disabled prefix caching. Cache-aware routing was tested separately. | [Test matrix](benchmark-data/upstream-flow-control-v0.9.0/README.md) and [prefix-cache routing](benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/) |
-| Do these results establish a deployment SLO? | They establish measured behavior and relative baselines. A deployment SLO still needs a named target and matched TTFT, end-to-end latency, TPOT, and success-rate tests. | [SLO proof tests](docs/slo-proof-tests.md) |
+## Takeaways
 
-<details>
-<summary>How the top-line results were measured</summary>
+### Shared model pool
 
-Traffic changed over time, including timed surges and recovery periods. Each
-selected scenario ran three times with prefix caching off. The figures report
-the median p95 time to first token across those repeats. Batch eviction was
-tested separately with an upstream experimental build.
+**Chat, batch, and tenant traffic can share one GPU instead of separate
+underutilized pools.** The consolidation runs put two high-priority tenants and a
+lower-priority burst on one model pool. Separate production scenarios test
+real-time, standard, and batch traffic under the same flow-control policy.
+
+<img src="assets/v09-tuning/consolidation-data.svg" width="100%" alt="Measured consolidation run showing two high-priority tenants and a lower-priority burst sharing one GPU, with high-priority p95 time to first token remaining much lower during the surge">
+
+<sub>Traffic: selected repeat 2. Surge p95 TTFT: median across three request-count admission repeats, log scale.</sub>
+
+<img src="assets/v09-tuning/consolidation.svg" width="100%" alt="Two high-priority tenants and a lower-priority burst share one GPU through the Endpoint Picker">
+
+[Tenant consolidation runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [Production scenario runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/) · [Additional consolidation evidence](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on/)
+
+### Saturated pool
+
+**When the pool saturates, policy decides who waits. Higher-priority traffic is
+protected under load, while lower-priority traffic absorbs the queue’s latency.**
+The Endpoint Picker continues to dispatch higher-priority requests and queues
+lower-priority work until model capacity becomes available.
+
+<img src="assets/v09-tuning/05-production.svg" width="100%" alt="Priority-tier results show platinum, gold, and silver traffic below one second median surge p95 time to first token while bronze batch exceeds 13 seconds">
+
+<sub>Surge p95 TTFT: median across three request-count admission repeats, log scale.</sub>
+
+[Priority-tier runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/)
+
+### Same-priority peers
+
+**One tenant’s surge does not starve same-priority peers.** Round-robin fairness
+keeps each tenant receiving dispatch turns inside one priority band. Their tail
+latency still depends on the vLLM capacity they share.
+
+<img src="assets/v09-tuning/06-fairness.svg" width="100%" alt="Peer fairness results showing peer tenants retaining service while one tenant sends a larger burst">
+
+<sub>Surge p95 TTFT: median across three request-count admission repeats, log scale. The lower panel shows Endpoint Picker round-robin dispatch and the resulting A/B/C sequence sent to the shared GPU.</sub>
+
+[Peer fairness runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/)
+
+### Batch after dispatch
+
+**Reserved capacity and eviction protect real-time p95 TTFT while batch
+sequences are already executing in vLLM.** Reserved capacity keeps room for
+real-time work before dispatch. Eviction releases eligible batch work after it
+has entered vLLM, and the Async Processor retries that batch job in the tested
+setup.
+
+<img src="assets/batch-eviction-data.svg" width="100%" alt="Measured batch eviction results show reserved capacity and eviction keeping real-time p95 time to first token near the real-time-only reference while unprotected batch raises latency">
+
+<sub>Real-time p95 TTFT: median across three matched 300-second repeats.</sub>
+
+<img src="assets/batch-eviction-panel.svg" width="100%" alt="Eviction releases occupied batch capacity for real-time work and sends the interrupted batch request through retry to completion">
+
+<sub>Reserved capacity acts before dispatch. Eviction acts after dispatch: the Endpoint Picker selects eligible batch work, Gateway/Envoy resets the vLLM stream and returns HTTP 429, and the Async Processor retries the batch request.</sub>
+
+[Batch-interference runs](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) · [Single-model-replica eviction runs](benchmark-data/batch-eviction/single-model-replica/) · [Two-model-replica eviction runs](benchmark-data/batch-eviction/two-model-replicas/)
+
+## Flow control under load
+
+Flow-control-on/off runs show the same system before and after policy queues
+were active.
+
+<img src="assets/results-at-a-glance.svg" width="100%" alt="Three measured outcomes: priority admission keeps premium traffic ahead of standard traffic, batch overload produces zero HTTP 429 responses with flow control on, and premium traffic stays faster than standard traffic in a consolidated pool">
+
+<sub>Compare bars within each card. The cards use the metric printed on each card.</sub>
+
+- **Priority admission:** higher-priority traffic had lower p95 TTFT than
+  standard traffic under saturated load.
+- **Zero HTTP 429:** batch overload queued at the Endpoint Picker; HTTP 429
+  responses dropped to zero with the gate on.
+- **Shared pool protection:** higher-priority tenants kept lower p95 TTFT than
+  standard traffic in one shared model pool.
+
+## Where flow control sits in llm-d
+
+The Gateway labels each request. Flow control runs inside the Endpoint Picker,
+before the request is assigned to a vLLM replica.
+
+<img src="assets/flow-control-in-llmd.svg" width="100%" alt="Requests pass through the llm-d Gateway to flow control inside the Endpoint Picker, then to vLLM. Requests pass through while capacity is available; under saturation, priority queues decide which requests wait">
+
+<details markdown="1">
+<summary><strong>Dispatch path under pressure</strong></summary>
+
+<img src="assets/dispatch-path.svg" width="100%" alt="Request path from gateway headers through Endpoint Picker priority queues and fairness to a vLLM model replica">
+
+Reserved capacity limits how much lower-priority work can enter vLLM. Eviction
+can release capacity from eligible batch work that has already entered vLLM.
 
 </details>
 
-## How traffic was generated
+## Configurations
 
-- **Closed loop:** a fixed number of callers wait for each response before
-  sending another request. We used this for capacity and configuration sweeps.
-- **Open-loop Poisson:** requests arrive on schedule even when earlier requests
-  are still running. We used this for production behavior.
-- **Noisy sinusoidal phases:** the open-loop rate moves through baseline, surge,
-  and recovery periods. We used this to test burst protection and recovery.
+The benchmark set the replica limit first, then compared admission signals, and
+then tested protection for batch work that had already entered vLLM.
 
-## Enforce priority under production traffic
+<img src="assets/operating-point-sweep.svg" width="100%" alt="Two single-tenant concurrency-sweep passes show served throughput peaking near 128 concurrent requests while p95 time to first token rises beyond that point">
 
-**What it proves.** Under saturation, flow control dispatched higher-priority
-requests first while same-priority tenants continued receiving turns.
+<sub>Operating-point sweep: median of two single-tenant passes.</sub>
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/results.svg" width="100%" alt="Realtime protection under production traffic, showing median surge p95 time to first token in milliseconds for each workload">
+- **Replica capacity:** 128 concurrent requests was the operating point for
+  production traffic.
+- **Admission signal:** request-count admission kept real-time latency lower
+  than queue-depth detection in the direct comparison.
+- **Prompt shape:** token-count admission helped long-context and batch work
+  when prompt sizes varied.
+- **Batch already running:** reserved capacity protected room before dispatch;
+  eviction released eligible batch work after dispatch.
 
-**Why it matters.** Realtime and batch can share GPUs without changing the
-priority order. Same-priority latency still depends on available vLLM capacity.
+[Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) · [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) · [Mixed workload](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) · [Batch eviction](benchmark-data/batch-eviction/)
 
-## Choose settings for the workload
+## Production scenarios
 
-vLLM controls how much work can run. The Endpoint Picker controls how much work
-enters vLLM and when requests are queued. These settings must be tested with the
-traffic they will serve.
+The four scenarios used the same surge schedule and changed the traffic mix.
+The charts below use request-count admission. Earlier utilization-detector runs
+are linked when the comparison answers the same question.
 
-### Find the engine boundary
+### Higher-priority traffic stayed faster
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/results.svg" width="100%" alt="Engine configuration sweeps compare max sequence and batched-token settings using throughput, p95 time to first token, and time per output token">
+**Higher-priority traffic kept faster access while bronze batch absorbed most
+of the surge delay.**
 
-Increasing vLLM's running-request limit produced little additional throughput
-and increased p95 time per output token. The production tests used the setting
-with lower output-token latency.
+<img src="assets/v09-tuning/priority-tiers-section.svg" width="100%" alt="Priority-tier results show platinum, gold, and silver traffic below one second median surge p95 time to first token while bronze batch exceeds 13 seconds">
 
-### Choose how much work enters vLLM
+<sub>Production scenario: median p95 TTFT during the surge, log scale.</sub>
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/results.svg" width="100%" alt="Matched mixed-workload runs compare request-count and input-token admission using p95 time to first token in milliseconds for realtime, agentic, long-context, and batch traffic">
+[Priority-tier evidence](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [Earlier priority-tier evidence](benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s/)
 
-**What we saw.** Request-count admission kept realtime latency lower by holding
-batch requests longer. Input-token admission lowered batch latency and raised
-realtime latency in these runs.
+### Batch queued behind real-time traffic
 
-**Why it matters.** The latency goal and request sizes determine which admission
-method fits the workload. The
-[utilization-detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/)
-shows how queue-depth and KV-cache thresholds change when the Endpoint Picker
-begins holding requests.
+**Batch used spare capacity and queued behind real-time traffic when the pool
+saturated.**
 
-## Advanced tests: protect realtime from batch interference
+<img src="assets/v09-tuning/batch-isolation-section.svg" width="100%" alt="Batch queue results show real-time and standard traffic below one second median surge p95 time to first token while batch exceeds 13 seconds">
 
-The Endpoint Picker can queue lower-priority requests before dispatch. Reserved
-capacity prevents batch from consuming all available capacity. If batch is
-already running inside vLLM, eviction stops it and the Async Processor retries
-it.
+<sub>Production scenario: median p95 TTFT during the surge, log scale.</sub>
 
-### How much can batch interfere with realtime traffic?
+[Batch queued behind real-time traffic](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/) · [Earlier batch queue evidence](benchmark-data/rhaii-3.4-flow-control/batch-gate-on/)
 
-**Answer.** Under request-count admission, running batch increased realtime p95
-TTFT from 133 ms to 15,378 ms.
+### High-priority tenants shared one pool
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/batch-interference/results.svg" width="100%" alt="Batch interference baseline compares realtime p95 time to first token in milliseconds with and without batch already running inside vLLM">
+**Two high-priority tenants shared the pool while a lower-priority burst carried
+most of the queue delay.**
 
-With request-count admission, lower-priority batch already running in vLLM
-raised realtime p95 TTFT from 133 ms to 15,378 ms. That is 115 times the
-realtime-only reference. The detector queued additional batch requests but
-could not remove batch work that was already running.
+<img src="assets/v09-tuning/consolidation-section.svg" width="100%" alt="Tenant-consolidation results show two high-priority tenants below one second median surge p95 time to first token while the lower-priority burst waits about 25.9 seconds">
 
-Request-count and utilization detection both act before dispatch, so neither
-can reclaim running work. The 115-times result was measured with request-count
-admission; the utilization detector was not tested under this exact batch-first
-traffic pattern.
+<sub>Production scenario: median p95 TTFT during the surge, log scale.</sub>
 
-### Reserved capacity and eviction protect realtime after batch starts
+[Tenant-consolidation evidence](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [Earlier consolidation evidence](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on/)
 
-<img src="assets/blog-batch-eviction-hero.svg" width="100%" alt="One pool, protected latency, completed batch: consolidate chat and batch on shared GPUs with ~341 ms TTFT and 38 evicted batch jobs retried to one final result each">
+### Peers kept receiving dispatch turns
 
-Reserved capacity kept realtime p95 TTFT close to the realtime-only run.
-Evicted batch requests were retried, and each job produced one final result.
-The retry path also worked with
-[two model replicas](benchmark-data/batch-eviction/two-model-replicas/), although
-run-to-run variation was too large to compare latency.
+**The tenant sending the larger burst waited longer while both peers continued
+receiving dispatch turns.**
 
-## Test recovery, scaling, and routing separately
+<img src="assets/v09-tuning/same-priority-fairness-section.svg" width="100%" alt="Peer fairness results show the bursting tenant waiting about 12.1 seconds while peers B and C stay near half a second">
 
-These tests answer three separate questions: does the service recover after a
-surge, does per-GPU throughput hold as model replicas are added, and does
-prefix-aware routing improve this traffic?
+<sub>Production scenario: median p95 TTFT during the surge, log scale.</sub>
 
-### The queue drained after both surges
+[Peers kept receiving dispatch turns](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/)
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/long-stability/results.svg" width="100%" alt="A 30-minute stability run aligns premium p95 time to first token with the percentage of metric samples containing queued requests; the final window returns near the pre-surge latency with no queued samples">
+### Request count kept real-time latency lower
 
-The service recovered after both surges without manual intervention. Realtime
-latency returned to its earlier range, every request completed, and no requests
-remained queued at the end.
+**Request-count admission kept real-time p95 TTFT lower than queue-depth
+detection in the two direct comparisons.** Queue-depth detection activates
+after requests accumulate inside vLLM. Request count limits admitted work
+before that queue builds.
 
-### Per-GPU throughput held as the model pool grew
+<img src="assets/v09-tuning/detector-comparison.svg" width="100%" alt="Request-count admission keeps real-time p95 time to first token lower than queue-depth detection in matched consolidation and same-priority fairness scenarios">
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/results.svg" width="100%" alt="Model pool scaling compares served requests per second per GPU and premium p95 time to first token across one, two, and four model replicas">
+<sub>Median p95 TTFT range across the selected real-time tenants. Both detector methods used the same prompts, traffic schedule, model, GPU, and repeat count.</sub>
 
-Adding replicas increased total capacity while served throughput per GPU stayed
-stable. Rejections fell as the pool grew, and the four-replica runs served all
-offered requests.
+[Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production)
 
-### Prefix-aware routing helped some workloads and hurt others
+## Advanced scenarios
 
-<img src="benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/results.svg" width="100%" alt="Prefix-cache routing compares random and prefix-aware routing using p95 time to first token in milliseconds across four workloads">
+These runs add mixed prompt shapes, batch already inside vLLM, repeated surges,
+larger model pools, and prefix-aware routing.
 
-Prefix-aware routing lowered realtime and batch latency in this traffic. It
-also increased standard long-context latency, route imbalance, and HTTP 429
-responses. The cache hit rate did not increase. The mixed result does not
-support changing the routing policy for this workload.
+### Request shape changed the best admission signal
 
-**Why it matters.** A setting that helps one request shape can hurt another.
-Routing and admission settings must be tested with the workloads they will
-serve.
+**Request-count admission favored real-time latency in the mixed workload.
+Input-token admission lowered batch latency in the same run.** The long-context
+package showed token-aware queue activation, but did not establish a latency
+advantage.
 
-## Evidence packages
+<img src="assets/v09-tuning/07-mixed.svg" width="100%" alt="Mixed-workload comparison shows the latency tradeoff between request-count admission and input-token admission across request shapes">
 
-- [`benchmark-data/upstream-flow-control-v0.9.0/results.html`](benchmark-data/upstream-flow-control-v0.9.0/results.html) summarizes the selected configuration, four production scenarios, workload shapes, scaling, stability, and prefix-aware routing.
-- [`benchmark-data/rhaii-3.4-flow-control/`](benchmark-data/rhaii-3.4-flow-control/) contains the original utilization-detector evidence used throughout this README.
-- [`benchmark-data/batch-eviction/`](benchmark-data/batch-eviction/) contains the batch-eviction and retry proof for one and two model replicas.
-- [`flow-control-visualizer`](https://github.com/alexagriffith/flow-control-visualizer) replays the published time-series packages as synchronized traffic, Endpoint Picker queue, and vLLM views.
+<sub>Mixed workload: median surge p95 TTFT across three repeats. Lower is better.</sub>
 
-The [combined evidence page](benchmark-data/results.html) shows the three
-campaigns together. Each package includes its configuration, request and system
-metrics, acceptance checks, and supported claims. Absolute latency depends on
-the model, hardware, request shape, and offered load.
+[Mixed-workload evidence](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) · [Long-context evidence](benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/)
 
-Most packages disable prefix caching so the tests measure scheduling behavior.
+| Request-shape package | Takeaway |
+|---|---|
+| Mixed workload | Request-count admission was lower for real-time traffic; input-token admission was lower for batch. |
+| Long context | Token-aware admission activated queues, but the paired latency difference was not significant. |
+
+### Workload shape changed first-token latency
+
+**The selected agentic workload had higher first-token latency than chat while
+per-token latency stayed close.** This package characterizes the selected
+request shapes before they are mixed with other traffic.
+
+<img src="assets/v09-tuning/07-workload-shapes.svg" width="100%" alt="Selected workload-shape results show agentic requests with higher p95 time to first token while p95 time per output token stays close to chat">
+
+<sub>Selected workload shapes: median surge p95 across three single-tenant repeats.</sub>
+
+[Workload-shape evidence](benchmark-data/upstream-flow-control-v0.9.0/selected-workload-shapes/)
+
+### Batch interference raised real-time latency
+
+**Once batch work occupied vLLM capacity, real-time requests waited behind it.**
+The batch-eviction runs above show how reserved capacity and eviction restore
+room for real-time work.
+
+<img src="assets/v09-tuning/08-batch-interference.svg" width="100%" alt="Real-time p95 time to first token rises when batch work already occupies vLLM">
+
+<sub>Batch interference test: real-time p95 TTFT with and without batch already inside vLLM. Median across three matched repeats.</sub>
+
+[Batch-interference evidence](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) · [Batch-eviction evidence](benchmark-data/batch-eviction/)
+
+### The queue drained after repeated surges
+
+Queue pressure rose during each surge and drained during each recovery window.
+The recovery package contains one 30-minute run.
+
+<img src="assets/v09-tuning/09-stability.svg" width="100%" alt="Real-time latency and queue pressure rise during two surges and return during both recovery windows">
+
+<sub>Recovery test: premium p95 TTFT and queue pressure across one 30-minute run.</sub>
+
+### Per-GPU throughput stayed stable
+
+**Served throughput per GPU stayed stable as the model pool grew.** Smaller
+pools returned some HTTP non-200 responses, so only the four-replica runs
+served all offered traffic.
+
+<img src="assets/v09-tuning/10-scale.svg" width="100%" alt="Served throughput per GPU stays stable as the model pool grows from one to four replicas">
+
+<sub>Scale test: served throughput per GPU across the tested pool sizes. Median across three repeats.</sub>
+
+[Recovery evidence](benchmark-data/upstream-flow-control-v0.9.0/long-stability/) · [Scaling evidence](benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/)
+
+### Prefix routing helped chat and added costs
+
+**Prefix-aware routing lowered real-time chat latency in the routing workload.**
+Prefix-aware routing raised latency for standard long-context requests and
+increased route imbalance in the same run.
+
+<img src="assets/v09-tuning/11-routing.svg" width="100%" alt="Prefix-aware routing improves some request shapes while increasing latency and route imbalance for others">
+
+<sub>Prefix-routing test: real-time chat p95 TTFT and routing costs from the same run.</sub>
+
+| Cost in routing run | Random routing | Prefix-aware routing |
+|---|---:|---:|
+| Standard long-context p95 TTFT | 10.3 s | 12.6 s |
+| Route imbalance | 0.9% | 19.1% |
+| HTTP 429 responses | 4 | 19 |
+
+[Prefix-routing evidence](benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/)
+
+## Batch eviction tests
+
+These tests start from the failure mode above: batch is already using vLLM
+capacity when real-time demand arrives.
+
+**Reserved capacity kept room for real-time traffic before dispatch. Eviction
+and retry handled eligible batch work after dispatch.**
+
+<img src="assets/batch-eviction-data.svg" width="100%" alt="Measured batch eviction results show reserved capacity and eviction keeping real-time p95 time to first token near the real-time-only reference while unprotected batch raises latency">
+
+<sub>Single-replica test: real-time p95 TTFT across matched 300-second repeats.</sub>
+
+<img src="assets/batch-eviction-panel.svg" width="100%" alt="Reserved capacity protects before dispatch; eviction selects eligible batch work after dispatch and retry returns the batch request to the normal path">
+
+<sub>Batch eviction path: reserve before dispatch, evict eligible running batch after dispatch, then retry the same batch request.</sub>
+
+- **Single replica:** reserved capacity and eviction kept real-time p95 TTFT near
+  the real-time-only reference.
+- **Retry:** evicted batch work was retried and produced one final result in the
+  tested setup.
+- **Two replicas:** the retry path also worked with two model replicas; the
+  latency comparison remains directional.
+
+[Single-replica eviction evidence](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica eviction evidence](benchmark-data/batch-eviction/two-model-replicas/)
+
+## Claims and evidence
+
+<details markdown="1">
+<summary><strong>Open the claim index</strong></summary>
+
+### Shared capacity
+
+| Claim | Evidence |
+|---|---|
+| Multiple tenants and workload classes shared one model pool while priority kept higher-priority traffic ahead of a lower-priority burst. | [Tenant consolidation](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [Earlier consolidation](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on/) |
+| Served throughput per GPU stayed stable as the pool grew. Smaller pools returned some HTTP non-200 responses. | [Model-pool scaling](benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/) |
+
+### Priority and admission
+
+| Claim | Evidence |
+|---|---|
+| Higher-priority requests kept faster access while lower-priority traffic absorbed more queue latency during the surge. | [Priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) |
+| Excess batch traffic stayed queued at the Endpoint Picker while real-time traffic retained access. | [Batch queued behind real-time traffic](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/) · [Earlier batch queue evidence](benchmark-data/rhaii-3.4-flow-control/batch-gate-on/) |
+| Request-count admission kept real-time p95 TTFT lower than queue-depth detection in two directly compared scenarios. | [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) |
+| Round-robin fairness kept same-priority peers receiving dispatch turns during another tenant's burst. | [Peers kept receiving dispatch turns](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/) |
+
+### Batch after dispatch
+
+| Claim | Evidence |
+|---|---|
+| Batch interference raised real-time latency after batch entered vLLM because admission control could not release occupied capacity. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) |
+| Reserved capacity kept room for real-time work, and eviction released capacity from eligible running batch requests. | [Single-model proof](benchmark-data/batch-eviction/single-model-replica/) · [Two-model proof](benchmark-data/batch-eviction/two-model-replicas/) |
+| Evicted batch requests were retried, and each tested batch job produced one final result. | [Retry evidence](benchmark-data/batch-eviction/single-model-replica/) |
+
+### Configuration and resilience
+
+| Claim | Evidence |
+|---|---|
+| The capacity and engine sweeps selected the point where more admitted work stopped improving throughput and started adding latency. | [Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) · [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
+| Queue depth and KV-cache thresholds control when model-side pressure activates flow control. | [Utilization calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) |
+| Token-aware admission activated queues for long-context prompts, but did not establish a general latency advantage in that package. | [Long-context admission](benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/) |
+| The selected agentic workload had higher first-token latency than chat while per-token latency stayed close. | [Selected workload shapes](benchmark-data/upstream-flow-control-v0.9.0/selected-workload-shapes/) |
+| The queue drained after both sustained surges and every request completed. | [Long stability](benchmark-data/upstream-flow-control-v0.9.0/long-stability/) |
+
+</details>
+
+## Walkthrough and reproduction
+
+The [combined evidence page](benchmark-data/results.html) links accepted runs to
+their configuration, metrics, checks, and reproduction commands. The
+[benchmark walkthrough](walkthrough.html) explains the test order and methods.
+
+- [Flow control guide](learn/flow-control.html)
+- [Interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)
+- [Benchmark data](benchmark-data/)
+- [Runner and reproduction guide](pipeline/README.md)
+- [Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer)
+
+<details markdown="1">
+<summary><strong>Scope</strong></summary>
+
+The benchmarks establish measured behavior and comparative baselines. A
+deployment service-level objective still needs a named target plus TTFT,
+end-to-end latency, time per output token, and success-rate tests at the
+deployment's expected load.
+
+Three-repeat comparisons report descriptive medians and ranges. No formal
+statistical significance is claimed. The recovery figure is a single
+30-minute run; the production comparisons use three-repeat medians.
+
+Most packages disable prefix caching so latency reflects scheduling behavior.
 The prefix-routing package enables caching because cache reuse is the behavior
 under test.
 
-Readable scenario names and claim boundaries for the run folders are defined in
-[`benchmark-data/RUN-METADATA.json`](benchmark-data/RUN-METADATA.json).
-
-## Reproduce and replay
-
-Each accepted package records the scenario, seed, runner hash, image,
-configuration, commands, and acceptance checks. GuideLLM uses those inputs to
-recreate the request schedule. Request latency and model output can vary across
-clusters, so comparisons should use repeated runs with the same hardware,
-images, and settings. The original model responses remain in each evidence
-package.
-
-Selected time-series packages also include a recorded replay. The same clips can be regenerated with the public [Flow Control Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer) and the package commands in [`pipeline/README.md`](pipeline/README.md).
-
-## RHAII 3.4 reference campaign
-
-The sections below preserve the first verified utilization-detector campaign
-used by the original walkthrough. The stable upstream v0.9.0 campaign adds
-open-loop traffic, mixed request sizes, model-pool scaling, routing, and a
-30-minute stability run.
-
-<details>
-<summary>Open the original RHAII 3.4 reference results</summary>
-
-## What flow control does, in one screen
-
-These comparisons use the same traffic and GPU. The only change is whether flow
-control is enabled. Premium represents interactive traffic, standard represents
-normal traffic, and batch represents work that can wait.
-
-<img src="assets/results-at-a-glance.svg" width="100%" alt="With flow control on under a saturated service-tier surge, premium p95 TTFT is 1117 ms versus 1406 ms for standard; batch isolation turns 48,224 rejected requests into zero">
-
-- **Priority determines queue order.** When the pool of workers is saturated,
-  higher-priority requests dispatch first and lower-priority bands absorb more
-  of the wait.
-- **The Endpoint Picker can hold batch requests.** At the same load, more than
-  48,000 low-priority batch requests were rejected without flow control. With
-  flow control, those requests entered Endpoint Picker queues and waited for
-  capacity.
-- **Below saturation, the results were similar.** No policy queue formed while
-  workers had capacity, so enabling flow control did not materially change
-  latency.
-
-**How to read the numbers.** Absolute latency depends on the GPU, model, request
-shape, and offered load. These tests show that premium requests are dispatched
-before standard requests when workers are saturated. They also show that batch
-requests can be queued instead of rejected. A service-level objective requires
-a named target plus TTFT, end-to-end latency, time per output token (TPOT), and success-rate results at
-the target load; see [SLO proof tests](docs/slo-proof-tests.md) and the
-[execution plan](docs/slo-proof-execution-plan.md).
-
-## How we chose the operating point and configuration
-
-At 128 concurrent requests, throughput was near its peak. Raising concurrency
-further increased latency and vLLM waiting with little additional throughput.
-The later scenarios used 128 concurrent requests to create controlled
-saturation.
-
-<img src="assets/operating-point-sweep.svg" width="100%" alt="Single-tenant sweep from 32 to 200 concurrent requests: throughput peaks at 128 and falls past it while p95 TTFT climbs steadily; 128 is the chosen capacity boundary">
-
-The later tests kept these settings fixed so each comparison changed one thing:
-
-| Choice | Value | Why |
-|---|---|---|
-| Request shape | 512 in / 128 out | A single fixed shape so every number is comparable; the output ladder (64, 128, 512) is varied separately |
-| `max-num-seqs` | 128 | Sets how many sequences vLLM can schedule concurrently. Additional requests wait inside vLLM |
-| Prefix caching | off | Keeps measured latency focused on scheduling. Each prompt has a unique head and body |
-| Repeats | 3 counted; 300 s for corrected SLO-sensitive runs | Repeats capture run-to-run variance; SLO-sensitive claims use per-repeat p95 with a min-max range, never pooled repeats |
-| Priority | verified per run | Premium had to resolve to priority 100 in the flow-control queue metric before a run counted |
-
-Each point ran for 180 seconds in two randomized passes. Both passes found the
-same capacity boundary. Data is in
-[`benchmark-data/rhaii-3.4-flow-control/operating-point-sweep`](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep).
-
-<img src="assets/dispatch-path.svg" width="100%" alt="Dispatch path: the gateway tags each request, the Endpoint Picker queues by priority band with round-robin fairness and a saturation gate, then dispatches to vLLM">
-
-## Service tiers under mixed load
-
-**What it proves.** When the pool of workers is saturated, requests are
-dispatched in priority order. Lower-priority bands absorb more of the wait.
-
-**What we saw.** The standard surge filled vLLM and created waiting. Flow
-control dispatched premium requests first. Standard requests spent more time
-in the Endpoint Picker queue.
-
-<img src="assets/tiers-p95-gate.svg" width="100%" alt="Under saturation with flow control on, premium p95 TTFT is 1117 ms while standard is 1406 ms, with premium stable across three repeats">
-
-<img src="assets/traffic-tiers.svg" width="100%" alt="Offered concurrency over the run: standard surges to about 96 in-flight requests mid-run while premium holds steady and low. The arrivals are noisy, not a flat synthetic load.">
-
-The request rate changed throughout the run. Standard traffic surged midway
-through while premium traffic remained steady.
-
-| tier | p50 TTFT (ms) | p90 TTFT (ms) | p95 TTFT (ms) | p95 TTFT range (ms) |
-|---|---|---|---|---|
-| premium | 374 ms | 914 ms | 1117 ms | 1056-1211 ms |
-| standard | 593 ms | 1240 ms | 1406 ms | 1250-1488 ms |
-
-
-The published result calculates p95 separately for each repeat, then reports
-the median and range. An earlier 251 ms value pooled the repeats and is
-withdrawn because that method hid run-to-run variation.
-
-<img src="assets/tiers-output-lengths.svg" width="100%" alt="Premium p95 TTFT for the corrected 128-token service-tier run is 1117 ms with flow control on; earlier output-length cells are being restated with the same per-repeat method">
-
-Corrected 300 s gate-on data is in
-[`benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s`](benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s).
-Only the corrected 128-output data supports the headline SLO evidence. The older
-64- and 512-output cells remain for provenance until the same per-repeat method
-restates them.
-
-**Why it matters.** Realtime requests can keep faster access to a shared GPU
-during a surge caused by lower-priority traffic. A complete service-level
-objective still requires a named target, end-to-end latency, TPOT, and success
-rate.
-
-*Noisy priority run, 512 input / 128 output tokens, three counted 300 s repeats. Premium resolved to priority 100, verified in the flow-control queue metric before counting. Data in [`benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s`](benchmark-data/rhaii-3.4-flow-control/tiers-gate-on-300s).*
-
-## Batch isolation under surge
-
-**What it proves.** Batch can use available GPU capacity while realtime
-requests are dispatched first when workers are saturated. Excess batch
-requests are queued at the Endpoint Picker instead of rejected to the caller.
-
-**What we saw.** When batch exceeded capacity, the Endpoint Picker queued it
-behind realtime traffic. Realtime latency and served throughput remained
-stable. Callers did not have to retry the excess batch requests.
-
-<img src="assets/batch-429-elimination.svg" width="100%" alt="Without flow control 48,224 batch requests are rejected with HTTP 429; with flow control on, zero rejections, and batch is queued behind the interactive tiers instead">
-
-<img src="assets/traffic-batch.svg" width="100%" alt="Offered concurrency over the run: batch ramps in after the interactive tiers and floods the pool well past the GPU batch limit.">
-
-<img src="assets/pct-batch.svg" width="100%" alt="p50, p90, and p95 TTFT for premium, standard, and batch, gate off versus on. Interactive tiers hold while batch is deferred.">
-
-| tier | p50 TTFT off (ms) | p90 TTFT off (ms) | p95 TTFT off (ms) | p50 TTFT on (ms) | p90 TTFT on (ms) | p95 TTFT on (ms) |
-|---|---|---|---|---|---|---|
-| premium | 145 ms | 1030 ms | 1394 ms | 154 ms | 968 ms | 1196 ms |
-| standard | 155 ms | 1082 ms | 1347 ms | 164 ms | 1069 ms | 1328 ms |
-| batch | 559 ms | 1354 ms | 1605 ms | 1148 ms | 1975 ms | 2173 ms |
-
-Batch TTFT rises because the platform queues it behind the interactive tiers
-until capacity opens.
-
-
-**Why it matters.** Batch can use capacity that realtime traffic does not need.
-When demand grows, the Endpoint Picker queues batch requests and reduces the
-retry and backoff work left to application teams.
-
-*Batch isolation run, three counted repeats. Premium and batch priorities verified before counting. Data in [`benchmark-data/rhaii-3.4-flow-control/batch-gate-on`](benchmark-data/rhaii-3.4-flow-control/batch-gate-on) and [`benchmark-data/rhaii-3.4-flow-control/batch-gate-off`](benchmark-data/rhaii-3.4-flow-control/batch-gate-off).*
-
-## Batch eviction and retry
-
-Reserved capacity kept realtime p95 TTFT close to the realtime-only run while
-batch shared the GPU. When realtime traffic needed capacity already occupied by
-batch, eviction stopped those requests and the Async Processor retried them.
-Each batch job produced one final result in the tested single-model-replica
-path.
-
-<img src="assets/batch-eviction.svg" width="100%" alt="Realtime p95 TTFT across four matched scenarios: 342 milliseconds with realtime only, 561 milliseconds with batch and no protection, 341 milliseconds with reserved capacity, and 348 milliseconds with batch eviction and retry. All 38 evicted requests were retried and completed with zero duplicate results.">
-
-*Four matched scenarios, three counted 300-second repeats, one NVIDIA H100 GPU, prefix
-caching off. Data, configuration, and the visual report are in
-[`benchmark-data/batch-eviction`](benchmark-data/batch-eviction).*
-
-## Consolidate tenants on one GPU
-
-During a standard-tenant burst, flow control dispatched requests from both
-premium tenants first.
-
-<img src="assets/consolidation-p95-gate.svg" width="100%" alt="Two premium tenants share a GPU; when a standard tenant floods the pool, premium p95 TTFT stays below standard with flow control on">
-
-<img src="assets/traffic-consolidation.svg" width="100%" alt="Offered concurrency over the run: two premium tenants hold a steady packed load while a standard tenant floods the pool past the GPU batch limit.">
-
-<img src="assets/pct-consolidation.svg" width="100%" alt="p50, p90, and p95 TTFT for premium and standard, gate off versus on, on the consolidated pool.">
-
-| tier | p50 TTFT off (ms) | p90 TTFT off (ms) | p95 TTFT off (ms) | p50 TTFT on (ms) | p90 TTFT on (ms) | p95 TTFT on (ms) |
-|---|---|---|---|---|---|---|
-| premium | 256 ms | 750 ms | 886 ms | 256 ms | 664 ms | 795 ms |
-| standard | 455 ms | 849 ms | 948 ms | 499 ms | 935 ms | 1062 ms |
-
-
-The premium tenants kept lower p95 TTFT than the standard tenant. One GPU served
-all three tenants while preserving the configured priority order.
-
-*Saturated consolidation run, three counted repeats. Data in [`benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on`](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on) and [`benchmark-data/rhaii-3.4-flow-control/consolidation-gate-off`](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-off).*
-
-## Where priority and fairness apply
-
-Flow control chooses which priority band dispatches first. Round-robin fairness
-chooses which tenant takes the next turn within one band.
-
-**Same-band fairness.** One tenant burst to several times the load of its two
-same-priority peers. Round-robin fairness kept all three tenants receiving
-dispatch turns and prevented starvation. Tail latency still depended on the
-vLLM capacity they shared.
-
-<img src="assets/pct-fairness.svg" width="100%" alt="p50, p90, and p95 TTFT for the three same-priority tenants, gate off versus on. The effect is small because there is no priority gap to enforce.">
-
-| tier | p50 TTFT off (ms) | p90 TTFT off (ms) | p95 TTFT off (ms) | p50 TTFT on (ms) | p90 TTFT on (ms) | p95 TTFT on (ms) |
-|---|---|---|---|---|---|---|
-| premium, all three at priority 100 | 258 ms | 740 ms | 894 ms | 290 ms | 752 ms | 882 ms |
-
-**Below saturation.** No policy queue formed, and latency was similar with flow
-control enabled and disabled.
-
-These tests show when flow control changes behavior. When a full worker pool
-receives requests at different priorities, priority determines dispatch order.
-Within one priority band, round-robin fairness prevents starvation but does not
-create a separate low-latency lane. Below saturation, no policy queue forms.
-
-## Tune how many requests enter vLLM
-
-Every RHAII 3.4 result in this section uses the **utilization detector**, which
-activates flow control from vLLM queue depth. The upstream **concurrency
-detector** limits how many requests can enter vLLM. We tested
-`maxConcurrency` values from 32 to 128 at the same saturating load.
-
-<img src="assets/upstream-sweep.svg" width="100%" alt="Premium p95 TTFT as a function of maxConcurrency forms a U with its minimum of 461 ms at maxConcurrency 48, while standard p95 falls as the cap loosens">
-
-Premium p95 TTFT was lowest at `maxConcurrency=48` for this workload. At 32,
-premium requests queued at the admission limit. Above 48, vLLM admitted more
-standard requests and premium TTFT increased. None of the tested settings kept
-premium p95 TTFT below 300 ms at this load.
-
-*Endpoint Picker v0.9.0 request-concurrency tuning, with matched load and
-premium resolved to priority 100. The run metrics record build commit
-`5f4e762f`. This test compares v0.9.0 cap settings. The RHAII 3.4 campaign used
-a different test. Data is in
-[`benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning`](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning).*
-
 </details>
-
-## SLO proof tests
-
-The results above show priority dispatch and batch queuing. A deployment can
-claim a specific service-level objective only after the target is defined and
-the test measures TTFT, end-to-end latency, TPOT, and success rate. The test
-design is in [`docs/slo-proof-tests.md`](docs/slo-proof-tests.md), with the
-public evidence protocol in
-[`docs/slo-proof-execution-plan.md`](docs/slo-proof-execution-plan.md). The
-short version:
-
-- **Closed-loop priority admission test:** confirms the gate puts premium ahead of standard under saturation.
-- **Open-loop SLO test:** drives a named request rate with Poisson arrivals and checks whether premium meets the target at p95/p99.
-- **Success-rate test:** treats 429, 503, and timeout as SLO failures, not just latency exclusions.
-- **Decode and memory test:** reports TPOT and KV/preemption metrics so a fast first token cannot hide slow generation.
-- **Detector comparison:** runs both detectors against the same traffic to show
-  where requests queue and how each detector affects latency, throughput, and
-  errors.
-
-## Scope
-
-The RHAII 3.4 reference campaign primarily uses one model replica. A separate
-two-replica run also dispatched premium requests first. Its premium p95 TTFT was
-177 ms. Data is in
-[`benchmark-data/rhaii-3.4-flow-control/multi-replica-tiers`](benchmark-data/rhaii-3.4-flow-control/multi-replica-tiers).
-
-The v0.9.0 campaign tests one Endpoint Picker with one, two, and four model
-replicas. Served requests per second per GPU stayed within 0.6% across those
-tests. The one-replica runs returned five realtime HTTP 429 responses. The
-two-replica runs returned one standard long-context HTTP 429 response. All
-three four-replica runs completed every offered request.
-
-Before accepting a run, the validator confirms that the expected priority label
-appears in Endpoint Picker queue metrics. Runs that fail this check are excluded
-from the public benchmark data.
-
-## The walkthrough
-
-**[How we got the numbers, one pass at a time](walkthrough.html)** documents the
-test order, the invalid measurements we rejected, and the method used for the
-published results.
-
-## Learn flow control
-
-**[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)**
-
-The interactive explainer shows the request path, saturation detector, Endpoint
-Picker queues, and dispatch behavior. Its playground lets readers change the
-load. Source is at
-[`learn/flow-control-journey.html`](learn/flow-control-journey.html). The
-[written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html)
-presents the same material as a page to read.
-
-
-## Pipeline
-
-`pipeline/benchmark.py` runs the closed-loop sweeps. The open-loop production
-scenarios use `pipeline/guidellm_trace.py` to create the GuideLLM request
-schedule and `pipeline/run_guidellm_scenario.py` to run it. Both runners attach
-the tenant headers, verify the deployed configuration, confirm that flow
-control engaged, log request outcomes, and capture vLLM and Endpoint Picker
-metrics. Each accepted package records the command, runner hash, scenario,
-seed, image, and configuration.
-
-`pipeline/gen_charts.py` draws the RHAII 3.4 charts from their CSV inputs.
-`pipeline/generate_package_visuals.py` generates the v0.9.0 and batch-eviction
-visuals deterministically from the accepted package data.
-
-The public benchmark folders contain accepted evidence. Exploratory runs remain
-outside this repository.

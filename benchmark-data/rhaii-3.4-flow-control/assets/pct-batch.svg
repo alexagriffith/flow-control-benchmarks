@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" font-family="-apple-system,system-ui,sans-serif">
+<rect width="680" height="320" fill="white"/>
+<text x="52" y="24" font-size="14" font-weight="600" fill="#151515">Batch isolation: p50 / p90 / p95 TTFT (ms), gate off vs on</text>
+<line x1="52" y1="262" x2="660" y2="262" stroke="#ececea"/>
+<text x="46" y="266" font-size="9" fill="#898781" text-anchor="end">0</text>
+<line x1="52" y1="220" x2="660" y2="220" stroke="#ececea"/>
+<text x="46" y="224" font-size="9" fill="#898781" text-anchor="end">499</text>
+<line x1="52" y1="178" x2="660" y2="178" stroke="#ececea"/>
+<text x="46" y="182" font-size="9" fill="#898781" text-anchor="end">998</text>
+<line x1="52" y1="136" x2="660" y2="136" stroke="#ececea"/>
+<text x="46" y="140" font-size="9" fill="#898781" text-anchor="end">1497</text>
+<line x1="52" y1="94" x2="660" y2="94" stroke="#ececea"/>
+<text x="46" y="98" font-size="9" fill="#898781" text-anchor="end">1996</text>
+<line x1="52" y1="52" x2="660" y2="52" stroke="#ececea"/>
+<text x="46" y="56" font-size="9" fill="#898781" text-anchor="end">2495</text>
+<rect x="60" y="250" width="23" height="12" fill="#898781" opacity="0.5"/>
+<rect x="85" y="249" width="23" height="13" fill="#1f8a5f"/>
+<text x="83" y="273" font-size="8" fill="#898781" text-anchor="middle">p50</text>
+<rect x="128" y="175" width="23" height="87" fill="#898781" opacity="0.5"/>
+<rect x="153" y="181" width="23" height="81" fill="#1f8a5f"/>
+<text x="151" y="273" font-size="8" fill="#898781" text-anchor="middle">p90</text>
+<rect x="195" y="145" width="23" height="117" fill="#898781" opacity="0.5"/>
+<rect x="220" y="161" width="23" height="101" fill="#1f8a5f"/>
+<text x="218" y="273" font-size="8" fill="#898781" text-anchor="middle">p95</text>
+<text x="153" y="288" font-size="10" font-weight="600" fill="#1f8a5f" text-anchor="middle">premium</text>
+<rect x="263" y="249" width="23" height="13" fill="#898781" opacity="0.5"/>
+<rect x="288" y="248" width="23" height="14" fill="#d59a00"/>
+<text x="286" y="273" font-size="8" fill="#898781" text-anchor="middle">p50</text>
+<rect x="330" y="171" width="23" height="91" fill="#898781" opacity="0.5"/>
+<rect x="355" y="172" width="23" height="90" fill="#d59a00"/>
+<text x="353" y="273" font-size="8" fill="#898781" text-anchor="middle">p90</text>
+<rect x="398" y="149" width="23" height="113" fill="#898781" opacity="0.5"/>
+<rect x="423" y="150" width="23" height="112" fill="#d59a00"/>
+<text x="421" y="273" font-size="8" fill="#898781" text-anchor="middle">p95</text>
+<text x="356" y="288" font-size="10" font-weight="600" fill="#d59a00" text-anchor="middle">standard</text>
+<rect x="465" y="215" width="23" height="47" fill="#898781" opacity="0.5"/>
+<rect x="490" y="165" width="23" height="97" fill="#8b5cf6"/>
+<text x="488" y="273" font-size="8" fill="#898781" text-anchor="middle">p50</text>
+<rect x="533" y="148" width="23" height="114" fill="#898781" opacity="0.5"/>
+<rect x="558" y="96" width="23" height="166" fill="#8b5cf6"/>
+<text x="556" y="273" font-size="8" fill="#898781" text-anchor="middle">p90</text>
+<rect x="601" y="127" width="23" height="135" fill="#898781" opacity="0.5"/>
+<rect x="626" y="79" width="23" height="183" fill="#8b5cf6"/>
+<text x="624" y="273" font-size="8" fill="#898781" text-anchor="middle">p95</text>
+<text x="559" y="288" font-size="10" font-weight="600" fill="#8b5cf6" text-anchor="middle">batch</text>
+<rect x="510" y="52" width="10" height="10" fill="#898781" opacity="0.5"/><text x="524" y="61" font-size="9" fill="#151515">gate off</text>
+<rect x="580" y="52" width="10" height="10" fill="#1f8a5f"/><text x="594" y="61" font-size="9" fill="#151515">gate on</text>
+</svg>

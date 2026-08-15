@@ -9,8 +9,9 @@ Verified against benchmark-data/CANONICAL-RESULTS.json. Lead with the principle
 (priority admission, zero rejections, premium ahead of standard), not a fake
 absolute SLO.
 """
-import csv, glob, os
+import csv, glob, json, math, os
 from collections import defaultdict
+from statistics import median
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "benchmark-data", "rhaii-3.4-flow-control")
@@ -103,104 +104,162 @@ def legend_dot(x, y, color, label):
 
 
 # ================================================================ CHART 1
-# Hero: premium p95 TTFT, batch rejections, and the boundary of what is proven.
+# Hero: priority admission, batch rejections, and consolidation under load.
 def chart_hero():
+    tiers = TIERS_128_CORRECTED
     _, batch_off_429 = gather("batch-gate-off")
-    cons_off, _ = gather("consolidation-gate-off")
-    cons_on, _ = gather("consolidation-gate-on")
+    consolidation_on, _ = gather("consolidation-gate-on")
 
-    t_on = TIERS_128_CORRECTED["premium"]["p95"]
-    t_std = TIERS_128_CORRECTED["standard"]["p95"]
-    c_off, c_on = p95(cons_off, "100"), p95(cons_on, "100")
-
-    W, H = 1200, 470
-    s = svg_open(W, H, "Premium p95 time to first token, flow control off versus on, "
-                        "across the four scenarios")
-    s += txt(20, 40, "Flow control, off vs on", 24, 800, INK, spacing="-0.5")
-    s += txt(20, 62, "Premium p95 time to first token on one GPU, GPT-OSS 20B behind the llm-d "
-                     "inference gateway. Every number is measured from the benchmark data.", 13, 400, MUTED)
-
-    # four cards
     cards = [
-        dict(tag="SERVICE TIERS", color=GREEN,
-             big="Priority admission",
-             sub="premium ahead of standard",
-             off=t_std, on=t_on, unit="ms",
-             note=f"Premium {t_on:.0f} ms vs standard {t_std:.0f} ms under saturated load."),
-        dict(tag="BATCH ISOLATION", color=RED,
-             big="Zero rejections",
-             sub="429s eliminated, gate on",
-             off=batch_off_429, on=0, unit="429s", is_count=True,
-             note=f"{batch_off_429:,} rejected with the gate off. None with it on."),
-        dict(tag="CONSOLIDATION", color=BLUE,
-             big="Premium held",
-             sub="p95 protected under a standard flood",
-             off=c_off, on=c_on, unit="ms",
-             note=f"{c_off:.0f} ms -> {c_on:.0f} ms while standard floods the shared pool."),
-        dict(tag="FAIRNESS", color=GOLD,
-             big="Within band",
-             sub="modest effect inside one priority band",
-             off=894, on=882, unit="ms",
-             note="882 vs 894 ms. Same-band traffic shares evenly, as designed."),
+        {
+            "tag": "SERVICE PRIORITY",
+            "title": "Priority admission",
+            "subtitle": "p95 TTFT under saturated load",
+            "rows": [
+                ("Standard (on)", tiers["standard"]["p95"], "#59636e"),
+                ("Premium (on)", tiers["premium"]["p95"], GREEN),
+            ],
+            "unit": "ms",
+        },
+        {
+            "tag": "BATCH OVERLOAD",
+            "title": "Zero HTTP 429",
+            "subtitle": "HTTP 429 responses",
+            "rows": [("Gate off", batch_off_429, RED), ("Gate on", 0, GREEN)],
+            "unit": "count",
+        },
+        {
+            "tag": "SHARED POOL",
+            "title": "Shared pool protected",
+            "subtitle": "p95 TTFT in one model pool",
+            "rows": [
+                ("Standard", p95(consolidation_on, "0"), "#59636e"),
+                ("Premium", p95(consolidation_on, "100"), GREEN),
+            ],
+            "unit": "ms",
+        },
     ]
 
-    cw, gap, x0, cy = 282, 24, 20, 88
-    ch = 350
-    for i, c in enumerate(cards):
-        x = x0 + i * (cw + gap)
-        s += f'<rect x="{x}" y="{cy}" width="{cw}" height="{ch}" rx="14" fill="{CARD}" stroke="{STROKE}"/>'
-        s += txt(x + 20, cy + 30, c["tag"], 11, 800, c["color"], spacing="1.2")
-        s += txt(x + 20, cy + 66, c["big"], 27, 800, INK, spacing="-0.5")
-        s += txt(x + 20, cy + 86, c["sub"], 11.5, 400, MUTED)
-
-        # mini before/after bars inside the card
-        bx = x + 20
-        by = cy + 250          # baseline for bars
-        bw = 74
-        bgap = 40
-        if c.get("is_count"):
-            # 429 count: log-ish visual, off is a full bar, on is a flat line
-            s += rbar(bx, cy + 118, bw, by - (cy + 118), RED, 6)
-            s += txt(bx + bw / 2, cy + 112, f"{c['off']:,}", 12.5, 800, RED, "middle")
-            s += txt(bx + bw / 2, by + 18, "gate off", 11, 600, "#4a4a4a", "middle")
-            # gate on: essentially zero -> thin baseline chip
-            s += rbar(bx + bw + bgap, by - 6, bw, 6, GREEN, 3)
-            s += txt(bx + bw + bgap + bw / 2, by - 12, "0", 12.5, 800, GREEN, "middle")
-            s += txt(bx + bw + bgap + bw / 2, by + 18, "gate on", 11, 600, "#4a4a4a", "middle")
-        else:
-            vmax = max(c["off"], c["on"]) * 1.18
-            top = cy + 118
-            span = by - top
-            for j, (val, lbl, col) in enumerate([(c["off"], "gate off", "#9aa0a6"),
-                                                  (c["on"], "gate on", c["color"])]):
-                h = max(4, span * (val / vmax))
-                xx = bx + j * (bw + bgap)
-                s += rbar(xx, by - h, bw, h, col, 6)
-                s += txt(xx + bw / 2, by - h - 6, f"{val:.0f}", 12.5, 800, INK, "middle")
-                s += txt(xx + bw / 2, by + 18, lbl, 11, 600, "#4a4a4a", "middle")
-
-        # footnote
-        # wrap note to two lines at ~34 chars
-        note = c["note"]
-        words, line, lines = note.split(), "", []
-        for w in words:
-            if len(line) + len(w) + 1 > 36:
-                lines.append(line)
-                line = w
+    W, H = 1200, 330
+    s = svg_open(
+        W,
+        H,
+        "Three measured outcomes: priority admission kept premium traffic below standard p95 TTFT, batch overload produced zero HTTP 429 responses with flow control on, and premium tenants stayed lower latency in a consolidated pool.",
+    )
+    cw, gap, x0, cy, ch = 374, 12, 18, 14, 302
+    for index, card in enumerate(cards):
+        x = x0 + index * (cw + gap)
+        rows = card["rows"]
+        s += f'<rect x="{x}" y="{cy}" width="{cw}" height="{ch}" rx="8" fill="{CARD}" stroke="{STROKE}"/>'
+        s += txt(x + 22, cy + 30, card["tag"], 11, 800, rows[1][2], spacing="1")
+        s += txt(x + 22, cy + 66, card["title"], 25, 800, INK)
+        s += txt(x + 22, cy + 90, card["subtitle"], 12, 550, MUTED)
+        maximum = max(value for _, value, _ in rows)
+        bar_base = cy + 242
+        bar_max_h = 112
+        for row_index, (label, value, color) in enumerate(rows):
+            bar_x = x + 40 + row_index * 188
+            value_label = f"{value:,.0f}" if card["unit"] == "count" else f"{value:,.0f} ms"
+            if value == 0:
+                s += txt(bar_x + 53, bar_base - 8, value_label, 14, 800, color, "middle")
             else:
-                line = (line + " " + w).strip()
-        if line:
-            lines.append(line)
-        for k, ln in enumerate(lines[:3]):
-            s += txt(x + 20, cy + 300 + k * 15, ln, 11.5, 400, "#4a4a4a")
+                height = max(18, bar_max_h * value / maximum)
+                s += txt(bar_x + 53, bar_base - height - 10, value_label, 14, 800, color, "middle")
+                s += f'<rect x="{bar_x}" y="{bar_base - height:.1f}" width="106" height="{height:.1f}" rx="6" fill="{color}"/>'
+            s += txt(bar_x + 53, bar_base + 22, label, 11.5, 650, "#4b4f54", "middle")
 
     save("results-at-a-glance", s)
+
+
+def chart_operating_point():
+    """Render the two-pass concurrency sweep with one unit per panel."""
+    grouped = defaultdict(lambda: {"throughput": [], "ttft_ms": []})
+    pattern = os.path.join(DATA, "operating-point-sweep", "pass*", "*", "summary.json")
+    for path in sorted(glob.glob(pattern)):
+        payload = json.load(open(path))
+        concurrency = int(payload["scenario"].rsplit("_", 1)[1])
+        summary = payload["client_summary"][0]
+        grouped[concurrency]["throughput"].append(float(summary["throughput_rps"]))
+        grouped[concurrency]["ttft_ms"].append(float(summary["ttft_p95_s"]) * 1000.0)
+
+    settings = sorted(grouped)
+    throughput = [median(grouped[value]["throughput"]) for value in settings]
+    ttft = [median(grouped[value]["ttft_ms"]) for value in settings]
+    selected = 128
+
+    W, H = 880, 410
+    left, right = 92.0, 824.0
+    top_a, bottom_a = 78.0, 192.0
+    top_b, bottom_b = 238.0, 352.0
+
+    def sx(value):
+        return left + (value - settings[0]) / (settings[-1] - settings[0]) * (right - left)
+
+    def sy(value, low, high, top, bottom):
+        return bottom - (value - low) / (high - low) * (bottom - top)
+
+    throughput_low, throughput_high = 20.0, 56.0
+    ttft_low, ttft_high = 0.0, 2200.0
+    s = svg_open(
+        W,
+        H,
+        "Across two concurrency-sweep passes, served throughput peaked near 128 concurrent requests while p95 time to first token continued to rise at higher limits.",
+    )
+    s += f'<rect x="1" y="1" width="{W - 2}" height="{H - 2}" fill="none" stroke="{STROKE}"/>'
+    s += txt(28, 30, "Throughput peaked near 128 concurrent requests", 20, 800, INK)
+    s += txt(28, 52, "Median of two sweep passes", 11, 600, MUTED)
+
+    selected_x = sx(selected)
+    s += f'<rect x="{selected_x - 34:.1f}" y="64" width="68" height="300" fill="{RED}" opacity="0.05"/>'
+    s += f'<line x1="{selected_x:.1f}" y1="64" x2="{selected_x:.1f}" y2="364" stroke="{RED}" stroke-width="2" stroke-dasharray="5 5"/>'
+    s += txt(selected_x, 72, "selected", 10, 800, RED, "middle")
+
+    for value in (20, 40, 56):
+        y = sy(value, throughput_low, throughput_high, top_a, bottom_a)
+        s += f'<line x1="{left}" y1="{y:.1f}" x2="{right}" y2="{y:.1f}" stroke="{GRID}"/>'
+        s += txt(left - 12, y + 4, f"{value:.0f}", 10, 650, GREEN, "end")
+    s += txt(left, 70, "Served throughput (requests/s)", 11, 750, GREEN)
+    throughput_points = " ".join(
+        f"{sx(setting):.1f},{sy(value, throughput_low, throughput_high, top_a, bottom_a):.1f}"
+        for setting, value in zip(settings, throughput)
+    )
+    s += f'<polyline points="{throughput_points}" fill="none" stroke="{GREEN}" stroke-width="4"/>'
+    for setting, value in zip(settings, throughput):
+        x = sx(setting)
+        y = sy(value, throughput_low, throughput_high, top_a, bottom_a)
+        s += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="{GREEN}" stroke="#ffffff" stroke-width="2"/>'
+    peak_index = throughput.index(max(throughput))
+    peak_x = sx(settings[peak_index])
+    peak_y = sy(throughput[peak_index], throughput_low, throughput_high, top_a, bottom_a)
+    s += txt(peak_x + 14, peak_y + 20, f"{max(throughput):.1f} requests/s", 11, 800, GREEN)
+
+    for value in (0, 1000, 2000):
+        y = sy(value, ttft_low, ttft_high, top_b, bottom_b)
+        s += f'<line x1="{left}" y1="{y:.1f}" x2="{right}" y2="{y:.1f}" stroke="{GRID}"/>'
+        s += txt(left - 12, y + 4, f"{value:,}", 10, 650, GOLD, "end")
+    s += txt(left, 230, "p95 time to first token (milliseconds)", 11, 750, GOLD)
+    ttft_points = " ".join(
+        f"{sx(setting):.1f},{sy(value, ttft_low, ttft_high, top_b, bottom_b):.1f}"
+        for setting, value in zip(settings, ttft)
+    )
+    s += f'<polyline points="{ttft_points}" fill="none" stroke="{GOLD}" stroke-width="4" stroke-dasharray="9 5"/>'
+    for setting, value in zip(settings, ttft):
+        x = sx(setting)
+        y = sy(value, ttft_low, ttft_high, top_b, bottom_b)
+        s += f'<rect x="{x - 5:.1f}" y="{y - 5:.1f}" width="10" height="10" fill="{GOLD}" transform="rotate(45 {x:.1f} {y:.1f})"/>'
+    final_ttft_y = sy(ttft[-1], ttft_low, ttft_high, top_b, bottom_b)
+    s += txt(right - 10, final_ttft_y - 12, f"{ttft[-1] / 1000:.1f} s", 11, 800, GOLD, "end")
+
+    for setting in settings:
+        s += txt(sx(setting), 382, str(setting), 10, 650, MUTED, "middle")
+    s += txt((left + right) / 2, 402, "Maximum concurrent requests", 11, 700, MUTED, "middle")
+    save("operating-point-sweep", s)
 
 
 # ================================================================ CHART 2
 # Per-scenario TTFT: premium vs standard, gate off vs on. Grouped bars.
 def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
-                        target=300, ymax=2200):
+                        target=None, ymax=2200):
     if scenario_base == "tiers":
         prem_off = None
         prem_on = TIERS_128_CORRECTED["premium"]["p95"]
@@ -232,11 +291,11 @@ def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
         s += txt(x_left - 8, y + 4, f"{v:.0f}", 11, 400, FAINT, "end")
         v += step
 
-    # Reference line. It is a target only when a run is designed to prove it.
-    ty = sy(target)
-    s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
-          f'stroke="{INK}" stroke-dasharray="5 4" opacity=".35"/>')
-    s += txt(x_left + 6, ty - 8, f"{target} ms reference", 11, 600, "#4a4a4a", "start")
+    if target is not None:
+        ty = sy(target)
+        s += (f'<line x1="{x_left}" y1="{ty:.1f}" x2="{x_right}" y2="{ty:.1f}" '
+              f'stroke="{INK}" stroke-dasharray="5 4" opacity=".35"/>')
+        s += txt(x_left + 6, ty - 8, f"{target} ms reference", 11, 600, "#4a4a4a", "start")
 
     # two groups: Premium, Standard. Two bars each (off, on).
     groups = [("Premium", GREEN, prem_off, prem_on),
@@ -247,7 +306,10 @@ def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
         gcx = x_left + span * (gi + 0.5) / len(groups)
         pair_w = bw * 2 + 30
         x = gcx - pair_w / 2
-        for val, lbl, fill in [(voff, "gate off", "#9aa0a6"), (von, "gate on", col)]:
+        for val, lbl, fill in [
+            (voff, "flow control off", "#9aa0a6"),
+            (von, "flow control on", col),
+        ]:
             if val is None:
                 x += bw + 30
                 continue
@@ -261,15 +323,9 @@ def chart_scenario_ttft(scenario_base, title_line, sub_line, name,
 
     # callout
     if scenario_base == "tiers":
-        s += txt(x_left, H - 14, "Corrected 300 s run: premium p95 1117 ms "
-                                 "(range 1056-1211) vs standard 1406 ms.",
+        s += txt(x_left, H - 14, "Corrected 300 s run: premium p95 1,117 ms "
+                                 "versus standard 1,406 ms.",
                  12, 600, "#383838")
-    elif prem_off and prem_on:
-        fold = prem_off / prem_on
-        s += txt(x_left, H - 14, f"Premium p95 improves {fold:.0f}x with the gate on. "
-                                 f"Standard absorbs the wait it was previously spreading everywhere.",
-                 12, 600, "#383838")
-
     s += f'<line x1="{x_left}" y1="{plot_bot}" x2="{x_right}" y2="{plot_bot}" stroke="{AXIS}"/>'
     save(name, s)
 
@@ -283,10 +339,8 @@ def chart_batch_429():
     W, H = 1200, 400
     s = svg_open(W, H, f"Rejected requests under a batch flood, {off_429:,} with the gate off "
                        f"and {on_429} with it on")
-    s += txt(20, 34, "Rejected requests under a batch flood", 20, 800, INK, spacing="-0.5")
-    s += txt(20, 56, "A low-priority batch tenant floods a saturated pool. With the gate off the "
-                     "server sheds load with 429s. With it on, batch is queued, not rejected.",
-             13, 400, MUTED)
+    s += txt(20, 34, "Batch overload queued instead of rejected", 20, 800, INK, spacing="-0.5")
+    s += txt(20, 56, "HTTP 429 responses under the same offered load", 13, 500, MUTED)
 
     plot_top, plot_bot = 110, 300
     x_left = 90
@@ -301,11 +355,9 @@ def chart_batch_429():
     s += txt(x1 + col_w / 2, plot_bot + 30, "GATE OFF", 13, 800, INK, "middle", spacing="1.5")
     s += txt(x1 + col_w / 2, plot_bot + 50, "requests rejected with 429", 12, 400, MUTED, "middle")
 
-    # gate on column: a flat chip on the baseline
+    # gate on column: zero is a label, not a visible bar.
     x2 = x_left + col_w + gap
-    chip = 10
-    s += rbar(x2, plot_bot - chip, col_w, chip, GREEN, 5)
-    s += txt(x2 + col_w / 2, plot_bot - chip - 16, f"{on_429}", 34, 800, GREEN, "middle", spacing="-1")
+    s += txt(x2 + col_w / 2, plot_bot - 16, f"{on_429}", 34, 800, GREEN, "middle", spacing="-1")
     s += txt(x2 + col_w / 2, plot_bot + 30, "GATE ON", 13, 800, INK, "middle", spacing="1.5")
     s += txt(x2 + col_w / 2, plot_bot + 50, "requests rejected", 12, 400, MUTED, "middle")
 
@@ -316,8 +368,8 @@ def chart_batch_429():
     s += (f'<path d="M {x2 - 24} {plot_bot - 20} l -12 -6 v 12 z" fill="{AXIS}"/>')
     s += txt(ax, plot_bot - 34, "the gate", 11.5, 600, "#4a4a4a", "middle")
 
-    s += txt(20, H - 20, "Same offered load, same GPU. The gate converts dropped work into "
-                         "queued work so nothing is lost.", 12, 600, "#383838")
+    s += txt(20, H - 20, "Same offered load, same GPU. Gate on keeps excess batch work queued at the Endpoint Picker.",
+             12, 600, "#383838")
     save("batch-429-elimination", s)
 
 
@@ -384,14 +436,13 @@ def chart_tiers_output_lengths():
 
 if __name__ == "__main__":
     chart_hero()  # -> results-at-a-glance.svg (existing hero name)
-    chart_scenario_ttft("tiers", "Service tiers, premium vs standard p95 TTFT",
-                        "Standard surges past capacity. The gate lets priority decide who waits. "
-                        "Corrected run uses per-repeat p95, never pooled repeats.",
-                        "tiers-p95-gate", target=300, ymax=2200)
-    chart_scenario_ttft("consolidation", "Consolidation, premium vs standard p95 TTFT",
-                        "Three tenants share one GPU. Premium stays protected when standard floods "
-                        "the shared pool.",
-                        "consolidation-p95-gate", target=300, ymax=1200)
+    chart_operating_point()  # -> operating-point-sweep.svg
+    chart_scenario_ttft("tiers", "Priority admission under load",
+                        "p95 TTFT (milliseconds), flow control on",
+                        "tiers-p95-gate", ymax=2200)
+    chart_scenario_ttft("consolidation", "Shared pool under load",
+                        "p95 TTFT (milliseconds), flow control off vs on",
+                        "consolidation-p95-gate", ymax=1200)
     chart_batch_429()  # -> batch-429-elimination.svg
     chart_tiers_output_lengths()  # -> tiers-output-lengths.svg
     print("done")

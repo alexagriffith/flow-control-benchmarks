@@ -35,11 +35,11 @@
     .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-bottom: 25px; }
     .section-head p { color: var(--muted); }
     .lanes, .proof-grid, .link-grid { display: grid; gap: 14px; }
-    .lanes { grid-template-columns: repeat(3, 1fr); }
+    .lanes { grid-template-columns: repeat(2, 1fr); }
     .lane { min-height: 285px; padding: 22px; border: 1px solid var(--line); border-top: 4px solid var(--blue); }
     .lane:nth-child(2) { border-top-color: var(--teal); }
     .lane:nth-child(3) { border-top-color: var(--violet); }
-    .eyebrow { margin-bottom: 16px; color: var(--muted); font-size: 12px; font-weight: 750; text-transform: uppercase; }
+    .lane:nth-child(4) { border-top-color: var(--orange); }
     .outcome { margin: 12px 0 18px; font-size: 25px; font-weight: 780; line-height: 1.15; }
     .small { color: var(--muted); font-size: 13px; }
     .proof-grid { grid-template-columns: repeat(2, 1fr); }
@@ -76,34 +76,36 @@
   <nav><div><span>Flow control benchmark</span><span><a href="../sections.html">All sections</a> · <a href="#pages">Evidence pages</a></span></div></nav>
   <header>
     <div>
-      <h1>Flow control evidence, tied together</h1>
-      <p class="lead">Three benchmark campaigns establish priority behavior, production configuration choices, and safe recovery for batch work that is already running.</p>
+      <h1>Flow control benchmark results</h1>
+      <p class="lead">Priority, fairness, reserved capacity, and eviction let realtime, batch, and tenant traffic share one model pool.</p>
     </div>
   </header>
   <main>
     <section>
       <div class="section-head">
-        <h2>What each campaign adds</h2>
-        <p>The absolute latency values are specific to each model, GPU, request shape, and offered load. Compare mechanisms within a matched campaign.</p>
+        <h2>Takeaways</h2>
+        <p>These measurements depend on the model, GPU, request shape, and traffic. Compare runs that used the same setup.</p>
       </div>
       <div class="lanes">
         <article class="lane">
-          <p class="eyebrow">RHAII 3.4 flow control</p>
-          <h3>Priority and queueing baseline</h3>
-          <p class="outcome">Higher-priority traffic dispatches first while batch absorbs the wait.</p>
-          <p class="small">The gate removed 48,224 batch HTTP 429 responses at the same offered load. Same-priority fairness prevented starvation but did not create a separate latency tier.</p>
+          <h3>Share one GPU pool</h3>
+          <p class="outcome">Chat, batch, and tenant traffic can share one GPU instead of separate underutilized pools.</p>
+          <p class="small">Priority and fairness preserved preferential access for realtime traffic during the tested surges.</p>
         </article>
         <article class="lane">
-          <p class="eyebrow">Endpoint Picker v0.9.0</p>
-          <h3>Configuration and production traffic</h3>
-          <p class="outcome">Request-count admission protected steady realtime tenants across four production-shaped scenarios.</p>
-          <p class="small">Engine, detector, admission, workload-shape, mixed-traffic, routing, stability, and model-pool tests define where each setting helps and where it does not.</p>
+          <h3>Protect higher-priority traffic</h3>
+          <p class="outcome">When the pool saturates, policy decides who waits. Higher-priority traffic is protected under load, while lower-priority traffic absorbs the queue’s latency.</p>
+          <p class="small">The charts below show that priority order during the tested surges.</p>
         </article>
         <article class="lane">
-          <p class="eyebrow">Batch eviction build</p>
-          <h3>Recovery for work already in vLLM</h3>
-          <p class="outcome">Reserved capacity protected realtime p95 TTFT while evicted batch work was retried reliably.</p>
-          <p class="small">The one-model-replica proof reproduced across three repeats. A two-model-replica follow-up confirms the mechanism across a shared model pool.</p>
+          <h3>Keep peers receiving service</h3>
+          <p class="outcome">One tenant’s surge does not starve same-priority peers.</p>
+          <p class="small">Round-robin fairness kept peer tenants receiving dispatch turns inside the shared priority band.</p>
+        </article>
+        <article class="lane">
+          <h3>Protect realtime after batch starts</h3>
+          <p class="outcome">Reserved capacity and eviction protect real-time p95 TTFT while batch sequences are already executing in vLLM.</p>
+          <p class="small">Evicted batch requests were retried, and each tested job produced one final result.</p>
         </article>
       </div>
     </section>
@@ -115,27 +117,26 @@
       </div>
       <div class="proof-grid">
         <article class="proof">
-          <h3>RHAII 3.4: service tiers during saturation</h3>
+          <h3>Priority during saturation</h3>
           <div class="row"><span>Premium</span><div class="track"><div class="bar teal" style="width:79%"></div></div><span class="value">1,117 ms</span></div>
           <div class="row"><span>Standard</span><div class="track"><div class="bar orange" style="width:100%"></div></div><span class="value">1,406 ms</span></div>
           <p class="note">Premium stayed ahead while standard traffic created the surge.</p>
         </article>
         <article class="proof">
-          <h3>RHAII 3.4: batch overload handling</h3>
+          <h3>Batch overload handling</h3>
           <div class="row"><span>Gate off</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">48,224</span></div>
           <div class="row"><span>Gate on</span><div class="track"><div class="bar teal" style="width:0%"></div></div><span class="value">0</span></div>
           <p class="note">HTTP 429 responses. With flow control, deferrable work waited instead of failing.</p>
         </article>
         <article class="proof">
-          <h3>v0.9.0: priority tiers</h3>
-          <div class="row"><span>Platinum</span><div class="track"><div class="bar teal" style="width:3%"></div></div><span class="value">404 ms</span></div>
-          <div class="row"><span>Gold</span><div class="track"><div class="bar blue" style="width:4%"></div></div><span class="value">511 ms</span></div>
-          <div class="row"><span>Silver</span><div class="track"><div class="bar orange" style="width:5%"></div></div><span class="value">656 ms</span></div>
-          <div class="row"><span>Batch</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">13,264 ms</span></div>
-          <p class="note">Log-scale relationship shown on the detailed page. Flow control was engaged and batch absorbed most of the wait.</p>
+          <h3>Same-priority fairness</h3>
+          <div class="row"><span>Burster</span><div class="track"><div class="bar violet" style="width:100%"></div></div><span class="value">12,097 ms</span></div>
+          <div class="row"><span>Peer B</span><div class="track"><div class="bar teal" style="width:4%"></div></div><span class="value">527 ms</span></div>
+          <div class="row"><span>Peer C</span><div class="track"><div class="bar teal" style="width:5%"></div></div><span class="value">570 ms</span></div>
+          <p class="note">Both peer tenants kept receiving dispatch turns while the overloaded tenant absorbed most of the delay.</p>
         </article>
         <article class="proof">
-          <h3>Batch eviction: realtime protection</h3>
+          <h3>Batch eviction and retry</h3>
           <div class="row"><span>Realtime only</span><div class="track"><div class="bar blue" style="width:61%"></div></div><span class="value">342 ms</span></div>
           <div class="row"><span>Unprotected batch</span><div class="track"><div class="bar red" style="width:100%"></div></div><span class="value">561 ms</span></div>
           <div class="row"><span>Reserved capacity</span><div class="track"><div class="bar teal" style="width:61%"></div></div><span class="value">341 ms</span></div>
@@ -152,9 +153,9 @@
       </div>
       <div class="decision">
         <div class="label">Across priority tiers</div><div class="good">Supported</div><div>Higher-priority queued work dispatches first during saturation.</div>
-        <div class="label">Within one priority tier</div><div class="good">Fair dispatch supported</div><div>Round robin prevents starvation. It does not guarantee equal TTFT.</div>
-        <div class="label">Batch not yet running</div><div class="good">Supported</div><div>Policy queues defer batch work while realtime traffic is served.</div>
-        <div class="label">Batch already running</div><div class="good">Supported by eviction build</div><div>Reserved capacity protects realtime; eviction and retry recover selected batch work.</div>
+        <div class="label">Within one priority tier</div><div class="good">Fair dispatch supported</div><div>Round robin keeps peers receiving dispatch turns. Shared vLLM capacity still determines latency.</div>
+        <div class="label">Before batch dispatch</div><div class="good">Supported</div><div>Reserved capacity keeps part of the admission limit available for realtime traffic.</div>
+        <div class="label">After batch dispatch</div><div class="good">Supported by eviction build</div><div>Eviction can stop eligible running batch work, and the retry owner resubmits it.</div>
         <div class="label">Admission choice</div><div class="bound">Workload dependent</div><div>Request count favored realtime latency here. Token admission distributed delay more evenly across mixed request sizes.</div>
         <div class="label">Model-pool scaling</div><div class="bound">Throughput result with boundary</div><div>Per-GPU throughput stayed flat from one to four replicas; sparse HTTP 429 responses prevent a rejection-free claim at every size.</div>
       </div>
@@ -163,7 +164,7 @@
     <section id="pages">
       <div class="section-head"><h2>Open the detailed pages</h2><p>Use the benchmark pages for evidence and the learning pages for mechanism details.</p></div>
       <div class="link-grid">
-        <a class="page-link" href="upstream-flow-control-v0.9.0/results.html"><strong>Endpoint Picker v0.9.0 benchmark</strong><span>Configuration sweeps, production scenarios, workloads, scale, routing, and stability.</span></a>
+        <a class="page-link" href="upstream-flow-control-v0.9.0/results.html"><strong>Production and configuration benchmarks</strong><span>Configuration sweeps, production scenarios, workloads, scale, routing, and stability.</span></a>
         <a class="page-link" href="batch-eviction/single-model-replica/results.html"><strong>Batch eviction benchmark</strong><span>Matched proof, scenarios, run database, and CSV export.</span></a>
         <a class="page-link" href="../learn/flow-control-journey.html"><strong>Detailed benchmark walkthrough</strong><span>How the operating point and evidence were built.</span></a>
         <a class="page-link" href="../learn/flow-control.html"><strong>Flow control explainer</strong><span>How priority, fairness, queues, and dispatch work.</span></a>

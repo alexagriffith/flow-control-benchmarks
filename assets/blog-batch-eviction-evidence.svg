@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Realtime latency stayed near its reference while batch recovered</title>
+  <desc id="desc">Median realtime p95 time to first token was 342 milliseconds with realtime only, 561 milliseconds with unprotected batch, 341 milliseconds with reserved capacity, and 348 milliseconds with eviction and retry. All 38 evicted batch requests were retried and produced one final result each.</desc>
+  <rect width="1200" height="675" fill="#ffffff"/>
+  <g font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <text x="58" y="58" font-size="34" font-weight="800" fill="#111820">Realtime latency stayed near its reference</text>
+    <text x="58" y="88" font-size="16" fill="#536273">Reserved capacity protected realtime access. Eviction and retry recovered interrupted batch work.</text>
+    <rect x="58" y="126" width="720" height="480" rx="8" fill="#f4f7f9" stroke="#cdd7df"/>
+    <text x="86" y="166" font-size="13" font-weight="800" fill="#536273">MEDIAN REALTIME P95 TTFT (MILLISECONDS)</text>
+    <line x1="332" y1="198" x2="332" y2="550" stroke="#2f6fed" stroke-width="2" stroke-dasharray="7 6"/>
+    <text x="332" y="186" text-anchor="middle" font-size="12" font-weight="800" fill="#2f6fed">342 ms reference</text>
+    <text x="86" y="244" font-size="15" font-weight="750" fill="#111820">Realtime only</text>
+    <line x1="230" y1="238" x2="700" y2="238" stroke="#d7e0e7" stroke-width="3"/><circle cx="332" cy="238" r="12" fill="#2f6fed"/><text x="354" y="244" font-size="16" font-weight="800" fill="#111820">342 ms</text>
+    <text x="86" y="326" font-size="15" font-weight="750" fill="#111820">Batch, no protection</text>
+    <line x1="230" y1="320" x2="700" y2="320" stroke="#d7e0e7" stroke-width="3"/><line x1="332" y1="320" x2="605" y2="320" stroke="#b83232" stroke-width="9" opacity="0.26"/><circle cx="605" cy="320" r="14" fill="#b83232"/><text x="630" y="326" font-size="18" font-weight="800" fill="#b83232">561 ms</text><text x="630" y="347" font-size="12" fill="#536273">higher latency</text>
+    <text x="86" y="418" font-size="15" font-weight="750" fill="#111820">Reserved capacity</text>
+    <line x1="230" y1="412" x2="700" y2="412" stroke="#d7e0e7" stroke-width="3"/><circle cx="331" cy="412" r="12" fill="#087f73"/><text x="353" y="418" font-size="16" font-weight="800" fill="#087f73">341 ms</text><text x="353" y="439" font-size="12" fill="#536273">near reference</text>
+    <text x="86" y="510" font-size="15" font-weight="750" fill="#111820">Eviction and retry</text>
+    <line x1="230" y1="504" x2="700" y2="504" stroke="#d7e0e7" stroke-width="3"/><circle cx="340" cy="504" r="12" fill="#6650a4"/><text x="362" y="510" font-size="16" font-weight="800" fill="#6650a4">348 ms</text><text x="362" y="531" font-size="12" fill="#536273">near reference</text>
+    <text x="86" y="578" font-size="12" fill="#536273">Three matched 300-second repeats per scenario. Prefix caching was off.</text>
+    <rect x="802" y="126" width="340" height="480" rx="8" fill="#111820"/>
+    <text x="834" y="168" font-size="13" font-weight="800" fill="#8fd9cc">BATCH RECOVERY</text>
+    <text x="834" y="210" font-size="24" font-weight="800" fill="#ffffff">Every interrupted job</text><text x="834" y="240" font-size="24" font-weight="800" fill="#ffffff">was retried.</text>
+    <g transform="translate(834,286)">
+      <circle cx="46" cy="46" r="46" fill="#6650a4"/><text x="46" y="43" text-anchor="middle" font-size="26" font-weight="800" fill="#ffffff">38</text><text x="46" y="64" text-anchor="middle" font-size="11" font-weight="800" fill="#ffffff">EVICTED</text>
+      <path d="M100 46 L132 46 M124 39 L134 46 L124 53" fill="none" stroke="#8fa0ad" stroke-width="3"/>
+      <circle cx="180" cy="46" r="46" fill="#087f73"/><text x="180" y="43" text-anchor="middle" font-size="26" font-weight="800" fill="#ffffff">38</text><text x="180" y="64" text-anchor="middle" font-size="11" font-weight="800" fill="#ffffff">RETRIED</text>
+    </g>
+    <rect x="834" y="410" width="276" height="94" rx="6" fill="#ffffff"/>
+    <text x="972" y="445" text-anchor="middle" font-size="13" font-weight="800" fill="#087f73">FINAL OUTPUT</text><text x="972" y="480" text-anchor="middle" font-size="25" font-weight="800" fill="#111820">One result per job</text>
+    <text x="834" y="548" font-size="13" fill="#b8c4ce">Tested single-replica setup</text><text x="834" y="572" font-size="13" fill="#b8c4ce">38 correlated eviction-and-retry events</text>
+  </g>
+</svg>

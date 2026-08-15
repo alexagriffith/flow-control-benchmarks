@@ -203,8 +203,27 @@ def scenario_package(root: Path, slug: str, title: str, traffic: str) -> dict:
     data = load_json(root, f"{rel}/analysis.json")
     selected = data["selected_configuration_results"]
     selected_rows = [(name.title(), values["median_p95_ttft_ms"]) for name, values in selected.items()]
-    panel_note = "Lower-priority or overloaded work absorbed more delay."
-    package_takeaway = "Flow control kept dispatch policy active while the surge changed who queued."
+    scenario_copy = {
+        "priority-tiers": (
+            "Higher-priority realtime traffic retained faster access while lower-priority traffic absorbed more delay.",
+            "Lower-priority traffic absorbed more delay during the surge.",
+        ),
+        "consolidation": (
+            "Two realtime tenants retained faster access while a lower-priority burst filled the shared pool.",
+            "The lower-priority burst absorbed more delay than either realtime tenant.",
+        ),
+        "same-priority-fairness": (
+            "Peer tenants kept receiving service while one tenant sent a larger burst.",
+            "The tenant sending the larger burst absorbed most of the delay.",
+        ),
+    }
+    package_takeaway, panel_note = scenario_copy.get(
+        slug,
+        (
+            "Higher-priority realtime traffic retained faster access during the surge.",
+            "Lower-priority or overloaded work absorbed more delay.",
+        ),
+    )
     if slug == "batch-isolation":
         panel_note = "Directional medians: realtime ranged from 371–669 ms and standard from 436–1,017 ms, above the 1.5× repeat-stability gate."
         package_takeaway = "Realtime stayed faster than batch in every repeat; latency spread was too wide for a stable point estimate."
@@ -438,7 +457,7 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         plot_rows = [(display_names[name], median(values)) for name, values in groups.items()]
         retry_rows = [("Evicted", sum(int(r["evicted_batch_requests"]) for r in rows)), ("Retried", sum(int(r["async_retried_requests"]) for r in rows)), ("One final result", sum(int(r["async_retried_requests"]) for r in rows))]
         panels = [dot("Realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), process("Safe batch retry", "requests", retry_rows, "Evicted work was retried without duplicate results.")]
-        takeaway = "One pool. Protected latency. Completed batch."
+        takeaway = "Realtime traffic remained protected while evicted batch work was safely retried."
         arch = ("Realtime and batch", "Reserved capacity and eviction", "One vLLM replica", "Retry owner completes batch")
         results_template = "batch_eviction_single"
     else:

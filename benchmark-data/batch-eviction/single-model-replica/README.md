@@ -4,6 +4,15 @@ This benchmark tests whether flow control protects higher-priority realtime p95
 TTFT while lower-priority batch workloads share the same GPU. When realtime
 demand needed capacity, batch work was evicted, retried, and completed later.
 
+## Business question
+
+Can reserved capacity and eviction protect realtime traffic when batch work is
+already running on one model replica?
+
+**Answer.** Reserved capacity kept realtime p95 TTFT near its realtime-only
+reference, and the retry path safely handled every evicted batch request in the
+tested single-model-replica setup.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -87,3 +96,16 @@ This package covers one model replica. The separate
 [`two-model-replicas/`](../two-model-replicas/) package tests the same
 eviction-and-retry mechanism across two model replicas. Neither package sets a
 fixed service-level objective.
+
+## Verify the published package
+
+From the repository root:
+
+```bash
+python3 pipeline/generate_package_configs.py --check
+python3 pipeline/generate_package_visuals.py --check
+python3 pipeline/validate_batch_eviction_packages.py
+```
+
+These commands confirm that the tested configuration, visual summary, and
+published evidence agree with the accepted data.

@@ -5,6 +5,15 @@ realtime traffic while batch workloads run across two model replicas. When
 realtime demand needed capacity, lower-priority batch work was evicted and
 retried.
 
+## Business question
+
+Does batch eviction and retry continue to work when one Endpoint Picker serves
+two model replicas?
+
+**Answer.** Eviction and retry worked across both model replicas; run-to-run
+variance leaves the small latency difference from the single-model reference
+inconclusive.
+
 <!-- generated:package-visuals -->
 
 ## Visual summary
@@ -89,3 +98,16 @@ This package establishes the tested eviction-and-retry mechanism with one
 Endpoint Picker and two model replicas. It does not test multiple Endpoint Picker
 replicas, set an absolute service-level objective, or establish a small latency
 scaling difference with three repeats.
+
+## Verify the published package
+
+From the repository root:
+
+```bash
+python3 pipeline/generate_package_configs.py --check
+python3 pipeline/generate_package_visuals.py --check
+python3 pipeline/validate_batch_eviction_packages.py
+```
+
+These commands confirm that the tested configuration, visual summary, and
+published evidence agree with the accepted data.
