@@ -53,8 +53,9 @@ realtime request; the two single-request misses remain in the published data.
 | Realtime with batch eviction and retry | Batch starts first | Reserved capacity, eviction, and retry | Can running batch be reclaimed and completed later? |
 
 Reserved capacity produced the latency result. Eviction added recovery when
-batch was already running: the Endpoint Picker ended selected batch streams,
-and the Async Processor retried those requests to completion.
+batch was already running: the Endpoint Picker selected eligible batch and
+issued ImmediateResponse(429), Envoy reset the upstream stream, and the Async
+Processor retried those requests to completion.
 
 ## Fixed configuration
 

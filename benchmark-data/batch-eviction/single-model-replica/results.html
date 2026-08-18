@@ -1129,7 +1129,7 @@
         <p class="takeaway">When capacity is needed, eligible batch work is interrupted and returns through the normal request path.</p>
       </div>
       <figure class="visual asset-visual">
-        <img src="batch-recovery-flow.svg" alt="Batch recovery sequence from the Async Processor through the Gateway and Endpoint Picker to vLLM, followed by stream termination, HTTP 429, and resubmission." width="1000" height="470">
+        <img src="batch-recovery-flow.svg" alt="Batch recovery sequence from the Async Processor through the llm-d Gateway and Endpoint Picker to vLLM, followed by ImmediateResponse 429, Envoy stream reset, and resubmission." width="1000" height="470">
         <figcaption class="visual-caption">
           <span><strong>Observed:</strong> every evicted request was retried and produced one final result in the matched proof.</span>
           <span><a href="batch-recovery-flow.svg">Open image</a> · See the <a href="#data">run database</a>.</span>
@@ -1233,7 +1233,7 @@
         <article class="capability boundary">
           <h3>Evidence limits</h3>
           <ul>
-            <li><span class="mark" aria-hidden="true"></span><span><b>Retry owner required.</b> The Endpoint Picker aborts the stream; the Async Processor must resubmit.</span></li>
+            <li><span class="mark" aria-hidden="true"></span><span><b>Retry owner required.</b> The Endpoint Picker issues ImmediateResponse(429), Envoy resets the upstream stream, and the Async Processor must resubmit.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Reserved capacity produced the latency result.</b> Eviction recovered batch work already running in vLLM.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>Request count ignores prompt size.</b> Large prompts raised TTFT before the gate activated.</span></li>
             <li><span class="mark" aria-hidden="true"></span><span><b>High batch ceiling can reject realtime work.</b> The 75% ceiling failed two pressure shapes.</span></li>

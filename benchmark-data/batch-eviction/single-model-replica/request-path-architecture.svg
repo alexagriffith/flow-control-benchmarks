@@ -18,7 +18,7 @@
   <rect x="50" y="108" width="220" height="62" fill="#fff" stroke="#c56a00" stroke-width="2"/>
   <text x="160" y="135" class="ink actor" text-anchor="middle">Async Processor</text><text x="160" y="155" fill="#9a4f00" class="phase" text-anchor="middle">RETRY OWNER</text>
   <rect x="340" y="108" width="220" height="62" fill="#fff" stroke="#738190" stroke-width="2"/>
-  <text x="450" y="135" class="ink actor" text-anchor="middle">Envoy</text><text x="450" y="155" class="muted phase" text-anchor="middle">PROXY + STREAM</text>
+  <text x="450" y="135" class="ink actor" text-anchor="middle">llm-d Gateway / Envoy</text><text x="450" y="155" class="muted phase" text-anchor="middle">PROXY + STREAM</text>
   <rect x="630" y="108" width="220" height="62" fill="#fff" stroke="#087f72" stroke-width="2"/>
   <text x="740" y="135" class="ink actor" text-anchor="middle">Endpoint Picker</text><text x="740" y="155" fill="#087f72" class="phase" text-anchor="middle">ROUTING + EVICTION</text>
   <rect x="920" y="108" width="220" height="62" fill="#fff" stroke="#2d6cdf" stroke-width="2"/>

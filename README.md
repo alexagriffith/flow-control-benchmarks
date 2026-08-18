@@ -67,10 +67,10 @@ latency still depends on the vLLM capacity they share.
 ### Batch after dispatch
 
 **Reserved capacity and eviction protect real-time p95 TTFT while batch
-sequences are already executing in vLLM.** Reserved capacity keeps room for
-real-time work before dispatch. Eviction releases eligible batch work after it
-has entered vLLM, and the Async Processor retries that batch job in the tested
-setup.
+sequences are already executing in vLLM.** Reserved capacity alone kept
+real-time latency near its real-time-only reference in the bounded burst.
+Eviction added a recovery path for eligible batch already running in vLLM; this
+test did not establish an additional real-time latency benefit from eviction.
 
 <img src="assets/batch-eviction-data.svg" width="100%" alt="Measured batch eviction results show reserved capacity and eviction keeping real-time p95 time to first token near the real-time-only reference while unprotected batch raises latency">
 
@@ -78,7 +78,7 @@ setup.
 
 <img src="assets/batch-eviction-panel.svg" width="100%" alt="Eviction releases occupied batch capacity for real-time work and sends the interrupted batch request through retry to completion">
 
-<sub>Reserved capacity acts before dispatch. Eviction acts after dispatch: the Endpoint Picker selects eligible batch work, Gateway/Envoy resets the vLLM stream and returns HTTP 429, and the Async Processor retries the batch request.</sub>
+<sub>Reserved capacity acts before dispatch. After dispatch, the Endpoint Picker selects eligible batch work and issues ImmediateResponse(429). Envoy resets the upstream connection, vLLM releases the sequence, and the client-side Async Processor submits the job again as a new request.</sub>
 
 [Batch-interference runs](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) · [Single-model-replica eviction runs](benchmark-data/batch-eviction/single-model-replica/) · [Two-model-replica eviction runs](benchmark-data/batch-eviction/two-model-replicas/)
 
@@ -87,13 +87,13 @@ setup.
 Priority admission and shared-pool protection compare traffic classes with
 flow control on. Batch overload compares flow control off and on.
 
-<img src="assets/results-at-a-glance.svg" width="100%" alt="Three measured outcomes: priority admission keeps premium traffic ahead of standard traffic, batch overload produces zero HTTP 429 responses with flow control on, and premium traffic stays faster than standard traffic in a consolidated pool">
+<img src="assets/results-at-a-glance.svg" width="100%" alt="Three measured outcomes: priority admission keeps premium traffic ahead of standard traffic, batch overload produces zero rejections with flow control on, and premium traffic stays faster than standard traffic in a consolidated pool">
 
 <sub>Compare bars within each card. The cards use the metric printed on each card.</sub>
 
 - **Priority admission:** higher-priority traffic had lower p95 TTFT than
   standard traffic under saturated load.
-- **Zero HTTP 429:** batch overload queued at the Endpoint Picker; HTTP 429
+- **Zero rejections:** batch overload queued at the Endpoint Picker; HTTP 429
   responses dropped to zero with the gate on.
 - **Shared pool protection:** higher-priority tenants kept lower p95 TTFT than
   standard traffic in one shared model pool.
@@ -112,57 +112,76 @@ replica.
 
 **Flow control queues by priority band and tenant.**
 
-<img src="assets/dispatch-path.svg" width="100%" alt="Endpoint Picker flow control groups the consolidation run into a priority 100 tenant queue and a priority 0 Tenant C queue before dispatching to vLLM">
+<img src="assets/dispatch-path.svg" width="100%" alt="Inside the Endpoint Picker, the consolidation example groups Platinum Tenants A and B in priority 100 and Bronze Tenant C in priority 0 before dispatch to the shared vLLM model pool">
 
 <sub>The first diagram shows where flow control runs. The second uses the consolidation run as a concrete queue example: Tenant A and Tenant B share priority 100, while Tenant C waits in priority 0.</sub>
 
 ## How we chose the operating point and configuration
 
-The tests set GPU capacity first, then chose vLLM execution limits and the
-Endpoint Picker signal that determined when new work should wait. Each sweep
-changed one control while the rest of that package stayed fixed.
+The configuration followed five decisions in order. Each sweep changed one
+control while the rest of that package stayed fixed.
 
-### Throughput stopped improving near 128 concurrent requests
+### 1. Find GPU capacity
+
+**Throughput stopped improving near 128 concurrent requests.** Higher offered
+concurrency added latency without increasing served throughput.
 
 <img src="assets/operating-point-sweep.svg" width="100%" alt="Two single-tenant concurrency-sweep passes show a throughput knee at 128 concurrent requests while p95 time to first token continues to rise at higher offered concurrency">
 
 <sub>Operating-point sweep: median of two single-tenant passes. The 128-request knee became the capacity reference for the later tests.</sub>
 
-### More active sequences added little throughput and more token delay
+### 2. Set vLLM execution limits
 
-The middle batched-token budget produced the best tested throughput and
-first-token latency. Raising the active-sequence limit added little throughput
-and increased time per output token.
+**More active sequences added little throughput and much more token delay.**
+
+Raising vLLM's active-sequence limit from 128 to 192 increased throughput from
+50.5 to 51.9 requests/s. Over the same sweep, p95 time per output token rose
+from 19.6 to 28.9 ms/token. The separate batched-token sweep favored 8,192:
+it produced the highest tested throughput and the lowest tested p95 TTFT.
 
 <img src="assets/configuration-engine.svg" width="100%" alt="vLLM engine sweeps compare throughput and latency at three maximum-sequence settings and three batched-token budgets, highlighting 128 sequences and 8,192 tokens">
 
-<sub>Engine sweeps: three matched runs per setting. Bars use the units printed above each column.</sub>
+<sub>Engine sweeps: three matched runs per setting. Each plot uses its printed unit and directly labels every measured point.</sub>
 
-### Request count stopped work before the vLLM queue grew
+### 3. Choose when requests wait
 
-The in-flight request limit acts in the Endpoint Picker. The waiting-queue
-threshold reacts after requests have accumulated inside vLLM.
+**Request count stops work before the vLLM queue grows.** Request count is
+measured in the Endpoint Picker before dispatch. Queue depth and KV pressure
+are measured inside vLLM and react after work reaches the model server.
 
-<img src="assets/configuration-admission.svg" width="100%" alt="Endpoint Picker request-limit calibration and vLLM waiting-queue calibration compare throughput and p95 first-token latency at the tested settings">
+<img src="assets/configuration-admission.svg" width="100%" alt="Request count is measured in the Endpoint Picker before dispatch, while queue depth and KV-cache pressure are measured inside vLLM after dispatch">
 
-<sub>Admission calibration: the highlighted row was carried forward within each package. The production detector comparison tests the two signal types directly.</sub>
-
-### Request shape determined whether counting requests was enough
-
-Request count remained the baseline for similarly sized, latency-sensitive
-traffic. Exact input-token count was carried as the size-aware option when
-prompt sizes varied materially.
-
-| Sweep | What it established | Evidence |
+| Signal | Where it is measured | Setting carried forward |
 |---|---|---|
-| GPU operating point | 128 concurrent requests marked the throughput knee for the first campaign. | [Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) |
-| vLLM maximum sequences | 128 avoided the token-delay increase measured at higher limits. | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
-| vLLM batched-token budget | 8,192 produced the best tested throughput and p95 TTFT balance. | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
-| Endpoint Picker request limit | 128 became the request-count baseline; 160 added a small amount of throughput and higher p95 TTFT. | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
-| vLLM waiting-queue threshold | Eight waiting requests beat five in the short calibration; the later matched production comparison still favored request-count admission. | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) · [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) |
-| KV-cache pressure | A 0.8 threshold was retained as a pressure guardrail; the sweep did not establish a latency-optimal default. | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) |
-| Request size | Exact input tokens became the size-aware option; the input-plus-output estimate was not carried forward. | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
-| Earlier priority tuning | A 48-request cap minimized premium p95 TTFT in the historical two-repeat sweep; it did not set the later production baseline. | [Earlier priority tuning](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/) |
+| Request count | Endpoint Picker, before dispatch | 128 in-flight requests as the default |
+| Queue depth | vLLM waiting queue, after dispatch | Calibrated per workload; eight won the short calibration |
+| KV pressure | vLLM KV cache, after dispatch | 0.8 retained as a pressure guardrail |
+
+The later production comparison tests request count and queue depth directly.
+
+### 4. Account for request shape
+
+**Count requests by default; count input tokens when prompt sizes differ
+materially.** Exact input-token admission handled the mixed-size calibration
+better than treating every request equally. The fixed input-plus-output
+estimate was not carried forward.
+
+<img src="assets/configuration-request-shape.svg" width="100%" alt="Request-size calibration compares p95 first-token latency for request count, exact input tokens, and an input-plus-output estimate across short, medium, and long prompts">
+
+<sub>Admission calibration: median p95 TTFT across three matched runs per retained method. The input-plus-output estimate was a one-run screen and was not advanced.</sub>
+
+### 5. Preserve every sweep
+
+| Decision | Setting carried forward | Evidence |
+|---|---|---|
+| Replica saturation reference | 128 concurrent requests | [Operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) |
+| vLLM maximum sequences | 128 active sequences | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
+| vLLM batched-token budget | 8,192 batched tokens | [Engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) |
+| Default admission signal | Request count; 128 in-flight requests | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
+| Reactive queue signal | Queue depth, calibrated per workload | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) · [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) |
+| Reactive memory signal | KV pressure; 0.8 retained as a guardrail | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) |
+| Size-aware admission | Exact input tokens; fixed output estimate rejected | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
+| Historical priority tuning | 48-request cap for that earlier two-repeat study only | [Earlier priority tuning](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/) |
 
 ## Production scenarios
 
@@ -214,11 +233,17 @@ longer.
 
 [Peers kept receiving dispatch turns](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/)
 
-### Request count kept real-time latency lower
+### Request-count admission reacted before queue-depth detection
 
 Request-count admission kept real-time p95 TTFT lower in the two direct
-comparisons. It limits admitted work before requests accumulate in vLLM;
-queue-depth detection reacts after that queue forms.
+comparisons. It limits work in the Endpoint Picker before dispatch. Queue-depth
+detection measures requests already waiting inside vLLM and reacts after that
+queue forms.
+
+| Admission signal | Where it is measured | When new work waits |
+|---|---|---|
+| Request count | Endpoint Picker, before dispatch | In-flight requests reach the configured limit. |
+| Queue depth | vLLM, after dispatch | Requests waiting inside vLLM reach the configured threshold. |
 
 <img src="assets/v09-tuning/detector-comparison.svg" width="100%" alt="Request-count admission keeps real-time p95 time to first token lower than queue-depth detection in matched consolidation and same-priority fairness scenarios">
 
@@ -235,8 +260,7 @@ larger model pools, and prefix-aware routing.
 
 In the mixed workload, request-count admission kept real-time p95 TTFT lower.
 Input-token admission kept batch p95 TTFT lower. A separate long-context
-comparison showed queue activation, but its 16 ms mean latency difference was
-not significant.
+comparison showed queue activation, but did not establish a latency advantage.
 
 <img src="assets/v09-tuning/07-mixed.svg" width="100%" alt="Mixed-workload comparison shows the latency tradeoff between request-count admission and input-token admission across request shapes">
 

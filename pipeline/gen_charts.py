@@ -123,7 +123,7 @@ def chart_hero():
         },
         {
             "tag": "BATCH OVERLOAD",
-            "title": "Zero HTTP 429",
+            "title": "Zero rejections",
             "subtitle": "HTTP 429 responses",
             "rows": [("Gate off", batch_off_429, RED), ("Gate on", 0, GREEN)],
             "unit": "count",
@@ -144,7 +144,7 @@ def chart_hero():
     s = svg_open(
         W,
         H,
-        "Three measured outcomes: priority admission kept premium traffic below standard p95 TTFT, batch overload produced zero HTTP 429 responses with flow control on, and premium tenants stayed lower latency in a consolidated pool.",
+        "Three measured outcomes: priority admission kept premium traffic below standard p95 TTFT, batch overload produced zero rejections with flow control on, and premium tenants stayed lower latency in a consolidated pool.",
     )
     cw, gap, x0, cy, ch = 374, 12, 18, 14, 302
     for index, card in enumerate(cards):
@@ -243,7 +243,7 @@ def chart_operating_point():
         y = sy(value, ttft_low, ttft_high)
         s += f'<rect x="{x - 5:.1f}" y="{y - 5:.1f}" width="10" height="10" fill="{GOLD}" transform="rotate(45 {x:.1f} {y:.1f})"/>'
     final_ttft_y = sy(ttft[-1], ttft_low, ttft_high)
-    s += txt(right - 10, final_ttft_y - 12, f"{ttft[-1] / 1000:.1f} s", 11, 800, GOLD, "end")
+    s += txt(right - 10, final_ttft_y - 12, f"{ttft[-1]:,.0f} ms", 11, 800, GOLD, "end")
     selected_index = settings.index(selected)
     selected_ttft_y = sy(ttft[selected_index], ttft_low, ttft_high)
     s += txt(selected_x + 12, selected_ttft_y - 12, f"{ttft[selected_index]:,.0f} ms", 10, 800, GOLD)
