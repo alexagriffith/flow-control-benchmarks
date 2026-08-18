@@ -169,7 +169,13 @@ one-run screen.
 
 <img src="assets/configuration-request-shape.svg" width="100%" alt="Request-size calibration compares p95 first-token latency for request count, exact input tokens, and an input-plus-output estimate across short, medium, and long prompts">
 
-<sub>Admission calibration: median p95 TTFT across three matched runs per retained method. The one-run input-plus-output screen was excluded from the retained comparison.</sub>
+<sub>Admission calibration: median p95 TTFT across three matched runs per retained method. Lower is better; the outlined bar is lower within each prompt-size pair. The one-run input-plus-output screen was excluded from the retained comparison.</sub>
+
+The sweeps identified the GPU throughput knee, then set how much work vLLM
+could run. Request count became the default because it stops new work before
+dispatch. Queue depth and KV pressure remain useful when policy should react to
+pressure already visible inside vLLM. Input-token counting fits workloads whose
+prompt sizes vary materially.
 
 ### 5. Preserve every sweep
 
@@ -260,6 +266,13 @@ dispatch. Queue depth reacts after requests enter the vLLM waiting queue.
 
 [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production)
 
+Across the four scenarios, higher-priority traffic stayed below one second
+while lower-priority batch or the bursting tenant absorbed most of the delay.
+Two high-priority tenants shared one pool, and round-robin dispatch continued
+serving peers inside one priority tier. In the direct detector comparisons,
+request-count admission reacted before queue-depth detection and kept real-time
+p95 TTFT lower.
+
 ## Advanced scenarios
 
 The advanced scenarios vary prompt shape, running batch, surge count, model-pool
@@ -274,7 +287,7 @@ latency difference fell within run variance.
 
 <img src="assets/v09-tuning/07-mixed.svg" width="100%" alt="Mixed-workload comparison shows the latency tradeoff between request-count admission and input-token admission across request shapes">
 
-<sub>Mixed workload: median surge p95 TTFT across three repeats.</sub>
+<sub>Mixed workload: median surge p95 TTFT across three repeats. Lower is better; the outlined bar is lower within each traffic class.</sub>
 
 [Mixed-workload evidence](benchmark-data/upstream-flow-control-v0.9.0/mixed-production-workload/) · [Long-context evidence](benchmark-data/upstream-flow-control-v0.9.0/long-context-admission/)
 
