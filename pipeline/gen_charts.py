@@ -172,7 +172,7 @@ def chart_hero():
 
 
 def chart_operating_point():
-    """Render the two-pass concurrency sweep with one unit per panel."""
+    """Render the capacity knee with explicit left and right metric axes."""
     grouped = defaultdict(lambda: {"throughput": [], "ttft_ms": []})
     pattern = os.path.join(DATA, "operating-point-sweep", "pass*", "*", "summary.json")
     for path in sorted(glob.glob(pattern)):
@@ -187,72 +187,70 @@ def chart_operating_point():
     ttft = [median(grouped[value]["ttft_ms"]) for value in settings]
     selected = 128
 
-    W, H = 880, 410
-    left, right = 92.0, 824.0
-    top_a, bottom_a = 78.0, 192.0
-    top_b, bottom_b = 238.0, 352.0
+    W, H = 880, 320
+    left, right = 76.0, 804.0
+    top, bottom = 54.0, 254.0
 
     def sx(value):
         return left + (value - settings[0]) / (settings[-1] - settings[0]) * (right - left)
 
-    def sy(value, low, high, top, bottom):
+    def sy(value, low, high):
         return bottom - (value - low) / (high - low) * (bottom - top)
 
-    throughput_low, throughput_high = 20.0, 56.0
+    throughput_low, throughput_high = 20.0, 60.0
     ttft_low, ttft_high = 0.0, 2200.0
     s = svg_open(
         W,
         H,
         "Across two concurrency-sweep passes, served throughput peaked near 128 concurrent requests while p95 time to first token continued to rise at higher limits.",
     )
-    s += f'<rect x="1" y="1" width="{W - 2}" height="{H - 2}" fill="none" stroke="{STROKE}"/>'
-    s += txt(28, 30, "Throughput peaked near 128 concurrent requests", 20, 800, INK)
-    s += txt(28, 52, "Median of two sweep passes", 11, 600, MUTED)
+    s += f'<rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="7" fill="#ffffff" stroke="{STROKE}"/>'
 
     selected_x = sx(selected)
-    s += f'<rect x="{selected_x - 34:.1f}" y="64" width="68" height="300" fill="{RED}" opacity="0.05"/>'
-    s += f'<line x1="{selected_x:.1f}" y1="64" x2="{selected_x:.1f}" y2="364" stroke="{RED}" stroke-width="2" stroke-dasharray="5 5"/>'
-    s += txt(selected_x, 72, "selected", 10, 800, RED, "middle")
+    s += f'<rect x="{selected_x - 30:.1f}" y="{top - 10:.1f}" width="60" height="{bottom - top + 20:.1f}" fill="{RED}" opacity="0.05"/>'
+    s += f'<line x1="{selected_x:.1f}" y1="{top - 10:.1f}" x2="{selected_x:.1f}" y2="{bottom + 10:.1f}" stroke="{RED}" stroke-width="1.5" stroke-dasharray="5 5"/>'
+    s += txt(selected_x, 30, "knee = 128", 11, 800, RED, "middle")
 
-    for value in (20, 40, 56):
-        y = sy(value, throughput_low, throughput_high, top_a, bottom_a)
+    for value in (20, 30, 40, 50, 60):
+        y = sy(value, throughput_low, throughput_high)
         s += f'<line x1="{left}" y1="{y:.1f}" x2="{right}" y2="{y:.1f}" stroke="{GRID}"/>'
         s += txt(left - 12, y + 4, f"{value:.0f}", 10, 650, GREEN, "end")
-    s += txt(left, 70, "Served throughput (requests/s)", 11, 750, GREEN)
+    for value in (0, 500, 1000, 1500, 2000):
+        y = sy(value, ttft_low, ttft_high)
+        s += txt(right + 12, y + 4, f"{value:,}", 10, 650, GOLD)
+    s += txt(left, 42, "Served throughput (requests/s)", 11, 750, GREEN)
+    s += txt(right, 42, "p95 TTFT (milliseconds)", 11, 750, GOLD, "end")
     throughput_points = " ".join(
-        f"{sx(setting):.1f},{sy(value, throughput_low, throughput_high, top_a, bottom_a):.1f}"
+        f"{sx(setting):.1f},{sy(value, throughput_low, throughput_high):.1f}"
         for setting, value in zip(settings, throughput)
     )
     s += f'<polyline points="{throughput_points}" fill="none" stroke="{GREEN}" stroke-width="4"/>'
     for setting, value in zip(settings, throughput):
         x = sx(setting)
-        y = sy(value, throughput_low, throughput_high, top_a, bottom_a)
+        y = sy(value, throughput_low, throughput_high)
         s += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="{GREEN}" stroke="#ffffff" stroke-width="2"/>'
     peak_index = throughput.index(max(throughput))
     peak_x = sx(settings[peak_index])
-    peak_y = sy(throughput[peak_index], throughput_low, throughput_high, top_a, bottom_a)
-    s += txt(peak_x + 14, peak_y + 20, f"{max(throughput):.1f} requests/s", 11, 800, GREEN)
-
-    for value in (0, 1000, 2000):
-        y = sy(value, ttft_low, ttft_high, top_b, bottom_b)
-        s += f'<line x1="{left}" y1="{y:.1f}" x2="{right}" y2="{y:.1f}" stroke="{GRID}"/>'
-        s += txt(left - 12, y + 4, f"{value:,}", 10, 650, GOLD, "end")
-    s += txt(left, 230, "p95 time to first token (milliseconds)", 11, 750, GOLD)
+    peak_y = sy(throughput[peak_index], throughput_low, throughput_high)
+    s += txt(peak_x + 14, peak_y + 20, f"{max(throughput):.1f} requests/s", 10, 800, GREEN)
     ttft_points = " ".join(
-        f"{sx(setting):.1f},{sy(value, ttft_low, ttft_high, top_b, bottom_b):.1f}"
+        f"{sx(setting):.1f},{sy(value, ttft_low, ttft_high):.1f}"
         for setting, value in zip(settings, ttft)
     )
-    s += f'<polyline points="{ttft_points}" fill="none" stroke="{GOLD}" stroke-width="4" stroke-dasharray="9 5"/>'
+    s += f'<polyline points="{ttft_points}" fill="none" stroke="{GOLD}" stroke-width="4"/>'
     for setting, value in zip(settings, ttft):
         x = sx(setting)
-        y = sy(value, ttft_low, ttft_high, top_b, bottom_b)
+        y = sy(value, ttft_low, ttft_high)
         s += f'<rect x="{x - 5:.1f}" y="{y - 5:.1f}" width="10" height="10" fill="{GOLD}" transform="rotate(45 {x:.1f} {y:.1f})"/>'
-    final_ttft_y = sy(ttft[-1], ttft_low, ttft_high, top_b, bottom_b)
+    final_ttft_y = sy(ttft[-1], ttft_low, ttft_high)
     s += txt(right - 10, final_ttft_y - 12, f"{ttft[-1] / 1000:.1f} s", 11, 800, GOLD, "end")
+    selected_index = settings.index(selected)
+    selected_ttft_y = sy(ttft[selected_index], ttft_low, ttft_high)
+    s += txt(selected_x + 12, selected_ttft_y - 12, f"{ttft[selected_index]:,.0f} ms", 10, 800, GOLD)
 
     for setting in settings:
-        s += txt(sx(setting), 382, str(setting), 10, 650, MUTED, "middle")
-    s += txt((left + right) / 2, 402, "Maximum concurrent requests", 11, 700, MUTED, "middle")
+        s += txt(sx(setting), 276, str(setting), 10, 650, MUTED, "middle")
+    s += txt((left + right) / 2, 302, "Offered concurrency (requests)", 11, 700, MUTED, "middle")
     save("operating-point-sweep", s)
 
 
