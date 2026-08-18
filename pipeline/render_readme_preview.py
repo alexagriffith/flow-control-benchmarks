@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
+import re
 import sys
 from pathlib import Path
 
@@ -35,6 +37,20 @@ code{background:#f6f8fa;padding:1px 4px;border-radius:4px}
 """
 
 
+def version_svg_sources(body: str) -> str:
+    """Bust browser caches when a generated README SVG changes."""
+
+    def add_version(match: re.Match[str]) -> str:
+        source = match.group(1)
+        asset = ROOT / source
+        if not asset.is_file():
+            return match.group(0)
+        digest = hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
+        return f'src="{source}?v={digest}"'
+
+    return re.sub(r'src="([^"?]+\.svg)"', add_version, body)
+
+
 def render(output: Path) -> None:
     sys.path.insert(0, "/tmp/flow-control-preview-lib")
     try:
@@ -50,6 +66,7 @@ def render(output: Path) -> None:
         extensions=["extra", "toc"],
         output_format="html5",
     )
+    body = version_svg_sources(body)
     document = (
         "<!doctype html><html><head><meta charset=\"utf-8\">"
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
