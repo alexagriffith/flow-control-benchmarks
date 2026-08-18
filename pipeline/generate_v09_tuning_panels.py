@@ -1612,7 +1612,7 @@ def render_batch_retry_evidence_svg() -> str:
 
 
 def render_batch_eviction_data_svg(root: Path) -> str:
-    """Show each condition's distance from the real-time-only TTFT reference."""
+    """Compare each condition directly with the real-time-only TTFT reference."""
     teal = "#087f72"
     source = root / "benchmark-data/batch-eviction/single-model-replica/summary.csv"
     grouped: dict[str, list[float]] = {}
@@ -1621,46 +1621,39 @@ def render_batch_eviction_data_svg(root: Path) -> str:
             grouped.setdefault(row["scenario"], []).append(float(row["realtime_p95_ttft_ms"]))
     reference = statistics.median(grouped["Realtime only"])
     scenarios = [
+        ("Real-time only", "Realtime only", "#65717e"),
         ("Batch, no protection", "Realtime with batch and no protection", "#b83232"),
         ("Reserved capacity", "Realtime with reserved capacity", "#087f72"),
         ("Reserved + eviction", "Realtime with reserved capacity, batch eviction, and retry", "#087f72"),
     ]
     values = [(label, statistics.median(grouped[key]), color) for label, key, color in scenarios]
     height = 264
-    left, right, top, bottom = 96.0, 836.0, 60.0, 202.0
-    minimum, maximum = -50.0, 250.0
+    left, right, top, bottom = 84.0, 842.0, 54.0, 194.0
+    maximum = 650.0
 
-    def y_delta(value: float) -> float:
-        return bottom - (value - minimum) / (maximum - minimum) * (bottom - top)
+    def y_value(value: float) -> float:
+        return bottom - value / maximum * (bottom - top)
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Unprotected batch increased real-time p95 time to first token by 219 milliseconds from the 342 millisecond real-time-only reference. Reserved capacity measured one millisecond below the reference and reserved capacity with eviction measured six milliseconds above it.">',
+        f'role="img" aria-label="Real-time-only p95 time to first token measured 342 milliseconds. Unprotected batch measured 561 milliseconds. Reserved capacity measured 341 milliseconds and reserved capacity with eviction measured 348 milliseconds.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect x="1" y="1" width="{WIDTH - 2}" height="{height - 2}" rx="6" fill="#ffffff" stroke="{LINE}"/>',
-        text(28, 32, f"Change from real-time-only reference ({reference:.0f} ms)", 10, 700, MUTED),
+        text(28, 30, "Real-time p95 TTFT (milliseconds)", 10, 700, MUTED),
+        text(852, 30, f"Reference line: {reference:.0f} ms", 9, 750, "#22313f", "end"),
     ]
-    for tick in (-50, 0, 100, 200):
-        ty = y_delta(tick)
+    for tick in (0, 200, 400, 600):
+        ty = y_value(tick)
         parts.append(f'<line x1="{left}" y1="{ty:.1f}" x2="{right}" y2="{ty:.1f}" stroke="#e4e9ee"/>')
-        tick_label = "reference" if tick == 0 else f"{tick:+d} ms"
-        parts.append(text(left - 12, ty + 3, tick_label, 8, 650, MUTED, "end"))
-    reference_y = y_delta(0)
-    column_w = 94
+        parts.append(text(left - 12, ty + 3, tick, 8, 650, MUTED, "end"))
+    reference_y = y_value(reference)
+    column_w = 82
     for index, (label, value, color) in enumerate(values):
-        x = 170 + index * 238
-        delta = value - reference
-        delta_y = y_delta(delta)
-        bar_y = min(reference_y, delta_y)
-        bar_h = max(4.0, abs(delta_y - reference_y))
-        if abs(delta) < 10:
-            bar_y = reference_y - 2 if delta >= 0 else reference_y
-        parts.append(f'<rect x="{x}" y="{bar_y:.1f}" width="{column_w}" height="{bar_h:.1f}" rx="5" fill="{color}"/>')
-        value_y = delta_y - 10 if delta >= 0 else delta_y + 18
-        parts.append(text(x + column_w / 2, value_y, f"{value:.0f} ms", 10, 850, color, "middle"))
-        delta_label = f"{delta:+.0f} ms"
-        parts.append(text(x + column_w / 2, 220, delta_label, 9, 800, color, "middle"))
-        parts.append(text(x + column_w / 2, 242, label, 9, 700, INK, "middle"))
+        center = 150 + index * 205
+        bar_y = y_value(value)
+        parts.append(f'<rect x="{center - column_w / 2:.1f}" y="{bar_y:.1f}" width="{column_w}" height="{bottom - bar_y:.1f}" rx="5" fill="{color}"/>')
+        parts.append(text(center, bar_y - 9, f"{value:.0f} ms", 10, 850, color, "middle"))
+        parts.append(text(center, 222, label, 9, 700, INK, "middle"))
     parts.append(f'<line x1="{left}" y1="{reference_y:.1f}" x2="{right}" y2="{reference_y:.1f}" stroke="#22313f" stroke-width="2.5"/>')
     parts.append("</svg>\n")
     return "".join(parts)
