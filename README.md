@@ -20,10 +20,11 @@ behind the llm-d inference gateway.
 
 ## Takeaways
 
-### Shared model pool
+### GPU consolidation let mixed traffic share one pool
 
-**Chat, batch, and tenant traffic can share one GPU.** The consolidation runs put
-two high-priority tenants and a lower-priority burst on one model pool.
+**Chat, batch, and tenant traffic can share one GPU instead of separate
+underutilized pools.** The consolidation runs put two high-priority tenants and
+a lower-priority burst on one model pool.
 Production scenarios test real-time, standard, and batch traffic under the same
 flow-control policy.
 
@@ -35,10 +36,11 @@ flow-control policy.
 
 [Tenant consolidation runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [Production scenario runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/) · [Additional consolidation evidence](benchmark-data/rhaii-3.4-flow-control/consolidation-gate-on/)
 
-### Saturated pool
+### Lower-priority traffic absorbed the wait
 
-**When the pool saturates, the Endpoint Picker protects higher-priority traffic
-by queuing lower-priority traffic.**
+**When the pool saturates, policy decides who waits. Higher-priority traffic is
+protected under load, while lower-priority traffic absorbs the queue's
+latency.**
 
 <img src="assets/v09-tuning/05-production.svg" width="100%" alt="Priority-tier results show platinum, gold, and silver traffic below one second median surge p95 time to first token while bronze batch exceeds 13 seconds">
 
@@ -46,12 +48,11 @@ by queuing lower-priority traffic.**
 
 [Priority-tier runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/)
 
-### Same-priority peers
+### Fairness was upheld within a priority tier
 
-**Same-priority peers continue receiving dispatch turns during one tenant's
-surge.** Round-robin fairness gives each tenant dispatch turns inside one
-priority band. Tail latency still depends on the vLLM capacity shared by the
-tenants.
+**One tenant's surge does not starve same-priority peers.** Round-robin fairness
+gives each tenant dispatch turns inside one priority band. Tail latency still
+depends on the vLLM capacity shared by the tenants.
 
 <img src="assets/v09-tuning/06-fairness.svg" width="100%" alt="Peer fairness results showing peer tenants retaining service while one tenant sends a larger burst">
 
@@ -59,15 +60,15 @@ tenants.
 
 [Peer fairness runs](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/)
 
-### Batch after dispatch
+### Reserved capacity protected real-time traffic during batch execution
 
-**Reserved capacity protects real-time p95 TTFT. Eviction recovers eligible
-batch work already executing in vLLM.** Reserved capacity kept real-time latency
-near the real-time-only reference in the bounded burst. The batch-eviction test
-measured similar real-time latency with reserved capacity alone and with
-reserved capacity plus eviction. Eviction added recovery for eligible batch
-work already running in vLLM; its measured real-time latency was within 7 ms
-of reserved capacity alone.
+**Reserved capacity and eviction protect real-time p95 TTFT while batch
+sequences are already executing in vLLM.** Reserved capacity kept real-time
+latency near the real-time-only reference in the bounded burst. The
+batch-eviction test measured similar real-time latency with reserved capacity
+alone and with reserved capacity plus eviction. Eviction added recovery for
+eligible batch work already running in vLLM; its measured real-time latency was
+within 7 ms of reserved capacity alone.
 
 <img src="assets/batch-eviction-data.svg" width="100%" alt="Measured batch eviction results show reserved capacity and eviction keeping real-time p95 time to first token near the real-time-only reference while unprotected batch raises latency">
 
@@ -100,19 +101,21 @@ enabled.
 
 ## Where flow control sits in llm-d
 
-Requests carry tenant and priority metadata into the llm-d Gateway. Inside the
-Endpoint Picker, flow-control admission runs before the scheduler's filters,
-scorers, and picker. The picker assigns admitted requests to a vLLM replica.
+The llm-d Gateway uses Envoy's `ext_proc` protocol to ask the Endpoint Picker
+(EPP) where a request should run. Inside the EPP, request-header processors run
+before `FlowControlAdmissionController.EnqueueAndWait`. Admitted requests then
+move through endpoint-candidate lookup and request-data preparation, admission
+plugins, scheduler filters, scorers, and the picker.
 
 **Flow-control admission runs before endpoint scoring.**
 
-<img src="assets/flow-control-in-llmd.svg" width="100%" alt="Request path through llm-d: Gateway, flow-control admission, scheduling filters, scorers, picker, and the selected vLLM replica">
+<img src="assets/flow-control-in-llmd.svg" width="100%" alt="Technical llm-d Router request path: Envoy calls the Endpoint Picker over ext-proc; the EPP processes headers, waits for flow-control admission, prepares endpoint data, runs admission plugins, filters, scorers, and the picker; the selected destination returns to Envoy, which forwards the request to vLLM">
 
 **Flow control queues by priority band and tenant.**
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Inside the Endpoint Picker, the consolidation example groups Platinum Tenants A and B in priority 100 and Bronze Tenant C in priority 0 before dispatch to the shared vLLM model pool">
 
-<sub>Flow control queues a request when policy requires it. Admitted requests continue through filters, scorers, and the picker. The queue diagram uses the consolidation run: Tenant A and Tenant B share priority 100. Tenant C waits in priority 0.</sub>
+<sub>The EPP returns the selected destination as a request header or dynamic metadata. Envoy then forwards the original request to that vLLM replica. The queue diagram uses the consolidation run: Tenant A and Tenant B share priority 100. Tenant C waits in priority 0.</sub>
 
 ## How we chose the operating point and configuration
 
@@ -184,12 +187,16 @@ one-run screen.
 | Size-aware admission | Exact input tokens; fixed output estimate rejected | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
 | Historical priority tuning | 48-request cap for the two-repeat study only | [Historical priority tuning](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/) |
 
-The sweeps set a 128-request capacity reference, a 128-sequence limit, and an
-8,192-token batch budget for the later tests. Request count became the default
-admission signal because it limits work before dispatch. Queue depth and KV
-pressure remain reactive signals for workload-specific pressure inside vLLM.
-Input-token counting fit mixed prompt sizes, while request count stayed lower
-for the tested long prompts.
+### Results
+
+Served throughput reached its tested plateau near 128 admitted requests while
+p95 TTFT continued to rise at higher limits. Increasing the active-sequence
+limit from 128 to 192 added 1.4 requests/s and raised p95 time per output token
+from 19.6 to 28.9 ms/token. The 8,192-token budget had the highest throughput
+and lowest p95 TTFT in its sweep. Request count became the default admission
+signal because it limits work before dispatch. Queue depth and KV pressure
+report pressure after work reaches vLLM, while input-token counting fit the
+mixed-size calibration better for short and medium prompts.
 
 ## Production scenarios
 
@@ -198,6 +205,15 @@ The charts use request-count admission with flow control enabled. The direct
 flow-control-off comparison belongs to the earlier utilization-detector
 campaign in [Flow control under load](#flow-control-under-load); the two
 campaigns remain separate because they used different detector configurations.
+
+- [Priority tiers](#bronze-batch-absorbed-most-of-the-surge-delay): Bronze batch
+  absorbed most of the surge delay.
+- [Batch isolation](#batch-queued-behind-real-time-traffic): batch waited while
+  real-time and standard traffic stayed below one second.
+- [Tenant consolidation](#two-high-priority-tenants-shared-one-pool): two
+  high-priority tenants shared one model pool.
+- [Same-priority fairness](#fairness-was-upheld-within-a-priority-tier): peers
+  continued receiving dispatch turns within one priority tier.
 
 ### Bronze batch absorbed most of the surge delay
 
@@ -251,7 +267,7 @@ larger burst waited longer.
 
 [Peer-fairness evidence](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/)
 
-### Request-count admission kept real-time latency lower
+### Request-count admission kept real-time latency lower than queue-depth detection
 
 Request-count admission kept real-time p95 TTFT lower in the two direct
 comparisons. Request count limits admitted work in the Endpoint Picker before
@@ -278,6 +294,13 @@ p95 TTFT lower.
 
 The advanced scenarios vary prompt shape, running batch, surge count, model-pool
 size, and routing policy.
+
+- [Mixed request shapes](#request-count-favored-real-time-traffic-and-input-tokens-favored-batch)
+- [Longer output](#longer-output-raised-first-token-latency)
+- [Batch already running](#running-batch-raised-real-time-latency)
+- [Repeated surges](#the-queue-drained-after-both-surges)
+- [Model-pool scale](#per-gpu-throughput-held-from-one-to-four-replicas)
+- [Prefix-aware routing](#prefix-aware-routing-lowered-chat-latency-and-increased-route-imbalance)
 
 ### Request count favored real-time traffic, and input tokens favored batch
 
@@ -394,18 +417,7 @@ work that had already entered vLLM.
 
 [Reserved-capacity evidence](benchmark-data/batch-eviction/single-model-replica/)
 
-### Evicted batch work returned through retry
-
-The tested retry path returned each evicted batch job to normal request
-processing and produced one final result.
-
-<img src="assets/batch-eviction-panel.svg" width="100%" alt="Reserved capacity protects before dispatch; eviction selects eligible batch work after dispatch and retry returns the batch request to the normal path">
-
-<sub>Batch eviction path: reserve before dispatch, evict eligible running batch after dispatch, then retry the same batch request.</sub>
-
-[Single-replica retry path](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica retry path](benchmark-data/batch-eviction/two-model-replicas/)
-
-### Every observed eviction returned once
+### Every observed eviction was retried once
 
 All 38 evictions in the single-replica package and all 57 evictions in the
 two-replica package were retried. Each evicted request produced one final result,
@@ -416,13 +428,6 @@ and neither package recorded duplicate results.
 <sub>Retry correlation across the retained single- and two-replica proof packages.</sub>
 
 [Single-replica retry evidence](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica retry evidence](benchmark-data/batch-eviction/two-model-replicas/)
-
-- **Single replica:** reserved capacity and eviction kept real-time p95 TTFT near
-  the real-time-only reference.
-- **Retry:** evicted batch work was retried and produced one final result in the
-  tested setup.
-- **Two replicas:** the retry path also worked with two model replicas. The
-  latency comparison requires additional repeats.
 
 ## Claims and evidence
 

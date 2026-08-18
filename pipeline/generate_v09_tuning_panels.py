@@ -633,31 +633,28 @@ def render_configuration_admission_svg() -> str:
         '<marker id="queue-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#2d6cdf"/></marker>'
         '<marker id="kv-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#c56a00"/></marker>'
         '</defs>',
-        component(28, 108, 112, 50, "New requests", LINE, "#fbfcfd"),
-        f'<rect x="176" y="38" width="382" height="254" rx="8" fill="#f4fbf9" stroke="{teal}" stroke-width="2"/>',
-        text(367, 64, "Endpoint Picker", 12, 800, INK, "middle"),
-        f'<rect x="204" y="108" width="146" height="50" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
-        text(277, 129, "Request count", 9, 780, INK, "middle"),
-        text(277, 146, "128 in-flight", 8, 700, MUTED, "middle"),
-        component(384, 108, 146, 50, "Admission gate", teal, "#ffffff"),
-        f'<rect x="204" y="220" width="146" height="44" rx="6" fill="#fffaf5" stroke="{orange}" stroke-width="1.5"/>',
-        text(277, 238, "Policy queue", 9, 780, INK, "middle"),
-        text(277, 253, "new work waits", 8, 700, MUTED, "middle"),
-        f'<rect x="384" y="220" width="146" height="44" rx="6" fill="#ffffff" stroke="{gray}" stroke-width="1.5"/>',
-        text(457, 238, "Reactive pressure", 9, 780, INK, "middle"),
-        text(457, 253, "queue or KV signal", 8, 700, MUTED, "middle"),
-        f'<path d="M140 133 H204" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
-        f'<path d="M350 133 H384" fill="none" stroke="{teal}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
-        f'<rect x="588" y="38" width="256" height="254" rx="8" fill="#f7faff" stroke="{blue}" stroke-width="2"/>',
-        text(716, 64, "vLLM", 12, 800, INK, "middle"),
-        component(616, 108, 200, 50, "Running requests", LINE, "#ffffff"),
-        component(616, 188, 200, 40, "Waiting queue · depth", blue, "#ffffff"),
-        component(616, 244, 200, 40, "KV cache · pressure", orange, "#ffffff"),
-        f'<path d="M530 133 H616" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
-        f'<path d="M420 158 V196 H277 V220" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
-        f'<path d="M616 208 H566 V232 H530" fill="none" stroke="{blue}" stroke-width="2" marker-end="url(#queue-arrow)"/>',
-        f'<path d="M616 264 H566 V252 H530" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
-        f'<path d="M457 220 V158" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
+        component(24, 112, 108, 48, "New requests", LINE, "#fbfcfd"),
+        f'<rect x="158" y="34" width="388" height="264" rx="8" fill="#f4fbf9" stroke="{teal}" stroke-width="2"/>',
+        text(352, 60, "Endpoint Picker", 12, 800, INK, "middle"),
+        f'<rect x="184" y="108" width="142" height="56" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
+        text(255, 131, "Request count", 9, 780, INK, "middle"),
+        text(255, 148, "128 in-flight", 8, 700, MUTED, "middle"),
+        f'<rect x="370" y="92" width="150" height="88" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
+        text(445, 140, "Admission gate", 9, 780, INK, "middle"),
+        f'<rect x="370" y="224" width="150" height="50" rx="6" fill="#fffaf5" stroke="{orange}" stroke-width="1.5"/>',
+        text(445, 245, "Policy queue", 9, 780, INK, "middle"),
+        text(445, 262, "new work waits", 8, 700, MUTED, "middle"),
+        f'<path d="M132 136 H184" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
+        f'<path d="M326 136 H370" fill="none" stroke="{teal}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
+        f'<path d="M445 180 V224" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
+        f'<rect x="584" y="34" width="270" height="264" rx="8" fill="#f7faff" stroke="{blue}" stroke-width="2"/>',
+        text(719, 60, "vLLM", 12, 800, INK, "middle"),
+        component(614, 90, 210, 48, "Running requests", LINE, "#ffffff"),
+        component(614, 170, 210, 44, "Waiting queue · depth", blue, "#ffffff"),
+        component(614, 240, 210, 44, "KV cache · pressure", orange, "#ffffff"),
+        f'<path d="M520 118 H614" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
+        f'<path d="M614 192 H556 L520 152" fill="none" stroke="{blue}" stroke-width="2" marker-end="url(#queue-arrow)"/>',
+        f'<path d="M614 262 H566 L520 166" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
     ]
     parts.append('</svg>\n')
     return "".join(parts)
@@ -1043,61 +1040,77 @@ def render_configuration_map_svg() -> str:
 
 
 def render_flow_control_architecture_svg() -> str:
-    """Show flow-control admission before the normal endpoint scheduling stages."""
+    """Show the implemented Envoy, EPP request-control, and proxy path."""
     teal, blue, orange = "#087f72", "#2d6cdf", "#c56a00"
-    height = 230
+    gray = "#7f8a98"
+    height = 360
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Requests pass through the llm-d Gateway. Inside the Endpoint Picker, flow-control admission runs first. Filters remove candidates, scorers rank them, and the picker selects a vLLM replica.">',
+        f'role="img" aria-label="Envoy sends an external processing request to the Endpoint Picker. The EPP processes headers, waits for flow-control admission, prepares endpoint data, runs admission plugins, filters, scorers, and the picker. The EPP returns the selected destination to Envoy, which proxies the original request to vLLM.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="6" fill="none" stroke="{LINE}"/>',
         '<defs>',
-        '<marker id="arch-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7f8a98"/></marker>',
-        f'<marker id="queue-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{orange}"/></marker>',
+        '<marker id="arch-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7f8a98"/></marker>',
+        f'<marker id="arch-return" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{blue}"/></marker>',
+        f'<marker id="arch-proxy" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{teal}"/></marker>',
         '</defs>',
-        f'<rect x="24" y="66" width="104" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(76, 89, "Requests", 10.5, 780, INK, "middle"),
-        f'<rect x="38" y="105" width="76" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>',
-        text(76, 119, "tenant", 8.5, 700, MUTED, "middle"),
-        f'<rect x="38" y="132" width="76" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>',
-        text(76, 146, "priority", 8.5, 700, MUTED, "middle"),
-        f'<rect x="152" y="66" width="124" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(214, 104, "llm-d Gateway", 10.5, 780, INK, "middle"),
-        text(214, 125, "routes request", 8.5, 650, MUTED, "middle"),
-        f'<rect x="302" y="28" width="430" height="174" rx="8" fill="#f8fcfb" stroke="{teal}" stroke-width="2"/>',
-        text(517, 54, "Endpoint Picker", 11, 780, INK, "middle"),
-        f'<rect x="318" y="78" width="96" height="58" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
-        text(366, 99, "Flow control", 9, 760, INK, "middle"),
-        text(366, 117, "admit or queue", 8, 650, teal, "middle"),
-        f'<rect x="318" y="154" width="96" height="25" rx="5" fill="#fffaf5" stroke="{orange}"/>',
-        text(366, 171, "policy queue", 8, 720, orange, "middle"),
+        f'<rect x="24" y="64" width="128" height="192" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(88, 91, "Envoy", 11, 800, INK, "middle"),
+        text(88, 109, "llm-d Gateway", 8.5, 650, MUTED, "middle"),
+        f'<rect x="40" y="126" width="96" height="28" rx="5" fill="#ffffff" stroke="{LINE}"/>',
+        text(88, 144, "ext_proc request", 8, 700, gray, "middle"),
+        f'<rect x="40" y="170" width="96" height="28" rx="5" fill="#ffffff" stroke="{blue}"/>',
+        text(88, 188, "destination", 8, 700, blue, "middle"),
+        f'<rect x="40" y="214" width="96" height="28" rx="5" fill="#ffffff" stroke="{teal}"/>',
+        text(88, 232, "proxy upstream", 8, 700, teal, "middle"),
+        f'<rect x="176" y="26" width="550" height="238" rx="8" fill="#f8fcfb" stroke="{teal}" stroke-width="2"/>',
+        text(451, 50, "Endpoint Picker (EPP)", 11, 800, INK, "middle"),
+        f'<rect x="194" y="72" width="84" height="100" rx="6" fill="#ffffff" stroke="{LINE}"/>',
+        text(236, 106, "Request header", 8.2, 780, INK, "middle"),
+        text(236, 124, "processors", 7.5, 650, MUTED, "middle"),
+        f'<rect x="292" y="72" width="102" height="100" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
+        text(343, 99, "FlowControl", 8.5, 780, INK, "middle"),
+        text(343, 114, "AdmissionController", 7.5, 700, INK, "middle"),
+        f'<rect x="303" y="132" width="80" height="24" rx="4" fill="#fffaf5" stroke="{orange}"/>',
+        text(343, 148, "EnqueueAndWait", 7.2, 720, orange, "middle"),
+        f'<rect x="408" y="72" width="96" height="100" rx="6" fill="#ffffff" stroke="{LINE}"/>',
+        text(456, 102, "Endpoint", 8.5, 780, INK, "middle"),
+        text(456, 117, "candidates", 8.5, 780, INK, "middle"),
+        text(456, 142, "+ request data", 7.5, 650, MUTED, "middle"),
+        f'<rect x="518" y="72" width="84" height="100" rx="6" fill="#ffffff" stroke="{LINE}"/>',
+        text(560, 108, "Admission", 8.2, 780, INK, "middle"),
+        text(560, 124, "plugins", 8.2, 780, INK, "middle"),
+        f'<rect x="616" y="72" width="92" height="100" rx="6" fill="#ffffff" stroke="{blue}" stroke-width="1.5"/>',
+        text(662, 90, "Scheduler", 8.5, 800, INK, "middle"),
+        f'<rect x="630" y="101" width="64" height="18" rx="4" fill="#f6f9ff" stroke="{blue}"/>',
+        text(662, 114, "Filters", 7.3, 720, INK, "middle"),
+        f'<rect x="630" y="125" width="64" height="18" rx="4" fill="#f6f9ff" stroke="{blue}"/>',
+        text(662, 138, "Scorers", 7.3, 720, INK, "middle"),
+        f'<rect x="630" y="149" width="64" height="18" rx="4" fill="#f6f9ff" stroke="{blue}"/>',
+        text(662, 162, "Picker", 7.3, 720, INK, "middle"),
+        f'<rect x="518" y="204" width="190" height="34" rx="5" fill="#f6f9ff" stroke="{blue}"/>',
+        text(613, 218, "ext_proc response", 7.5, 650, MUTED, "middle"),
+        text(613, 231, "destination header or metadata", 7.2, 720, blue, "middle"),
     ]
-    stages = [
-        (432, 78, 76, "Filters", "eligible"),
-        (526, 78, 82, "Scorers", "rank"),
-        (626, 78, 82, "Picker", "select"),
-    ]
-    for x, y, width, label, subtitle in stages:
-        parts.append(f'<rect x="{x}" y="{y}" width="{width}" height="58" rx="6" fill="#ffffff" stroke="{blue}"/>')
-        parts.append(text(x + width / 2, y + 23, label, 9, 760, INK, "middle"))
-        parts.append(text(x + width / 2, y + 42, subtitle, 8, 650, MUTED, "middle"))
     parts.extend([
-        '<path d="M128 115 H145" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        '<path d="M276 115 H295" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        '<path d="M414 107 H425" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        '<path d="M508 107 H519" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        '<path d="M608 107 H619" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        '<path d="M366 136 V147" stroke="#c56a00" stroke-width="1.6" marker-end="url(#queue-arrow)"/>',
-        '<path d="M708 107 H749" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
-        f'<rect x="756" y="66" width="102" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(807, 91, "vLLM", 10.5, 780, INK, "middle"),
-        text(807, 109, "selected replica", 8, 650, MUTED, "middle"),
+        '<path d="M136 140 H187" stroke="#7f8a98" stroke-width="1.6" marker-end="url(#arch-arrow)"/>',
+        '<path d="M278 122 H285" stroke="#7f8a98" stroke-width="1.5" marker-end="url(#arch-arrow)"/>',
+        '<path d="M394 122 H401" stroke="#7f8a98" stroke-width="1.5" marker-end="url(#arch-arrow)"/>',
+        '<path d="M504 122 H511" stroke="#7f8a98" stroke-width="1.5" marker-end="url(#arch-arrow)"/>',
+        '<path d="M602 122 H609" stroke="#7f8a98" stroke-width="1.5" marker-end="url(#arch-arrow)"/>',
+        '<path d="M662 172 V197" stroke="#2d6cdf" stroke-width="1.5" marker-end="url(#arch-return)"/>',
+        '<path d="M518 221 H164 V184 H143" fill="none" stroke="#2d6cdf" stroke-width="1.6" marker-end="url(#arch-return)"/>',
+        '<path d="M136 228 H164 V306 H740" fill="none" stroke="#087f72" stroke-width="1.8" marker-end="url(#arch-proxy)"/>',
+        text(430, 326, "original request routed to selected destination", 8, 700, teal, "middle"),
+        f'<rect x="746" y="264" width="126" height="78" rx="7" fill="#fbfcfd" stroke="{teal}" stroke-width="1.5"/>',
+        text(809, 284, "vLLM", 10.5, 800, INK, "middle"),
+        text(809, 300, "selected replica", 8, 650, MUTED, "middle"),
     ])
-    for index in range(12):
+    for index in range(8):
         row, col = divmod(index, 4)
-        color = teal if index < 8 else blue
-        parts.append(f'<rect x="{780 + col * 14}" y="{123 + row * 13}" width="9" height="9" rx="2" fill="{color}" opacity="0.68"/>')
+        color = teal if row == 0 else blue
+        parts.append(f'<rect x="{781 + col * 14}" y="{312 + row * 13}" width="9" height="9" rx="2" fill="{color}" opacity="0.68"/>')
     parts.append("</svg>\n")
     return "".join(parts)
 
@@ -1184,49 +1197,42 @@ def render_scale_takeaway_svg() -> str:
     """Pair total throughput growth with stable per-GPU throughput."""
     replicas = [1, 2, 4]
     throughput = [4.293, 4.317, 4.302]
-    rejections = [5, 1, 0]
     total = [replica * value for replica, value in zip(replicas, throughput)]
-    blue, purple, orange = "#2d6cdf", "#6550a5", "#c56a00"
-    height = 336
+    blue, purple = "#2d6cdf", "#6550a5"
+    height = 326
 
-    def per_gpu_y(value: float) -> float:
-        return 238 - (value - 4.25) / 0.10 * 126
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Total served throughput rose with replica count while served throughput per GPU stayed within 0.6 percent from one to four replicas">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
-        f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{PAGE}"/>',
+        f'<rect width="{WIDTH}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
-        f'<rect x="38" y="56" width="386" height="244" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
-        f'<rect x="456" y="56" width="386" height="244" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
-        text(58, 82, "Total served throughput (requests/s)", 11, 750, MUTED),
-        text(476, 82, "Served throughput per GPU (requests/s)", 11, 750, MUTED),
+        f'<rect x="38" y="36" width="386" height="252" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
+        f'<rect x="456" y="36" width="386" height="252" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
+        text(58, 62, "Total served throughput (requests/s)", 11, 750, MUTED),
+        text(476, 62, "Served throughput per GPU (requests/s)", 11, 750, MUTED),
     ]
     for tick in (0, 6, 12, 18):
-        yp = 252 - tick / 18 * 144
+        yp = 240 - tick / 18 * 142
         parts.append(f'<line x1="74" y1="{yp:.1f}" x2="404" y2="{yp:.1f}" stroke="#e7ebef"/>')
         parts.append(text(66, yp + 3, tick, 8, 650, MUTED, "end"))
     centers = (126, 232, 338)
     for center, replica, value in zip(centers, replicas, total):
-        top_y = 252 - value / 18 * 144
-        parts.append(f'<rect x="{center - 34}" y="{top_y:.1f}" width="68" height="{252 - top_y:.1f}" rx="5" fill="{blue}"/>')
+        top_y = 240 - value / 18 * 142
+        parts.append(f'<rect x="{center - 34}" y="{top_y:.1f}" width="68" height="{240 - top_y:.1f}" rx="5" fill="{blue}"/>')
         parts.append(text(center, top_y - 8, f"{value:.2f}", 10, 800, blue, "middle"))
-        parts.append(text(center, 276, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"))
+        parts.append(text(center, 264, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"))
+
+    per_gpu_min, per_gpu_max = 4.25, 4.35
     for value in (4.25, 4.30, 4.35):
-        yp = per_gpu_y(value)
+        yp = 240 - (value - per_gpu_min) / (per_gpu_max - per_gpu_min) * 142
         parts.append(f'<line x1="492" y1="{yp:.1f}" x2="816" y2="{yp:.1f}" stroke="#e7ebef"/>')
         parts.append(text(484, yp + 3, f"{value:.2f}", 8, 650, MUTED, "end"))
-    points = " ".join(f"{540 + i * 110:.1f},{per_gpu_y(v):.1f}" for i, v in enumerate(throughput))
-    parts.append(f'<polyline points="{points}" fill="none" stroke="{purple}" stroke-width="3"/>')
-    for index, (replica, value, non200) in enumerate(zip(replicas, throughput, rejections)):
-        xp, yp = 540 + index * 110, per_gpu_y(value)
-        parts.extend([
-            f'<circle cx="{xp:.1f}" cy="{yp:.1f}" r="6" fill="{purple}"/>',
-            text(xp, yp - 11, f"{value:.2f}", 10, 800, purple, "middle"),
-            text(xp, 276, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"),
-            f'<circle cx="{xp - 24:.1f}" cy="292" r="3.5" fill="{orange if non200 else blue}"/>',
-            text(xp - 16, 295, f"non-200: {non200}", 7.5, 650, MUTED),
-        ])
-    parts.append(text(816, 100, "0.6% spread", 9, 800, purple, "end"))
+    for center, replica, value in zip((540, 650, 760), replicas, throughput):
+        top_y = 240 - (value - per_gpu_min) / (per_gpu_max - per_gpu_min) * 142
+        parts.append(f'<rect x="{center - 34}" y="{top_y:.1f}" width="68" height="{240 - top_y:.1f}" rx="5" fill="{purple}"/>')
+        parts.append(text(center, top_y - 8, f"{value:.2f}", 10, 800, purple, "middle"))
+        parts.append(text(center, 264, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"))
+    parts.append(text(816, 82, "0.6% spread", 9, 800, purple, "end"))
     parts.append("</svg>\n")
     return "".join(parts)
 
@@ -1427,80 +1433,70 @@ def render_stability_takeaway_svg() -> str:
 
 
 def render_batch_eviction_takeaway_svg() -> str:
-    """Show reserve, eviction, and retry with one shared Gateway."""
+    """Show reserved capacity and the eviction retry as an architecture sequence."""
     teal, blue, orange, red, gray = "#087f72", "#2d6cdf", "#c56a00", "#b83232", "#667180"
-    height = 410
+    height = 470
 
     def box(x: float, y: float, w: float, h: float, title: str, subtitle: str = "", stroke: str = LINE, fill: str = "#ffffff") -> str:
         title_y = y + h / 2 - (5 if subtitle else -3)
-        body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" fill="{fill}" stroke="{stroke}"/>'
-        body += text(x + w / 2, title_y, title, 9, 800, INK, "middle")
+        body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" fill="{fill}" stroke="{stroke}" stroke-width="1.4"/>'
+        body += text(x + w / 2, title_y, title, 8.5, 800, INK, "middle")
         if subtitle:
-            body += text(x + w / 2, title_y + 17, subtitle, 7.4, 650, MUTED, "middle")
+            body += text(x + w / 2, title_y + 16, subtitle, 7.2, 650, MUTED, "middle")
         return body
 
-    def arrow(path: str, color: str, marker: str, width: float = 2.0) -> str:
+    def arrow(path: str, color: str, marker: str, width: float = 1.8) -> str:
         return f'<path d="{path}" stroke="{color}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round" fill="none" marker-end="url(#{marker})"/>'
 
-    def slots(x: float, y: float, colors: list[str]) -> str:
-        body = ""
-        for index, color in enumerate(colors):
-            row, col = divmod(index, 5)
-            body += f'<rect x="{x + col * 15:.1f}" y="{y + row * 14:.1f}" width="10" height="10" rx="2.4" fill="{color}"/>'
-        return body
+    def marker(marker_id: str, color: str) -> str:
+        return f'<marker id="{marker_id}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{color}"/></marker>'
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Reserved capacity keeps batch in the Endpoint Picker before vLLM. After dispatch, the Endpoint Picker can select eligible running batch, Envoy resets the vLLM stream, and the batch client retries the request.">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Reserved capacity dispatches real-time requests while batch waits in the Endpoint Picker. After an eligible running batch is evicted, the Endpoint Picker sends a retryable response through Gateway and Envoy, Envoy resets the vLLM stream, and the batch client retries through the same Gateway, Endpoint Picker, and vLLM request path.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="8" fill="#ffffff" stroke="{LINE}"/>',
-        '<defs>'
-        '<marker id="reserve-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#087f72"/></marker>'
-        '<marker id="batch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#c56a00"/></marker>'
-        '<marker id="retry-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#2d6cdf"/></marker>'
-        '<marker id="reset-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#b83232"/></marker>'
-        '<marker id="gray-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#667180"/></marker>'
-        '</defs>',
-        f'<rect x="30" y="24" width="820" height="158" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(50, 48, "Reserved capacity", 11, 800, teal),
-        box(54, 76, 124, 58, "Gateway / Envoy", "request path"),
-        f'<rect x="230" y="54" width="356" height="112" rx="8" fill="#f1fbf8" stroke="{teal}" stroke-width="1.6"/>',
-        text(408, 72, "Endpoint Picker", 9, 800, INK, "middle"),
-        f'<rect x="250" y="82" width="316" height="28" rx="5" fill="#ffffff" stroke="{teal}"/>',
-        text(264, 100, "real-time", 8, 750, teal),
-        slots(396, 90, [teal, teal, teal]),
-        f'<rect x="250" y="122" width="316" height="28" rx="5" fill="#fff8f0" stroke="{orange}"/>',
-        text(264, 140, "batch", 8, 750, orange),
-        slots(396, 130, [orange, orange, orange, orange, orange]),
-        f'<rect x="692" y="64" width="112" height="86" rx="7" fill="#ffffff" stroke="{LINE}"/>',
-        text(748, 85, "vLLM", 10, 800, INK, "middle"),
-        slots(718, 98, [teal, teal, teal, teal, "#dbe9e6", teal, teal, teal, teal, "#dbe9e6"]),
-        text(748, 142, "running slots", 7.2, 650, MUTED, "middle"),
-        arrow("M178 105 H230", gray, "gray-arrow"),
-        arrow("M566 96 H692", teal, "reserve-arrow"),
-        f'<rect x="616" y="90" width="12" height="12" rx="2" fill="{teal}" stroke="#ffffff" stroke-width="1.5"/>',
+        '<defs>', marker("gray-arrow", gray), marker("teal-arrow", teal), marker("orange-arrow", orange), marker("red-arrow", red), marker("blue-arrow", blue), '</defs>',
+        f'<rect x="28" y="24" width="824" height="152" rx="8" fill="#f8fcfb" stroke="{LINE}"/>',
+        text(46, 48, "Reserved capacity", 10.5, 800, teal),
+        box(54, 76, 118, 54, "Gateway / Envoy", "request path"),
+        box(222, 50, 430, 106, "Endpoint Picker", "flow control", teal, "#f1fbf8"),
+        f'<rect x="704" y="64" width="120" height="78" rx="7" fill="#ffffff" stroke="{teal}" stroke-width="1.4"/>',
+        text(764, 84, "vLLM", 8.5, 800, INK, "middle"),
+        text(764, 99, "running capacity", 7.2, 650, MUTED, "middle"),
+        arrow("M172 103 H222", gray, "gray-arrow"),
+        f'<rect x="244" y="82" width="382" height="28" rx="5" fill="#ffffff" stroke="{teal}"/>',
+        text(260, 100, "real-time", 8.2, 760, teal),
+        ''.join(f'<rect x="{330 + i * 14}" y="91" width="9" height="10" rx="2" fill="{teal}"/>' for i in range(3)),
+        arrow("M626 96 H704", teal, "teal-arrow", 2.0),
+        f'<rect x="244" y="118" width="382" height="28" rx="5" fill="#fff8f0" stroke="{orange}"/>',
+        text(260, 136, "batch queue", 8.2, 760, orange),
+        ''.join(f'<rect x="{330 + i * 14}" y="127" width="9" height="10" rx="2" fill="{orange}"/>' for i in range(6)),
+        f'<line x1="616" y1="122" x2="616" y2="142" stroke="{orange}" stroke-width="2"/>',
+        ''.join(f'<rect x="{736 + (i % 4) * 14}" y="{112 + (i // 4) * 14}" width="9" height="9" rx="2" fill="{teal if i < 5 else "#dce8e6"}"/>' for i in range(8)),
 
-        f'<rect x="30" y="194" width="820" height="190" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(50, 218, "Eviction and retry", 11, 800, orange),
-        box(50, 250, 124, 54, "Batch client", "Async Processor", blue, "#f7f9ff"),
-        box(224, 250, 132, 54, "Gateway / Envoy", "response + reset"),
-        box(406, 250, 132, 54, "Endpoint Picker", "selects batch", orange, "#fff8f0"),
-        box(686, 250, 116, 54, "vLLM", "releases sequence", red, "#fff8f8"),
-
-        arrow("M406 266 H356", orange, "batch-arrow"),
-        text(381, 257, "429", 7.5, 800, orange, "middle"),
-        arrow("M356 288 H686", red, "reset-arrow"),
-        text(521, 280, "reset stream", 7.5, 800, red, "middle"),
-        arrow("M224 288 H174", blue, "retry-arrow"),
-        text(199, 280, "HTTP 429", 7.5, 800, blue, "middle"),
-
-        arrow("M112 304 V344 H290 V304", blue, "retry-arrow"),
-        text(200, 338, "retry", 7.5, 800, blue, "middle"),
-        arrow("M290 304 V344 H472 V304", blue, "retry-arrow"),
-        text(381, 338, "route", 7.5, 800, blue, "middle"),
-        arrow("M472 304 V344 H744 V304", blue, "retry-arrow"),
-        text(608, 338, "dispatch", 7.5, 800, blue, "middle"),
+        f'<rect x="28" y="192" width="824" height="250" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(46, 216, "Eviction and retry", 10.5, 800, orange),
+        box(46, 230, 118, 44, "Batch client", "Async Processor", blue, "#f7f9ff"),
+        box(226, 230, 126, 44, "Gateway / Envoy", "request path"),
+        box(418, 230, 140, 44, "Endpoint Picker", "flow control", teal, "#f1fbf8"),
+        box(682, 230, 120, 44, "vLLM", "running work", red, "#fff8f8"),
+        f'<line x1="105" y1="274" x2="105" y2="424" stroke="#d9e0e6" stroke-dasharray="3 5"/>',
+        f'<line x1="289" y1="274" x2="289" y2="424" stroke="#d9e0e6" stroke-dasharray="3 5"/>',
+        f'<line x1="488" y1="274" x2="488" y2="424" stroke="#d9e0e6" stroke-dasharray="3 5"/>',
+        f'<line x1="742" y1="274" x2="742" y2="424" stroke="#d9e0e6" stroke-dasharray="3 5"/>',
+        arrow("M488 302 H289", orange, "orange-arrow"),
+        text(388, 294, "1  retryable response", 8.4, 760, orange, "middle"),
+        arrow("M289 330 H742", red, "red-arrow"),
+        text(516, 322, "2  reset stream", 8.4, 760, red, "middle"),
+        arrow("M289 358 H105", blue, "blue-arrow"),
+        text(197, 350, "3  response", 8.4, 760, blue, "middle"),
+        arrow("M105 386 H289", blue, "blue-arrow"),
+        text(197, 378, "4  retry", 8.4, 760, blue, "middle"),
+        arrow("M289 410 H488", teal, "teal-arrow"),
+        text(388, 402, "5  route", 8.4, 760, teal, "middle"),
+        arrow("M488 434 H742", teal, "teal-arrow"),
+        text(615, 426, "6  dispatch", 8.4, 760, teal, "middle"),
     ]
     parts.append("</svg>\n")
     return "".join(parts)
@@ -1575,36 +1571,32 @@ def render_fairness_takeaway_svg() -> str:
 
 
 def render_batch_retry_evidence_svg() -> str:
-    """Show that every observed eviction returned once in both proof packages."""
+    """Show matched eviction, retry, and completion counts as vertical bars."""
     teal, blue, orange, purple = "#087f72", "#2d6cdf", "#c56a00", "#6550a5"
     width, height = 880, 312
 
-    def marker(marker_id: str, color: str) -> str:
-        return (
-            f'<marker id="{marker_id}" viewBox="0 0 10 10" refX="8" refY="5" '
-            f'markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="{color}"/></marker>'
-        )
-
     def proof_panel(x: float, label: str, count: int) -> str:
-        stage_y = 112
-        stage_w = 92
-        stage_h = 78
-        centers = [x + 72, x + 205, x + 338]
+        panel_y, panel_w, panel_h = 40, 398, 236
+        left, right, top, bottom = x + 54, x + 374, 92, 220
+        centers = [x + 104, x + 214, x + 324]
+        names = ["Evicted", "Retried", "Completed once"]
         colors = [orange, blue, purple]
-        names = ["Evicted", "Retried", "Final result"]
-        body = f'<rect x="{x}" y="50" width="398" height="226" rx="7" fill="#fbfcfd" stroke="{LINE}"/>'
-        body += text(x + 20, 80, label, 12, 800, INK)
-        for index, (center, color, name) in enumerate(zip(centers, colors, names)):
-            body += f'<rect x="{center-stage_w/2:.1f}" y="{stage_y}" width="{stage_w}" height="{stage_h}" rx="7" fill="#ffffff" stroke="{color}" stroke-width="1.6"/>'
-            body += text(center, stage_y + 31, f"{count}", 19, 850, color, "middle")
-            body += text(center, stage_y + 56, name, 8.5, 740, MUTED, "middle")
-            if index < 2:
-                body += f'<path d="M{center+stage_w/2+8:.1f} {stage_y+stage_h/2:.1f} H{centers[index+1]-stage_w/2-8:.1f}" stroke="{blue}" stroke-width="2" marker-end="url(#proof-arrow)"/>'
-        check_x = centers[-1] + 34
-        check_y = stage_y + 17
-        body += f'<circle cx="{check_x}" cy="{check_y}" r="9" fill="{teal}" stroke="#ffffff" stroke-width="2"/>'
-        body += f'<path d="M{check_x-3} {check_y} L{check_x-0.5} {check_y+2.5} L{check_x+4} {check_y-3}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
-        body += text(x + 20, 244, "0 duplicate results", 9, 750, teal)
+        body = f'<rect x="{x}" y="{panel_y}" width="{panel_w}" height="{panel_h}" rx="7" fill="#fbfcfd" stroke="{LINE}"/>'
+        body += text(x + 20, 68, label, 12, 800, INK)
+        for tick in (0, 30, 60):
+            ty = bottom - tick / 60 * (bottom - top)
+            body += f'<line x1="{left}" y1="{ty:.1f}" x2="{right}" y2="{ty:.1f}" stroke="#e4e9ee"/>'
+            body += text(left - 9, ty + 3, tick, 7.5, 650, MUTED, "end")
+        bar_top = bottom - count / 60 * (bottom - top)
+        for index, (center, name, color) in enumerate(zip(centers, names, colors)):
+            body += f'<rect x="{center - 29}" y="{bar_top:.1f}" width="58" height="{bottom - bar_top:.1f}" rx="5" fill="{color}"/>'
+            body += text(center, bar_top - 8, count, 11, 850, color, "middle")
+            body += text(center, 240, name, 8.2, 720, MUTED, "middle")
+            if index == 2:
+                check_x, check_y = center + 24, bar_top + 13
+                body += f'<circle cx="{check_x}" cy="{check_y}" r="8" fill="{teal}" stroke="#ffffff" stroke-width="2"/>'
+                body += f'<path d="M{check_x-3} {check_y} L{check_x-0.5} {check_y+2.5} L{check_x+4} {check_y-3}" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'
+        body += text(x + panel_w - 20, 260, "0 duplicate results", 8.5, 750, teal, "end")
         return body
 
     parts = [
@@ -1612,7 +1604,6 @@ def render_batch_retry_evidence_svg() -> str:
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{width}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="10" y="10" width="{width-20}" height="{height-20}" rx="7" fill="{SURFACE}" stroke="{LINE}"/>',
-        '<defs>', marker("proof-arrow", blue), '</defs>',
         proof_panel(30, "Single replica", 38),
         proof_panel(452, "Two replicas", 57),
         '</svg>\n',
@@ -1621,7 +1612,7 @@ def render_batch_retry_evidence_svg() -> str:
 
 
 def render_batch_eviction_data_svg(root: Path) -> str:
-    """Compare matched real-time p95 TTFT medians across the four eviction scenarios."""
+    """Show each condition's distance from the real-time-only TTFT reference."""
     teal = "#087f72"
     source = root / "benchmark-data/batch-eviction/single-model-replica/summary.csv"
     grouped: dict[str, list[float]] = {}
@@ -1635,40 +1626,42 @@ def render_batch_eviction_data_svg(root: Path) -> str:
         ("Reserved + eviction", "Realtime with reserved capacity, batch eviction, and retry", "#087f72"),
     ]
     values = [(label, statistics.median(grouped[key]), color) for label, key, color in scenarios]
-    height = 260
-    left, right, top, bottom = 92.0, 830.0, 72.0, 200.0
-    minimum, maximum = 0.0, 600.0
+    height = 264
+    left, right, top, bottom = 96.0, 836.0, 60.0, 202.0
+    minimum, maximum = -50.0, 250.0
 
-    def y(value: float) -> float:
+    def y_delta(value: float) -> float:
         return bottom - (value - minimum) / (maximum - minimum) * (bottom - top)
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Reserved capacity and reserved capacity with eviction kept real-time p95 time to first token near the real-time-only reference while unprotected batch raised latency">',
+        f'role="img" aria-label="Unprotected batch increased real-time p95 time to first token by 219 milliseconds from the 342 millisecond real-time-only reference. Reserved capacity measured one millisecond below the reference and reserved capacity with eviction measured six milliseconds above it.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect x="1" y="1" width="{WIDTH - 2}" height="{height - 2}" rx="6" fill="#ffffff" stroke="{LINE}"/>',
-        text(28, 34, "Real-time p95 TTFT (milliseconds)", 10, 700, MUTED),
+        text(28, 32, f"Change from real-time-only reference ({reference:.0f} ms)", 10, 700, MUTED),
     ]
-    for tick in (0, 200, 400, 600):
-        ty = y(tick)
+    for tick in (-50, 0, 100, 200):
+        ty = y_delta(tick)
         parts.append(f'<line x1="{left}" y1="{ty:.1f}" x2="{right}" y2="{ty:.1f}" stroke="#e4e9ee"/>')
-        parts.append(text(left - 14, ty + 3, tick, 8, 650, MUTED, "end"))
-    reference_y = y(reference)
+        tick_label = "reference" if tick == 0 else f"{tick:+d} ms"
+        parts.append(text(left - 12, ty + 3, tick_label, 8, 650, MUTED, "end"))
+    reference_y = y_delta(0)
     column_w = 94
     for index, (label, value, color) in enumerate(values):
         x = 170 + index * 238
-        top_y = y(value)
-        base_y = y(minimum)
-        parts.append(f'<rect x="{x}" y="{top_y:.1f}" width="{column_w}" height="{base_y-top_y:.1f}" rx="5" fill="{color}"/>')
-        label_y = top_y - 8 if abs(value - reference) > 40 else top_y + 17
-        label_color = color if abs(value - reference) > 40 else "#ffffff"
-        parts.append(text(x + column_w / 2, label_y, f"{value:.0f} ms", 10, 800, label_color, "middle"))
-        parts.append(text(x + column_w / 2, 232, label, 9, 700, INK, "middle"))
-    parts.extend([
-        f'<line x1="{left}" y1="{reference_y:.1f}" x2="{right}" y2="{reference_y:.1f}" stroke="#22313f" stroke-width="3"/>',
-        f'<rect x="{right - 202}" y="{reference_y - 19:.1f}" width="202" height="16" rx="3" fill="#ffffff"/>',
-        text(right - 4, reference_y - 8, f"Real-time-only reference · {reference:.0f} ms", 9, 800, "#22313f", "end"),
-    ])
+        delta = value - reference
+        delta_y = y_delta(delta)
+        bar_y = min(reference_y, delta_y)
+        bar_h = max(4.0, abs(delta_y - reference_y))
+        if abs(delta) < 10:
+            bar_y = reference_y - 2 if delta >= 0 else reference_y
+        parts.append(f'<rect x="{x}" y="{bar_y:.1f}" width="{column_w}" height="{bar_h:.1f}" rx="5" fill="{color}"/>')
+        value_y = delta_y - 10 if delta >= 0 else delta_y + 18
+        parts.append(text(x + column_w / 2, value_y, f"{value:.0f} ms", 10, 850, color, "middle"))
+        delta_label = f"{delta:+.0f} ms"
+        parts.append(text(x + column_w / 2, 220, delta_label, 9, 800, color, "middle"))
+        parts.append(text(x + column_w / 2, 242, label, 9, 700, INK, "middle"))
+    parts.append(f'<line x1="{left}" y1="{reference_y:.1f}" x2="{right}" y2="{reference_y:.1f}" stroke="#22313f" stroke-width="2.5"/>')
     parts.append("</svg>\n")
     return "".join(parts)
 
