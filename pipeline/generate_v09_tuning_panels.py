@@ -629,9 +629,9 @@ def render_configuration_admission_svg() -> str:
         f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{width - 20}" height="{height - 20}" rx="7" fill="#ffffff" stroke="{LINE}"/>',
         '<defs>'
-        '<marker id="admit-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#667180"/></marker>'
-        '<marker id="queue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#2d6cdf"/></marker>'
-        '<marker id="kv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#c56a00"/></marker>'
+        '<marker id="admit-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#667180"/></marker>'
+        '<marker id="queue-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#2d6cdf"/></marker>'
+        '<marker id="kv-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#c56a00"/></marker>'
         '</defs>',
         component(28, 108, 112, 50, "New requests", LINE, "#fbfcfd"),
         f'<rect x="176" y="38" width="382" height="254" rx="8" fill="#f4fbf9" stroke="{teal}" stroke-width="2"/>',
@@ -640,9 +640,12 @@ def render_configuration_admission_svg() -> str:
         text(277, 129, "Request count", 9, 780, INK, "middle"),
         text(277, 146, "128 in-flight", 8, 700, MUTED, "middle"),
         component(384, 108, 146, 50, "Admission gate", teal, "#ffffff"),
-        f'<rect x="384" y="220" width="146" height="44" rx="6" fill="#fffaf5" stroke="{orange}" stroke-width="1.5"/>',
-        text(457, 238, "Policy queue", 9, 780, INK, "middle"),
-        text(457, 253, "new work waits", 8, 700, MUTED, "middle"),
+        f'<rect x="204" y="220" width="146" height="44" rx="6" fill="#fffaf5" stroke="{orange}" stroke-width="1.5"/>',
+        text(277, 238, "Policy queue", 9, 780, INK, "middle"),
+        text(277, 253, "new work waits", 8, 700, MUTED, "middle"),
+        f'<rect x="384" y="220" width="146" height="44" rx="6" fill="#ffffff" stroke="{gray}" stroke-width="1.5"/>',
+        text(457, 238, "Reactive pressure", 9, 780, INK, "middle"),
+        text(457, 253, "queue or KV signal", 8, 700, MUTED, "middle"),
         f'<path d="M140 133 H204" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
         f'<path d="M350 133 H384" fill="none" stroke="{teal}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
         f'<rect x="588" y="38" width="256" height="254" rx="8" fill="#f7faff" stroke="{blue}" stroke-width="2"/>',
@@ -651,9 +654,10 @@ def render_configuration_admission_svg() -> str:
         component(616, 188, 200, 40, "Waiting queue · depth", blue, "#ffffff"),
         component(616, 244, 200, 40, "KV cache · pressure", orange, "#ffffff"),
         f'<path d="M530 133 H616" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
-        f'<path d="M457 158 V220" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
-        f'<path d="M616 208 H568 V90 H490 V108" fill="none" stroke="{blue}" stroke-width="2" marker-end="url(#queue-arrow)"/>',
-        f'<path d="M616 264 H548 V78 H450 V108" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
+        f'<path d="M420 158 V196 H277 V220" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
+        f'<path d="M616 208 H566 V232 H530" fill="none" stroke="{blue}" stroke-width="2" marker-end="url(#queue-arrow)"/>',
+        f'<path d="M616 264 H566 V252 H530" fill="none" stroke="{orange}" stroke-width="2" marker-end="url(#kv-arrow)"/>',
+        f'<path d="M457 220 V158" fill="none" stroke="{gray}" stroke-width="2" marker-end="url(#admit-arrow)"/>',
     ]
     parts.append('</svg>\n')
     return "".join(parts)
@@ -701,6 +705,10 @@ def render_configuration_request_shape_svg() -> str:
             stroke_width = 3 if value == lower_value else 0
             parts.append(f'<rect x="{x_pos:.1f}" y="{top_y:.1f}" width="{bar_width}" height="{bottom - top_y:.1f}" rx="5" fill="{color}" stroke="{stroke}" stroke-width="{stroke_width}"/>')
             parts.append(text(x_pos + bar_width / 2, top_y - 8, f"{value:,}", 10, 800, color, "middle"))
+            if value == lower_value:
+                cx, cy = x_pos + bar_width - 3, top_y + 7
+                parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="8" fill="#087f72" stroke="#ffffff" stroke-width="2"/>')
+                parts.append(f'<path d="M{cx-3:.1f} {cy:.1f} L{cx-0.5:.1f} {cy+2.5:.1f} L{cx+4:.1f} {cy-3:.1f}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
         parts.append(text(center, 296, label, 11, 800, INK, "middle"))
     parts.append('</svg>\n')
     return "".join(parts)
@@ -1014,7 +1022,7 @@ def render_configuration_map_svg() -> str:
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="7" fill="#ffffff" stroke="{LINE}"/>',
-        '<defs><marker id="ladder-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8b96a3"/></marker></defs>',
+        '<defs><marker id="ladder-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#8b96a3"/></marker></defs>',
     ]
     box_w, box_h, gap, start_x, top = 152, 116, 20, 20, 48
     for index, (number, label, values, color) in enumerate(steps):
@@ -1029,7 +1037,7 @@ def render_configuration_map_svg() -> str:
         for line_index, value in enumerate(values):
             parts.append(text(x + box_w / 2, value_start + line_index * 15, value, 8.5, 700, color, "middle"))
         if index < len(steps) - 1:
-            parts.append(f'<path d="M{x + box_w} {top + box_h / 2} H{x + box_w + gap - 8}" stroke="#8b96a3" stroke-width="2" marker-end="url(#ladder-arrow)"/>')
+            parts.append(f'<path d="M{x + box_w + 3} {top + box_h / 2} H{x + box_w + gap - 4}" stroke="#8b96a3" stroke-width="1.4" marker-end="url(#ladder-arrow)"/>')
     parts.append("</svg>\n")
     return "".join(parts)
 
@@ -1128,91 +1136,87 @@ def render_dispatch_path_svg() -> str:
 
 
 def render_batch_interference_takeaway_svg() -> str:
-    """Compare real-time latency with and without batch already running."""
-    ref_ms = 133
-    delayed_ms = 15378
-    delayed_s = delayed_ms / 1000.0
-    ratio = int(round(delayed_ms / ref_ms))
-    teal, orange = "#087f72", "#c56a00"
-    left, right = 190.0, 820.0
+    """Compare real-time latency with vertical log-scale columns."""
+    orange = "#c56a00"
+    values = [("Real-time only", 0.133, "133 ms", "#667180"), ("Batch running", 15.378, "15.4 s", orange)]
+    height = 300
+    top, bottom = 62.0, 236.0
     log_min, log_max = math.log10(0.1), math.log10(30.0)
 
-    def marker_x(seconds: float) -> float:
-        return left + (math.log10(seconds) - log_min) / (log_max - log_min) * (right - left)
+    def y(seconds: float) -> float:
+        return bottom - (math.log10(seconds) - log_min) / (log_max - log_min) * (bottom - top)
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
         f'role="img" aria-label="Batch in vLLM raised real-time p95 TTFT from 133 ms to 15.4 seconds">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
-        f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{PAGE}"/>',
-        f'<rect x="20" y="10" width="{PANEL_W}" height="{HEIGHT - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
+        f'<rect width="{WIDTH}" height="{height}" fill="{PAGE}"/>',
+        f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="4" fill="{orange}" rx="6"/>',
         text(38, 40, "Real-time p95 TTFT (seconds, log scale)", 12, 700, MUTED),
     ]
-    for seconds, label in [(0.1, "0.1"), (0.3, "0.3"), (1.0, "1"), (3.0, "3"), (10.0, "10"), (30.0, "30 s")]:
-        x = marker_x(seconds)
-        parts.append(f'<line x1="{x:.1f}" y1="78" x2="{x:.1f}" y2="218" stroke="#e7ebef"/>')
-        parts.append(text(x, 73, label, 8, 600, MUTED, "middle"))
-
-    rows = [
-        ("Real-time only", ref_ms / 1000.0, f"{ref_ms} ms", teal, 116),
-        ("Batch running", delayed_s, f"{delayed_s:.1f} s", orange, 178),
-    ]
-    for label, seconds, value_label, color, y in rows:
-        end = marker_x(seconds)
-        parts.append(text(left - 16, y + 4, label, 10, 750, INK, "end"))
-        parts.append(f'<line x1="{left}" y1="{y}" x2="{right}" y2="{y}" stroke="#edf1f4" stroke-width="14" stroke-linecap="round"/>')
-        parts.append(f'<rect x="{end - 8:.1f}" y="{y - 8:.1f}" width="16" height="16" rx="4" fill="{color}"/>')
-        anchor = "end" if end > right - 70 else "start"
-        value_x = end - 12 if anchor == "end" else end + 12
-        parts.append(text(value_x, y - 13, value_label, 11, 800, color, anchor))
+    for seconds in (0.1, 0.3, 1, 3, 10, 30):
+        yp = y(seconds)
+        parts.append(f'<line x1="104" y1="{yp:.1f}" x2="826" y2="{yp:.1f}" stroke="#e7ebef"/>')
+        parts.append(text(92, yp + 3, f"{seconds:g}", 8, 650, MUTED, "end"))
+    for center, (label, seconds, value_label, color) in zip((300, 600), values):
+        top_y = y(seconds)
+        parts.append(f'<rect x="{center - 62}" y="{top_y:.1f}" width="124" height="{bottom - top_y:.1f}" rx="6" fill="{color}"/>')
+        parts.append(text(center, top_y - 10, value_label, 12, 800, color, "middle"))
+        parts.append(text(center, 262, label, 11, 760, INK, "middle"))
 
     parts.append("</svg>\n")
     return "".join(parts)
 
 
 def render_scale_takeaway_svg() -> str:
-    """Show per-GPU throughput as a stable line with the HTTP boundary beneath it."""
+    """Pair total throughput growth with stable per-GPU throughput."""
     replicas = [1, 2, 4]
     throughput = [4.293, 4.317, 4.302]
     rejections = [5, 1, 0]
-    teal, orange = "#087f72", "#c56a00"
-    left, right, top, bottom = 130.0, 750.0, 92.0, 184.0
+    total = [replica * value for replica, value in zip(replicas, throughput)]
+    blue, purple, orange = "#2d6cdf", "#6550a5", "#c56a00"
+    height = 336
 
-    def x(index: int) -> float:
-        return left + index * (right - left) / 2
-
-    def y(value: float) -> float:
-        return bottom - (value - 4.25) / 0.10 * (bottom - top)
-
-    points = " ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(throughput))
+    def per_gpu_y(value: float) -> float:
+        return 238 - (value - 4.25) / 0.10 * 126
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="Served throughput per GPU stayed within 0.6 percent from one to four replicas; smaller pools returned a few HTTP non-200 responses">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Total served throughput rose with replica count while served throughput per GPU stayed within 0.6 percent from one to four replicas">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{PAGE}"/>',
-        f'<rect x="20" y="10" width="{PANEL_W}" height="{HEIGHT - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
-        f'<rect x="20" y="10" width="{PANEL_W}" height="4" fill="{teal}" rx="6"/>',
-        text(38, 40, "Median served throughput per GPU (requests/s) · three repeats", 12, 700, MUTED),
-        f'<rect x="{left}" y="{y(4.32):.1f}" width="{right-left}" height="{y(4.29)-y(4.32):.1f}" fill="{teal}" opacity="0.12"/>',
+        f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
+        f'<rect x="38" y="56" width="386" height="244" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
+        f'<rect x="456" y="56" width="386" height="244" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
+        text(58, 82, "Total served throughput (requests/s)", 11, 750, MUTED),
+        text(476, 82, "Served throughput per GPU (requests/s)", 11, 750, MUTED),
     ]
-    for value in [4.25, 4.30, 4.35]:
-        yp = y(value)
-        parts.append(f'<line x1="{left}" y1="{yp:.1f}" x2="{right}" y2="{yp:.1f}" stroke="#e7ebef"/>')
-        parts.append(text(left - 12, yp + 3, f"{value:.2f}", 8, 600, MUTED, "end"))
-    parts.append(f'<polyline points="{points}" fill="none" stroke="{teal}" stroke-width="4"/>')
+    for tick in (0, 6, 12, 18):
+        yp = 252 - tick / 18 * 144
+        parts.append(f'<line x1="74" y1="{yp:.1f}" x2="404" y2="{yp:.1f}" stroke="#e7ebef"/>')
+        parts.append(text(66, yp + 3, tick, 8, 650, MUTED, "end"))
+    centers = (126, 232, 338)
+    for center, replica, value in zip(centers, replicas, total):
+        top_y = 252 - value / 18 * 144
+        parts.append(f'<rect x="{center - 34}" y="{top_y:.1f}" width="68" height="{252 - top_y:.1f}" rx="5" fill="{blue}"/>')
+        parts.append(text(center, top_y - 8, f"{value:.2f}", 10, 800, blue, "middle"))
+        parts.append(text(center, 276, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"))
+    for value in (4.25, 4.30, 4.35):
+        yp = per_gpu_y(value)
+        parts.append(f'<line x1="492" y1="{yp:.1f}" x2="816" y2="{yp:.1f}" stroke="#e7ebef"/>')
+        parts.append(text(484, yp + 3, f"{value:.2f}", 8, 650, MUTED, "end"))
+    points = " ".join(f"{540 + i * 110:.1f},{per_gpu_y(v):.1f}" for i, v in enumerate(throughput))
+    parts.append(f'<polyline points="{points}" fill="none" stroke="{purple}" stroke-width="3"/>')
     for index, (replica, value, non200) in enumerate(zip(replicas, throughput, rejections)):
-        xp, yp = x(index), y(value)
+        xp, yp = 540 + index * 110, per_gpu_y(value)
         parts.extend([
-            f'<circle cx="{xp:.1f}" cy="{yp:.1f}" r="7" fill="{teal}"/>',
-            text(xp, yp - 12, f"{value:.2f}", 11, 800, teal, "middle"),
-            text(xp, 207, f"{replica} replica" + ("s" if replica > 1 else ""), 10, 700, INK, "middle"),
-            f'<circle cx="{xp - 18:.1f}" cy="232" r="4" fill="{orange if non200 else teal}"/>',
-            text(xp - 8, 235, f"HTTP non-200: {non200}", 9, 650, MUTED),
+            f'<circle cx="{xp:.1f}" cy="{yp:.1f}" r="6" fill="{purple}"/>',
+            text(xp, yp - 11, f"{value:.2f}", 10, 800, purple, "middle"),
+            text(xp, 276, f"{replica} replica" + ("s" if replica > 1 else ""), 9, 700, INK, "middle"),
+            f'<circle cx="{xp - 24:.1f}" cy="292" r="3.5" fill="{orange if non200 else blue}"/>',
+            text(xp - 16, 295, f"non-200: {non200}", 7.5, 650, MUTED),
         ])
-    parts.extend([
-        text(804, 76, "0.6% spread", 10, 800, teal, "end"),
-        "</svg>\n",
-    ])
+    parts.append(text(816, 100, "0.6% spread", 9, 800, purple, "end"))
+    parts.append("</svg>\n")
     return "".join(parts)
 
 
@@ -1248,6 +1252,10 @@ def render_mixed_takeaway_svg() -> str:
         stroke = emphasis if value == min(req_premium, tok_premium) else "none"
         parts.append(f'<rect x="{bx:.0f}" y="{by:.1f}" width="{bar_w}" height="{bh:.1f}" rx="5" fill="{color}" stroke="{stroke}" stroke-width="{3 if stroke != "none" else 0}"/>')
         parts.append(text(bx + bar_w / 2, by - 6, f"{value:,} ms", 12, 800, INK, "middle"))
+        if value == min(req_premium, tok_premium):
+            cx, cy = bx + bar_w - 4, by + 8
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="8" fill="#087f72" stroke="#ffffff" stroke-width="2"/>')
+            parts.append(f'<path d="M{cx-3:.1f} {cy:.1f} L{cx-0.5:.1f} {cy+2.5:.1f} L{cx+4:.1f} {cy-3:.1f}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
         parts.append(text(bx + bar_w / 2, label_y, label, 10, 650, MUTED, "middle"))
     batch_max = req_batch
     parts.extend([
@@ -1266,6 +1274,10 @@ def render_mixed_takeaway_svg() -> str:
             parts.append(text(bx + bar_w / 2, by - 6, f"{value / 1000:.1f} s", 12, 800, INK, "middle"))
         else:
             parts.append(text(bx + bar_w / 2, by - 6, f"{value:,} ms", 12, 800, INK, "middle"))
+        if value == min(req_batch, tok_batch):
+            cx, cy = bx + bar_w - 4, by + 8
+            parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="8" fill="#087f72" stroke="#ffffff" stroke-width="2"/>')
+            parts.append(f'<path d="M{cx-3:.1f} {cy:.1f} L{cx-0.5:.1f} {cy+2.5:.1f} L{cx+4:.1f} {cy-3:.1f}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')
         parts.append(text(bx + bar_w / 2, label_y, label, 10, 650, MUTED, "middle"))
     parts.append("</svg>\n")
     return "".join(parts)
@@ -1326,48 +1338,53 @@ def render_workload_shape_takeaway_svg() -> str:
 
 
 def render_stability_takeaway_svg() -> str:
-    """Overlay queue pressure and premium latency across surge and recovery windows."""
+    """Align separate latency and queue plots across surge and recovery phases."""
     labels = ["Baseline", "Surge 1", "Recovery 1", "Surge 2", "Recovery 2", "Final"]
     latency = [299, 1760, 127, 1227, 279, 290]
     queue = [0, 39, 0, 27, 0, 0]
     blue, orange, green = "#2d6cdf", "#c56a00", "#087f72"
-    left, right, top, bottom = 108.0, 816.0, 86.0, 210.0
+    height = 372
+    left, right = 108.0, 816.0
 
     def x(index: int) -> float:
         return left + index * (right - left) / (len(labels) - 1)
 
     def y_latency(value: float) -> float:
-        return bottom - value / 2000.0 * (bottom - top)
+        return 184 - value / 2000.0 * 100
 
     def y_queue(value: float) -> float:
-        return bottom - value / 40.0 * (bottom - top)
+        return 318 - value / 40.0 * 88
 
     latency_points = " ".join(f"{x(i):.1f},{y_latency(v):.1f}" for i, v in enumerate(latency))
     queue_points = " ".join(f"{x(i):.1f},{y_queue(v):.1f}" for i, v in enumerate(queue))
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="Queue pressure and premium latency rose during both surges and returned to their earlier range during both recovery windows">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Premium latency and queue depth rise during two surges and return during both recovery windows">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{WIDTH}" height="{HEIGHT}" fill="{PAGE}"/>',
-        f'<rect x="20" y="10" width="{PANEL_W}" height="{HEIGHT - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
+        f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="4" fill="{green}" rx="6"/>',
-        text(38, 40, "Premium p95 TTFT (ms) and peak queue (requests) · one 30-minute run", 12, 700, MUTED),
-        text(left, 72, "Latency (ms)", 9, 750, orange),
-        text(right, 72, "Queue (requests)", 9, 750, blue, "end"),
+        text(38, 40, "One 30-minute run", 12, 700, MUTED),
+        text(38, 70, "Premium p95 TTFT (milliseconds)", 9, 750, orange),
+        text(38, 218, "Peak queue depth (requests)", 9, 750, blue),
     ]
+    for index in (2, 4):
+        xp = x(index)
+        parts.append(f'<rect x="{xp - 52:.1f}" y="76" width="104" height="252" rx="5" fill="#eaf6f3" opacity="0.72"/>')
     for value in [0, 1000, 2000]:
         yp = y_latency(value)
         parts.append(f'<line x1="{left}" y1="{yp:.1f}" x2="{right}" y2="{yp:.1f}" stroke="#e7ebef"/>')
         parts.append(text(left - 10, yp + 3, f"{value:,}", 8, 600, MUTED, "end"))
     for value in [0, 20, 40]:
         yp = y_queue(value)
-        parts.append(text(right + 12, yp + 3, f"{value}", 8, 600, blue, "start"))
+        parts.append(f'<line x1="{left}" y1="{yp:.1f}" x2="{right}" y2="{yp:.1f}" stroke="#e7ebef"/>')
+        parts.append(text(left - 10, yp + 3, f"{value}", 8, 600, MUTED, "end"))
     parts.extend([
         f'<polyline points="{latency_points}" fill="none" stroke="{orange}" stroke-width="4"/>',
         f'<polyline points="{queue_points}" fill="none" stroke="{blue}" stroke-width="3"/>',
     ])
     for index, label in enumerate(labels):
         xp = x(index)
-        label_y = y_latency(latency[index]) - 12
+        label_y = y_latency(latency[index]) - 10
         label_anchor = "middle"
         label_x = xp
         if index == 1:
@@ -1382,22 +1399,26 @@ def render_stability_takeaway_svg() -> str:
             label_y -= 4
         latency_y = y_latency(latency[index])
         queue_y = y_queue(queue[index])
-        if index in (2, 4, 5):
+        if index in (2, 4):
             parts.append(f'<circle cx="{xp:.1f}" cy="{latency_y:.1f}" r="10" fill="none" stroke="{green}" stroke-width="3"/>')
         parts.extend([
             f'<circle cx="{xp:.1f}" cy="{latency_y:.1f}" r="6" fill="{orange}"/>',
             f'<circle cx="{xp:.1f}" cy="{queue_y:.1f}" r="5" fill="{blue}"/>',
             text(label_x, label_y, f"{latency[index]:,} ms", 8, 800, orange, label_anchor),
-            text(xp, 228, label, 8, 650, INK, "middle"),
+            text(xp, 346, label, 8, 650, INK, "middle"),
         ])
+        if index in (2, 4):
+            parts.append(f'<circle cx="{xp:.1f}" cy="{queue_y:.1f}" r="9" fill="none" stroke="{green}" stroke-width="2.5"/>')
+        if queue[index] > 0:
+            parts.append(text(xp, queue_y - 10, queue[index], 8, 800, blue, "middle"))
     parts.append("</svg>\n")
     return "".join(parts)
 
 
 def render_batch_eviction_takeaway_svg() -> str:
-    """Show reserve-before-dispatch and the explicit eviction/retry request path."""
+    """Show reserve, eviction, and retry with one shared Gateway."""
     teal, blue, orange, red, gray = "#087f72", "#2d6cdf", "#c56a00", "#b83232", "#667180"
-    height = 432
+    height = 410
 
     def box(x: float, y: float, w: float, h: float, title: str, subtitle: str = "", stroke: str = LINE, fill: str = "#ffffff") -> str:
         title_y = y + h / 2 - (5 if subtitle else -3)
@@ -1424,47 +1445,51 @@ def render_batch_eviction_takeaway_svg() -> str:
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="8" fill="#ffffff" stroke="{LINE}"/>',
         '<defs>'
-        '<marker id="reserve-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#087f72"/></marker>'
-        '<marker id="batch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#c56a00"/></marker>'
-        '<marker id="retry-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#2d6cdf"/></marker>'
-        '<marker id="reset-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b83232"/></marker>'
-        '<marker id="gray-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#667180"/></marker>'
+        '<marker id="reserve-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#087f72"/></marker>'
+        '<marker id="batch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#c56a00"/></marker>'
+        '<marker id="retry-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#2d6cdf"/></marker>'
+        '<marker id="reset-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#b83232"/></marker>'
+        '<marker id="gray-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="#667180"/></marker>'
         '</defs>',
-        f'<rect x="30" y="26" width="820" height="154" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(50, 52, "Reserved capacity", 12, 800, teal),
-        box(50, 88, 112, 56, "Gateway", "request labels"),
-        arrow("M162 116 H206", gray, "gray-arrow"),
-        f'<rect x="216" y="68" width="386" height="102" rx="7" fill="#f1fbf8" stroke="{teal}" stroke-width="1.5"/>',
-        text(409, 88, "Endpoint Picker", 9, 800, INK, "middle"),
-        f'<rect x="238" y="99" width="326" height="26" rx="4" fill="#ffffff" stroke="{teal}"/>',
-        text(250, 116, "real-time", 7.8, 750, teal),
-        slots(332, 107, [teal, teal, teal]),
-        f'<rect x="238" y="135" width="326" height="26" rx="4" fill="#fff8f0" stroke="{orange}"/>',
-        text(250, 152, "batch", 7.8, 750, orange),
-        slots(332, 143, [orange, orange, orange, orange, orange]),
-        arrow("M564 112 H684", teal, "reserve-arrow"),
-        f'<rect x="608" y="106" width="12" height="12" rx="2" fill="{teal}" stroke="#ffffff" stroke-width="1.5"/>',
-        f'<rect x="696" y="78" width="122" height="80" rx="7" fill="#ffffff" stroke="{LINE}"/>',
-        text(757, 97, "vLLM", 9, 800, INK, "middle"),
-        slots(721, 108, [teal, teal, teal, teal, "#dbe9e6", teal, teal, teal, teal, "#dbe9e6"]),
-        text(757, 151, "running slots", 7.2, 650, MUTED, "middle"),
-        f'<rect x="30" y="194" width="820" height="206" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
-        text(50, 220, "Eviction and retry", 12, 800, orange),
-        box(50, 244, 142, 58, "Endpoint Picker", "selects running batch", orange, "#fffaf4"),
-        box(242, 244, 160, 58, "Gateway / Envoy", "returns HTTP 429"),
-        box(452, 244, 134, 58, "vLLM", "releases sequence", red, "#fff8f8"),
-        arrow("M192 273 H242", orange, "batch-arrow"),
-        text(217, 258, "ImmediateResponse(429)", 6.8, 800, orange, "middle"),
-        arrow("M402 273 H452", red, "reset-arrow"),
-        text(427, 258, "reset", 7.2, 800, red, "middle"),
-        box(242, 332, 120, 46, "HTTP 429", "retryable response", blue, "#f7f9ff"),
-        box(402, 332, 132, 46, "Batch client", "Async Processor", blue, "#f7f9ff"),
-        box(574, 332, 116, 46, "New request", "same job", blue, "#f7f9ff"),
-        box(730, 332, 90, 46, "Gateway", "re-entry", blue, "#f7f9ff"),
-        arrow("M322 302 V332", blue, "retry-arrow"),
-        arrow("M362 355 H402", blue, "retry-arrow"),
-        arrow("M534 355 H574", blue, "retry-arrow"),
-        arrow("M690 355 H730", blue, "retry-arrow"),
+        f'<rect x="30" y="24" width="820" height="158" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(50, 48, "Reserved capacity", 11, 800, teal),
+        box(54, 76, 124, 58, "Gateway / Envoy", "request path"),
+        f'<rect x="230" y="54" width="356" height="112" rx="8" fill="#f1fbf8" stroke="{teal}" stroke-width="1.6"/>',
+        text(408, 72, "Endpoint Picker", 9, 800, INK, "middle"),
+        f'<rect x="250" y="82" width="316" height="28" rx="5" fill="#ffffff" stroke="{teal}"/>',
+        text(264, 100, "real-time", 8, 750, teal),
+        slots(396, 90, [teal, teal, teal]),
+        f'<rect x="250" y="122" width="316" height="28" rx="5" fill="#fff8f0" stroke="{orange}"/>',
+        text(264, 140, "batch", 8, 750, orange),
+        slots(396, 130, [orange, orange, orange, orange, orange]),
+        f'<rect x="692" y="64" width="112" height="86" rx="7" fill="#ffffff" stroke="{LINE}"/>',
+        text(748, 85, "vLLM", 10, 800, INK, "middle"),
+        slots(718, 98, [teal, teal, teal, teal, "#dbe9e6", teal, teal, teal, teal, "#dbe9e6"]),
+        text(748, 142, "running slots", 7.2, 650, MUTED, "middle"),
+        arrow("M178 105 H230", gray, "gray-arrow"),
+        arrow("M566 96 H692", teal, "reserve-arrow"),
+        f'<rect x="616" y="90" width="12" height="12" rx="2" fill="{teal}" stroke="#ffffff" stroke-width="1.5"/>',
+
+        f'<rect x="30" y="194" width="820" height="190" rx="8" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(50, 218, "Eviction and retry", 11, 800, orange),
+        box(50, 250, 124, 54, "Batch client", "Async Processor", blue, "#f7f9ff"),
+        box(224, 250, 132, 54, "Gateway / Envoy", "response + reset"),
+        box(406, 250, 132, 54, "Endpoint Picker", "selects batch", orange, "#fff8f0"),
+        box(686, 250, 116, 54, "vLLM", "releases sequence", red, "#fff8f8"),
+
+        arrow("M406 266 H356", orange, "batch-arrow"),
+        text(381, 257, "429", 7.5, 800, orange, "middle"),
+        arrow("M356 288 H686", red, "reset-arrow"),
+        text(521, 280, "reset stream", 7.5, 800, red, "middle"),
+        arrow("M224 288 H174", blue, "retry-arrow"),
+        text(199, 280, "HTTP 429", 7.5, 800, blue, "middle"),
+
+        arrow("M112 304 V344 H290 V304", blue, "retry-arrow"),
+        text(200, 338, "retry", 7.5, 800, blue, "middle"),
+        arrow("M290 304 V344 H472 V304", blue, "retry-arrow"),
+        text(381, 338, "route", 7.5, 800, blue, "middle"),
+        arrow("M472 304 V344 H744 V304", blue, "retry-arrow"),
+        text(608, 338, "dispatch", 7.5, 800, blue, "middle"),
     ]
     parts.append("</svg>\n")
     return "".join(parts)
@@ -1538,6 +1563,52 @@ def render_fairness_takeaway_svg() -> str:
     return "".join(parts)
 
 
+def render_batch_retry_evidence_svg() -> str:
+    """Show that every observed eviction returned once in both proof packages."""
+    teal, blue, orange, purple = "#087f72", "#2d6cdf", "#c56a00", "#6550a5"
+    width, height = 880, 312
+
+    def marker(marker_id: str, color: str) -> str:
+        return (
+            f'<marker id="{marker_id}" viewBox="0 0 10 10" refX="8" refY="5" '
+            f'markerWidth="4" markerHeight="4" orient="auto"><path d="M0 1L8 5L0 9Z" fill="{color}"/></marker>'
+        )
+
+    def proof_panel(x: float, label: str, count: int) -> str:
+        stage_y = 112
+        stage_w = 92
+        stage_h = 78
+        centers = [x + 72, x + 205, x + 338]
+        colors = [orange, blue, purple]
+        names = ["Evicted", "Retried", "Final result"]
+        body = f'<rect x="{x}" y="50" width="398" height="226" rx="7" fill="#fbfcfd" stroke="{LINE}"/>'
+        body += text(x + 20, 80, label, 12, 800, INK)
+        for index, (center, color, name) in enumerate(zip(centers, colors, names)):
+            body += f'<rect x="{center-stage_w/2:.1f}" y="{stage_y}" width="{stage_w}" height="{stage_h}" rx="7" fill="#ffffff" stroke="{color}" stroke-width="1.6"/>'
+            body += text(center, stage_y + 31, f"{count}", 19, 850, color, "middle")
+            body += text(center, stage_y + 56, name, 8.5, 740, MUTED, "middle")
+            if index < 2:
+                body += f'<path d="M{center+stage_w/2+8:.1f} {stage_y+stage_h/2:.1f} H{centers[index+1]-stage_w/2-8:.1f}" stroke="{blue}" stroke-width="2" marker-end="url(#proof-arrow)"/>'
+        check_x = centers[-1] + 34
+        check_y = stage_y + 17
+        body += f'<circle cx="{check_x}" cy="{check_y}" r="9" fill="{teal}" stroke="#ffffff" stroke-width="2"/>'
+        body += f'<path d="M{check_x-3} {check_y} L{check_x-0.5} {check_y+2.5} L{check_x+4} {check_y-3}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+        body += text(x + 20, 244, "0 duplicate results", 9, 750, teal)
+        return body
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="All 38 single-replica evictions and all 57 two-replica evictions were retried, and each produced one final result with no duplicates">',
+        '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
+        f'<rect width="{width}" height="{height}" fill="{PAGE}"/>',
+        f'<rect x="10" y="10" width="{width-20}" height="{height-20}" rx="7" fill="{SURFACE}" stroke="{LINE}"/>',
+        '<defs>', marker("proof-arrow", blue), '</defs>',
+        proof_panel(30, "Single replica", 38),
+        proof_panel(452, "Two replicas", 57),
+        '</svg>\n',
+    ]
+    return "".join(parts)
+
+
 def render_batch_eviction_data_svg(root: Path) -> str:
     """Compare matched real-time p95 TTFT medians across the four eviction scenarios."""
     teal = "#087f72"
@@ -1592,7 +1663,7 @@ def render_batch_eviction_data_svg(root: Path) -> str:
 
 
 def render_routing_takeaway_svg() -> str:
-    """Show the mixed latency result of prefix-aware routing across workloads."""
+    """Use neutral paired columns for the mixed prefix-routing result."""
     root = Path(__file__).resolve().parents[1]
     source = root / "benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/analysis.json"
     comparisons = json.loads(source.read_text())["overall_latency_comparison"]
@@ -1603,16 +1674,15 @@ def render_routing_takeaway_svg() -> str:
         "standard-long-context": "Standard long context",
         "batch-long-context": "Batch long context",
     }
-    width, height = 720, 310
-    left, right = 186.0, 574.0
+    width, height = 880, 432
     low_seconds, high_seconds = 0.5, 60.0
-    gray, teal = "#90a7c5", "#087f72"
+    gray, purple = "#667180", "#6550a5"
 
-    def x(value_ms: float) -> float:
+    def bar_height(value_ms: float) -> float:
         seconds = min(high_seconds, max(low_seconds, value_ms / 1000.0))
-        return left + (math.log10(seconds) - math.log10(low_seconds)) / (
+        return 116 * (math.log10(seconds) - math.log10(low_seconds)) / (
             math.log10(high_seconds) - math.log10(low_seconds)
-        ) * (right - left)
+        )
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
@@ -1620,29 +1690,28 @@ def render_routing_takeaway_svg() -> str:
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{width}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="10" y="10" width="{width - 20}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
-        text(28, 38, "Median surge p95 TTFT (seconds, log scale)", 13, 700, MUTED),
-        f'<rect x="28" y="52" width="{width - 56}" height="{height - 80}" fill="#fbfcfd" stroke="{LINE}" rx="6"/>',
-        f'<rect x="420" y="23" width="12" height="6" rx="3" fill="{gray}"/>',
-        text(438, 30, "Random", 10, 700, MUTED),
-        f'<rect x="506" y="23" width="12" height="6" rx="3" fill="{teal}"/>',
-        text(524, 30, "Prefix aware", 10, 700, MUTED),
+        text(28, 38, "Median surge p95 TTFT (seconds, log scale)", 12, 700, MUTED),
+        f'<rect x="600" y="25" width="12" height="10" rx="2" fill="{gray}"/>',
+        text(620, 34, "Random", 9, 700, MUTED),
+        f'<rect x="702" y="25" width="12" height="10" rx="2" fill="{purple}"/>',
+        text(722, 34, "Prefix aware", 9, 700, MUTED),
     ]
-    for seconds in (0.5, 1, 3, 10, 30, 60):
-        xp = x(seconds * 1000)
-        parts.append(f'<line x1="{xp:.1f}" y1="72" x2="{xp:.1f}" y2="{height - 42}" stroke="#e7ebef"/>')
-        parts.append(text(xp, 68, f"{seconds:g} s", 10, 650, MUTED, "middle"))
-    for index, row in enumerate(rows):
-        row_y = 96 + index * 48
-        parts.append(text(46, row_y + 9, labels[row["workload"]], 11, 740, INK))
-        for offset, value, color in (
-            (0, float(row["random_routing_median_ms"]), gray),
-            (16, float(row["prefix_aware_routing_median_ms"]), teal),
-        ):
-            y = row_y + offset
-            end = x(value)
-            parts.append(f'<line x1="{left}" y1="{y}" x2="{right}" y2="{y}" stroke="#edf1f4" stroke-width="9" stroke-linecap="round"/>')
-            parts.append(f'<line x1="{left}" y1="{y}" x2="{end:.1f}" y2="{y}" stroke="{color}" stroke-width="9" stroke-linecap="round"/>')
-            parts.append(text(674, y + 4, fmt_latency(value), 11, 800, color, "end"))
+    panels = [(28, 58), (448, 58), (28, 238), (448, 238)]
+    for row, (panel_x, panel_y) in zip(rows, panels):
+        parts.append(f'<rect x="{panel_x}" y="{panel_y}" width="404" height="164" fill="#fbfcfd" stroke="{LINE}" rx="6"/>')
+        parts.append(text(panel_x + 18, panel_y + 27, labels[row["workload"]], 11, 780, INK))
+        baseline = panel_y + 136
+        for tick in (1, 10):
+            tick_h = 116 * (math.log10(tick) - math.log10(low_seconds)) / (math.log10(high_seconds) - math.log10(low_seconds))
+            ty = baseline - tick_h
+            parts.append(f'<line x1="{panel_x + 54}" y1="{ty:.1f}" x2="{panel_x + 376}" y2="{ty:.1f}" stroke="#e7ebef"/>')
+            parts.append(text(panel_x + 46, ty + 3, f"{tick:g} s", 7.5, 650, MUTED, "end"))
+        values = [float(row["random_routing_median_ms"]), float(row["prefix_aware_routing_median_ms"])]
+        for center, label, value, color in zip((panel_x + 166, panel_x + 274), ("Random", "Prefix"), values, (gray, purple)):
+            bh = bar_height(value)
+            parts.append(f'<rect x="{center - 34}" y="{baseline - bh:.1f}" width="68" height="{bh:.1f}" rx="5" fill="{color}"/>')
+            parts.append(text(center, baseline - bh - 8, fmt_latency(value), 9.5, 800, color, "middle"))
+            parts.append(text(center, baseline + 18, label, 8.5, 700, MUTED, "middle"))
     parts.append("</svg>\n")
     return "".join(parts)
 
@@ -1918,6 +1987,9 @@ def main() -> int:
     batch_data = root / "assets" / "batch-eviction-data.svg"
     write_svg(batch_data, render_batch_eviction_data_svg(root))
     print(f"wrote {batch_data} (measured batch eviction data)")
+    batch_retry_evidence = root / "assets" / "batch-retry-evidence.svg"
+    write_svg(batch_retry_evidence, render_batch_retry_evidence_svg())
+    print(f"wrote {batch_retry_evidence} (measured batch retry evidence)")
     detector_panel = out / "detector-comparison.svg"
     write_svg(detector_panel, render_detector_comparison_takeaway_svg(root))
     print(f"wrote {detector_panel} (detector comparison takeaway)")

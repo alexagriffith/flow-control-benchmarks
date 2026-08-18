@@ -156,8 +156,8 @@ after work reaches vLLM.**
 | Queue depth | Calibrated per workload; a threshold of 8 was selected in the short calibration |
 | KV pressure | 0.8 retained as a pressure guardrail |
 
-The production detector comparison tests request count and queue depth
-directly.
+The [production detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production)
+tests request count and queue depth directly.
 
 ### 4. Account for request shape
 
@@ -171,13 +171,7 @@ one-run screen.
 
 <sub>Admission calibration: median p95 TTFT across three matched runs per retained method. Lower is better; the outlined bar is lower within each prompt-size pair. The one-run input-plus-output screen was excluded from the retained comparison.</sub>
 
-The sweeps identified the GPU throughput knee, then set how much work vLLM
-could run. Request count became the default because it stops new work before
-dispatch. Queue depth and KV pressure remain useful when policy should react to
-pressure already visible inside vLLM. Input-token counting fits workloads whose
-prompt sizes vary materially.
-
-### 5. Preserve every sweep
+### 5. Configuration decisions and evidence
 
 | Decision | Setting carried forward | Evidence |
 |---|---|---|
@@ -189,6 +183,13 @@ prompt sizes vary materially.
 | Reactive memory signal | KV pressure; 0.8 retained as a guardrail | [Utilization detector calibration](benchmark-data/upstream-flow-control-v0.9.0/utilization-detector-calibration/) |
 | Size-aware admission | Exact input tokens; fixed output estimate rejected | [Request and token admission](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/) |
 | Historical priority tuning | 48-request cap for the two-repeat study only | [Historical priority tuning](benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning/) |
+
+The sweeps set a 128-request capacity reference, a 128-sequence limit, and an
+8,192-token batch budget for the later tests. Request count became the default
+admission signal because it limits work before dispatch. Queue depth and KV
+pressure remain reactive signals for workload-specific pressure inside vLLM.
+Input-token counting fit mixed prompt sizes, while request count stayed lower
+for the tested long prompts.
 
 ## Production scenarios
 
@@ -314,6 +315,9 @@ requests. Admission control left work already inside vLLM in place.
 
 [Batch-interference evidence](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) · [Batch-eviction evidence](benchmark-data/batch-eviction/)
 
+The batch-interference run also supplies the problem statement for the
+batch-eviction tests below.
+
 ### The queue drained after both surges
 
 Flow control engaged twice. The queue returned to zero after each surge, and
@@ -327,12 +331,14 @@ every request completed.
 
 ### Per-GPU throughput held from one to four replicas
 
-Served throughput per GPU varied by 0.6%. The tests returned five non-200
-responses at one replica, one at two replicas, and zero at four replicas.
+Total served throughput increased with the model pool while served throughput
+per GPU varied by 0.6%. Adding replicas did not reduce throughput per GPU in
+this test. The tests returned five non-200 responses at one replica, one at two
+replicas, and zero at four replicas.
 
 <img src="assets/v09-tuning/10-scale.svg" width="100%" alt="Served throughput per GPU stays stable as the model pool grows from one to four replicas">
 
-<sub>Scale test: median served throughput per GPU across three repeats at each pool size.</sub>
+<sub>Scale test: total and per-GPU served throughput across one, two, and four replicas. Each point is the median of three repeats.</sub>
 
 [Scaling evidence](benchmark-data/upstream-flow-control-v0.9.0/multi-replica-scaling/)
 
@@ -346,12 +352,36 @@ and requests were distributed less evenly across replicas.
 
 <sub>Prefix-routing test: median p95 TTFT across three repeats. Route imbalance was 0.9% with random routing and 19.1% with prefix-aware routing.</sub>
 
+| Cost in the routing run | Random routing | Prefix-aware routing |
+|---|---:|---:|
+| Standard long-context p95 TTFT | 10.3 s | 12.6 s |
+| Route imbalance | 0.9% | 19.1% |
+| HTTP 429 responses | 4 | 19 |
+
 [Prefix-routing evidence](benchmark-data/upstream-flow-control-v0.9.0/prefix-cache-routing/)
+
+Request shape changed which admission signal kept latency lower. Longer output
+and running batch increased first-token wait because they held vLLM capacity.
+The queue recovered after repeated surges, and per-GPU throughput stayed stable
+as replicas were added. Prefix-aware routing changed latency by workload and
+distributed requests less evenly in this run.
 
 ## Batch eviction tests
 
 The batch-eviction tests begin with batch work occupying vLLM capacity when
 real-time demand arrives.
+
+### Running batch blocked new real-time work
+
+Real-time p95 TTFT rose from 133 ms to 15.4 seconds after batch work occupied
+vLLM capacity. Admission control could still govern new requests, but it could
+not release work already running inside vLLM.
+
+<img src="assets/v09-tuning/08-batch-interference.svg" width="100%" alt="Real-time p95 time to first token rises from 133 milliseconds to 15.4 seconds when batch work already occupies vLLM">
+
+<sub>Batch-interference test: real-time p95 TTFT with and without running batch. Median across three matched repeats.</sub>
+
+[Batch-interference evidence](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/)
 
 ### Reserved capacity protected real-time traffic
 
@@ -362,6 +392,8 @@ work that had already entered vLLM.
 
 <sub>Single-replica test: real-time p95 TTFT across matched 300-second repeats.</sub>
 
+[Reserved-capacity evidence](benchmark-data/batch-eviction/single-model-replica/)
+
 ### Evicted batch work returned through retry
 
 The tested retry path returned each evicted batch job to normal request
@@ -371,14 +403,26 @@ processing and produced one final result.
 
 <sub>Batch eviction path: reserve before dispatch, evict eligible running batch after dispatch, then retry the same batch request.</sub>
 
+[Single-replica retry path](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica retry path](benchmark-data/batch-eviction/two-model-replicas/)
+
+### Every observed eviction returned once
+
+All 38 evictions in the single-replica package and all 57 evictions in the
+two-replica package were retried. Each evicted request produced one final result,
+and neither package recorded duplicate results.
+
+<img src="assets/batch-retry-evidence.svg" width="100%" alt="All 38 single-replica evictions and all 57 two-replica evictions were retried and produced one final result without duplicates">
+
+<sub>Retry correlation across the retained single- and two-replica proof packages.</sub>
+
+[Single-replica retry evidence](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica retry evidence](benchmark-data/batch-eviction/two-model-replicas/)
+
 - **Single replica:** reserved capacity and eviction kept real-time p95 TTFT near
   the real-time-only reference.
 - **Retry:** evicted batch work was retried and produced one final result in the
   tested setup.
 - **Two replicas:** the retry path also worked with two model replicas. The
   latency comparison requires additional repeats.
-
-[Single-replica eviction evidence](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica eviction evidence](benchmark-data/batch-eviction/two-model-replicas/)
 
 ## Claims and evidence
 
@@ -407,7 +451,7 @@ processing and produced one final result.
 |---|---|
 | Batch interference raised real-time latency after batch entered vLLM because admission control left occupied capacity in place. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) |
 | Reserved capacity kept room for real-time work, and eviction released capacity from eligible running batch requests. | [Single-model proof](benchmark-data/batch-eviction/single-model-replica/) · [Two-model proof](benchmark-data/batch-eviction/two-model-replicas/) |
-| Evicted batch requests were retried, and each tested batch job produced one final result. | [Retry evidence](benchmark-data/batch-eviction/single-model-replica/) |
+| Evicted batch requests were retried, and each tested batch job produced one final result. | [Single-replica retry evidence](benchmark-data/batch-eviction/single-model-replica/) · [Two-replica retry evidence](benchmark-data/batch-eviction/two-model-replicas/) |
 
 ### Configuration and resilience
 
