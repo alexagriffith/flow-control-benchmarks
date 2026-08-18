@@ -1043,50 +1043,61 @@ def render_configuration_map_svg() -> str:
 
 
 def render_flow_control_architecture_svg() -> str:
-    """Place flow control in the llm-d request path as a component diagram."""
-    teal, blue, orange, gold = "#087f72", "#2d6cdf", "#c56a00", "#d79a00"
-    height = 214
+    """Show flow-control admission before the normal endpoint scheduling stages."""
+    teal, blue, orange = "#087f72", "#2d6cdf", "#c56a00"
+    height = 230
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Requests carry tenant and priority metadata through the llm-d Gateway, then flow control queues inside the Endpoint Picker, then to a vLLM model pool.">',
+        f'role="img" aria-label="Requests pass through the llm-d Gateway. Inside the Endpoint Picker, flow-control admission runs first. Filters remove candidates, scorers rank them, and the picker selects a vLLM replica.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="6" fill="none" stroke="{LINE}"/>',
         '<defs>',
-        '<marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8b96a3"/></marker>',
+        '<marker id="arch-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7f8a98"/></marker>',
+        f'<marker id="queue-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{orange}"/></marker>',
         '</defs>',
+        f'<rect x="24" y="66" width="104" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(76, 89, "Requests", 10.5, 780, INK, "middle"),
+        f'<rect x="38" y="105" width="76" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>',
+        text(76, 119, "tenant", 8.5, 700, MUTED, "middle"),
+        f'<rect x="38" y="132" width="76" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>',
+        text(76, 146, "priority", 8.5, 700, MUTED, "middle"),
+        f'<rect x="152" y="66" width="124" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(214, 104, "llm-d Gateway", 10.5, 780, INK, "middle"),
+        text(214, 125, "routes request", 8.5, 650, MUTED, "middle"),
+        f'<rect x="302" y="28" width="430" height="174" rx="8" fill="#f8fcfb" stroke="{teal}" stroke-width="2"/>',
+        text(517, 54, "Endpoint Picker", 11, 780, INK, "middle"),
+        f'<rect x="318" y="78" width="96" height="58" rx="6" fill="#ffffff" stroke="{teal}" stroke-width="1.5"/>',
+        text(366, 99, "Flow control", 9, 760, INK, "middle"),
+        text(366, 117, "admit or queue", 8, 650, teal, "middle"),
+        f'<rect x="318" y="154" width="96" height="25" rx="5" fill="#fffaf5" stroke="{orange}"/>',
+        text(366, 171, "policy queue", 8, 720, orange, "middle"),
     ]
-    components = [
-        (30, 42, 150, 136, "Requests", "", "#fbfcfd", LINE),
-        (208, 52, 126, 112, "llm-d Gateway / Envoy", "routes request", "#fbfcfd", LINE),
-        (374, 30, 302, 164, "Endpoint Picker", "flow control", "#f8fcfb", teal),
-        (730, 42, 120, 136, "vLLM", "model pool", "#fbfcfd", LINE),
+    stages = [
+        (432, 78, 76, "Filters", "eligible"),
+        (526, 78, 82, "Scorers", "rank"),
+        (626, 78, 82, "Picker", "select"),
     ]
-    for x, y, width, box_height, title_value, subtitle, fill, stroke in components:
-        parts.append(f'<rect x="{x}" y="{y}" width="{width}" height="{box_height}" rx="7" fill="{fill}" stroke="{stroke}" stroke-width="{2 if stroke == teal else 1}"/>')
-        parts.append(text(x + width / 2, y + 28, title_value, 11, 780, INK, "middle"))
-        if subtitle:
-            parts.append(text(x + width / 2, y + 46, subtitle, 8.5, 650, MUTED, "middle"))
-    for start, end in [(180, 208), (334, 374), (676, 730)]:
-        parts.append(f'<path d="M{start} 110 H{end - 10}" stroke="#8b96a3" stroke-width="2.5" marker-end="url(#arch-arrow)"/>')
-    traffic = [(92, "Platinum", teal), (116, "Gold", gold), (140, "Silver", blue), (164, "Bronze", orange)]
-    for y, label, color in traffic:
-        parts.append(f'<circle cx="52" cy="{y - 4}" r="5" fill="{color}"/>')
-        parts.append(text(66, y, label, 8.5, 700, INK))
-    for index, label in enumerate(("tenant", "priority")):
-        y = 104 + index * 28
-        parts.append(f'<rect x="224" y="{y}" width="94" height="20" rx="4" fill="#ffffff" stroke="{LINE}"/>')
-        parts.append(text(271, y + 14, label, 8.5, 760, MUTED, "middle"))
-    queues = [(94, "Platinum", teal, 2), (120, "Gold", gold, 3), (146, "Silver", blue, 4), (172, "Bronze", orange, 6)]
-    for y, label, color, count in queues:
-        parts.append(f'<rect x="392" y="{y - 14}" width="264" height="22" rx="4" fill="#ffffff" stroke="{color}"/>')
-        parts.append(text(404, y + 1, label, 8, 700, INK))
-        for index in range(count):
-            parts.append(f'<rect x="{500 + index * 18}" y="{y - 9}" width="12" height="12" rx="2" fill="{color}" opacity="0.78"/>')
-    for index in range(20):
-        row, col = divmod(index, 5)
-        color = teal if index < 10 else blue
-        parts.append(f'<rect x="{752 + col * 15}" y="{104 + row * 16}" width="10" height="10" rx="2" fill="{color}" opacity="0.62"/>')
+    for x, y, width, label, subtitle in stages:
+        parts.append(f'<rect x="{x}" y="{y}" width="{width}" height="58" rx="6" fill="#ffffff" stroke="{blue}"/>')
+        parts.append(text(x + width / 2, y + 23, label, 9, 760, INK, "middle"))
+        parts.append(text(x + width / 2, y + 42, subtitle, 8, 650, MUTED, "middle"))
+    parts.extend([
+        '<path d="M128 115 H145" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        '<path d="M276 115 H295" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        '<path d="M414 107 H425" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        '<path d="M508 107 H519" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        '<path d="M608 107 H619" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        '<path d="M366 136 V147" stroke="#c56a00" stroke-width="1.6" marker-end="url(#queue-arrow)"/>',
+        '<path d="M708 107 H749" stroke="#7f8a98" stroke-width="1.7" marker-end="url(#arch-arrow)"/>',
+        f'<rect x="756" y="66" width="102" height="98" rx="7" fill="#fbfcfd" stroke="{LINE}"/>',
+        text(807, 91, "vLLM", 10.5, 780, INK, "middle"),
+        text(807, 109, "selected replica", 8, 650, MUTED, "middle"),
+    ])
+    for index in range(12):
+        row, col = divmod(index, 4)
+        color = teal if index < 8 else blue
+        parts.append(f'<rect x="{780 + col * 14}" y="{123 + row * 13}" width="9" height="9" rx="2" fill="{color}" opacity="0.68"/>')
     parts.append("</svg>\n")
     return "".join(parts)
 

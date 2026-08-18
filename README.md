@@ -100,19 +100,19 @@ enabled.
 
 ## Where flow control sits in llm-d
 
-Requests carry tenant and priority metadata into the llm-d Gateway. Flow control
-runs inside the Endpoint Picker, before the request is assigned to a vLLM
-replica.
+Requests carry tenant and priority metadata into the llm-d Gateway. Inside the
+Endpoint Picker, flow-control admission runs before the scheduler's filters,
+scorers, and picker. The picker assigns admitted requests to a vLLM replica.
 
-**Flow control runs inside the Endpoint Picker.**
+**Flow-control admission runs before endpoint scoring.**
 
-<img src="assets/flow-control-in-llmd.svg" width="100%" alt="Requests carry tenant and priority metadata through the llm-d Gateway to flow control inside the Endpoint Picker, then to vLLM">
+<img src="assets/flow-control-in-llmd.svg" width="100%" alt="Request path through llm-d: Gateway, flow-control admission, scheduling filters, scorers, picker, and the selected vLLM replica">
 
 **Flow control queues by priority band and tenant.**
 
 <img src="assets/dispatch-path.svg" width="100%" alt="Inside the Endpoint Picker, the consolidation example groups Platinum Tenants A and B in priority 100 and Bronze Tenant C in priority 0 before dispatch to the shared vLLM model pool">
 
-<sub>The llm-d architecture diagram locates flow control inside the Endpoint Picker. The queue diagram uses the consolidation run: Tenant A and Tenant B share priority 100. Tenant C waits in priority 0.</sub>
+<sub>Flow control queues a request when policy requires it. Admitted requests continue through filters, scorers, and the picker. The queue diagram uses the consolidation run: Tenant A and Tenant B share priority 100. Tenant C waits in priority 0.</sub>
 
 ## How we chose the operating point and configuration
 
