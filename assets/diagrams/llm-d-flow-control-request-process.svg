@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="650" viewBox="0 0 1220 650" role="img" aria-labelledby="title desc">
+  <title id="title">llm-d flow-control request process</title>
+  <desc id="desc">Queued work enters the Async Processor, which sends and retries requests through Envoy. Envoy proxies the original request directly to vLLM and consults the Endpoint Picker over ExtProc. Inside the EPP, RequestControl prepares the request, admission applies its priority, FlowController queues it until a decision, and the single-writer Processor manages dispatch. Priority queues provide fairness and ordering, while saturation and usage limits gate dispatch. When higher-priority demand is blocked, in-flight eviction selects eligible lower-priority work, returns a retryable response, and resets its upstream stream.</desc>
+  <defs>
+    <style>
+      text { font-family: Inter, "Red Hat Text", system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .title { fill: #15202b; font-size: 22px; font-weight: 820; }
+      .lane { fill: #5f6c7b; font-size: 10px; font-weight: 820; letter-spacing: 1.2px; }
+      .box-title { fill: #15202b; font-size: 12.5px; font-weight: 800; }
+      .subtle { fill: #5f6c7b; font-size: 9.5px; font-weight: 560; }
+      .item { fill: #15202b; font-size: 9px; font-weight: 650; }
+      .arrow-label { fill: #15202b; font-size: 9.5px; font-weight: 720; text-anchor: middle; }
+    </style>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#7f8a98"/></marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#087f72"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#2d6cdf"/></marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#c56a00"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#e5484d"/></marker>
+  </defs>
+
+  <rect width="1220" height="650" fill="#f7f8fa"/>
+  <rect x="12" y="12" width="1196" height="626" rx="9" fill="#ffffff" stroke="#dde3ea"/>
+  <text x="34" y="44" class="title">llm-d flow-control request process</text>
+
+  <!-- External request path -->
+  <rect x="20" y="64" width="1165" height="156" rx="8" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="38" y="88" class="lane">REQUEST AND RETRY PATH</text>
+
+  <rect x="30" y="105" width="150" height="90" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="105" y="140" class="box-title" text-anchor="middle">Message Queue</text>
+  <text x="105" y="164" class="subtle" text-anchor="middle">queued work</text>
+
+  <rect x="200" y="105" width="150" height="90" rx="7" fill="#f4f7ff" stroke="#2d6cdf" stroke-width="1.5"/>
+  <text x="275" y="140" class="box-title" text-anchor="middle">Async Processor</text>
+  <text x="275" y="162" class="subtle" text-anchor="middle">dispatch · retry · backoff</text>
+  <text x="275" y="180" class="subtle" text-anchor="middle">owns the request</text>
+
+  <rect x="370" y="105" width="150" height="90" rx="7" fill="#ffffff" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="445" y="140" class="box-title" text-anchor="middle">Gateway / Envoy</text>
+  <text x="445" y="164" class="subtle" text-anchor="middle">HTTP proxy · ExtProc client</text>
+
+  <rect x="1010" y="105" width="150" height="90" rx="7" fill="#f3fbf9" stroke="#087f72" stroke-width="1.5"/>
+  <text x="1085" y="140" class="box-title" text-anchor="middle">vLLM Replica</text>
+  <text x="1085" y="164" class="subtle" text-anchor="middle">running sequences</text>
+
+  <line x1="180" y1="150" x2="200" y2="150" stroke="#7f8a98" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <line x1="350" y1="126" x2="370" y2="126" stroke="#087f72" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <line x1="370" y1="177" x2="350" y2="177" stroke="#2d6cdf" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <line x1="520" y1="126" x2="1010" y2="126" stroke="#087f72" stroke-width="2.2" marker-end="url(#arrow-teal)"/>
+  <rect x="683" y="114" width="164" height="18" rx="4" fill="#fbfcfd"/>
+  <text x="765" y="127" class="arrow-label" fill="#087f72">selected upstream request</text>
+  <line x1="520" y1="177" x2="1010" y2="177" stroke="#e5484d" stroke-width="2.2" marker-end="url(#arrow-red)"/>
+  <rect x="686" y="165" width="158" height="18" rx="4" fill="#fbfcfd"/>
+  <text x="765" y="178" class="arrow-label" fill="#e5484d">reset evicted stream</text>
+
+  <!-- EPP boundary uses the remaining width with one aligned component row. -->
+  <rect x="20" y="255" width="1165" height="225" rx="9" fill="#f8fcfb" stroke="#087f72" stroke-width="2"/>
+  <rect x="385" y="241" width="120" height="28" rx="5" fill="#ffffff" stroke="#087f72" stroke-width="1.5"/>
+  <text x="445" y="259" class="item" text-anchor="middle" fill="#087f72">ExtProc API</text>
+  <text x="602.5" y="292" class="box-title" text-anchor="middle">Endpoint Picker (EPP) · flow-control subsystem</text>
+
+  <line x1="420" y1="241" x2="420" y2="195" stroke="#2d6cdf" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <line x1="470" y1="195" x2="470" y2="241" stroke="#7f8a98" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <text x="406" y="228" class="subtle" text-anchor="end">destination / 429</text>
+  <text x="484" y="228" class="subtle">request</text>
+
+  <!-- Code-level call order -->
+  <rect x="45" y="330" width="200" height="130" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="145" y="360" class="box-title" text-anchor="middle">Request Control</text>
+  <text x="145" y="399" class="subtle" text-anchor="middle">prepare request context</text>
+  <text x="145" y="422" class="subtle" text-anchor="middle">invoke admission</text>
+
+  <rect x="265" y="330" width="200" height="130" rx="7" fill="#ffffff" stroke="#087f72" stroke-width="1.5"/>
+  <text x="365" y="360" class="box-title" text-anchor="middle">Priority Admission</text>
+  <text x="365" y="399" class="subtle" text-anchor="middle">apply request priority</text>
+  <text x="365" y="422" class="subtle" text-anchor="middle">invoke flow controller</text>
+
+  <rect x="485" y="330" width="200" height="130" rx="7" fill="#ffffff" stroke="#087f72" stroke-width="1.5"/>
+  <text x="585" y="360" class="box-title" text-anchor="middle">Flow Controller</text>
+  <rect x="525" y="389" width="120" height="36" rx="5" fill="#fff8ef" stroke="#c56a00"/>
+  <text x="585" y="411" class="item" text-anchor="middle" fill="#c56a00">queue and wait</text>
+  <text x="585" y="445" class="subtle" text-anchor="middle">dispatch or reject</text>
+
+  <rect x="705" y="330" width="455" height="130" rx="7" fill="#ffffff" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="932.5" y="360" class="box-title" text-anchor="middle">Dispatch Processor</text>
+  <text x="932.5" y="379" class="subtle" text-anchor="middle">single-writer run loop</text>
+  <rect x="730" y="389" width="115" height="40" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <rect x="865" y="389" width="115" height="40" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <rect x="1000" y="389" width="135" height="40" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="787.5" y="413" class="item" text-anchor="middle">enqueue</text>
+  <text x="922.5" y="406" class="item" text-anchor="middle">dispatch</text>
+  <text x="922.5" y="419" class="item" text-anchor="middle">cycle</text>
+  <text x="1067.5" y="406" class="item" text-anchor="middle">dispatch /</text>
+  <text x="1067.5" y="419" class="item" text-anchor="middle">reject</text>
+  <line x1="845" y1="409" x2="865" y2="409" stroke="#7f8a98" stroke-width="1.6" marker-end="url(#arrow-gray)"/>
+  <line x1="980" y1="409" x2="1000" y2="409" stroke="#7f8a98" stroke-width="1.6" marker-end="url(#arrow-gray)"/>
+
+  <path d="M445 269V305H145V330" fill="none" stroke="#7f8a98" stroke-width="1.8" stroke-linejoin="round" marker-end="url(#arrow-gray)"/>
+  <line x1="245" y1="395" x2="265" y2="395" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+  <line x1="465" y1="395" x2="485" y2="395" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+  <line x1="685" y1="395" x2="705" y2="395" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+
+  <!-- Explanatory callouts sit outside the EPP runtime boundary. -->
+  <rect x="45" y="500" width="200" height="100" rx="7" fill="#fbfcfd" stroke="#aeb8c4" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="145" y="527" class="box-title" text-anchor="middle">Request Lifecycle</text>
+  <text x="145" y="552" class="subtle" text-anchor="middle">track dispatched requests</text>
+  <text x="145" y="575" class="subtle" text-anchor="middle">remove completed requests</text>
+
+  <rect x="485" y="500" width="200" height="100" rx="7" fill="#fbfcfd" stroke="#aeb8c4" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="585" y="527" class="box-title" text-anchor="middle">Priority Queues</text>
+  <text x="585" y="552" class="subtle" text-anchor="middle">priority bands · per-flow queues</text>
+  <text x="585" y="575" class="subtle" text-anchor="middle">fairness · ordering</text>
+
+  <rect x="705" y="500" width="205" height="100" rx="7" fill="#fbfcfd" stroke="#aeb8c4" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="807.5" y="527" class="box-title" text-anchor="middle">Dispatch Limits</text>
+  <text x="807.5" y="552" class="subtle" text-anchor="middle">saturation detector</text>
+  <text x="807.5" y="575" class="subtle" text-anchor="middle">usage-limit policy</text>
+
+  <rect x="930" y="500" width="230" height="100" rx="7" fill="#fffaf5" stroke="#c56a00" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="1045" y="527" class="box-title" text-anchor="middle">In-Flight Eviction</text>
+  <text x="1045" y="552" class="subtle" text-anchor="middle">select lower-priority work</text>
+  <text x="1045" y="575" class="item" text-anchor="middle" fill="#c56a00">return 429 · reset stream</text>
+
+  <line x1="145" y1="460" x2="145" y2="500" stroke="#7f8a98" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <line x1="585" y1="460" x2="585" y2="500" stroke="#7f8a98" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <line x1="807.5" y1="460" x2="807.5" y2="500" stroke="#7f8a98" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <line x1="1045" y1="460" x2="1045" y2="500" stroke="#c56a00" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-orange)"/>
+</svg>

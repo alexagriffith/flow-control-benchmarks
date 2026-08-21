@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="600" viewBox="0 0 1240 600" role="img" aria-labelledby="title desc">
+  <title id="title">llm-d Router component architecture</title>
+  <desc id="desc">Envoy proxies the original HTTP request directly to the selected vLLM replica and consults the Endpoint Picker over ExtProc. Inside the EPP, the RequestControl Director executes request preparation, flow-control admission, endpoint and request-data preparation, admission plugins, and scheduling in that order.</desc>
+  <defs>
+    <style>
+      text { font-family: Inter, "Red Hat Text", system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .title { fill: #15202b; font-size: 23px; font-weight: 820; }
+      .lane { fill: #5f6c7b; font-size: 10px; font-weight: 820; letter-spacing: 1.25px; }
+      .box-title { fill: #15202b; font-size: 13px; font-weight: 800; }
+      .subtle { fill: #5f6c7b; font-size: 10px; font-weight: 560; }
+      .item { fill: #15202b; font-size: 9.5px; font-weight: 650; }
+      .arrow-label { fill: #15202b; font-size: 10px; font-weight: 720; text-anchor: middle; }
+    </style>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#7f8a98"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#087f72"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#2d6cdf"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="600" fill="#f7f8fa"/>
+  <rect x="12" y="12" width="1216" height="576" rx="9" fill="#ffffff" stroke="#dde3ea"/>
+  <text x="36" y="46" class="title">llm-d Router component architecture</text>
+
+  <!-- Direct HTTP data path -->
+  <rect x="30" y="70" width="1180" height="148" rx="8" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="50" y="94" class="lane">HTTP DATA PATH</text>
+
+  <rect x="54" y="121" width="150" height="66" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="129" y="159" class="box-title" text-anchor="middle">Inference client</text>
+
+  <rect x="260" y="109" width="230" height="90" rx="8" fill="#ffffff" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="375" y="146" class="box-title" text-anchor="middle">Gateway / Envoy</text>
+  <text x="375" y="169" class="subtle" text-anchor="middle">HTTP proxy · ExtProc client</text>
+
+  <rect x="970" y="109" width="210" height="90" rx="8" fill="#f3fbf9" stroke="#087f72" stroke-width="1.5"/>
+  <text x="1075" y="146" class="box-title" text-anchor="middle">vLLM replica</text>
+  <text x="1075" y="169" class="subtle" text-anchor="middle">selected endpoint</text>
+
+  <line x1="204" y1="154" x2="260" y2="154" stroke="#087f72" stroke-width="2.2" marker-end="url(#arrow-teal)"/>
+  <line x1="490" y1="154" x2="970" y2="154" stroke="#087f72" stroke-width="2.2" marker-end="url(#arrow-teal)"/>
+  <rect x="631" y="142" width="198" height="20" rx="4" fill="#fbfcfd"/>
+  <text x="730" y="156" class="arrow-label" fill="#087f72">original request · selected endpoint</text>
+
+  <!-- EPP control service -->
+  <rect x="260" y="270" width="920" height="280" rx="9" fill="#f8fcfb" stroke="#087f72" stroke-width="2"/>
+  <rect x="315" y="256" width="120" height="28" rx="5" fill="#ffffff" stroke="#087f72" stroke-width="1.5"/>
+  <text x="375" y="274" class="item" text-anchor="middle" fill="#087f72">ExtProc API</text>
+  <text x="720" y="304" class="box-title" text-anchor="middle">Endpoint Picker (EPP) · RequestControl Director</text>
+
+  <!-- Direct bidirectional ExtProc connection -->
+  <line x1="350" y1="256" x2="350" y2="199" stroke="#7f8a98" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <line x1="400" y1="199" x2="400" y2="256" stroke="#2d6cdf" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="336" y="235" class="subtle" text-anchor="end">destination</text>
+  <text x="414" y="235" class="subtle">request</text>
+
+  <!-- Code order in RequestControl.Director.HandleRequest -->
+  <rect x="285" y="342" width="160" height="160" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="365" y="376" class="box-title" text-anchor="middle">Request preparation</text>
+  <rect x="305" y="402" width="120" height="30" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="365" y="421" class="item" text-anchor="middle">parse / rewrite</text>
+  <rect x="305" y="445" width="120" height="30" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="365" y="464" class="item" text-anchor="middle">header processors</text>
+
+  <rect x="463" y="342" width="160" height="160" rx="7" fill="#ffffff" stroke="#087f72" stroke-width="1.5"/>
+  <text x="543" y="376" class="box-title" text-anchor="middle">Flow-control admission</text>
+  <rect x="483" y="411" width="120" height="38" rx="5" fill="#fff8ef" stroke="#c56a00"/>
+  <text x="543" y="434" class="item" text-anchor="middle" fill="#c56a00">EnqueueAndWait</text>
+
+  <rect x="641" y="342" width="160" height="160" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="721" y="376" class="box-title" text-anchor="middle">Candidate + data</text>
+  <rect x="661" y="402" width="120" height="30" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="721" y="421" class="item" text-anchor="middle">endpoint lookup</text>
+  <rect x="661" y="445" width="120" height="30" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="721" y="464" class="item" text-anchor="middle">data producers</text>
+
+  <rect x="819" y="342" width="160" height="160" rx="7" fill="#ffffff" stroke="#dde3ea" stroke-width="1.5"/>
+  <text x="899" y="376" class="box-title" text-anchor="middle">Admission plugins</text>
+  <rect x="839" y="411" width="120" height="38" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="899" y="434" class="item" text-anchor="middle">allow / deny</text>
+
+  <rect x="997" y="342" width="160" height="160" rx="7" fill="#ffffff" stroke="#2d6cdf" stroke-width="1.5"/>
+  <text x="1077" y="376" class="box-title" text-anchor="middle">Scheduler</text>
+  <rect x="1017" y="396" width="120" height="25" rx="5" fill="#f6f9ff" stroke="#a9cdef"/>
+  <text x="1077" y="413" class="item" text-anchor="middle">filter</text>
+  <rect x="1017" y="429" width="120" height="25" rx="5" fill="#f6f9ff" stroke="#a9cdef"/>
+  <text x="1077" y="446" class="item" text-anchor="middle">score</text>
+  <rect x="1017" y="462" width="120" height="25" rx="5" fill="#f6f9ff" stroke="#a9cdef"/>
+  <text x="1077" y="479" class="item" text-anchor="middle">pick</text>
+
+  <!-- Straight, centered connections -->
+  <line x1="445" y1="422" x2="463" y2="422" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+  <line x1="623" y1="422" x2="641" y2="422" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+  <line x1="801" y1="422" x2="819" y2="422" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+  <line x1="979" y1="422" x2="997" y2="422" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+</svg>

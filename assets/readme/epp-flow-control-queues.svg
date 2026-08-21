@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="560" viewBox="0 0 1220 560" role="img" aria-labelledby="title desc">
+  <title id="title">EPP flow-control queue internals</title>
+  <desc id="desc">Requests enter with an inference objective and fairness ID. The EPP resolves the objective to a numerical priority and combines it with the fairness ID to form a flow key. Flow control places requests into priority bands, with one managed queue per tenant flow. The Processor scans bands from highest to lowest, applies fairness to choose a tenant queue, applies ordering to choose that queue's head request, and dispatches only when saturation is below the band's usage ceiling.</desc>
+  <defs>
+    <style>
+      text { font-family: Inter, "Red Hat Text", system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .title { fill: #15202b; font-size: 22px; font-weight: 820; }
+      .lane { fill: #5f6c7b; font-size: 10px; font-weight: 820; letter-spacing: 1.1px; }
+      .box-title { fill: #15202b; font-size: 12.5px; font-weight: 800; }
+      .subtle { fill: #5f6c7b; font-size: 9.5px; font-weight: 560; }
+      .item { fill: #15202b; font-size: 9.5px; font-weight: 680; }
+      .small { fill: #5f6c7b; font-size: 8.5px; font-weight: 620; }
+    </style>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#7f8a98"/></marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#087f72"/></marker>
+  </defs>
+
+  <rect width="1220" height="560" fill="#f7f8fa"/>
+  <rect x="12" y="12" width="1196" height="536" rx="9" fill="#ffffff" stroke="#dde3ea"/>
+  <text x="34" y="44" class="title">EPP flow-control queue internals</text>
+
+  <!-- Incoming request metadata. -->
+  <rect x="20" y="72" width="280" height="454" rx="9" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="40" y="100" class="lane">INCOMING REQUESTS</text>
+  <text x="40" y="124" class="small">x-llm-d-inference-objective</text>
+  <text x="40" y="140" class="small">x-llm-d-inference-fairness-id</text>
+
+  <rect x="40" y="160" width="240" height="70" rx="7" fill="#f3fbf9" stroke="#087f72"/>
+  <text x="60" y="184" class="box-title">A1 · A2</text>
+  <text x="60" y="207" class="item">realtime · tenant-a</text>
+
+  <rect x="40" y="245" width="240" height="70" rx="7" fill="#f3fbf9" stroke="#087f72"/>
+  <text x="60" y="269" class="box-title">B1</text>
+  <text x="60" y="292" class="item">realtime · tenant-b</text>
+
+  <rect x="40" y="330" width="240" height="70" rx="7" fill="#fffaf5" stroke="#c56a00"/>
+  <text x="60" y="354" class="box-title">C1 · C2</text>
+  <text x="60" y="377" class="item">standard · tenant-c</text>
+
+  <rect x="40" y="415" width="240" height="70" rx="7" fill="#fffaf5" stroke="#c56a00"/>
+  <text x="60" y="439" class="box-title">D1</text>
+  <text x="60" y="462" class="item">standard · tenant-d</text>
+
+  <!-- Endpoint Picker and nested flow-control subsystem. -->
+  <rect x="320" y="72" width="880" height="454" rx="9" fill="#f8fcfb" stroke="#087f72" stroke-width="2"/>
+  <text x="340" y="100" class="lane">ENDPOINT PICKER (EPP)</text>
+  <rect x="335" y="116" width="840" height="340" rx="8" fill="#ffffff" stroke="#2d6cdf" stroke-width="1.5"/>
+  <text x="355" y="140" class="lane">FLOW CONTROL</text>
+
+  <line x1="300" y1="280" x2="355" y2="280" stroke="#7f8a98" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+  <!-- Header resolution into a FlowKey. -->
+  <rect x="355" y="180" width="160" height="150" rx="7" fill="#ffffff" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="435" y="211" class="box-title" text-anchor="middle">Classify Request</text>
+  <text x="435" y="242" class="item" text-anchor="middle">objective → priority</text>
+  <text x="435" y="265" class="item" text-anchor="middle">fairness ID → flow</text>
+  <rect x="375" y="286" width="120" height="27" rx="5" fill="#f4f7ff" stroke="#2d6cdf"/>
+  <text x="435" y="304" class="small" text-anchor="middle">FlowKey{ID, priority}</text>
+
+  <line x1="515" y1="255" x2="535" y2="255" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+
+  <!-- Concrete FlowRegistry hierarchy. -->
+  <rect x="535" y="146" width="420" height="289" rx="7" fill="#fbfcfd" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="745" y="172" class="box-title" text-anchor="middle">Flow Registry</text>
+
+  <rect x="550" y="188" width="390" height="110" rx="7" fill="#f3fbf9" stroke="#087f72"/>
+  <text x="570" y="211" class="item">Priority Band 100</text>
+  <rect x="570" y="224" width="165" height="54" rx="5" fill="#ffffff" stroke="#9fd5cc"/>
+  <text x="652.5" y="242" class="item" text-anchor="middle">tenant-a queue</text>
+  <rect x="590" y="254" width="24" height="10" rx="4" fill="#087f72"/><text x="602" y="262" class="small" text-anchor="middle" fill="#ffffff">A1</text>
+  <rect x="620" y="254" width="24" height="10" rx="4" fill="#56aa9f"/><text x="632" y="262" class="small" text-anchor="middle" fill="#ffffff">A2</text>
+  <rect x="755" y="224" width="165" height="54" rx="5" fill="#ffffff" stroke="#9fd5cc"/>
+  <text x="837.5" y="242" class="item" text-anchor="middle">tenant-b queue</text>
+  <rect x="775" y="254" width="24" height="10" rx="4" fill="#087f72"/><text x="787" y="262" class="small" text-anchor="middle" fill="#ffffff">B1</text>
+  <text x="745" y="291" class="small" text-anchor="middle">fairness selects one tenant queue</text>
+
+  <rect x="550" y="313" width="390" height="110" rx="7" fill="#fffaf5" stroke="#c56a00"/>
+  <text x="570" y="336" class="item">Priority Band 0</text>
+  <rect x="570" y="349" width="165" height="54" rx="5" fill="#ffffff" stroke="#f0c38f"/>
+  <text x="652.5" y="367" class="item" text-anchor="middle">tenant-c queue</text>
+  <rect x="590" y="379" width="24" height="10" rx="4" fill="#c56a00"/><text x="602" y="387" class="small" text-anchor="middle" fill="#ffffff">C1</text>
+  <rect x="620" y="379" width="24" height="10" rx="4" fill="#e5a963"/><text x="632" y="387" class="small" text-anchor="middle" fill="#ffffff">C2</text>
+  <rect x="755" y="349" width="165" height="54" rx="5" fill="#ffffff" stroke="#f0c38f"/>
+  <text x="837.5" y="367" class="item" text-anchor="middle">tenant-d queue</text>
+  <rect x="775" y="379" width="24" height="10" rx="4" fill="#c56a00"/><text x="787" y="387" class="small" text-anchor="middle" fill="#ffffff">D1</text>
+  <text x="745" y="416" class="small" text-anchor="middle">ordering exposes each queue's head request</text>
+
+  <line x1="955" y1="255" x2="975" y2="255" stroke="#7f8a98" stroke-width="1.8" marker-end="url(#arrow-gray)"/>
+
+  <!-- Single-writer dispatch logic. -->
+  <rect x="975" y="160" width="180" height="270" rx="7" fill="#ffffff" stroke="#aeb8c4" stroke-width="1.5"/>
+  <text x="1065" y="188" class="box-title" text-anchor="middle">Processor</text>
+  <text x="1065" y="208" class="subtle" text-anchor="middle">single-writer run loop</text>
+
+  <rect x="995" y="226" width="140" height="36" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="1065" y="248" class="item" text-anchor="middle">highest band first</text>
+  <rect x="995" y="276" width="140" height="36" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="1065" y="298" class="item" text-anchor="middle">fairness → queue</text>
+  <rect x="995" y="326" width="140" height="36" rx="5" fill="#fbfcfd" stroke="#dde3ea"/>
+  <text x="1065" y="348" class="item" text-anchor="middle">ordering → head</text>
+  <rect x="995" y="376" width="140" height="38" rx="5" fill="#f4f7ff" stroke="#2d6cdf"/>
+  <text x="1065" y="393" class="item" text-anchor="middle">dispatch gate</text>
+  <text x="1065" y="407" class="small" text-anchor="middle">saturation &lt; band ceiling</text>
+
+  <line x1="1065" y1="430" x2="1065" y2="477" stroke="#087f72" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <rect x="995" y="477" width="140" height="30" rx="5" fill="#ffffff" stroke="#087f72"/>
+  <text x="1065" y="497" class="item" text-anchor="middle">Scheduler</text>
+</svg>
