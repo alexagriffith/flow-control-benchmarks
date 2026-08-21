@@ -194,12 +194,20 @@ leaving request-count capacity available to Realtime. That returned Realtime
 p95 TTFT to 341 ms, but median Batch completions fell from 2,488 to 1,648 per
 300-second run.
 
+<img src="assets/readme/reserved-capacity-result.svg" width="100%" alt="Matched reserved-capacity result showing Realtime p95 time to first token falling from 561 milliseconds with uncontrolled Batch to 341 milliseconds with reserved capacity">
+
+<sub>Matched 300-second runs with Batch already active. Reserved capacity lowered median Realtime p95 TTFT by 220 ms, or 39%.</sub>
+
 Eviction handles the case that a pre-dispatch gate cannot: lower-priority Batch
 already running inside vLLM. EPP can end an eligible Batch stream, and the Async
 Processor retries the request instead of losing it. With eviction and retry,
 median Realtime p95 TTFT remained in the protected range at 348 ms, while median
 Batch completions increased to 1,798. The latency protection comes from priority
 holdback; eviction and retry recover already-admitted work.
+
+<img src="assets/readme/batch-retry-value.svg" width="100%" alt="Two matched comparisons show reserved capacity protecting Realtime latency and eviction plus retry recovering Batch completions while reserved capacity remains fixed">
+
+<sub>Left: reserved capacity lowered Realtime p95 TTFT from 561 to 341 ms. Right: with reserved capacity held constant, eviction and retry increased median Batch completions from 1,648 to 1,798 per 300-second run.</sub>
 
 <img src="assets/readme/batch-protection.svg" width="100%" alt="Three independent bars show Realtime p95 TTFT at 342 milliseconds without Batch, 561 milliseconds with Batch and no controls, and 348 milliseconds with Batch, reserved capacity, and eviction">
 
@@ -340,16 +348,16 @@ for the claim being made.
 
 ## Evidence Links
 
-| Topic | Link |
-|---|---|
-| Combined evidence page | [benchmark-data/results.html](benchmark-data/results.html) |
-| RHAII 3.4 saturation detector | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
-| Upstream v0.9 tuning and scenarios | [benchmark-data/upstream-flow-control-v0.9.0/](benchmark-data/upstream-flow-control-v0.9.0/) |
-| Batch eviction | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
-| Claim matrix | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
-| Runner and reproduction | [pipeline/README.md](pipeline/README.md) |
-| SLO proof protocol | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
-| Benchmark | [benchmark.html](benchmark.html) |
-| Flow-control guide | [learn/flow-control.html](learn/flow-control.html) |
-| Interactive journey | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
-| Flow Control Flight Recorder | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |
+| Topic | Status | Note | Link |
+|---|---|---|---|
+| Combined evidence page | ⚠️ Review or retire | It duplicates the README and predates the latest narrative. | [benchmark-data/results.html](benchmark-data/results.html) |
+| RHAII 3.4 saturation detector | ✅ Current | The accepted saturation-detector package remains the source of record. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
+| Upstream v0.9 tuning and scenarios | 🟡 In progress | Package summaries and tuning scenarios are being refreshed. | [benchmark-data/upstream-flow-control-v0.9.0/](benchmark-data/upstream-flow-control-v0.9.0/) |
+| Batch eviction | 🟡 In progress | The evidence is published; the narrative and visuals are still being refined. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
+| Claim matrix | ✅ Current | Claims, evidence, and boundaries match the current README. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
+| Runner and reproduction | ✅ Current | The runner, artifact contract, validation, and reproduction paths are documented. | [pipeline/README.md](pipeline/README.md) |
+| SLO proof protocol | 📋 Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
+| Benchmark | 🔎 Needs audit | This standalone narrative overlaps the README and has not been reconciled with the latest architecture and eviction work. | [benchmark.html](benchmark.html) |
+| Flow-control guide | 🔎 Needs audit | The guide is useful, but its architecture and capacity-control explanations need a final consistency pass. | [learn/flow-control.html](learn/flow-control.html) |
+| Interactive journey | ✅ Current | The interactive mechanism walkthrough remains usable as published. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
+| Flow Control Flight Recorder | ✅ Current | The linked repository is active and supports the published benchmark-package format. | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |
