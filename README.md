@@ -188,13 +188,26 @@ Realtime p95 TTFT increased from 133 ms to 15,378 ms when batch work already occ
 
 ## Reserved Capacity Protected Realtime Latency After Batch Entered vLLM
 
-In the PR-image single-model test, reserved capacity returned realtime p95 TTFT
-to the realtime-only range. Adding eviction kept latency in that range and
-retried eligible Batch work already running in vLLM.
+Without controls, Batch used the full EPP admission budget and median Realtime
+p95 TTFT rose to 561 ms. Priority holdback lowered Batch's dispatch ceiling,
+leaving request-count capacity available to Realtime. That returned Realtime
+p95 TTFT to 341 ms, but median Batch completions fell from 2,488 to 1,648 per
+300-second run.
+
+Eviction handles the case that a pre-dispatch gate cannot: lower-priority Batch
+already running inside vLLM. EPP can end an eligible Batch stream, and the Async
+Processor retries the request instead of losing it. With eviction and retry,
+median Realtime p95 TTFT remained in the protected range at 348 ms, while median
+Batch completions increased to 1,798. The latency protection comes from priority
+holdback; eviction and retry recover already-admitted work.
 
 <img src="assets/readme/batch-protection.svg" width="100%" alt="Three independent bars show Realtime p95 TTFT at 342 milliseconds without Batch, 561 milliseconds with Batch and no controls, and 348 milliseconds with Batch, reserved capacity, and eviction">
 
 <sub>Batch-eviction PR image, one H100, one model replica, request-count admission with `maxConcurrency=48`, vLLM `max-num-seqs=96`. n=3. Median p95 TTFT ranges were 318-345 ms for realtime only, 533-641 ms with Batch and no controls, 324-344 ms with reserved capacity, and 324-472 ms with reserved capacity plus eviction and retry. The two-model package shows eviction and retry across two model replicas; the two-model latency comparison is inconclusive.</sub>
+
+<img src="assets/readme/reserved-capacity-sweep.svg" width="100%" alt="Realtime p95 TTFT across 25, 50, and 75 percent reserved capacity; the lowest tested result was 967 milliseconds at 50 percent">
+
+<sub>The three-setting sweep held headroom at 0% and kept in-flight eviction enabled. Median Realtime p95 TTFT was 1.05 s at 25% reserved capacity, 967 ms at 50%, and 1.02 s at 75%. The 50% setting was lowest in this tested sweep; it is not a universal optimum.</sub>
 
 <img src="assets/readme/batch-eviction-mechanism.svg" width="100%" alt="Sequence diagram showing the request queue feeding Batch to Async Processor, EPP selecting the in-flight Batch stream for eviction, Envoy returning HTTP 429 and resetting vLLM, Realtime using the released capacity, and the retry schedule returning Batch to the original request queue for another attempt">
 
@@ -206,6 +219,108 @@ replicas, all 57 eligible evictions were retried once and produced one final
 result.
 
 <sub>Evidence [single-model summary.csv](benchmark-data/batch-eviction/single-model-replica/summary.csv) · [two-model analysis.json](benchmark-data/batch-eviction/two-model-replicas/analysis.json) · [source folder](benchmark-data/batch-eviction/)</sub>
+
+## Architecture Deep Dives
+
+These diagrams separate the shared inference boundary, Batch job-management
+path, sync and async inference paths, and the admission stages inside the
+Endpoint Picker.
+
+<details>
+<summary><strong>Shared inference request boundary</strong></summary>
+
+<br>
+
+<img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime HTTP, direct lower-priority HTTP, and expanded Batch requests converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
+
+| Component | Responsibility | Operational significance |
+|---|---|---|
+| Inference request producers | Send realtime, direct lower-priority, or expanded Batch inference requests. | All three request classes converge on the same Inference Gateway; Batch API job submission occurs earlier in a separate path. |
+| Inference Gateway / Envoy | Owns the HTTP stream, sends request headers and body chunks to EPP over ExtProc, and applies EPP's response. | Gateway/Envoy—not EPP—opens the selected upstream vLLM stream. |
+| Request handling | Reads headers and the parsed inference body, then resolves the routing objective. | This is the first in-process EPP stage, not a separate service. |
+| Flow classification | Combines the fairness identity and request priority into a flow key. | The flow key determines which EPP policy queue owns the request. |
+| Policy queue | Holds the live request in EPP memory while it waits for admission. | The queue is inside EPP; it is unrelated to the Batch Gateway job queue. |
+| Dispatch gate | Compares pool-wide detector saturation with the request's priority-band usage ceiling. | The gate decides whether work waits or advances to worker selection. |
+| Endpoint selection | Locates candidates, runs configured data and admission plugins, and schedules a worker after dispatch admission succeeds. | The ExtProc response identifies the worker through destination-header mutation and dynamic metadata. |
+| InferencePool | Groups candidate vLLM model-server processes, each with waiting and running scheduler state. | EPP chooses a worker; Envoy sends that worker the request stream. |
+
+</details>
+
+<details>
+<summary><strong>Inside the llm-d Batch Gateway system</strong></summary>
+
+<br>
+
+<img src="assets/readme/batch-gateway-system.svg" width="100%" alt="Batch API Server and Batch Processor connected through shared files, batch state, a job priority queue, and output files">
+
+| Component | Responsibility | Operational significance |
+|---|---|---|
+| Batch API client | Submits files and batch jobs to the Batch API Server. | The client never sends individual inference requests. |
+| Batch API Server | Stores the input file; a later call creates the batch record and enqueues a deadline-ordered job. | The API Server and Batch Processor are separate runnable components. |
+| Shared data services | Persist input and output files, batch state, progress, and the job priority queue. | These stores connect job submission to later processing; they are not the EPP flow-control queue. |
+| Batch Processor | Claims a job, reads its input, expands it into requests, dispatches them, and finalizes results. | It is the HTTP caller in sync mode and publishes requests for Async Processor in async mode. |
+| Per-request dispatch | Uses sync HTTP or the configured async request and result queues. | Only expanded inference requests leave Batch Gateway; the original Batch API job does not enter the inference router. |
+
+</details>
+
+<details>
+<summary><strong>How a Batch job reaches inference</strong></summary>
+
+<br>
+
+<img src="assets/readme/batch-workload-paths.svg" width="100%" alt="Batch job submission followed by separate sync and async paths to Inference Gateway, Endpoint Picker, and vLLM">
+
+| Component | Responsibility | Operational significance |
+|---|---|---|
+| Batch API client | Calls the file and batch endpoints. | Job management ends at Batch Gateway; the original job does not enter EPP or vLLM. |
+| Batch API Server | Stores the file, records the batch, and enqueues the job. | These are separate API operations, not inference requests. |
+| Job queue | Holds whole Batch jobs in external Redis or Valkey storage. | It is separate from EPP's in-memory policy queue. |
+| Batch Processor | Pulls a job and expands it into individual inference requests. | Each deployment uses either sync or async dispatch. |
+| Sync mode | Batch Processor sends each inference request over HTTP and receives its response. | No Async Processor or external request/result queue participates. |
+| Async mode | Batch Processor publishes requests; Async Processor consumes them and calls Inference Gateway over HTTP. | Async Processor is a separate deployment upstream of Inference Gateway. |
+| Async request/result queues | Carry individual inference requests and terminal results. | They are external Redis or Valkey structures in the tested integration. |
+| Inference Gateway / Envoy | Owns the inference HTTP stream and consults EPP over ExtProc. | Both modes enter the same Gateway data plane. |
+| llm-d Endpoint Picker | Admits each request and selects a worker. | EPP selects the worker; Gateway/Envoy owns the stream to vLLM. |
+| vLLM | Executes the selected inference request. | It never receives the original Batch API job-management call. |
+
+</details>
+
+<details>
+<summary><strong>Inside EPP: admission and dispatch</strong></summary>
+
+<br>
+
+<img src="assets/readme/epp-admission-dispatch.svg" width="100%" alt="Gateway and Envoy send request data through Endpoint Picker request handling, flow classification, policy queue, dispatch gate, and endpoint selection">
+
+| Component | Responsibility | Operational significance |
+|---|---|---|
+| Request handling | Reads request headers and the parsed body, then resolves the request objective. | Establishes the policy inputs before queueing. |
+| Flow classification | Combines fairness identity with priority. | Determines which policy queue owns the request. |
+| Policy queue | Stores the live request in EPP memory until a terminal outcome. | Realtime and lower-priority HTTP share one explicit queueing contract. |
+| Dispatch gate | Compares pool saturation with the request's priority-band usage ceiling. | Blocked work stays queued; admitted work advances. |
+| Endpoint selection | Locates candidates, runs data and admission plugins, and schedules a worker. | EPP's ExtProc response identifies the selected worker to Gateway/Envoy. |
+
+</details>
+
+<details>
+<summary><strong>Async retry after HTTP 429</strong></summary>
+
+<br>
+
+<img src="assets/readme/async-retry-path.svg" width="100%" alt="Inference Gateway returns the Endpoint Picker's HTTP 429 to Async Processor. Async Processor classifies the response as retryable, retains the same internal request for backoff, returns it to the configured request queue, and starts a new attempt through the same Gateway.">
+
+| Stage / owner | Responsibility | Operational significance |
+|---|---|---|
+| HTTP caller · Async Processor | Initiates the inference request and receives Envoy's HTTP 429 response. | Gateway does not invoke Async Processor. |
+| Retry decision · Async Processor | Classifies 429 as retryable and retains the same internal inference request for backoff. | Batch Gateway does not reconstruct the Batch job. |
+| Requeue · configured async backend | Returns the request to the configured async request queue for a new HTTP attempt. | The benchmark proves successful retry, but not which version-specific retry-storage implementation was deployed. |
+
+The benchmark package did not record the Async Processor image digest or source
+commit. Current llm-d Async uses a retry schedule and mover, while the released
+v0.9 implementation requeued directly. The diagram shows the behavior shared
+by both paths.
+
+</details>
 
 ## Claim Boundaries
 
