@@ -18,16 +18,17 @@ workloads can share GPU capacity without lower-priority work crowding out
 higher-priority work.
 
 Each result section states its aggregation, repeat count, units, and evidence
-source. The comparisons are descriptive; no formal statistical significance
-is claimed. Most packages disable prefix caching.
-The prefix-routing package enables caching because cache reuse is the behavior
-under test.
+source.
 
 <sub>Evidence [claim matrix](docs/readme-claim-matrix.md) · [priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [detector comparison](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [batch eviction](benchmark-data/batch-eviction/)</sub>
 
 ## Architecture
 
 ### Router Request and Scheduling Path
+
+The Gateway and Envoy own the client connection and the stream to vLLM. They
+ask the Endpoint Picker to admit the request and choose a worker, then send the
+original request to that selected vLLM replica.
 
 <img src="assets/diagrams/llm-d-router-component-architecture.svg" width="100%" alt="The inference client sends an HTTP request to Envoy, which proxies directly to the selected vLLM replica. Envoy consults the Endpoint Picker over ExtProc. Inside the EPP, RequestControl processes the request through preparation, flow-control admission, candidate and data preparation, admission plugins, and scheduling.">
 
@@ -48,6 +49,11 @@ under test.
 </details>
 
 ### Flow-Control Request Process
+
+This view zooms in on the flow-control path inside the Endpoint Picker. New
+requests wait in priority and tenant queues until the dispatch gate admits
+them; optional in-flight eviction handles eligible lower-priority work that
+has already reached vLLM.
 
 <img src="assets/diagrams/llm-d-flow-control-request-process.svg" width="100%" alt="Queued work enters the Async Processor, which sends and retries requests through Envoy. Envoy proxies selected requests to vLLM and consults the Endpoint Picker over ExtProc. Inside the green EPP boundary, RequestControl prepares the request, admission applies its priority, FlowController queues it until dispatch or rejection, and the single-writer Processor manages dispatch. Dashed callouts outside the EPP boundary explain request lifecycle tracking, priority queues, dispatch limits, and in-flight eviction behavior.">
 
@@ -72,6 +78,11 @@ under test.
 </details>
 
 ### Flow-Control Queue Internals
+
+Flow control chooses work in three steps: priority band first, tenant fairness
+inside that band, and request order inside the selected tenant queue. The
+dispatch gate then decides whether the request may move to worker selection or
+must keep waiting in EPP.
 
 <img src="assets/readme/epp-flow-control-queues.svg" width="100%" alt="Requests enter with an inference objective and fairness ID. The EPP resolves the objective to a priority and combines it with the fairness ID as a flow key. Flow control stores requests in priority bands with per-tenant queues. The Processor selects the highest priority band, a tenant queue, and its head request before applying the dispatch gate and handing the request to the Scheduler.">
 
@@ -99,7 +110,9 @@ Each suite covers one test purpose in the larger story.
 
 ## Consolidation Preserved Realtime Priority
 
-Multiple tenants used one GPU pool while realtime tenants stayed ahead.
+Multiple tenants used one GPU pool while Realtime tenants stayed ahead. The
+first two visuals show how separate tenant queues shared dispatch turns; the
+last shows that the lower-priority surge absorbed most of the latency.
 
 <img src="assets/readme/consolidation-tenants.svg" width="100%" alt="Three panels show Realtime A, Realtime B, and both tenants together. Realtime A and B use separate fairness queues inside the Realtime priority band and share one vLLM instance; the plots show observed per-second traffic.">
 
@@ -119,7 +132,9 @@ Multiple tenants used one GPU pool while realtime tenants stayed ahead.
 
 ## Flow Control Protected Priority Traffic Under Saturation
 
-Realtime and Standard tiers stayed below 1,000 ms while the Batch tier absorbed the wait.
+The priority tiers shared one pool under saturation. Realtime and Standard
+stayed below 1,000 ms while the lower-priority Batch tier absorbed the wait,
+reaching 13,264 ms p95 TTFT.
 
 <img src="assets/readme/priority-tiers.svg" width="100%" alt="Request-level latency distributions show Platinum, Gold, and Silver traffic clustered below 1,000 milliseconds while Bronze Batch is separated at 13,264 milliseconds p95 time to first token">
 
@@ -129,13 +144,15 @@ Realtime and Standard tiers stayed below 1,000 ms while the Batch tier absorbed 
 
 ## Lower-Priority Work Absorbed the Wait
 
-Realtime and Standard stayed below 1,000 ms while Batch waited 13,077 ms.
+These two views show the same isolation behavior as a summary and over time.
+Realtime and Standard stayed below 1,000 ms while Batch absorbed the surge and
+reached 13,077 ms p95 TTFT.
 
 <img src="assets/v09-tuning/batch-isolation-section.svg" width="100%" alt="Batch-isolation results show Realtime and Standard traffic below 1,000 milliseconds median surge p95 TTFT while Batch exceeds 13,000 milliseconds">
 
 <img src="assets/readme/batch-isolation.svg" width="100%" alt="A time-aligned p95 TTFT plot shows Batch absorbing latency during the highlighted surge while Realtime and Standard remain far lower">
 
-<sub>Upstream v0.9 batch isolation, one H100, one model replica, request-count admission with `maxConcurrency=128`. n=3. The wider repeat ranges make exact point estimates directional.</sub>
+<sub>Upstream v0.9 batch isolation, one H100, one model replica, request-count admission with `maxConcurrency=128`. n=3.</sub>
 
 <sub>Evidence [analysis.json](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/analysis.json) · [source folder](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/)</sub>
 
@@ -172,7 +189,9 @@ workload and pressure signal.
 
 ## Running Batch Exposes the Boundary of Admission Control
 
-Realtime p95 TTFT increased from 133 ms to 15,378 ms when batch work already occupied vLLM capacity.
+The Realtime arrival pattern was the same in both cases. Realtime p95 TTFT
+increased from 133 to 15,378 ms when Batch was already running inside vLLM,
+showing what a pre-dispatch gate cannot fix by itself.
 
 <img src="assets/readme/batch-interference-latency.svg" width="100%" alt="Realtime p95 TTFT remains low without Batch and rises when Realtime runs with Batch already active">
 
@@ -188,22 +207,28 @@ Realtime p95 TTFT increased from 133 ms to 15,378 ms when batch work already occ
 
 ## Reserved Capacity Protected Realtime Latency After Batch Entered vLLM
 
-Without controls, Batch used the full EPP admission budget and median Realtime
-p95 TTFT rose to 561 ms. Priority holdback lowered Batch's dispatch ceiling,
-leaving request-count capacity available to Realtime. That returned Realtime
-p95 TTFT to 341 ms, but median Batch completions fell from 2,488 to 1,648 per
-300-second run.
+The `priority-holdback-policy` is the pre-dispatch gate that creates reserved
+capacity. EPP compares the current pool load with a ceiling for the incoming
+request's priority band. This lets higher-priority Realtime requests continue
+to dispatch while lower-priority Batch waits in EPP. In the matched runs,
+Realtime p95 TTFT fell from 561 to 341 ms. The tradeoff was lower Batch
+throughput: median completions fell from 2,488 to 1,648 per 300-second run.
 
 <img src="assets/readme/reserved-capacity-result.svg" width="100%" alt="Matched reserved-capacity result showing Realtime p95 time to first token falling from 561 milliseconds with uncontrolled Batch to 341 milliseconds with reserved capacity">
 
 <sub>Matched 300-second runs with Batch already active. Reserved capacity lowered median Realtime p95 TTFT by 220 ms, or 39%.</sub>
 
-Eviction handles the case that a pre-dispatch gate cannot: lower-priority Batch
-already running inside vLLM. EPP can end an eligible Batch stream, and the Async
-Processor retries the request instead of losing it. With eviction and retry,
-median Realtime p95 TTFT remained in the protected range at 348 ms, while median
-Batch completions increased to 1,798. The latency protection comes from priority
-holdback; eviction and retry recover already-admitted work.
+The pre-dispatch gate cannot reclaim a Batch request after EPP has sent it to
+vLLM. If lower-priority Batch is already running when Realtime demand arrives,
+it can still occupy capacity needed by Realtime. In-flight eviction covers this
+case. EPP selects an eligible lower-priority Batch request and signals Envoy to
+end its vLLM stream. The Async Processor then safely retries the same request.
+
+With reserved capacity, eviction, and retry, Realtime p95 TTFT stayed near the
+Realtime-only baseline at 348 ms. Median Batch completions increased from 1,648
+to 1,798 per 300-second run. Together, priority holdback protects new
+higher-priority requests before dispatch, while eviction and retry reclaim
+capacity from eligible lower-priority work already inside vLLM.
 
 <img src="assets/readme/batch-retry-value.svg" width="100%" alt="Two matched comparisons show reserved capacity protecting Realtime latency and eviction plus retry recovering Batch completions while reserved capacity remains fixed">
 
@@ -211,11 +236,11 @@ holdback; eviction and retry recover already-admitted work.
 
 <img src="assets/readme/batch-protection.svg" width="100%" alt="Three independent bars show Realtime p95 TTFT at 342 milliseconds without Batch, 561 milliseconds with Batch and no controls, and 348 milliseconds with Batch, reserved capacity, and eviction">
 
-<sub>Batch-eviction PR image, one H100, one model replica, request-count admission with `maxConcurrency=48`, vLLM `max-num-seqs=96`. n=3. Median p95 TTFT ranges were 318-345 ms for realtime only, 533-641 ms with Batch and no controls, 324-344 ms with reserved capacity, and 324-472 ms with reserved capacity plus eviction and retry. The two-model package shows eviction and retry across two model replicas; the two-model latency comparison is inconclusive.</sub>
+<sub>Batch-eviction PR image, one H100, one model replica, request-count admission with `maxConcurrency=48`, vLLM `max-num-seqs=96`. n=3. Median p95 TTFT ranges were 318-345 ms for realtime only, 533-641 ms with Batch and no controls, 324-344 ms with reserved capacity, and 324-472 ms with reserved capacity plus eviction and retry. The two-model package shows eviction and retry across two model replicas.</sub>
 
 <img src="assets/readme/reserved-capacity-sweep.svg" width="100%" alt="Realtime p95 TTFT across 25, 50, and 75 percent reserved capacity; the lowest tested result was 967 milliseconds at 50 percent">
 
-<sub>The three-setting sweep held headroom at 0% and kept in-flight eviction enabled. Median Realtime p95 TTFT was 1.05 s at 25% reserved capacity, 967 ms at 50%, and 1.02 s at 75%. The 50% setting was lowest in this tested sweep; it is not a universal optimum.</sub>
+<sub>The three-setting sweep held headroom at 0% and kept in-flight eviction enabled. Median Realtime p95 TTFT was 1.05 s at 25% reserved capacity, 967 ms at 50%, and 1.02 s at 75%. The 50% setting was lowest in this sweep.</sub>
 
 <img src="assets/readme/batch-eviction-mechanism.svg" width="100%" alt="Sequence diagram showing the request queue feeding Batch to Async Processor, EPP selecting the in-flight Batch stream for eviction, Envoy returning HTTP 429 and resetting vLLM, Realtime using the released capacity, and the retry schedule returning Batch to the original request queue for another attempt">
 
@@ -228,7 +253,7 @@ result.
 
 <sub>Evidence [single-model summary.csv](benchmark-data/batch-eviction/single-model-replica/summary.csv) · [two-model analysis.json](benchmark-data/batch-eviction/two-model-replicas/analysis.json) · [source folder](benchmark-data/batch-eviction/)</sub>
 
-## Architecture Deep Dives
+## Shared Inference Architecture
 
 These diagrams separate the shared inference boundary, Batch job-management
 path, sync and async inference paths, and the admission stages inside the
@@ -238,6 +263,10 @@ Endpoint Picker.
 <summary><strong>Shared inference request boundary</strong></summary>
 
 <br>
+
+Realtime, direct lower-priority, and expanded Batch requests all enter the same
+Inference Gateway. The Endpoint Picker admits each request and selects a vLLM
+worker, but Gateway and Envoy own the HTTP stream to that worker.
 
 <img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime HTTP, direct lower-priority HTTP, and expanded Batch requests converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
 
@@ -259,6 +288,10 @@ Endpoint Picker.
 
 <br>
 
+Batch job management is separate from inference routing. The Batch API Server
+stores the file and job, and the Batch Processor later expands that job into
+individual inference requests.
+
 <img src="assets/readme/batch-gateway-system.svg" width="100%" alt="Batch API Server and Batch Processor connected through shared files, batch state, a job priority queue, and output files">
 
 | Component | Responsibility | Operational significance |
@@ -275,6 +308,11 @@ Endpoint Picker.
 <summary><strong>How a Batch job reaches inference</strong></summary>
 
 <br>
+
+A Batch job reaches inference only after the Batch Processor expands it into
+individual requests. In sync mode, Batch Processor calls the Inference Gateway
+directly; in async mode, Async Processor consumes queued requests and makes the
+same HTTP call.
 
 <img src="assets/readme/batch-workload-paths.svg" width="100%" alt="Batch job submission followed by separate sync and async paths to Inference Gateway, Endpoint Picker, and vLLM">
 
@@ -298,6 +336,10 @@ Endpoint Picker.
 
 <br>
 
+Inside EPP, request handling and flow classification place each request in the
+right policy queue. The dispatch gate decides when it may advance; endpoint
+selection runs only after admission succeeds.
+
 <img src="assets/readme/epp-admission-dispatch.svg" width="100%" alt="Gateway and Envoy send request data through Endpoint Picker request handling, flow classification, policy queue, dispatch gate, and endpoint selection">
 
 | Component | Responsibility | Operational significance |
@@ -314,6 +356,10 @@ Endpoint Picker.
 <summary><strong>Async retry after HTTP 429</strong></summary>
 
 <br>
+
+Async Processor receives the HTTP 429 because it made the inference request.
+It keeps the same internal request for backoff, returns it to the configured
+async queue, and starts a new attempt later.
 
 <img src="assets/readme/async-retry-path.svg" width="100%" alt="Inference Gateway returns the Endpoint Picker's HTTP 429 to Async Processor. Async Processor classifies the response as retryable, retains the same internal request for backoff, returns it to the configured request queue, and starts a new attempt through the same Gateway.">
 
