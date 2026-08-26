@@ -187,6 +187,17 @@ workload and pressure signal.
 | Queue depth | Backend waiting-queue growth is the intended signal | Reactive; responded later in the matched consolidation test |
 | KV-cache pressure | Memory pressure is the limiting condition | Verified activation, but not a latency win in calibration |
 
+## Reserved Capacity Gates Priorities; Headroom Gates Replicas
+
+Both controls use tracked in-flight request counts, but they answer different
+questions. Reserved capacity compares one pool-wide count with the incoming
+request's priority gate; headroom compares each candidate replica's count with
+one priority-blind filter.
+
+<img src="assets/readme/reserved-capacity-headroom.svg" width="100%" alt="Reserved capacity compares one pool-wide tracked in-flight request count with a priority-specific gate, while headroom compares each candidate replica's tracked in-flight request count with one priority-blind filter.">
+
+<sub>Explanatory states from separate tested configurations. Left: with 30 of 48 requests in flight, realtime and Standard pass their priority gates while Batch waits. Right: 10% headroom moves the per-replica filter from 128 to 140 tracked in-flight requests; a replica at 131 remains eligible and an example replica at 144 is filtered.</sub>
+
 ## Running Batch Exposes the Boundary of Admission Control
 
 The Realtime arrival pattern was the same in both cases. Realtime p95 TTFT
