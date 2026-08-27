@@ -275,15 +275,15 @@ Endpoint Picker.
 
 <br>
 
-Realtime, direct lower-priority, and expanded Batch requests all enter the same
+Realtime, Standard, and queued Batch requests from the Async Processor enter the same
 Inference Gateway. The Endpoint Picker admits each request and selects a vLLM
 worker, but Gateway and Envoy own the HTTP stream to that worker.
 
-<img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime HTTP, direct lower-priority HTTP, and expanded Batch requests converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
+<img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime and Standard HTTP clients, plus queued Batch requests from the Async Processor, converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
 
 | Component | Responsibility | Operational significance |
 |---|---|---|
-| Inference request producers | Send realtime, direct lower-priority, or expanded Batch inference requests. | All three request classes converge on the same Inference Gateway; Batch API job submission occurs earlier in a separate path. |
+| Inference request producers | Send realtime, Standard, or queued Batch inference requests. Async Processor is the Batch HTTP caller in this benchmark path. | All three request classes converge on the same Inference Gateway; Batch API job submission occurs earlier in a separate path. |
 | Inference Gateway / Envoy | Owns the HTTP stream, sends request headers and body chunks to EPP over ExtProc, and applies EPP's response. | Gateway/Envoy—not EPP—opens the selected upstream vLLM stream. |
 | Request handling | Reads headers and the parsed inference body, then resolves the routing objective. | This is the first in-process EPP stage, not a separate service. |
 | Flow classification | Combines the fairness identity and request priority into a flow key. | The flow key determines which EPP policy queue owns the request. |
