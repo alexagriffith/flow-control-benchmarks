@@ -2,6 +2,14 @@ ADVERSARIAL-CHANGELOG.md
 .build-src/
 blog-src/
 
+# Local operating-system, editor, and review state
+.DS_Store
+*.swp
+.cursor/
+.codex-google-docs/
+.local-review/
+unused-assets/
+
 # Local-only pipeline helpers and prototypes (not for the public repo)
 __pycache__/
 pipeline/promote_to_data_v4.sh
