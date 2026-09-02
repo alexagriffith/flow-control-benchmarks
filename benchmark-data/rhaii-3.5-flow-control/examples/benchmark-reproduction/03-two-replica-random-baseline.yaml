@@ -1,0 +1,209 @@
+# Benchmark reproduction: predictor-free two-replica routing baseline.
+#
+# Random selection was chosen here to isolate the replica-count comparison.
+# Both replicas were identical, prefix caching was off, and no routing score
+# was part of the question. Use the scored getting-started example for normal
+# multi-replica operation.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flow-control-demo
+  labels:
+    inference-gateway-access: "true"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: flow-control-gateway
+  namespace: redhat-ods-applications
+spec:
+  gatewayClassName: istio
+  infrastructure:
+    labels:
+      serving.kserve.io/gateway: kserve-ingress-gateway
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: inference-gateway-config
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              inference-gateway-access: "true"
+---
+apiVersion: serving.kserve.io/v1alpha2
+kind: LLMInferenceService
+metadata:
+  name: flow-control-model
+  namespace: flow-control-demo
+spec:
+  model:
+    name: openai/gpt-oss-20b
+    uri: hf://openai/gpt-oss-20b
+  parallelism:
+    tensor: 1
+  replicas: 2
+  router:
+    gateway:
+      refs:
+        - name: flow-control-gateway
+          namespace: redhat-ods-applications
+          sectionName: http
+    route: {}
+    scheduler:
+      config:
+        inline:
+          apiVersion: llm-d.ai/v1alpha1
+          kind: EndpointPickerConfig
+          featureGates:
+            - flowControl
+          flowControl:
+            defaultRequestTTL: 300s
+            maxBytes: 1073741824
+            priorityBands:
+              - priority: 100
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
+              - priority: 50
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
+              - priority: 0
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
+              - priority: -10
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
+            saturationDetector:
+              pluginRef: concurrency-detector
+            usageLimitPolicyPluginRef: static-usage-limit
+          plugins:
+            - type: openai-parser
+            - name: inflight-load
+              type: inflight-load-producer
+              parameters:
+                addEstimatedOutputTokens: false
+            - name: concurrency-detector
+              type: concurrency-detector
+              parameters:
+                concurrencyMode: requests
+                inFlightLoadProducerName: inflight-load
+                maxConcurrency: 128
+                headroom: 0.1
+            - name: static-usage-limit
+              type: static-usage-limit-policy
+              parameters:
+                threshold: 1
+            - name: round-robin-fairness-policy
+              type: round-robin-fairness-policy
+            - name: fcfs-ordering-policy
+              type: fcfs-ordering-policy
+            # This baseline intentionally gives every eligible replica an
+            # equal chance. It does not claim best-endpoint routing.
+            - name: random-picker
+              type: random-picker
+            - type: metrics-data-source
+              parameters:
+                scheme: https
+          requestHandler:
+            parsers:
+              - pluginRef: openai-parser
+          schedulingProfiles:
+            - name: default
+              plugins:
+                - pluginRef: concurrency-detector
+                - pluginRef: random-picker
+      template:
+        containers:
+          - name: main
+            image: quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:275037b7611b2d51faedae4437321014ebac349920c0440a2afb688e82430585
+            command:
+              - /app/epp
+              - --pool-name
+              - flow-control-model-inference-pool
+              - --pool-namespace
+              - flow-control-demo
+              - --zap-encoder
+              - json
+              - --grpc-port
+              - "9002"
+              - --grpc-health-port
+              - "9003"
+              - --enable-cert-reload=true
+              - --secure-serving=true
+              - --cert-path=/var/run/kserve/tls
+              - --allow-experimental-plugins
+  storageInitializer:
+    enabled: true
+  template:
+    containers:
+      - name: main
+        env:
+          - name: VLLM_ADDITIONAL_ARGS
+            value: >-
+              --max-model-len 32768 --max-num-batched-tokens 8192
+              --max-num-seqs 128 --gpu-memory-utilization 0.90
+              --no-enable-prefix-caching
+          - name: VLLM_HTTP_TIMEOUT_KEEP_ALIVE
+            value: "120"
+        resources:
+          requests:
+            cpu: "8"
+            memory: 64Gi
+            nvidia.com/gpu: "1"
+          limits:
+            cpu: "16"
+            memory: 128Gi
+            nvidia.com/gpu: "1"
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: priority-100
+  namespace: flow-control-demo
+spec:
+  priority: 100
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: priority-50
+  namespace: flow-control-demo
+spec:
+  priority: 50
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: priority-0
+  namespace: flow-control-demo
+spec:
+  priority: 0
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: priority-minus-10
+  namespace: flow-control-demo
+spec:
+  priority: -10
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool

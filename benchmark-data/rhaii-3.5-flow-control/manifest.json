@@ -12,9 +12,13 @@
     "batch_eviction_router_image": "sha256:12552e243168ebc9ccd6905acda939adc7cf55ccc9214097e91ab569cc648c01"
   },
   "files": {
-    "README.md": "a0c5cdc513851e4a8ebfeda5838e3589c7a4a6ed00ed9ad5ee200bb31bc7696d",
+    "README.md": "a923c51a1692fdd8ea4238d54351d0c6ac81954dd30fcad7e06cf78822baa947",
     "assets/capacity-slo-envelope.svg": "3eb1696a228827b58b66e1b319691c73d90a958d58ad58f18211f0a0b4266b65",
     "assets/slo-deadline-ordering.svg": "4dc7e9f6bfc39b8b737568644d21d51087728ec220570c2a3bfad20cd91d6ca7",
+    "examples/README.md": "e040744cd9fc9a2a5eb2f271154c8731872d2f09dbd153f338f0684300adcdc6",
+    "examples/benchmark-reproduction/03-two-replica-random-baseline.yaml": "a2754f9ede68f5e75aa97506ea317daa4a23641024302334256f1c8312ad0f4e",
+    "examples/getting-started/01-two-priority-scored-routing.yaml": "4c7cbebfeb51c39c0eb593e433b9bb2e4829a2eff13c573ec1d3d9011c1195f5",
+    "examples/getting-started/02-slo-deadline-ordering.yaml": "dfddf8a20699ea7964dd5ee007d939a7194f098fa284e9bc097fa44d7ba4e26e",
     "features/pd-flow-control/analysis.json": "98e5ec2e27fbf284493db7753d0d47a2fc0c56f992517f197aaa27b2ad0b5b36",
     "features/pd-flow-control/configuration/selected-recipe.yaml": "44754893a04ddca1f75acb049019788f6535c177ec09598a18463e57a7eeb67f",
     "features/soft-pt/analysis.json": "a0183ed69e120c235264253d98d21221752f94ae26ec8c8f385389fd2528ecf3",

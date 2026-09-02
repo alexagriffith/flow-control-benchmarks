@@ -14,11 +14,20 @@ ANALYSIS = PACKAGE.join("features/pd-flow-control/analysis.json")
 RECIPE = PACKAGE.join("features/pd-flow-control/configuration/selected-recipe.yaml")
 SOFT_PT_ANALYSIS = PACKAGE.join("features/soft-pt/analysis.json")
 MANIFEST = PACKAGE.join("manifest.json")
+EXAMPLE_FILES = [
+  PACKAGE.join("examples/getting-started/01-two-priority-scored-routing.yaml"),
+  PACKAGE.join("examples/getting-started/02-slo-deadline-ordering.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
+].freeze
 
 ALLOWED_FILES = %w[
   README.md
   assets/capacity-slo-envelope.svg
   assets/slo-deadline-ordering.svg
+  examples/README.md
+  examples/benchmark-reproduction/03-two-replica-random-baseline.yaml
+  examples/getting-started/01-two-priority-scored-routing.yaml
+  examples/getting-started/02-slo-deadline-ordering.yaml
   features/pd-flow-control/analysis.json
   features/pd-flow-control/configuration/selected-recipe.yaml
   features/soft-pt/analysis.json
@@ -72,6 +81,54 @@ analysis = JSON.parse(ANALYSIS.read)
 recipe = YAML.safe_load(RECIPE.read, permitted_classes: [], aliases: false)
 soft_pt_analysis = JSON.parse(SOFT_PT_ANALYSIS.read)
 manifest = JSON.parse(MANIFEST.read)
+
+EXAMPLE_FILES.each do |path|
+  documents = YAML.load_stream(path.read)
+  kinds = documents.map { |document| document.fetch("kind") }
+  assert(kinds.count("Namespace") == 1, "#{path.basename} must include one Namespace")
+  assert(kinds.count("Gateway") == 1, "#{path.basename} must include one Gateway")
+  assert(kinds.count("LLMInferenceService") == 1,
+         "#{path.basename} must include one LLMInferenceService")
+  assert(kinds.count("InferenceObjective") >= 2,
+         "#{path.basename} must include at least two InferenceObjectives")
+
+  service = documents.find { |document| document["kind"] == "LLMInferenceService" }
+  objectives = documents.select { |document| document["kind"] == "InferenceObjective" }
+  service_name = service.dig("metadata", "name")
+  pool_name = "#{service_name}-inference-pool"
+  objectives.each do |objective|
+    assert(objective.dig("spec", "poolRef", "name") == pool_name,
+           "#{path.basename} objective points to the wrong InferencePool")
+  end
+
+  inline = service.dig("spec", "router", "scheduler", "config", "inline")
+  assert(inline&.fetch("featureGates", [])&.include?("flowControl"),
+         "#{path.basename} does not enable flow control")
+  plugins = inline.fetch("plugins")
+  plugin_names = plugins.map { |plugin| plugin["name"] || plugin.fetch("type") }
+  profile_refs = inline.fetch("schedulingProfiles").flat_map do |profile|
+    profile.fetch("plugins").map { |entry| entry.fetch("pluginRef") }
+  end
+  profile_refs.each do |ref|
+    assert(plugin_names.include?(ref), "#{path.basename} has unresolved plugin reference #{ref}")
+  end
+  picker_refs = profile_refs.grep(/picker\z/)
+  assert(picker_refs.length == 1, "#{path.basename} must select exactly one picker")
+end
+
+scored = YAML.load_stream(EXAMPLE_FILES[0].read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles", 0, "plugins")
+      .map { |entry| entry.fetch("pluginRef") }
+assert(scored.include?("queue-scorer") && scored.include?("max-score-picker"),
+       "scored-routing example must score queues and select the maximum score")
+
+random_baseline = YAML.load_stream(EXAMPLE_FILES[2].read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles", 0, "plugins")
+               .map { |entry| entry.fetch("pluginRef") }
+assert(random_baseline == %w[concurrency-detector random-picker],
+       "replica baseline must preserve the tested predictor-free profile")
 
 assert(results.fetch("results").keys.sort == REQUIRED_RESULT_GROUPS.sort,
        "normalized result inventory differs from the reviewed promotion set")

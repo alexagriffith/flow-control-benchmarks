@@ -410,9 +410,15 @@ required runtime path.
 
 ## Public configuration examples
 
-The P/D package includes a sanitized, readable form of the selected Endpoint
-Picker configuration. It keeps the measured values so the public result maps
-to the tested recipe.
+The [`examples/`](examples/) directory contains complete, sanitized Kubernetes
+manifests. Start with the two-priority scored-routing example for normal
+multi-replica operation. Use the random-routing file only to reproduce the
+campaign's controlled one-versus-two-replica comparison.
+
+- [Two priorities with scored multi-replica routing](examples/getting-started/01-two-priority-scored-routing.yaml)
+- [SLO deadline ordering](examples/getting-started/02-slo-deadline-ordering.yaml)
+- [Tested random-routing replica baseline](examples/benchmark-reproduction/03-two-replica-random-baseline.yaml)
+- [Tested P/D Endpoint Picker recipe](features/pd-flow-control/configuration/selected-recipe.yaml)
 
 - Use the `llm-d.ai/v1alpha1` Endpoint Picker configuration shape tested by the
   OpenDataHub v0.10 build.
