@@ -417,6 +417,8 @@ campaign's controlled one-versus-two-replica comparison.
 
 - [Two priorities with scored multi-replica routing](examples/getting-started/01-two-priority-scored-routing.yaml)
 - [SLO deadline ordering](examples/getting-started/02-slo-deadline-ordering.yaml)
+- [Same-priority fairness](examples/getting-started/03-same-priority-fairness.yaml)
+- [Protected, standard, and retryable Batch work](examples/getting-started/04-priority-standard-batch.yaml)
 - [Tested random-routing replica baseline](examples/benchmark-reproduction/03-two-replica-random-baseline.yaml)
 - [Tested P/D Endpoint Picker recipe](features/pd-flow-control/configuration/selected-recipe.yaml)
 

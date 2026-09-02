@@ -1,8 +1,8 @@
-# Getting started: two priorities with scored multi-replica routing.
+# Getting started: protected, standard, and sheddable work.
 #
-# Choose this when two workloads share the same model and one needs stronger
-# latency protection. Flow control decides when work may leave the queue.
-# Queue scoring then selects the eligible replica with less queued work.
+# Choose this when interactive and retryable Batch work share one model. The
+# three priority ranks keep progressively more capacity available for work
+# above them. Send negative priority only for work that may be retried.
 #
 # The campaign measured maxConcurrency 128 and 10% detector headroom for
 # GPT-OSS 20B on one H100 per replica. Recalibrate both values for your model.
@@ -80,6 +80,11 @@ spec:
               - priority: 0
                 fairnessPolicyRef: round-robin-fairness-policy
                 orderingPolicyRef: fcfs-ordering-policy
+              # Bound the retryable queue so Batch cannot consume all memory.
+              - priority: -10
+                maxRequests: 1000
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
             saturationDetector:
               pluginRef: concurrency-detector
             usageLimitPolicyPluginRef: priority-holdback
@@ -104,14 +109,15 @@ spec:
               type: round-robin-fairness-policy
             - name: fcfs-ordering-policy
               type: fcfs-ordering-policy
-            # Standard work pauses at 75% saturation, leaving 25% available
-            # for protected work. Both classes may use idle capacity below it.
+            # Three ranks produce ceilings of 100%, 75%, and 50%. Batch pauses
+            # first, standard pauses next, and protected work may use the full
+            # measured limit.
             - name: priority-holdback
               type: priority-holdback-policy
               parameters:
                 domain: rank
                 shape: linear
-                minCeiling: 0.75
+                minCeiling: 0.5
                 maxCeiling: 1
             # Prefer the eligible replica with less queued model-server work.
             - name: queue-scorer
@@ -183,6 +189,19 @@ metadata:
   namespace: flow-control-demo
 spec:
   priority: 100
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  # Negative priority marks work that may be delayed or rejected under load.
+  name: batch
+  namespace: flow-control-demo
+spec:
+  priority: -10
   poolRef:
     group: inference.networking.k8s.io
     kind: InferencePool

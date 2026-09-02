@@ -17,6 +17,8 @@ MANIFEST = PACKAGE.join("manifest.json")
 EXAMPLE_FILES = [
   PACKAGE.join("examples/getting-started/01-two-priority-scored-routing.yaml"),
   PACKAGE.join("examples/getting-started/02-slo-deadline-ordering.yaml"),
+  PACKAGE.join("examples/getting-started/03-same-priority-fairness.yaml"),
+  PACKAGE.join("examples/getting-started/04-priority-standard-batch.yaml"),
   PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
 ].freeze
 
@@ -28,6 +30,8 @@ ALLOWED_FILES = %w[
   examples/benchmark-reproduction/03-two-replica-random-baseline.yaml
   examples/getting-started/01-two-priority-scored-routing.yaml
   examples/getting-started/02-slo-deadline-ordering.yaml
+  examples/getting-started/03-same-priority-fairness.yaml
+  examples/getting-started/04-priority-standard-batch.yaml
   features/pd-flow-control/analysis.json
   features/pd-flow-control/configuration/selected-recipe.yaml
   features/soft-pt/analysis.json
@@ -114,6 +118,12 @@ EXAMPLE_FILES.each do |path|
   end
   picker_refs = profile_refs.grep(/picker\z/)
   assert(picker_refs.length == 1, "#{path.basename} must select exactly one picker")
+
+  configured_priorities = inline.dig("flowControl", "priorityBands")
+                                .map { |band| band.fetch("priority") }.sort
+  objective_priorities = objectives.map { |objective| objective.dig("spec", "priority") }.uniq.sort
+  assert(configured_priorities == objective_priorities,
+         "#{path.basename} priorities differ between flow control and objectives")
 end
 
 scored = YAML.load_stream(EXAMPLE_FILES[0].read).find do |document|
@@ -123,7 +133,8 @@ end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles",
 assert(scored.include?("queue-scorer") && scored.include?("max-score-picker"),
        "scored-routing example must score queues and select the maximum score")
 
-random_baseline = YAML.load_stream(EXAMPLE_FILES[2].read).find do |document|
+random_example = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("random-baseline") }
+random_baseline = YAML.load_stream(random_example.read).find do |document|
   document["kind"] == "LLMInferenceService"
 end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles", 0, "plugins")
                .map { |entry| entry.fetch("pluginRef") }

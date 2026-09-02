@@ -10,6 +10,8 @@ manifests. Each file includes the `LLMInferenceService`, its
 | --- | --- | --- |
 | Protect one workload while two model replicas share traffic | [`01-two-priority-scored-routing.yaml`](getting-started/01-two-priority-scored-routing.yaml) | Uses priority and round-robin fairness for service protection, then selects the eligible replica with the shortest queue. |
 | Give requests with tighter TTFT objectives earlier queue positions | [`02-slo-deadline-ordering.yaml`](getting-started/02-slo-deadline-ordering.yaml) | Uses the campaign's tested SLO ordering policy inside the protected priority band. |
+| Keep two equally important applications from starving each other | [`03-same-priority-fairness.yaml`](getting-started/03-same-priority-fairness.yaml) | Gives each fairness ID alternating dispatch turns, then selects the eligible replica with the shortest queue. |
+| Share a model across protected, standard, and retryable Batch work | [`04-priority-standard-batch.yaml`](getting-started/04-priority-standard-batch.yaml) | Reserves progressively more capacity for higher priorities and bounds the negative-priority queue. |
 | Reproduce the campaign's one-versus-two-replica routing baseline | [`03-two-replica-random-baseline.yaml`](benchmark-reproduction/03-two-replica-random-baseline.yaml) | Preserves the exact predictor-free routing policy used to isolate replica scaling. This is evidence reproduction, not the recommended scored-routing starting point. |
 
 ## Before applying an example

@@ -1,8 +1,9 @@
-# Getting started: two priorities with scored multi-replica routing.
+# Getting started: equal-priority fairness with scored routing.
 #
-# Choose this when two workloads share the same model and one needs stronger
-# latency protection. Flow control decides when work may leave the queue.
-# Queue scoring then selects the eligible replica with less queued work.
+# Choose this when peer workloads have the same importance and neither should
+# monopolize dispatch. Give each workload a different fairness ID. Round-robin
+# fairness gives the two IDs alternating turns while queue scoring selects the
+# eligible replica with less queued work.
 #
 # The campaign measured maxConcurrency 128 and 10% detector headroom for
 # GPT-OSS 20B on one H100 per replica. Recalibrate both values for your model.
@@ -72,17 +73,14 @@ spec:
             defaultRequestTTL: 300s
             maxBytes: 1073741824
             priorityBands:
-              # Protected work is dispatched before standard work.
-              - priority: 100
-                fairnessPolicyRef: round-robin-fairness-policy
-                orderingPolicyRef: fcfs-ordering-policy
-              # Standard work still makes progress whenever capacity is free.
+              # Both workloads use priority 0. Their different fairness IDs,
+              # not different priorities, prevent one from taking every turn.
               - priority: 0
                 fairnessPolicyRef: round-robin-fairness-policy
                 orderingPolicyRef: fcfs-ordering-policy
             saturationDetector:
               pluginRef: concurrency-detector
-            usageLimitPolicyPluginRef: priority-holdback
+            usageLimitPolicyPluginRef: static-usage-limit
           plugins:
             # Read objective and fairness headers from OpenAI requests.
             - type: openai-parser
@@ -104,15 +102,11 @@ spec:
               type: round-robin-fairness-policy
             - name: fcfs-ordering-policy
               type: fcfs-ordering-policy
-            # Standard work pauses at 75% saturation, leaving 25% available
-            # for protected work. Both classes may use idle capacity below it.
-            - name: priority-holdback
-              type: priority-holdback-policy
+            # One ceiling is enough because both workloads share one priority.
+            - name: static-usage-limit
+              type: static-usage-limit-policy
               parameters:
-                domain: rank
-                shape: linear
-                minCeiling: 0.75
-                maxCeiling: 1
+                threshold: 1
             # Prefer the eligible replica with less queued model-server work.
             - name: queue-scorer
               type: queue-scorer
@@ -178,11 +172,10 @@ spec:
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Send this name in x-gateway-inference-objective for protected work.
-  name: protected
+  name: application-a
   namespace: flow-control-demo
 spec:
-  priority: 100
+  priority: 0
   poolRef:
     group: inference.networking.k8s.io
     kind: InferencePool
@@ -191,8 +184,7 @@ spec:
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Send this name for ordinary work that may wait behind protected work.
-  name: standard
+  name: application-b
   namespace: flow-control-demo
 spec:
   priority: 0
