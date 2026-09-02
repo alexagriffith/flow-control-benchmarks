@@ -1,0 +1,152 @@
+# Tested P/D flow-control recipe.
+#
+# Use this pattern when independent workloads share one prefill/decode service.
+# It gives each workload its own turn in the queue and keeps measured capacity
+# available for requests with the higher priority.
+#
+# A two-class service sends protected requests at priority 100 and standard
+# requests at priority 0. The tested configuration also defines priority -10,
+# but a two-class service does not send it. Use -10 only for work that may be
+# stopped and retried. In-flight eviction is a separate optional setting.
+#
+# The values 64, 80,000, 0.1, and 0.5 came from this benchmark. They fit one
+# GPT-OSS 20B prefill pod and one decode pod, each using one H100 on the same
+# node. Measure new limits before using this recipe with another model,
+# request shape, replica count, or topology.
+#
+# The tested Endpoint Picker used --allow-experimental-plugins.
+apiVersion: llm-d.ai/v1alpha1
+kind: EndpointPickerConfig
+
+featureGates:
+  - flowControl
+
+flowControl:
+  # Bound how long and how much work the Endpoint Picker may hold in its queue.
+  # These limits prevent an unavailable or overloaded service from building an
+  # unlimited backlog.
+  defaultRequestTTL: 90s
+  noEndpointRequestTTL: 30s
+  maxRequests: 1024
+  maxBytes: 1073741824
+  # Requests without an explicit band use the same round-robin fairness and
+  # first-come, first-served ordering as the bands below.
+  defaultPriorityBand:
+    fairnessPolicyRef: round-robin-fairness-policy
+    orderingPolicyRef: fcfs-ordering-policy
+  defaultNegativePriorityBand:
+    fairnessPolicyRef: round-robin-fairness-policy
+    orderingPolicyRef: fcfs-ordering-policy
+  priorityBands:
+    # Protected requests may use the full measured capacity. Flow IDs at this
+    # priority take turns, so one workload cannot take every dispatch slot.
+    - priority: 100
+      fairnessPolicyRef: round-robin-fairness-policy
+      orderingPolicyRef: fcfs-ordering-policy
+    # Standard requests stop dispatching when measured load reaches 75% of the
+    # calibrated limit. The remaining 25% stays available for priority 100.
+    - priority: 0
+      fairnessPolicyRef: round-robin-fairness-policy
+      orderingPolicyRef: fcfs-ordering-policy
+    # Priority -10 is for work that may be stopped and retried. It stops
+    # dispatching at 50% load. Queued negative-priority work may be shed.
+    # Stopping work already inside vLLM also requires enableEviction: true.
+    # Leave this band unused when both classes must always finish normally.
+    - priority: -10
+      fairnessPolicyRef: round-robin-fairness-policy
+      orderingPolicyRef: fcfs-ordering-policy
+  saturationDetector:
+    pluginRef: concurrency-detector
+  usageLimitPolicyPluginRef: priority-holdback-050
+
+plugins:
+  # Read priority, flow identity, token counts, and optional service-level
+  # objective fields from the OpenAI request. Later plugins use these values.
+  - type: openai-parser
+
+  # Track approximate prefix matches for P/D routing. This recipe always uses a
+  # separate prefill pod, so prefix matches do not decide whether to split the
+  # request. They remain part of the tested P/D setup.
+  - type: approx-prefix-cache-producer
+    parameters:
+      maxPrefixTokensToMatch: 16384
+      lruCapacityPerServer: 31250
+
+  # Build two candidate lists: prefill pods and decode pods. For each list,
+  # prefer the pod with less queued work and select its highest score.
+  - type: queue-scorer
+  - type: prefill-filter
+  - type: decode-filter
+  - type: max-score-picker
+
+  # Split every accepted request across separate prefill and decode pods.
+  # deciders.prefill connects that choice to the P/D route builder.
+  - type: always-disagg-pd-decider
+  - type: disagg-profile-handler
+    parameters:
+      deciders:
+        prefill: always-disagg-pd-decider
+
+  - name: inflight-load
+    type: inflight-load-producer
+    parameters:
+      # Count tokens already in the request, not the caller's maximum possible
+      # output. A requested maximum can be missing or much larger than the
+      # output actually produced. The hybrid detector still sees long decode
+      # work because it counts each active request until that request finishes.
+      addEstimatedOutputTokens: false
+
+  - name: concurrency-detector
+    type: concurrency-detector
+    parameters:
+      # Use both signals. Active-request count represents decode pressure;
+      # prompt-token count represents prefill pressure. The busier P/D stage
+      # controls admission.
+      concurrencyMode: hybrid
+      inFlightLoadProducerName: inflight-load
+      maxConcurrency: 64
+      maxTokenConcurrency: 80000
+      # Allow a 10% scheduling buffer at the limit: 64 requests becomes 70, and
+      # 80,000 tokens becomes 88,000. The buffer avoids blocking every new
+      # dispatch as soon as load touches the measured limit. Priority holdback,
+      # configured below, still determines how much each priority may use.
+      headroom: 0.1
+
+  - name: round-robin-fairness-policy
+    type: round-robin-fairness-policy
+  - name: fcfs-ordering-policy
+    type: fcfs-ordering-policy
+
+  - name: priority-holdback-050
+    type: priority-holdback-policy
+    parameters:
+      # Give the three configured ranks evenly spaced admission ceilings:
+      # priority 100 may use 100%, priority 0 may use 75%, and priority -10 may
+      # use 50% of the measured limit. This is what preserves capacity for the
+      # higher-priority class while lower-priority work shares the same GPUs.
+      domain: rank
+      shape: linear
+      minCeiling: 0.5
+      maxCeiling: 1
+
+requestHandler:
+  parsers:
+    - pluginRef: openai-parser
+
+schedulingProfiles:
+  # The P/D handler uses the profile named "prefill" for the helper that reads
+  # the prompt and produces KV data. This profile considers only prefill pods.
+  - name: prefill
+    plugins:
+      - pluginRef: prefill-filter
+      - pluginRef: queue-scorer
+      - pluginRef: max-score-picker
+  # The P/D handler uses the profile named "decode" for the pod that owns the
+  # response and generates output tokens. It selects the decode owner first,
+  # then the prefill helper. Runtime work still happens in this order: prefill,
+  # KV transfer, decode, response.
+  - name: decode
+    plugins:
+      - pluginRef: decode-filter
+      - pluginRef: queue-scorer
+      - pluginRef: max-score-picker

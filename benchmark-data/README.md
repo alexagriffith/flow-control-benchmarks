@@ -3,6 +3,7 @@
 Promoted results are grouped by the image and capability they test:
 
 - [`rhaii-3.4-flow-control/`](rhaii-3.4-flow-control/) contains the Red Hat AI Inference 3.4 capacity curve, priority tiers, batch isolation, consolidation, fairness, and multi-replica evidence.
+- [`rhaii-3.5-flow-control/`](rhaii-3.5-flow-control/) contains the Red Hat AI Inference 3.5 capacity and reproduction results, SLO and priority policy comparisons, Batch dispatch and eviction evidence, soft provisioned-throughput evidence, and the tested prefill/decode flow-control recipe.
 - [`upstream-flow-control-v0.9.0/`](upstream-flow-control-v0.9.0/) contains the stable upstream v0.9.0 calibration, detector tuning, and production evidence.
 - [`batch-eviction/`](batch-eviction/) contains separate one-model and two-model packages for reserved capacity, batch eviction, and retry.
 

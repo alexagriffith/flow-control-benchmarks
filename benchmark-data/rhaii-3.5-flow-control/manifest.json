@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "package": "rhaii-3.5-flow-control",
+  "publication_state": "published",
+  "generated_on": "2026-09-02",
+  "release_scope": {
+    "product": "Red Hat AI Inference 3.5",
+    "primary_router_source_commit": "e1029b30a12a89312752aef345c6be36c36828cd",
+    "primary_router_image": "quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:275037b7611b2d51faedae4437321014ebac349920c0440a2afb688e82430585",
+    "pd_router_source_commit": "b15fb9c233d68eef00e19721d4e08585f67da845",
+    "pd_router_image": "quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:05e5510b46136f7d02eaa602cd1223ae77c2d67e807d4222324215d74280670d",
+    "batch_eviction_router_image": "sha256:12552e243168ebc9ccd6905acda939adc7cf55ccc9214097e91ab569cc648c01"
+  },
+  "files": {
+    "README.md": "a0c5cdc513851e4a8ebfeda5838e3589c7a4a6ed00ed9ad5ee200bb31bc7696d",
+    "assets/capacity-slo-envelope.svg": "3eb1696a228827b58b66e1b319691c73d90a958d58ad58f18211f0a0b4266b65",
+    "assets/slo-deadline-ordering.svg": "4dc7e9f6bfc39b8b737568644d21d51087728ec220570c2a3bfad20cd91d6ca7",
+    "features/pd-flow-control/analysis.json": "98e5ec2e27fbf284493db7753d0d47a2fc0c56f992517f197aaa27b2ad0b5b36",
+    "features/pd-flow-control/configuration/selected-recipe.yaml": "44754893a04ddca1f75acb049019788f6535c177ec09598a18463e57a7eeb67f",
+    "features/soft-pt/analysis.json": "a0183ed69e120c235264253d98d21221752f94ae26ec8c8f385389fd2528ecf3",
+    "results.json": "d298d3c491cf978a75c115302b88cbdfc0777e767c0d0230b283d8d3661aa94e"
+  }
+}

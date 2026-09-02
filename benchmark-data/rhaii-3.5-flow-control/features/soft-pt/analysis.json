@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "promotion_status": "headline_with_composition_scope",
+  "question": "Can a trusted external token quota plus llm-d priority create an enforceable preference while overage and Batch work continue?",
+  "test_design": {
+    "accepted_runs": 9,
+    "counterbalanced_blocks": 3,
+    "accepted_runs_per_policy": 3,
+    "topology": "one model replica",
+    "request_shape": "fixed",
+    "percentile_policy": "Per-run request percentiles; policy summaries are medians of three run percentiles. Requests were not pooled across blocks."
+  },
+  "policies": {
+    "no_quota": {
+      "behavior": "Forward every request at standard priority.",
+      "median_quota_eligible_success_ratio": 0.9780141843971631,
+      "median_quota_eligible_p95_ttft_ms": 458.71002674102766,
+      "median_background_success_ratio": 0.9843971631205674,
+      "median_background_p95_ttft_ms": 412.334084510803,
+      "median_batch_drain_seconds": 304
+    },
+    "classifying_quota": {
+      "behavior": "Give work inside the trusted token budget higher priority and forward overage at standard priority.",
+      "median_quota_eligible_success_ratio": 0.9900709219858156,
+      "median_quota_eligible_p95_ttft_ms": 317.7860856056213,
+      "median_background_success_ratio": 0.9773049645390071,
+      "median_background_p95_ttft_ms": 543.8473224639891,
+      "median_batch_drain_seconds": 308,
+      "median_classifier_rejected_requests": 0
+    },
+    "blocking_quota": {
+      "behavior": "Give work inside the trusted token budget higher priority and reject overage.",
+      "median_quota_eligible_success_ratio": 0.8468085106382979,
+      "median_quota_eligible_p95_ttft_ms": 303.79638671875,
+      "median_background_success_ratio": 0.9765957446808511,
+      "median_background_p95_ttft_ms": 506.40316009521496,
+      "median_batch_drain_seconds": 300,
+      "median_classifier_rejected_requests": 208,
+      "latency_interpretation": "The successful-request percentile excludes classifier rejections and cannot represent all offered work."
+    }
+  },
+  "classifying_quota_matched_deltas": [
+    {
+      "block": 1,
+      "quota_eligible_success_delta_percentage_points": 1.2056737588652444,
+      "quota_eligible_p95_ttft_delta_ms": -498.3812570571897,
+      "background_success_delta_percentage_points": -0.35460992907800915,
+      "batch_drain_delta_seconds": 9
+    },
+    {
+      "block": 2,
+      "quota_eligible_success_delta_percentage_points": 1.276595744680853,
+      "quota_eligible_p95_ttft_delta_ms": -116.01693630218512,
+      "background_success_delta_percentage_points": -1.276595744680853,
+      "batch_drain_delta_seconds": 7
+    },
+    {
+      "block": 3,
+      "quota_eligible_success_delta_percentage_points": 1.631205673758862,
+      "quota_eligible_p95_ttft_delta_ms": 73.17640781402616,
+      "background_success_delta_percentage_points": -0.7092198581560294,
+      "batch_drain_delta_seconds": -3
+    }
+  ],
+  "batch_completion": {
+    "planned_items_per_run": 4752,
+    "completed_items_per_run": 4752,
+    "failed_terminal_items": 0,
+    "completed_in_all_runs": true
+  },
+  "selected_policy": "classifying_quota",
+  "supported_claim": "A trusted external quota classifier plus llm-d priority created measurable preference for in-budget work while overage and Batch work continued.",
+  "claim_boundary": "This one-replica, fixed-shape composition test does not establish dedicated capacity, a provisioned-throughput guarantee, universal token weights, or a production service-level objective."
+}

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "experiment": "stage-aware P/D flow control",
+  "status": "passed",
+  "topology": {
+    "model": "openai/gpt-oss-20b",
+    "model_revision": "6cee5e81ee83917806bbde320786a8fb61efebee",
+    "prefill": "one TP1 pod on one H100",
+    "decode": "one TP1 pod on one H100",
+    "placement": "same node",
+    "kv_transfer": "NIXL",
+    "prefix_cache": "off"
+  },
+  "endpoint_picker": {
+    "image": "quay.io/opendatahub/odh-llm-d-router-endpoint-picker@sha256:05e5510b46136f7d02eaa602cd1223ae77c2d67e807d4222324215d74280670d",
+    "source_commit": "b15fb9c233d68eef00e19721d4e08585f67da845",
+    "stage_saturation": "effective saturation is the maximum of prefill and decode saturation"
+  },
+  "selected_recipe": {
+    "detector": "hybrid request and token concurrency",
+    "max_concurrency": 64,
+    "max_token_concurrency": 80000,
+    "headroom": 0.1,
+    "fairness": "round-robin",
+    "ordering_within_priority": "FCFS",
+    "priority_ceiling_policy": {
+      "domain": "rank",
+      "minimum": 0.5,
+      "maximum": 1.0,
+      "configured_band_ceilings": {
+        "100": 1.0,
+        "0": 0.75,
+        "-10": 0.5
+      }
+    },
+    "priorities": {
+      "protected": 100,
+      "standard": 0,
+      "retry_owned": -10
+    }
+  },
+  "detector_comparison": {
+    "qualification_boundary": 0.9,
+    "matched_screens": [
+      {
+        "detector": "request count",
+        "max_concurrency": 64,
+        "prefill_heavy_peak_saturation": 0.09375,
+        "decode_heavy_peak_saturation": 1.015625,
+        "qualified_shapes": [
+          "decode"
+        ]
+      },
+      {
+        "detector": "token count",
+        "max_token_concurrency": 80000,
+        "add_estimated_output_tokens": false,
+        "prefill_heavy_peak_saturation": 1.884025,
+        "decode_heavy_peak_saturation": 0.64,
+        "qualified_shapes": [
+          "prefill"
+        ]
+      },
+      {
+        "detector": "hybrid request and token concurrency",
+        "max_concurrency": 64,
+        "max_token_concurrency": 80000,
+        "add_estimated_output_tokens": false,
+        "prefill_heavy_peak_saturation": 1.8850875,
+        "decode_heavy_peak_saturation": 1.03125,
+        "qualified_shapes": [
+          "prefill",
+          "decode"
+        ]
+      }
+    ]
+  },
+  "equal_priority_fairness": {
+    "policy": "round-robin",
+    "both_flows_progressed": true,
+    "all_requests_completed": true,
+    "sixty_second_starvation_intervals": 0,
+    "interpretation": "Round-robin provided bounded progress for equal-priority flows."
+  },
+  "priority_reserve": {
+    "policy": "priority holdback",
+    "minimum_ceiling": 0.5,
+    "counted_protected_priority": 100,
+    "counted_standard_priority": 0,
+    "counted_standard_ceiling": 0.75,
+    "counted_repeats_per_shape": 3,
+    "prefill_heavy_protected_p95_to_clean_ratio_range": [
+      0.9191577826488035,
+      1.1457287286828208
+    ],
+    "decode_heavy_protected_p95_to_clean_ratio_range": [
+      0.11512204926829966,
+      0.15943607318622063
+    ],
+    "protected_recipe_all_repeats_passed": true
+  },
+  "eviction": {
+    "policy": "optional for retry-owned priority -10 work",
+    "matched_pairs": 3,
+    "mechanism_chain_valid_pairs": 3,
+    "protected_requests_completed": true,
+    "retry_owned_jobs_completed": true,
+    "protected_p95_lower_pairs": 2,
+    "retry_owned_p95_completion_change_percent": [
+      20.504455267217153,
+      36.539345067755036,
+      29.022903215863227
+    ],
+    "recomputed_tokens": [
+      4189,
+      3299,
+      2928
+    ]
+  },
+  "decision": "Use stage-aware hybrid admission, separate flow identities, round-robin fairness, and measured priority reserve as the base P/D protection recipe. Use eviction for retry-owned work when faster reclamation justifies retry and recomputation.",
+  "scope": "One pinned same-node GPT-OSS 20B P/D topology with frozen prefill-heavy and decode-heavy traffic shapes."
+}

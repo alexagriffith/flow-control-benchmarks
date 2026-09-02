@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "release_scope": "Red Hat AI Inference 3.5 with pinned OpenDataHub Endpoint Picker builds",
+  "method": "Normalized summaries from accepted private runs; run-level percentiles were not pooled unless explicitly stated.",
+  "results": {
+    "capacity_envelope": {
+      "promotion_status": "headline",
+      "workload": {
+        "model": "GPT-OSS 20B",
+        "input_tokens": 512,
+        "output_tokens": 128,
+        "prefix_cache": "off"
+      },
+      "objective": {
+        "p95_ttft_ms_max": 250,
+        "p95_tpot_ms_max": 25
+      },
+      "points": [
+        {
+          "requests_per_second": 30.4,
+          "p95_ttft_ms": 124.301,
+          "classification": "inside objective"
+        },
+        {
+          "requests_per_second": 40.6,
+          "p95_ttft_ms": 155.098,
+          "classification": "selected operating point"
+        },
+        {
+          "requests_per_second": 50.7,
+          "p95_ttft_ms": 6273.37,
+          "classification": "queueing boundary"
+        },
+        {
+          "requests_per_second": 55.8,
+          "p95_ttft_ms": 28925.303,
+          "classification": "outside objective"
+        }
+      ],
+      "claim_boundary": "Exploratory operating-point selection for the tested workload and topology."
+    },
+    "request_concurrency_cap": {
+      "promotion_status": "supporting",
+      "operating_point_requests_per_second": 40.6,
+      "headroom": 0.1,
+      "candidates": {
+        "96": {
+          "accepted_repeats": 3,
+          "objective_passes": 1,
+          "median_p95_ttft_ms": 257.467
+        },
+        "128": {
+          "accepted_repeats": 3,
+          "objective_passes": 3,
+          "median_p95_ttft_ms": 143.111
+        }
+      },
+      "selected_cap": 128,
+      "claim_boundary": "Workload-specific detector calibration, not a universal concurrency limit."
+    },
+    "four_scenario_reproduction": {
+      "promotion_status": "supporting",
+      "scenarios": [
+        "priority tiers",
+        "Batch isolation",
+        "consolidation",
+        "same-priority fairness"
+      ],
+      "detector_configurations": 3,
+      "accepted_repeats_per_configuration": 3,
+      "accepted_runs": 36,
+      "successful_requests": 303093,
+      "claim_boundary": "Mechanism-level reproduction on the tested release; detector calibration does not isolate an image-version effect."
+    },
+    "slo_deadline_ordering": {
+      "promotion_status": "headline",
+      "accepted_matched_runs_per_policy": 3,
+      "values_are": "median of per-run values",
+      "comparisons": {
+        "250_ms_objective": {
+          "fcfs_p95_ttft_ms": 870.163,
+          "slo_ordering_p95_ttft_ms": 412.984,
+          "fcfs_fraction_meeting_objective": 0.414261,
+          "slo_ordering_fraction_meeting_objective": 0.721562
+        },
+        "500_ms_objective": {
+          "fcfs_p95_ttft_ms": 827.121,
+          "slo_ordering_p95_ttft_ms": 591.203,
+          "fcfs_fraction_meeting_objective": 0.704403,
+          "slo_ordering_fraction_meeting_objective": 0.90566
+        },
+        "no_objective": {
+          "fcfs_p95_ttft_ms": 825.785,
+          "slo_ordering_p95_ttft_ms": 1495.019
+        }
+      },
+      "all_requests_completed": true,
+      "claim_boundary": "Use only when callers provide meaningful deadlines and lower precedence for requests without a deadline is acceptable."
+    },
+    "priority_usage_limit_policies": {
+      "promotion_status": "headline",
+      "accepted_repeats_per_policy": 3,
+      "values_are": "median of per-run values",
+      "fixed_holdback_050": {
+        "platinum_p95_ttft_ms": 135,
+        "gold_p95_ttft_ms": 133,
+        "bronze_p95_ttft_ms": 66045,
+        "endpoint_picker_peak_queue_requests": 1250
+      },
+      "soft_reflective": {
+        "platinum_p95_ttft_ms": 200,
+        "gold_p95_ttft_ms": 318,
+        "bronze_p95_ttft_ms": 6219,
+        "endpoint_picker_peak_queue_requests": 143
+      },
+      "claim_boundary": "Directional one-GPU tradeoff evidence; not an equivalence test or universal threshold."
+    },
+    "batch_dispatch": {
+      "promotion_status": "headline_with_durability_boundary",
+      "accepted_counterbalanced_blocks_per_control": 3,
+      "realtime_objective_p95_ttft_ms_max": 250,
+      "controls": {
+        "fixed_synchronous": {
+          "objective_passes": 0,
+          "median_realtime_surge_p95_ttft_ms": 546,
+          "realtime_http_429": 47,
+          "median_batch_drain_seconds": 212
+        },
+        "synchronous_aimd": {
+          "objective_passes": 1,
+          "median_realtime_surge_p95_ttft_ms": 305,
+          "realtime_http_429": 12,
+          "median_batch_drain_seconds": 287
+        },
+        "metrics_gated_async": {
+          "objective_passes": 2,
+          "median_realtime_surge_p95_ttft_ms": 249,
+          "realtime_http_429": 42,
+          "median_batch_drain_seconds": 234
+        }
+      },
+      "all_planned_batch_requests_completed": true,
+      "claim_boundary": "Selected for this retry-safe shared-pool workload. Restart-safe operation requires durable queue state, reconstructable ownership, and startup reconciliation."
+    },
+    "batch_eviction": {
+      "promotion_status": "headline_with_experimental_image_scope",
+      "accepted_matched_pairs_per_reserve": 12,
+      "reserve_levels": {
+        "25_percent": {
+          "realtime_non_200_without_eviction": 15,
+          "realtime_non_200_with_eviction": 0,
+          "eviction_events": 452,
+          "unique_evicted_requests": 385,
+          "mean_batch_p95_completion_without_eviction_seconds": 58.69,
+          "mean_batch_p95_completion_with_eviction_seconds": 69.66,
+          "batch_p95_completion_change_percent": 18.7
+        },
+        "50_percent": {
+          "realtime_non_200_without_eviction": 11,
+          "realtime_non_200_with_eviction": 0,
+          "eviction_events": 189,
+          "batch_p95_completion_change_seconds": 5.41,
+          "batch_p95_completion_change_percent": 9.4
+        }
+      },
+      "all_batch_jobs_completed_exactly_once": true,
+      "claim_boundary": "Eviction is retry-safe overflow recovery for eligible work. The paired runs did not establish a stable successful-response p95 TTFT improvement."
+    },
+    "request_cost_metadata": {
+      "promotion_status": "supporting",
+      "usage_bearing_requests": 200,
+      "exact_token_sum_matches": 200,
+      "requests_without_usage": 20,
+      "correctly_omitted_cost": 20,
+      "claim_boundary": "Exact metadata propagation only; no billing ledger, quota enforcement, or provisioned-throughput guarantee was tested."
+    },
+    "soft_pt": {
+      "promotion_status": "headline_with_composition_scope",
+      "analysis": "features/soft-pt/analysis.json",
+      "accepted_runs": 9,
+      "counterbalanced_blocks": 3,
+      "selected_policy": "classifying_quota",
+      "classifying_quota_improved_quota_eligible_success_in_blocks": 3,
+      "classifying_quota_lowered_quota_eligible_p95_ttft_in_blocks": 2,
+      "all_batch_backlogs_completed": true,
+      "claim_boundary": "External quota classification plus llm-d priority created measurable preference in a one-replica, fixed-shape test; no dedicated-capacity or provisioned-throughput guarantee is claimed."
+    },
+    "pd_flow_control": {
+      "promotion_status": "headline_with_topology_scope",
+      "analysis": "features/pd-flow-control/analysis.json",
+      "configuration": "features/pd-flow-control/configuration/selected-recipe.yaml",
+      "claim_boundary": "One pinned same-node GPT-OSS 20B topology with one TP1 prefill pod and one TP1 decode pod, each on one H100."
+    },
+    "routing_scale": {
+      "promotion_status": "supporting",
+      "accepted_counterbalanced_runs": 6,
+      "one_to_two_replica_served_rps_per_gpu_change_percent": 0.39,
+      "premium_burst_p95_ttft_change_percent": 7.35,
+      "claim_boundary": "Routing-scale completion evidence, not a latency scale-out claim."
+    },
+    "long_replay": {
+      "promotion_status": "boundary_only",
+      "display_name": "stability boundary evidence",
+      "duration_minutes": 30,
+      "completed_requests": 14889,
+      "planned_requests": 14889,
+      "surge_1_premium_p95_ttft_ms": 673,
+      "surge_2_premium_p95_ttft_ms": 885,
+      "surge_to_surge_change_percent": 31.5,
+      "repeatability_guardrail_percent": 20,
+      "claim_boundary": "Completion and drain evidence only; the repeatability guardrail did not pass."
+    }
+  }
+}
