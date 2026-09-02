@@ -19,6 +19,8 @@ EXAMPLE_FILES = [
   PACKAGE.join("examples/getting-started/02-slo-deadline-ordering.yaml"),
   PACKAGE.join("examples/getting-started/03-same-priority-fairness.yaml"),
   PACKAGE.join("examples/getting-started/04-priority-standard-batch.yaml"),
+  PACKAGE.join("examples/getting-started/05-soft-reflective-scored-routing.yaml"),
+  PACKAGE.join("examples/getting-started/06-prefill-decode-hybrid.yaml"),
   PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
 ].freeze
 
@@ -32,6 +34,8 @@ ALLOWED_FILES = %w[
   examples/getting-started/02-slo-deadline-ordering.yaml
   examples/getting-started/03-same-priority-fairness.yaml
   examples/getting-started/04-priority-standard-batch.yaml
+  examples/getting-started/05-soft-reflective-scored-routing.yaml
+  examples/getting-started/06-prefill-decode-hybrid.yaml
   features/pd-flow-control/analysis.json
   features/pd-flow-control/configuration/selected-recipe.yaml
   features/soft-pt/analysis.json
@@ -116,8 +120,12 @@ EXAMPLE_FILES.each do |path|
   profile_refs.each do |ref|
     assert(plugin_names.include?(ref), "#{path.basename} has unresolved plugin reference #{ref}")
   end
-  picker_refs = profile_refs.grep(/picker\z/)
-  assert(picker_refs.length == 1, "#{path.basename} must select exactly one picker")
+  inline.fetch("schedulingProfiles").each do |profile|
+    picker_refs = profile.fetch("plugins").map { |entry| entry.fetch("pluginRef") }
+                         .grep(/picker\z/)
+    assert(picker_refs.length == 1,
+           "#{path.basename} profile #{profile.fetch('name')} must select one picker")
+  end
 
   configured_priorities = inline.dig("flowControl", "priorityBands")
                                 .map { |band| band.fetch("priority") }.sort
@@ -126,12 +134,50 @@ EXAMPLE_FILES.each do |path|
          "#{path.basename} priorities differ between flow control and objectives")
 end
 
-scored = YAML.load_stream(EXAMPLE_FILES[0].read).find do |document|
+EXAMPLE_FILES.reject { |path| path.basename.to_s.include?("random-baseline") }.each do |path|
+  service = YAML.load_stream(path.read).find { |document| document["kind"] == "LLMInferenceService" }
+  profiles = service.dig("spec", "router", "scheduler", "config", "inline",
+                         "schedulingProfiles")
+  profiles.each do |profile|
+    refs = profile.fetch("plugins").map { |entry| entry.fetch("pluginRef") }
+    assert(refs.include?("queue-scorer") && refs.include?("max-score-picker"),
+           "#{path.basename} must score queues and select the maximum score")
+  end
+end
+
+soft_path = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("soft-reflective") }
+soft_service = YAML.load_stream(soft_path.read).find do |document|
   document["kind"] == "LLMInferenceService"
-end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles", 0, "plugins")
-      .map { |entry| entry.fetch("pluginRef") }
-assert(scored.include?("queue-scorer") && scored.include?("max-score-picker"),
-       "scored-routing example must score queues and select the maximum score")
+end
+soft_inline = soft_service.dig("spec", "router", "scheduler", "config", "inline")
+assert(soft_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "soft-reflective",
+       "soft-reflective example must select the tested usage-limit policy")
+assert(soft_inline.fetch("plugins").any? do |plugin|
+  plugin["name"] == "soft-reflective" && plugin["type"] == "soft-reflective-ceiling-policy"
+end, "soft-reflective example must declare its tested policy plugin")
+
+pd_path = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("prefill-decode") }
+pd_documents = YAML.load_stream(pd_path.read)
+pd_service = pd_documents.find { |document| document["kind"] == "LLMInferenceService" }
+pd_inline = pd_service.dig("spec", "router", "scheduler", "config", "inline")
+pd_plugins = pd_inline.fetch("plugins").to_h do |plugin|
+  [plugin["name"] || plugin.fetch("type"), plugin]
+end
+assert(pd_service.dig("spec", "prefill", "replicas") == 1 && pd_service.dig("spec", "replicas") == 1,
+       "P/D example must create one prefill and one decode worker")
+assert(pd_documents.count { |document| document["kind"] == "ServiceMonitor" } == 2,
+       "P/D example must monitor both the Endpoint Picker and vLLM workers")
+assert(pd_plugins.dig("concurrency-detector", "parameters") == {
+  "concurrencyMode" => "hybrid",
+  "inFlightLoadProducerName" => "inflight-load",
+  "maxConcurrency" => 64,
+  "maxTokenConcurrency" => 80_000,
+  "headroom" => 0.1
+}, "P/D example detector differs from the accepted recipe")
+assert(pd_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "priority-holdback-050",
+       "P/D example must select the accepted priority holdback")
+assert(pd_inline.fetch("schedulingProfiles").map { |profile| profile.fetch("name") } ==
+       %w[prefill decode], "P/D example must define separate prefill and decode profiles")
 
 random_example = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("random-baseline") }
 random_baseline = YAML.load_stream(random_example.read).find do |document|

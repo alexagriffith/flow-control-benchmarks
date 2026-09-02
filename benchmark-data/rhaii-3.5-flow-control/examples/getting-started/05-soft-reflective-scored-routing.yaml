@@ -1,5 +1,5 @@
-# Benchmark reproduction: predictor-free two-replica routing baseline.
-# Random selection isolates replica count because both replicas are identical.
+# Getting started: soft-reflective priority ceilings with scored routing.
+# Choose this when lower priorities should keep more capacity as pressure rises.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -76,7 +76,7 @@ spec:
                 orderingPolicyRef: fcfs-ordering-policy
             saturationDetector:
               pluginRef: concurrency-detector
-            usageLimitPolicyPluginRef: static-usage-limit
+            usageLimitPolicyPluginRef: soft-reflective
           plugins:
             - type: openai-parser
             - name: inflight-load
@@ -90,18 +90,18 @@ spec:
                 inFlightLoadProducerName: inflight-load
                 maxConcurrency: 128
                 headroom: 0.1
-            - name: static-usage-limit
-              type: static-usage-limit-policy
-              parameters:
-                threshold: 1
             - name: round-robin-fairness-policy
               type: round-robin-fairness-policy
             - name: fcfs-ordering-policy
               type: fcfs-ordering-policy
-            # This baseline intentionally gives every eligible replica an
-            # equal chance. It does not claim best-endpoint routing.
-            - name: random-picker
-              type: random-picker
+            # This policy adjusts each priority ceiling as active demand changes.
+            - name: soft-reflective
+              type: soft-reflective-ceiling-policy
+            # Queue scoring prefers the replica with less queued model-server work.
+            - name: queue-scorer
+              type: queue-scorer
+            - name: max-score-picker
+              type: max-score-picker
             - type: metrics-data-source
               parameters:
                 scheme: https
@@ -112,7 +112,8 @@ spec:
             - name: default
               plugins:
                 - pluginRef: concurrency-detector
-                - pluginRef: random-picker
+                - pluginRef: queue-scorer
+                - pluginRef: max-score-picker
       template:
         containers:
           - name: main
