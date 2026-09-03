@@ -9,6 +9,21 @@ decode pressure in the matched screens.
 
 The same-node GPT-OSS 20B topology used one TP1 prefill pod and one TP1 decode
 pod, each on one H100, with NVIDIA Inference Xfer Library (NIXL) KV transfer.
+Prefix caching was disabled.
+
+The prefill-heavy workload used large prompts and short responses. The
+decode-heavy workload used shorter prompts and long responses. These two
+traffic shapes created pressure at different P/D stages.
+
+The study tested four decisions under both traffic shapes:
+
+1. Which saturation detector reports the active pressure: request count, token
+   count, or both.
+2. Whether round-robin scheduling keeps equal-priority workloads moving.
+3. Whether priority reserve protects the TTFT target for priority `100` while
+   priority `0` continues to complete requests.
+4. Whether eviction reclaims capacity from retryable priority `-10` work, and
+   how retries affect its completion time.
 
 | Detector | Prefill-heavy peak | Decode-heavy peak | Qualified shape |
 | --- | ---: | ---: | --- |
