@@ -1,0 +1,8 @@
+{
+  "accepted_blocks": 3,
+  "controls": [
+    "fixed-sync",
+    "sync-aimd",
+    "async-gated"
+  ]
+}

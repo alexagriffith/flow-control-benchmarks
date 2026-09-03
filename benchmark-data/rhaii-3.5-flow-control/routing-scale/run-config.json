@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "study": "routing-scale",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "one versus two model replicas",
+  "tested_configuration": "../examples/benchmark-reproduction/03-two-replica-random-baseline.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "counterbalanced_runs": 6
+}

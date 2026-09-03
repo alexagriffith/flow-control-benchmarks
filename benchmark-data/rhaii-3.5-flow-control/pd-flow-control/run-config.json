@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "study": "pd-flow-control",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "detectors, equal-priority fairness, priority reserve, and P/D eviction",
+  "tested_configuration": "configuration/selected-recipe.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "topology": {
+    "prefill_pods": 1,
+    "decode_pods": 1,
+    "gpus": 2,
+    "placement": "same node"
+  }
+}

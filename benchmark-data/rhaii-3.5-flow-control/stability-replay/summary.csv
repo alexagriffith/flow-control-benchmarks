@@ -1,0 +1,2 @@
+run_name,comparison,repeat,accepted,offered_requests,http_200_requests,non_200_requests,p50_ttft_ms,p95_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,prompt_tokens,completion_tokens
+30-minute-replay,long-replay,1,true,14889,14889,0,121.050969,853.641656,11938.637786,43.799305,40548928,2596992

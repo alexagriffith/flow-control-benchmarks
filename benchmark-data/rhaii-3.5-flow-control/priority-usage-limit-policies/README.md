@@ -17,6 +17,13 @@ Each policy had three accepted runs with the same one-H100 workload.
 - [Fixed-holdback benchmark configuration](../examples/benchmark-reproduction/05-fixed-priority-holdback.yaml)
 - [Soft-reflective benchmark configuration](../examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 This result describes a workload-specific tradeoff. Recalibrate the ceilings

@@ -1,0 +1,13 @@
+{
+  "detectors": [
+    "request count",
+    "token count",
+    "hybrid"
+  ],
+  "traffic_shapes": [
+    "prefill-heavy",
+    "decode-heavy"
+  ],
+  "priority_pairs_per_shape": 3,
+  "eviction_pairs": 3
+}

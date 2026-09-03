@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "study": "batch-dispatch",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "fixed synchronous, synchronous AIMD, and metrics-gated Async Batch",
+  "tested_configuration": "../examples/getting-started/04-priority-standard-batch.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "accepted_counterbalanced_blocks": 3
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "study": "request-concurrency",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "maxConcurrency 96 versus 128",
+  "tested_configuration": "../examples/benchmark-reproduction/01-capacity-request-concurrency.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "offered_requests_per_second": 40.6,
+  "headroom": 0.1
+}

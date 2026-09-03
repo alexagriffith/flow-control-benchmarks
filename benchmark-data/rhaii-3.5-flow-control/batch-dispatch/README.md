@@ -19,6 +19,13 @@ dispatch. Every planned Batch request completed under all three controls.
 - [Normalized analysis](analysis.json)
 - [Shared-pool starting configuration](../examples/getting-started/04-priority-standard-batch.yaml)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [control comparison](control-summary.csv),
+[run contract](run-config.json), and [scenario](scenario.json).
+
 ## Operating requirement
 
 Restart-safe Async dispatch needs durable queue state, reconstructable worker

@@ -18,6 +18,11 @@ eviction-off/on pairs, and 25% and 50% reserved capacity.
 - [Normalized analysis](analysis.json)
 - [Complete public Batch eviction package](../../batch-eviction/)
 
+## Evidence
+
+[Run summaries](summary.csv), [paired effects](paired-effects.csv),
+[matched-pair evidence](run-evidence.json), and [run contract](run-config.json).
+
 ## Scope
 
 The result uses the experimental Endpoint Picker digest named in the campaign

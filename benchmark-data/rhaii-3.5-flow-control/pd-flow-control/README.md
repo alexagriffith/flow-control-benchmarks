@@ -25,6 +25,14 @@ all three matched pairs.
 - [Reviewed Endpoint Picker recipe](configuration/selected-recipe.yaml)
 - [Complete P/D deployment example](../examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [detector screens](detector-screens.csv),
+[priority repeats](priority-repeats.csv), [eviction pairs](eviction-pairs.csv),
+[run contract](run-config.json), and [scenario](scenario.json).
+
 ## Scope
 
 Recalculate request, token, and priority ceilings for another model, traffic

@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+fixed-holdback-050-repeat-1,fixed-holdback-050,1,true,accepted run,8662,10582,14140,passed
+fixed-holdback-050-repeat-2,fixed-holdback-050,2,true,accepted run,8662,10582,14168,passed
+fixed-holdback-050-repeat-3,fixed-holdback-050,3,true,accepted run,8662,10586,14112,passed
+soft-reflective-repeat-1,soft-reflective,1,true,accepted run,8662,10582,13493,passed
+soft-reflective-repeat-2,soft-reflective,2,true,accepted run,8662,10582,13496,passed
+soft-reflective-repeat-3,soft-reflective,3,true,accepted run,8662,10582,13484,passed

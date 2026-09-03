@@ -1,0 +1,8 @@
+{
+  "accepted_blocks": 3,
+  "controls": [
+    "no-quota",
+    "classifying-quota",
+    "blocking-quota"
+  ]
+}

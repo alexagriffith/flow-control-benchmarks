@@ -17,6 +17,13 @@ then compared caps of 96 and 128 while holding the workload and topology fixed.
 - [Normalized analysis](analysis.json)
 - [Benchmark configuration](../examples/benchmark-reproduction/01-capacity-request-concurrency.yaml)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 The selected cap is a workload-specific calibration result. Set another

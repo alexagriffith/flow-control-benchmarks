@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "study": "request-cost-metadata",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "usage-bearing responses and responses without usage",
+  "tested_configuration": "../examples/benchmark-reproduction/07-request-cost-metadata.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles."
+}

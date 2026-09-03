@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "study": "stability-replay",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "two surge windows in one 30-minute replay",
+  "tested_configuration": "../examples/benchmark-reproduction/02-four-scenario-request-detector.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "duration_minutes": 30
+}

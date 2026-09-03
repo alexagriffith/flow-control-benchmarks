@@ -1,0 +1,13 @@
+shape,seed,candidate,status,highPriorityPeerP95TtftRatio
+prefill,201,static,valid-control-nonreproduction,1.5268316560607778
+prefill,201,holdback050,valid-protected-pass,0.9815317336046021
+prefill,202,holdback050,valid-protected-pass,1.1457287286828208
+prefill,202,static,valid-control-nonreproduction,1.9217320465672476
+prefill,203,static,valid-control-reproduced,2.1737305541393845
+prefill,203,holdback050,valid-protected-pass,0.9191577826488035
+decode,201,holdback050,valid-protected-pass,0.11512204926829966
+decode,201,static,valid-control-nonreproduction,0.6438406582522551
+decode,202,static,valid-control-nonreproduction,1.0361204262136097
+decode,202,holdback050,valid-protected-pass,0.15943607318622063
+decode,203,holdback050,valid-protected-pass,0.12535628556350709
+decode,203,static,valid-control-nonreproduction,0.6357442600627226

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "study": "capacity-envelope",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "30.4, 40.6, 50.7, and 55.8 requests per second",
+  "tested_configuration": "../examples/benchmark-reproduction/01-capacity-request-concurrency.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "request_shape": {
+    "input_tokens": 512,
+    "output_tokens": 128
+  },
+  "objective": {
+    "p95_ttft_ms": 250,
+    "p95_tpot_ms": 25
+  }
+}

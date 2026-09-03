@@ -22,6 +22,13 @@ The reproduced behaviors were:
 - [Earlier Red Hat AI Inference 3.4 package](../../rhaii-3.4-flow-control/)
 - [Earlier upstream v0.9 package](../../upstream-flow-control-v0.9.0/)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 This is mechanism-level reproduction. An image-version effect requires a

@@ -21,6 +21,14 @@ that rejected work.
 - [Serving-side configuration and classifier policy](../examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml)
 - [Request-cost metadata study](../request-cost-metadata/)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [policy results](policy-summary.csv),
+[paired effects](paired-effects.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 This one-replica, fixed-shape composition creates a measurable preference on

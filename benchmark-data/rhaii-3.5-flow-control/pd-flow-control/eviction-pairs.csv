@@ -1,0 +1,7 @@
+candidate,repeat,seed,status,protectedP95TtftMs,batchP95CompletionMs,evictions
+reserve-only,1,7401,valid-counted-arm,3487.7609005197883,28784.760808572173,0
+reserve-plus-eviction,1,7401,valid-counted-arm,3046.77761439234,34686.91921234131,13
+reserve-plus-eviction,2,7402,valid-counted-arm,5333.537822589278,37753.148555755615,10
+reserve-only,2,7402,valid-counted-arm,4561.916188336909,27650.01438744366,0
+reserve-only,3,7403,valid-counted-arm,3782.212344929576,27737.855203449726,0
+reserve-plus-eviction,3,7403,valid-counted-arm,3023.078945465386,35788.18607330322,9

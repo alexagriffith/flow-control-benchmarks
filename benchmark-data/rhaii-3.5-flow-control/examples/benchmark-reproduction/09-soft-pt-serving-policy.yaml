@@ -13,7 +13,8 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: flow-control-gateway
-  namespace: redhat-ods-applications
+  # Red Hat AI Inference commonly uses redhat-ods-applications.
+  namespace: ${GATEWAY_NAMESPACE}
 spec:
   gatewayClassName: istio
   infrastructure:
@@ -50,7 +51,7 @@ spec:
     gateway:
       refs:
         - name: flow-control-gateway
-          namespace: redhat-ods-applications
+          namespace: ${GATEWAY_NAMESPACE}
           sectionName: http
     route: {}
     scheduler:

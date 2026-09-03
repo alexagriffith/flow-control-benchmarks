@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+1-replica-repeat-1,model-replicas=1,1,true,accepted run,1166,542,7701,passed
+2-replica-repeat-1,model-replicas=2,1,true,accepted run,2338,542,10101,passed
+2-replica-repeat-2,model-replicas=2,2,true,accepted run,2338,542,10650,passed
+1-replica-repeat-2,model-replicas=1,2,true,accepted run,1166,542,7655,passed
+1-replica-repeat-3,model-replicas=1,3,true,accepted run,1166,542,8352,passed
+2-replica-repeat-3,model-replicas=2,3,true,accepted run,2338,542,10101,passed

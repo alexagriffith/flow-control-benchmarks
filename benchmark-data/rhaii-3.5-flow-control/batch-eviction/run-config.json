@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "study": "batch-eviction",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "eviction disabled versus enabled at 25% and 50% reserve",
+  "tested_configuration": "../../batch-eviction/",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "accepted_matched_pairs_per_reserve": 12
+}

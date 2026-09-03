@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,offered_requests,http_200_requests,non_200_requests,p50_ttft_ms,p95_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,prompt_tokens,completion_tokens
+fixed-holdback-050-repeat-1,fixed-holdback-050,1,true,8662,8662,0,71.955031,64309.306263,65866.311871,15.014542,4434944,1108736
+fixed-holdback-050-repeat-2,fixed-holdback-050,2,true,8662,8662,0,72.519092,63936.705941,65505.50651,15.128852,4434944,1108736
+fixed-holdback-050-repeat-3,fixed-holdback-050,3,true,8662,8662,0,74.949917,64789.63264,66374.055898,15.423941,4434944,1108736
+soft-reflective-repeat-1,soft-reflective,1,true,8662,8662,0,122.171777,5785.655648,7943.695428,20.193479,4434944,1108736
+soft-reflective-repeat-2,soft-reflective,2,true,8662,8662,0,112.837721,3431.05449,5649.470156,19.629212,4434944,1108736
+soft-reflective-repeat-3,soft-reflective,3,true,8662,8662,0,107.900488,4496.608578,6646.00203,19.221916,4434944,1108736

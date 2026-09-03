@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,offered_requests,http_200_requests,non_200_requests,p50_ttft_ms,p95_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,prompt_tokens,completion_tokens
+1-replica-repeat-1,model-replicas=1,1,true,1166,1166,0,59.5299,375.003815,1556.910216,12.155736,2672946,149248
+2-replica-repeat-1,model-replicas=2,1,true,2338,2338,0,58.548451,453.359258,1930.407834,15.073796,4934558,299264
+2-replica-repeat-2,model-replicas=2,2,true,2338,2338,0,58.208466,373.517644,1544.20768,12.054384,4934558,299264
+1-replica-repeat-2,model-replicas=1,2,true,1166,1166,0,57.670474,372.320473,1527.699172,11.925576,2672946,149248
+1-replica-repeat-3,model-replicas=1,3,true,1166,1166,0,57.786107,370.035767,1523.776174,11.896198,2672946,149248
+2-replica-repeat-3,model-replicas=2,3,true,2338,2338,0,58.090806,449.529434,1913.160622,14.934229,4934558,299264

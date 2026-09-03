@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "digest"
+require "csv"
 require "json"
 require "pathname"
 require "yaml"
@@ -54,10 +55,29 @@ ALLOWED_FILES = %w[
   assets/slo-deadline-ordering.svg
   batch-dispatch/README.md
   batch-dispatch/analysis.json
+  batch-dispatch/control-summary.csv
+  batch-dispatch/request-results.csv
+  batch-dispatch/run-config.json
+  batch-dispatch/run-evidence.csv
+  batch-dispatch/scenario.json
+  batch-dispatch/summary.csv
+  batch-dispatch/system-metrics.csv
+  batch-dispatch/traffic-samples.csv
   batch-eviction/README.md
   batch-eviction/analysis.json
+  batch-eviction/paired-effects.csv
+  batch-eviction/run-config.json
+  batch-eviction/run-evidence.json
+  batch-eviction/summary.csv
   capacity-envelope/README.md
   capacity-envelope/analysis.json
+  capacity-envelope/request-results.csv
+  capacity-envelope/run-config.json
+  capacity-envelope/run-evidence.csv
+  capacity-envelope/scenario.json
+  capacity-envelope/summary.csv
+  capacity-envelope/system-metrics.csv
+  capacity-envelope/traffic-samples.csv
   examples/README.md
   examples/benchmark-reproduction/01-capacity-request-concurrency.yaml
   examples/benchmark-reproduction/02-four-scenario-request-detector.yaml
@@ -78,23 +98,87 @@ ALLOWED_FILES = %w[
   pd-flow-control/README.md
   pd-flow-control/analysis.json
   pd-flow-control/configuration/selected-recipe.yaml
+  pd-flow-control/detector-screens.csv
+  pd-flow-control/eviction-pairs.csv
+  pd-flow-control/priority-repeats.csv
+  pd-flow-control/request-results.csv
+  pd-flow-control/run-config.json
+  pd-flow-control/run-evidence.csv
+  pd-flow-control/scenario.json
+  pd-flow-control/summary.csv
+  pd-flow-control/system-metrics.csv
+  pd-flow-control/traffic-samples.csv
   priority-usage-limit-policies/README.md
   priority-usage-limit-policies/analysis.json
+  priority-usage-limit-policies/request-results.csv
+  priority-usage-limit-policies/run-config.json
+  priority-usage-limit-policies/run-evidence.csv
+  priority-usage-limit-policies/scenario.json
+  priority-usage-limit-policies/summary.csv
+  priority-usage-limit-policies/system-metrics.csv
+  priority-usage-limit-policies/traffic-samples.csv
   production-scenarios/README.md
   production-scenarios/analysis.json
+  production-scenarios/request-results.csv
+  production-scenarios/run-config.json
+  production-scenarios/run-evidence.csv
+  production-scenarios/scenario.json
+  production-scenarios/summary.csv
+  production-scenarios/system-metrics.csv
+  production-scenarios/traffic-samples.csv
   request-concurrency/README.md
   request-concurrency/analysis.json
+  request-concurrency/request-results.csv
+  request-concurrency/run-config.json
+  request-concurrency/run-evidence.csv
+  request-concurrency/scenario.json
+  request-concurrency/summary.csv
+  request-concurrency/system-metrics.csv
+  request-concurrency/traffic-samples.csv
   request-cost-metadata/README.md
   request-cost-metadata/analysis.json
+  request-cost-metadata/request-results.csv
+  request-cost-metadata/run-config.json
+  request-cost-metadata/run-evidence.json
   results.json
   routing-scale/README.md
   routing-scale/analysis.json
+  routing-scale/request-results.csv
+  routing-scale/run-config.json
+  routing-scale/run-evidence.csv
+  routing-scale/scenario.json
+  routing-scale/summary.csv
+  routing-scale/system-metrics.csv
+  routing-scale/traffic-samples.csv
   slo-deadline-ordering/README.md
   slo-deadline-ordering/analysis.json
+  slo-deadline-ordering/request-results.csv
+  slo-deadline-ordering/run-config.json
+  slo-deadline-ordering/run-evidence.csv
+  slo-deadline-ordering/scenario.json
+  slo-deadline-ordering/summary.csv
+  slo-deadline-ordering/system-metrics.csv
+  slo-deadline-ordering/traffic-samples.csv
   soft-pt/README.md
   soft-pt/analysis.json
+  soft-pt/paired-effects.csv
+  soft-pt/policy-summary.csv
+  soft-pt/request-results.csv
+  soft-pt/run-config.json
+  soft-pt/run-evidence.csv
+  soft-pt/scenario.json
+  soft-pt/summary.csv
+  soft-pt/system-metrics.csv
+  soft-pt/traffic-samples.csv
   stability-replay/README.md
   stability-replay/analysis.json
+  stability-replay/request-results.csv
+  stability-replay/run-config.json
+  stability-replay/run-evidence.csv
+  stability-replay/scenario.json
+  stability-replay/summary.csv
+  stability-replay/system-metrics.csv
+  stability-replay/traffic-samples.csv
 ].freeze
 
 APPROVED_SVGS = %w[
@@ -349,14 +433,15 @@ PACKAGE.glob("**/README.md").each do |readme_path|
   end
 end
 
-public_text = PACKAGE.glob("**/*").select(&:file?).map(&:read).join("\n")
+public_text = files.select { |path| path.end_with?(".md", ".json", ".yaml") }
+                   .map { |path| PACKAGE.join(path).read }.join("\n")
 assert(public_text.include?("x-llm-d-inference-objective") &&
        public_text.include?("x-llm-d-inference-fairness-id"),
        "examples must document the current llm-d objective and fairness headers")
 assert(!public_text.match?(/x-gateway-inference-(?:objective|fairness-id)/),
        "package contains deprecated Gateway objective or fairness headers")
 
-text_files = files.select { |path| path.end_with?(".md", ".json", ".yaml", ".svg") }
+text_files = files.select { |path| path.end_with?(".md", ".json", ".yaml", ".svg", ".csv") }
 sanitization_patterns = {
   "local user path" => %r{/(?:Users|home)/[^/\s]+/},
   "private IPv4 address" => /\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b/,
@@ -374,6 +459,53 @@ text_files.each do |relative|
     assert(!content.match?(pattern), "#{relative} contains #{label}")
   end
 end
+
+RUN_LEVEL_STUDIES = {
+  "capacity-envelope" => 4,
+  "request-concurrency" => 6,
+  "production-scenarios" => 36,
+  "slo-deadline-ordering" => 6,
+  "priority-usage-limit-policies" => 6,
+  "batch-dispatch" => 9,
+  "soft-pt" => 9,
+  "pd-flow-control" => 26,
+  "routing-scale" => 6,
+  "stability-replay" => 1
+}.freeze
+
+RUN_LEVEL_STUDIES.each do |study, expected_runs|
+  summary = CSV.read(PACKAGE.join(study, "summary.csv"), headers: true)
+  evidence = CSV.read(PACKAGE.join(study, "run-evidence.csv"), headers: true)
+  requests = CSV.read(PACKAGE.join(study, "request-results.csv"), headers: true)
+  traffic = CSV.read(PACKAGE.join(study, "traffic-samples.csv"), headers: true)
+  metrics = CSV.read(PACKAGE.join(study, "system-metrics.csv"), headers: true)
+  assert(summary.length == expected_runs, "#{study} has the wrong run-summary count")
+  assert(evidence.length == expected_runs, "#{study} has the wrong validation-record count")
+  assert(requests.length.positive?, "#{study} has no request-level evidence")
+  assert(traffic.length.positive?, "#{study} has no traffic evidence")
+  assert(metrics.length.positive? || study == "stability-replay",
+         "#{study} has no system-metric evidence")
+  assert(evidence.all? { |row| row["accepted"] == "true" },
+         "#{study} includes a run that was not accepted")
+end
+
+cost_rows = CSV.read(PACKAGE.join("request-cost-metadata/request-results.csv"), headers: true)
+assert(cost_rows.length == 220, "request-cost metadata must contain 220 request outcomes")
+positive_cost_rows = cost_rows.select { |row| !row["expected_request_cost"].to_s.empty? }
+negative_cost_rows = cost_rows.select { |row| row["expected_request_cost"].to_s.empty? }
+assert(positive_cost_rows.length == 200 &&
+       positive_cost_rows.all? do |row|
+         row["expected_request_cost"] == row["observed_request_cost"] &&
+           row["cost_present"] == "true"
+       end, "usage-bearing request cost does not match the observer")
+assert(negative_cost_rows.length == 20 &&
+       negative_cost_rows.all? { |row| row["cost_present"] == "false" },
+       "negative-control requests unexpectedly contain request cost")
+
+eviction_evidence = JSON.parse(PACKAGE.join("batch-eviction/run-evidence.json").read)
+assert(eviction_evidence.length == 2 &&
+       eviction_evidence.all? { |record| record.fetch("pairs").length == 12 },
+       "Batch eviction must contain twelve matched pairs at each reserve")
 
 assert(recipe["apiVersion"] == "llm-d.ai/v1alpha1", "unexpected recipe API version")
 assert(recipe["kind"] == "EndpointPickerConfig", "unexpected recipe kind")

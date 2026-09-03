@@ -1,0 +1,5 @@
+run_name,comparison,repeat,accepted,offered_requests,http_200_requests,non_200_requests,p50_ttft_ms,p95_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,prompt_tokens,completion_tokens
+30.4-rps,capacity-envelope,,true,5297,5297,0,59.727944,123.22236,1664.709818,12.530346,2712064,678016
+40.6-rps,capacity-envelope,,true,7357,7357,0,99.892045,155.544335,2602.609433,19.640287,3766784,941696
+50.7-rps,capacity-envelope,,true,19239,19239,0,5510.077151,24294.004682,26840.013295,20.691977,9850368,2462592
+55.8-rps,capacity-envelope,,true,10142,10142,0,14350.380935,29429.981439,32006.852087,20.93481,5192704,1298176

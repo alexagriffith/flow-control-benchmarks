@@ -1,0 +1,39 @@
+[
+  {
+    "checks": {
+      "all_http_200": true,
+      "all_streams_complete": true,
+      "case_counts": true,
+      "client_ids_exact": true,
+      "negative_cost_absent": true,
+      "negative_usage_absent": true,
+      "no_client_errors": true,
+      "observer_rows_exact": true,
+      "observer_status_200": true,
+      "planned_220": true,
+      "positive_cost_exact": true,
+      "positive_usage_present": true
+    },
+    "claimBoundary": "Valid functional propagation proves exact response-token metadata delivery to this Gateway path; it is not a billing ledger, identity, price, quota, or hard PT guarantee.",
+    "counts": {
+      "clientRows": 220,
+      "costMismatches": 0,
+      "missingObserverRows": 0,
+      "negativeControlRows": 20,
+      "negativeRowsWithCost": 0,
+      "observerRows": 220,
+      "positiveRows": 200,
+      "unknownObserverRows": 0
+    },
+    "details": {
+      "clientDuplicates": [],
+      "mismatches": [],
+      "missing": [],
+      "negativeWithCost": [],
+      "observerDuplicates": [],
+      "unknown": []
+    },
+    "schemaVersion": 1,
+    "valid": true
+  }
+]

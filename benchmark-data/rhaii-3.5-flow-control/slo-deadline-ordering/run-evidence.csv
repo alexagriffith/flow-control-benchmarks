@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+fcfs-repeat-1,fcfs,1,true,accepted run,3487,4027,3455,passed
+fcfs-repeat-2,fcfs,2,true,accepted run,3487,4027,3455,passed
+fcfs-repeat-3,fcfs,3,true,accepted run,3487,4027,3455,passed
+slo-deadline-ordering-repeat-1,slo-deadline-ordering,1,true,accepted run,3487,4027,3455,passed
+slo-deadline-ordering-repeat-2,slo-deadline-ordering,2,true,accepted run,3487,4027,3455,passed
+slo-deadline-ordering-repeat-3,slo-deadline-ordering,3,true,accepted run,3487,4027,3455,passed

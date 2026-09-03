@@ -2,10 +2,10 @@
 
 This package documents Red Hat AI Inference 3.5 running pinned OpenDataHub
 builds of the llm-d router Endpoint Picker. It contains normalized results,
-per-study analysis records, two reviewed evidence charts, sanitized Kubernetes
-configuration examples, and the active configuration for the prefill/decode (P/D)
-recipe. The Batch eviction study uses a separately labeled experimental
-Endpoint Picker build.
+accepted run-level evidence, per-study analysis records, two reviewed evidence
+charts, sanitized Kubernetes configuration examples, and the active
+configuration for the prefill/decode (P/D) recipe. The Batch eviction study
+uses a separately labeled experimental Endpoint Picker build.
 
 ## How should a shared service protect latency objectives and use available capacity?
 
@@ -57,6 +57,11 @@ graph used by the accepted recipe.
 | New | Stage-aware P/D admission, fairness, priority reserve, and eviction | [`pd-flow-control/`](pd-flow-control/) | [`selected-recipe.yaml`](pd-flow-control/configuration/selected-recipe.yaml) |
 | Supporting boundary | One-replica versus two-replica routing | [`routing-scale/`](routing-scale/) | [`03-two-replica-random-baseline.yaml`](examples/benchmark-reproduction/03-two-replica-random-baseline.yaml) |
 | Supporting boundary | 30-minute completion and repeatability replay | [`stability-replay/`](stability-replay/) | [`02-four-scenario-request-detector.yaml`](examples/benchmark-reproduction/02-four-scenario-request-detector.yaml) |
+
+Each study directory contains its accepted summaries, request outcomes,
+traffic samples, system metrics, validation record, and run contract when the
+study produced those artifacts. Specialized studies use focused evidence files
+named in their README.
 
 ## What the campaign showed
 

@@ -1,0 +1,4 @@
+arm,protected_blocks,median_surge_p95_ttft_ms,median_surge_le_250ms_goodput_rps,total_realtime_429,median_recovery_p95_ttft_ms,median_batch_drain_s,median_batch_generated_tokens_per_gpu_s,total_batch_retryable_429
+fixed-sync,0,546.2,3.360,47,37.7,212,2869.1,807
+sync-aimd,1,304.8,5.427,12,330.2,287,2119.4,141
+async-gated,2,248.6,5.573,42,39.8,234,2599.4,191

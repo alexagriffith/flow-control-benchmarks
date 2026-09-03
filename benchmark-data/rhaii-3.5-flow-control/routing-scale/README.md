@@ -13,6 +13,13 @@ outside the replica-count comparison.
 - [Normalized analysis](analysis.json)
 - [Two-replica benchmark configuration](../examples/benchmark-reproduction/03-two-replica-random-baseline.yaml)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 This result supports routing-scale completion. A latency scale-out claim

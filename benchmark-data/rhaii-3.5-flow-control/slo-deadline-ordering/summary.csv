@@ -1,0 +1,7 @@
+run_name,comparison,repeat,accepted,offered_requests,http_200_requests,non_200_requests,p50_ttft_ms,p95_ttft_ms,p95_e2e_latency_ms,p95_tpot_ms_per_token,prompt_tokens,completion_tokens
+fcfs-repeat-1,fcfs,1,true,3487,3487,0,171.292442,768.614902,3026.74901,19.012522,1785344,446336
+fcfs-repeat-2,fcfs,2,true,3487,3487,0,154.387355,827.533753,2964.450008,18.714056,1785344,446336
+fcfs-repeat-3,fcfs,3,true,3487,3487,0,161.190652,744.777034,2924.502089,18.580946,1785344,446336
+slo-deadline-ordering-repeat-1,slo-deadline-ordering,1,true,3487,3487,0,152.275561,1504.67102,3546.816333,19.425698,1785344,446336
+slo-deadline-ordering-repeat-2,slo-deadline-ordering,2,true,3487,3487,0,163.552034,1025.91603,3178.077694,18.955089,1785344,446336
+slo-deadline-ordering-repeat-3,slo-deadline-ordering,3,true,3487,3487,0,137.898657,829.454101,2956.956378,18.363046,1785344,446336

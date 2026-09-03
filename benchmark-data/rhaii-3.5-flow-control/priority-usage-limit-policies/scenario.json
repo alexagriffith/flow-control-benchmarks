@@ -1,0 +1,4 @@
+{
+  "arrival_mode": "frozen open-loop schedule",
+  "accepted_repeats_per_policy": 3
+}

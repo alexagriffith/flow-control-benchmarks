@@ -1,0 +1,5 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+30.4-rps,capacity-envelope,,true,independently valid subrun,5297,5657,3620,passed
+40.6-rps,capacity-envelope,,true,independently valid subrun,7357,7717,3620,passed
+50.7-rps,capacity-envelope,,true,two valid shards from a partially rejected package,19239,20679,15830,passed
+55.8-rps,capacity-envelope,,true,accepted three-runner aggregate,10142,10250,6906,passed

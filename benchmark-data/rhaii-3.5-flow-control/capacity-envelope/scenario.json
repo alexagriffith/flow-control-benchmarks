@@ -1,0 +1,9 @@
+{
+  "arrival_mode": "open-loop Poisson",
+  "rates_requests_per_second": [
+    30.4,
+    40.6,
+    50.7,
+    55.8
+  ]
+}

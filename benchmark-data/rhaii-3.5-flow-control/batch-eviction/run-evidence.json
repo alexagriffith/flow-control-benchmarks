@@ -1,0 +1,892 @@
+[
+  {
+    "schema_version": 1,
+    "reserve_percent": 25,
+    "accepted_pairs": 12,
+    "primary_window": {
+      "name": "historical surge",
+      "startSeconds": 80.0,
+      "endExclusiveSeconds": 160.0,
+      "plannedRealtimeRequests": 227,
+      "metric": "per-run p95 TTFT over successful realtime responses in the window",
+      "effect": "same-repeat eviction-on minus eviction-off",
+      "failureAccounting": "Every non-200 remains a separate SLO failure and performance failure; it is never converted into a latency sample."
+    },
+    "method": {
+      "estimand": "mean same-pair eviction-on minus eviction-off burst-window realtime p95 TTFT",
+      "interval": "exact nonparametric paired percentile-bootstrap 90% interval",
+      "resamples": 8916100448256,
+      "distinctWeightedMeans": 1352078,
+      "poolRunPercentiles": false
+    },
+    "absolute_effect_ms": {
+      "mean": -170.89596533818016,
+      "ci90": [
+        -666.789857748275,
+        329.1114789947945
+      ],
+      "threshold": -100.0
+    },
+    "relative_effect": {
+      "mean": -0.0044459872278357,
+      "ci90": [
+        -0.10320437377001507,
+        0.09873792824404758
+      ],
+      "threshold": -0.1
+    },
+    "mechanism": {
+      "minimumEvictionsPerOnArm": 5,
+      "passed": true
+    },
+    "boundary": "Successful-response TTFT and non-200 outcomes remain separate. A valid unfavorable pair is retained and never replaced for performance.",
+    "decision": {
+      "reviewPoint": true,
+      "benefitPassed": false,
+      "status": "stop-without-proven-benefit"
+    },
+    "pairs": [
+      {
+        "pair": 1,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6975.6725410115905,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 59574.02563095093,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5513.116582995281,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 72426.58352851868,
+          "evictions": 60,
+          "uniqueEvictedRequests": 34,
+          "correlationValid": true,
+          "asyncRetries": 60.0
+        },
+        "absolute_delta_ms": -1462.55595801631,
+        "relative_delta": -0.2096652257424077
+      },
+      {
+        "pair": 2,
+        "eviction_off": {
+          "windowSuccesses": 225,
+          "burstP95TtftMs": 4825.056499976199,
+          "realtimeHttp200": 352,
+          "realtimeNon200": 2,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 59912.782192230225,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5359.625125012826,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 74913.52128982544,
+          "evictions": 59,
+          "uniqueEvictedRequests": 52,
+          "correlationValid": true,
+          "asyncRetries": 59.0
+        },
+        "absolute_delta_ms": 534.568625036627,
+        "relative_delta": 0.11079012754343166
+      },
+      {
+        "pair": 3,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 3978.1937500229105,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58582.20338821411,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5738.940917013679,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 72768.72944831848,
+          "evictions": 53,
+          "uniqueEvictedRequests": 40,
+          "correlationValid": true,
+          "asyncRetries": 53.0
+        },
+        "absolute_delta_ms": 1760.7471669907682,
+        "relative_delta": 0.442599651407282
+      },
+      {
+        "pair": 4,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 3887.6880839816295,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 59592.85831451416,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4488.541124970652,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 66492.11025238037,
+          "evictions": 28,
+          "uniqueEvictedRequests": 26,
+          "correlationValid": true,
+          "asyncRetries": 28.0
+        },
+        "absolute_delta_ms": 600.8530409890227,
+        "relative_delta": 0.1545527902469096
+      },
+      {
+        "pair": 5,
+        "eviction_off": {
+          "windowSuccesses": 224,
+          "burstP95TtftMs": 6078.201750002336,
+          "realtimeHttp200": 350,
+          "realtimeNon200": 4,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58204.43844795227,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4692.253540968522,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 70332.95273780823,
+          "evictions": 35,
+          "uniqueEvictedRequests": 35,
+          "correlationValid": true,
+          "asyncRetries": 35.0
+        },
+        "absolute_delta_ms": -1385.9482090338133,
+        "relative_delta": -0.22801944819177494
+      },
+      {
+        "pair": 6,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4966.51604201179,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58529.117822647095,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4203.5056670429185,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 68513.85068893433,
+          "evictions": 26,
+          "uniqueEvictedRequests": 25,
+          "correlationValid": true,
+          "asyncRetries": 26.0
+        },
+        "absolute_delta_ms": -763.0103749688715,
+        "relative_delta": -0.15363090917547875
+      },
+      {
+        "pair": 7,
+        "eviction_off": {
+          "windowSuccesses": 225,
+          "burstP95TtftMs": 5274.317000003066,
+          "realtimeHttp200": 352,
+          "realtimeNon200": 2,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57713.32883834839,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5275.715792027768,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 69328.10401916504,
+          "evictions": 41,
+          "uniqueEvictedRequests": 37,
+          "correlationValid": true,
+          "asyncRetries": 41.0
+        },
+        "absolute_delta_ms": 1.3987920247018337,
+        "relative_delta": 0.00026520818234873264
+      },
+      {
+        "pair": 8,
+        "eviction_off": {
+          "windowSuccesses": 223,
+          "burstP95TtftMs": 5665.268583048601,
+          "realtimeHttp200": 350,
+          "realtimeNon200": 4,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58426.16319656372,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 3964.8023750050925,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 68157.27162361145,
+          "evictions": 26,
+          "uniqueEvictedRequests": 25,
+          "correlationValid": true,
+          "asyncRetries": 26.0
+        },
+        "absolute_delta_ms": -1700.4662080435082,
+        "relative_delta": -0.30015632676826265
+      },
+      {
+        "pair": 9,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4801.715167006478,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58613.01684379578,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4916.342374985106,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 70216.61114692688,
+          "evictions": 36,
+          "uniqueEvictedRequests": 33,
+          "correlationValid": true,
+          "asyncRetries": 36.0
+        },
+        "absolute_delta_ms": 114.62720797862858,
+        "relative_delta": 0.023872138182259226
+      },
+      {
+        "pair": 10,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 3942.4324160208926,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58182.02090263367,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4292.7185840089805,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 63070.60766220093,
+          "evictions": 15,
+          "uniqueEvictedRequests": 15,
+          "correlationValid": true,
+          "asyncRetries": 15.0
+        },
+        "absolute_delta_ms": 350.286167988088,
+        "relative_delta": 0.08885026578125409
+      },
+      {
+        "pair": 11,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5213.221333979163,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58684.21769142151,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4139.127624977846,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 66648.42963218689,
+          "evictions": 26,
+          "uniqueEvictedRequests": 25,
+          "correlationValid": true,
+          "asyncRetries": 26.0
+        },
+        "absolute_delta_ms": -1074.0937090013176,
+        "relative_delta": -0.20603263130235833
+      },
+      {
+        "pair": 12,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4358.1709589925595,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58263.423919677734,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5331.012832990382,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 73059.34977531433,
+          "evictions": 47,
+          "uniqueEvictedRequests": 38,
+          "correlationValid": true,
+          "asyncRetries": 47.0
+        },
+        "absolute_delta_ms": 972.8418739978224,
+        "relative_delta": 0.22322251310276864
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "reserve_percent": 50,
+    "accepted_pairs": 12,
+    "primary_window": {
+      "name": "historical surge",
+      "startSeconds": 80.0,
+      "endExclusiveSeconds": 160.0,
+      "plannedRealtimeRequests": 227,
+      "metric": "per-run p95 TTFT over successful realtime responses in the window",
+      "effect": "same-repeat eviction-on minus eviction-off",
+      "failureAccounting": "Every non-200 remains a separate SLO failure and performance failure; it is never converted into a latency sample."
+    },
+    "method": {
+      "estimand": "mean same-pair eviction-on minus eviction-off burst-window realtime p95 TTFT",
+      "interval": "exact nonparametric paired percentile-bootstrap 90% interval",
+      "resamples": 8916100448256,
+      "distinctWeightedMeans": 1352078,
+      "poolRunPercentiles": false
+    },
+    "absolute_effect_ms": {
+      "mean": 196.28286432513656,
+      "ci90": [
+        -200.38379200559575,
+        677.7341908212596
+      ],
+      "threshold": -100.0
+    },
+    "relative_effect": {
+      "mean": 0.050545414180303276,
+      "ci90": [
+        -0.026110582663173242,
+        0.15464127591725266
+      ],
+      "threshold": -0.1
+    },
+    "mechanism": {
+      "minimumEvictionsPerOnArm": 5,
+      "passed": false
+    },
+    "boundary": "Successful-response TTFT and non-200 outcomes remain separate. A valid unfavorable pair is retained and never replaced for performance.",
+    "decision": {
+      "reviewPoint": true,
+      "benefitPassed": false,
+      "status": "stop-without-proven-benefit"
+    },
+    "pairs": [
+      {
+        "pair": 1,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 5764.7082500043325,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58195.49918174744,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6076.349042006768,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 65889.86444473267,
+          "evictions": 21,
+          "uniqueEvictedRequests": 21,
+          "correlationValid": true,
+          "asyncRetries": 22.0
+        },
+        "absolute_delta_ms": 311.6407920024358,
+        "relative_delta": 0.05406011518487541
+      },
+      {
+        "pair": 2,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 5835.554416989908,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 59642.07863807678,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6359.09600002924,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 59586.994647979736,
+          "evictions": 5,
+          "uniqueEvictedRequests": 5,
+          "correlationValid": true,
+          "asyncRetries": 5.0
+        },
+        "absolute_delta_ms": 523.5415830393322,
+        "relative_delta": 0.08971582571744488
+      },
+      {
+        "pair": 3,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6012.647291994654,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57871.94728851318,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6445.224374998361,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 63223.14357757568,
+          "evictions": 16,
+          "uniqueEvictedRequests": 16,
+          "correlationValid": true,
+          "asyncRetries": 16.0
+        },
+        "absolute_delta_ms": 432.57708300370723,
+        "relative_delta": 0.07194452992106291
+      },
+      {
+        "pair": 4,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 7148.731249966659,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58493.947982788086,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6154.804582998622,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 69038.3038520813,
+          "evictions": 31,
+          "uniqueEvictedRequests": 31,
+          "correlationValid": true,
+          "asyncRetries": 31.0
+        },
+        "absolute_delta_ms": -993.9266669680364,
+        "relative_delta": -0.139035394143915
+      },
+      {
+        "pair": 5,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 6546.7647920013405,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 56841.48144721985,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6778.3635829691775,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 64624.92108345032,
+          "evictions": 20,
+          "uniqueEvictedRequests": 20,
+          "correlationValid": true,
+          "asyncRetries": 20.0
+        },
+        "absolute_delta_ms": 231.59879096783698,
+        "relative_delta": 0.03537606716080561
+      },
+      {
+        "pair": 6,
+        "eviction_off": {
+          "windowSuccesses": 224,
+          "burstP95TtftMs": 7142.250542005058,
+          "realtimeHttp200": 351,
+          "realtimeNon200": 3,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57247.82657623291,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6309.208915976342,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 64568.19534301758,
+          "evictions": 21,
+          "uniqueEvictedRequests": 21,
+          "correlationValid": true,
+          "asyncRetries": 21.0
+        },
+        "absolute_delta_ms": -833.0416260287166,
+        "relative_delta": -0.11663573283090894
+      },
+      {
+        "pair": 7,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6454.112457984593,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58288.464069366455,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6720.312665973324,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 62686.84911727905,
+          "evictions": 13,
+          "uniqueEvictedRequests": 13,
+          "correlationValid": true,
+          "asyncRetries": 13.0
+        },
+        "absolute_delta_ms": 266.20020798873156,
+        "relative_delta": 0.0412450526267801
+      },
+      {
+        "pair": 8,
+        "eviction_off": {
+          "windowSuccesses": 226,
+          "burstP95TtftMs": 6212.386125000194,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57105.62515258789,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5965.272750006989,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 60151.111125946045,
+          "evictions": 7,
+          "uniqueEvictedRequests": 7,
+          "correlationValid": true,
+          "asyncRetries": 7.0
+        },
+        "absolute_delta_ms": -247.11337499320507,
+        "relative_delta": -0.039777529925057155
+      },
+      {
+        "pair": 9,
+        "eviction_off": {
+          "windowSuccesses": 225,
+          "burstP95TtftMs": 6521.107792039402,
+          "realtimeHttp200": 352,
+          "realtimeNon200": 2,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57663.9142036438,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6480.974624981172,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 61746.577501297,
+          "evictions": 12,
+          "uniqueEvictedRequests": 12,
+          "correlationValid": true,
+          "asyncRetries": 12.0
+        },
+        "absolute_delta_ms": -40.133167058229446,
+        "relative_delta": -0.006154348055283143
+      },
+      {
+        "pair": 10,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6063.9501250116155,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57700.50668716431,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 5807.746624981519,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 63320.84608078003,
+          "evictions": 12,
+          "uniqueEvictedRequests": 12,
+          "correlationValid": true,
+          "asyncRetries": 12.0
+        },
+        "absolute_delta_ms": -256.2035000300966,
+        "relative_delta": -0.04225026504973206
+      },
+      {
+        "pair": 11,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6124.767750035971,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 57896.6007232666,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 6176.603665982839,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 60087.0156288147,
+          "evictions": 5,
+          "uniqueEvictedRequests": 5,
+          "correlationValid": true,
+          "asyncRetries": 5.0
+        },
+        "absolute_delta_ms": 51.83591594686732,
+        "relative_delta": 0.008463327600718065
+      },
+      {
+        "pair": 12,
+        "eviction_off": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 4477.290999959223,
+          "realtimeHttp200": 353,
+          "realtimeNon200": 1,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 58882.80510902405,
+          "evictions": 0,
+          "uniqueEvictedRequests": 0,
+          "correlationValid": false,
+          "asyncRetries": 0.0
+        },
+        "eviction_on": {
+          "windowSuccesses": 227,
+          "burstP95TtftMs": 7385.709333990235,
+          "realtimeHttp200": 354,
+          "realtimeNon200": 0,
+          "batchResults": 492,
+          "batchHttp200": 492,
+          "batchDuplicates": 0,
+          "batchP95CompletionMs": 65875.19335746765,
+          "evictions": 26,
+          "uniqueEvictedRequests": 26,
+          "correlationValid": true,
+          "asyncRetries": 26.0
+        },
+        "absolute_delta_ms": 2908.418334031012,
+        "relative_delta": 0.6495933219568486
+      }
+    ]
+  }
+]

@@ -24,6 +24,13 @@ rapid queue growth, so 40.6 requests per second became the safe target for this 
 - [Benchmark configuration](../examples/benchmark-reproduction/01-capacity-request-concurrency.yaml)
 - [Reviewed evidence chart](../assets/capacity-slo-envelope.svg)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 These values apply to the tested model, request shape, and one-H100 topology.

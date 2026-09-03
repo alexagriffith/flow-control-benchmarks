@@ -13,6 +13,13 @@ predeclared repeatability guardrail was 20%.
 - [Normalized analysis](analysis.json)
 - [One-replica benchmark configuration](../examples/benchmark-reproduction/02-four-scenario-request-detector.yaml)
 
+## Evidence
+
+[Run summary](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation record](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 This is stability boundary evidence: all work completed, and the 31.5%

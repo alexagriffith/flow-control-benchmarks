@@ -1,0 +1,10 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+blocking-quota-block-1,blocking-quota,1,true,accepted run,2820,482,7602,passed
+classifying-quota-block-1,classifying-quota,1,true,accepted run,2820,482,7587,passed
+no-quota-block-1,no-quota,1,true,accepted run,2820,482,6657,passed
+blocking-quota-block-2,blocking-quota,2,true,accepted run,2820,482,7491,passed
+classifying-quota-block-2,classifying-quota,2,true,accepted run,2820,482,7470,passed
+no-quota-block-2,no-quota,2,true,accepted run,2820,482,6819,passed
+blocking-quota-block-3,blocking-quota,3,true,accepted run,2820,482,7248,passed
+classifying-quota-block-3,classifying-quota,3,true,accepted run,2820,482,7223,passed
+no-quota-block-3,no-quota,3,true,accepted run,2820,482,6798,passed

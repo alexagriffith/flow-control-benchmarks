@@ -1,10 +1,9 @@
 # Red Hat AI Inference 3.5 examples
 
-These examples turn the campaign configurations into Kubernetes manifests.
-Each file includes the `LLMInferenceService`, its
-`InferenceObjective` resources, and the Gateway objects needed by that example.
-The soft-PT composition also records the classifier policy interface; package
-the trusted classifier as its own reviewed service.
+Use `getting-started` for common deployment patterns and
+`benchmark-reproduction` for the configurations used in the campaign. Each
+file includes the Gateway, `LLMInferenceService`, and `InferenceObjective`
+resources for that example.
 
 ## Start here
 
@@ -20,8 +19,8 @@ the trusted classifier as its own reviewed service.
 ## Reproduce a campaign configuration
 
 These files preserve the Endpoint Picker graph used for each controlled
-comparison. Random selection appears where the benchmark intentionally removed
-queue and cache scores so that it could isolate the setting under test.
+comparison. Random selection isolates the setting under test when queue and
+cache scores are outside the comparison.
 
 | Campaign study | Configuration | What it isolates |
 | --- | --- | --- |
@@ -37,37 +36,39 @@ queue and cache scores so that it could isolate the setting under test.
 
 ## Before applying an example
 
-The examples create a Namespace, Gateway, `LLMInferenceService`, and matching
-`InferenceObjective` resources. The P/D example also creates ServiceMonitors
-for the Endpoint Picker and vLLM workers.
-
-The cluster must already provide the `istio` GatewayClass, the
+The cluster must provide the `istio` GatewayClass, the
 `inference-gateway-config` ConfigMap, and the Gateway API, KServe, and llm-d
-custom resources. Install and configure those cluster-owned components first.
+custom resources. Update the namespace, Gateway reference, model, accelerator,
+and image-pull settings for the target cluster. Recalibrate the numerical
+limits for the model and topology.
 
-The Namespace label `inference-gateway-access: "true"` matches the Gateway's
-`allowedRoutes` selector and permits routes from that namespace to attach to
-the Gateway. Authentication and flow control remain separate settings.
+Each file includes a Gateway so it can stand alone. Create that Gateway once,
+or point `spec.router.gateway.refs` to an existing inference Gateway.
 
-Change the namespace, Gateway reference, model, accelerator requests, and image
-pull settings for your cluster. The numerical limits came from GPT-OSS 20B on
-H100 GPUs and must be recalibrated for another model or topology.
+Set the Gateway namespace before applying a file. Red Hat AI Inference commonly
+uses `redhat-ods-applications`:
 
-Apply the file, wait for the `LLMInferenceService` to become ready, and send
-the matching objective and fairness headers with each request:
+```bash
+export GATEWAY_NAMESPACE=redhat-ods-applications
+envsubst '$GATEWAY_NAMESPACE' < getting-started/01-two-priority-scored-routing.yaml | kubectl apply -f -
+```
+
+The P/D example adds ServiceMonitors for the Endpoint Picker and vLLM workers.
+The soft-PT example records the serving policy and classifier interface; run
+the trusted classifier as a separately reviewed service.
+
+After the `LLMInferenceService` is ready, send the matching objective and
+fairness headers with each request:
 
 ```text
 x-llm-d-inference-objective: pd-protected
 x-llm-d-inference-fairness-id: workflow-a
 ```
 
-The Gateway can derive these values from authentication in a production
-deployment. The explicit headers make the behavior easy to verify during a
-controlled test.
+The Gateway can also derive these values from authenticated identity.
 
 ## Evidence boundary
 
-The `benchmark-reproduction` files preserve controlled campaign
-configurations. The `getting-started` files turn the same tested policies into
-operational examples with queue-aware maximum-score selection where it adds a
-meaningful endpoint choice. Recalibrate capacity values before deployment.
+The reproduction files preserve tested configurations. The getting-started
+files use the same policies with queue-aware endpoint selection where it adds a
+meaningful choice.

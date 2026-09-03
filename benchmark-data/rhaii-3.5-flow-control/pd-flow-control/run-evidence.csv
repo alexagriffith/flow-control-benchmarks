@@ -1,0 +1,27 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+detector-requests-prefill,detector:requests:prefill,,true,accepted run,204,660,7243,"valid nonqualifying screen: both flows completed and progressed without errors, but request-count admission materially under-reported the observed prefill pressure"
+detector-tokens-prefill,detector:tokens:prefill,,true,accepted run,156,660,7237,"valid qualifying screen: token-only admission detected prefill pressure and preserved progress, but the peer p95 TTFT ratio exceeded the later 2.0x business guardrail"
+detector-hybrid-prefill,detector:hybrid:prefill,,true,accepted run,158,660,7239,"valid qualifying screen: hybrid detected prefill pressure and preserved progress, but did not improve the one-repeat peer latency tradeoff versus token-only"
+detector-hybrid-decode,detector:hybrid:decode,,true,accepted run,514,660,8249,"valid qualifying screen: hybrid used its request ceiling to detect long-output decode pressure and preserved progress, but peer latency still exceeded the later business guardrail"
+detector-tokens-decode,detector:tokens:decode,,true,accepted run,602,660,7243,valid nonqualifying screen: token-only preserved progress and low peer latency but did not detect the frozen long-output decode pressure without estimated future output tokens
+detector-requests-decode,detector:requests:decode,,true,accepted run,602,660,7243,"valid nonqualifying screen for the runtime-aligned 128-request recipe: all requests completed cleanly, but its ceiling was predictably nonbinding at the selected 64-request operating point; this does not show that request-count mode cannot protect decode when tuned to that point"
+fairness-prefill,fairness:prefill,,true,accepted run,163,660,7239,valid-qualifying-detector-policy-guardrail-miss
+fairness-decode,fairness:decode,,true,accepted run,522,660,8246,valid-qualifying-detector-policy-guardrail-miss
+priority-static-prefill-seed-201,priority:static:prefill,201,true,accepted run,158,660,7235,valid-control-nonreproduction
+priority-holdback050-prefill-seed-201,priority:holdback050:prefill,201,true,accepted run,207,660,7243,valid-protected-pass
+priority-holdback050-prefill-seed-202,priority:holdback050:prefill,202,true,accepted run,185,660,7247,valid-protected-pass
+priority-static-prefill-seed-202,priority:static:prefill,202,true,accepted run,158,660,7235,valid-control-nonreproduction
+priority-static-prefill-seed-203,priority:static:prefill,203,true,accepted run,146,660,7613,valid-control-reproduced
+priority-holdback050-prefill-seed-203,priority:holdback050:prefill,203,true,accepted run,218,660,7243,valid-protected-pass
+priority-holdback050-decode-seed-201,priority:holdback050:decode,201,true,accepted run,546,660,8210,valid-protected-pass
+priority-static-decode-seed-201,priority:static:decode,201,true,accepted run,536,660,7213,valid-control-nonreproduction
+priority-static-decode-seed-202,priority:static:decode,202,true,accepted run,513,660,7974,valid-control-nonreproduction
+priority-holdback050-decode-seed-202,priority:holdback050:decode,202,true,accepted run,530,660,7243,valid-protected-pass
+priority-holdback050-decode-seed-203,priority:holdback050:decode,203,true,accepted run,529,660,7613,valid-protected-pass
+priority-static-decode-seed-203,priority:static:decode,203,true,accepted run,532,660,7209,valid-control-nonreproduction
+eviction-reserve-only-repeat-1,eviction:reserve-only,1,true,accepted run,0,0,0,valid-counted-arm
+eviction-reserve-plus-eviction-repeat-1,eviction:reserve-plus-eviction,1,true,accepted run,0,0,0,valid-counted-arm
+eviction-reserve-plus-eviction-repeat-2,eviction:reserve-plus-eviction,2,true,accepted run,0,0,0,valid-counted-arm
+eviction-reserve-only-repeat-2,eviction:reserve-only,2,true,accepted run,0,0,0,valid-counted-arm
+eviction-reserve-only-repeat-3,eviction:reserve-only,3,true,accepted run,0,0,0,valid-counted-arm
+eviction-reserve-plus-eviction-repeat-3,eviction:reserve-plus-eviction,3,true,accepted run,0,0,0,valid-counted-arm

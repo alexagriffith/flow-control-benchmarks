@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "study": "slo-deadline-ordering",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "FCFS versus SLO deadline ordering",
+  "tested_configuration": "../examples/benchmark-reproduction/04-slo-deadline-ordering.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "ttft_objectives_ms": [
+    250,
+    500,
+    null
+  ]
+}

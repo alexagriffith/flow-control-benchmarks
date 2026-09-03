@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "study": "production-scenarios",
+  "release": "Red Hat AI Inference 3.5",
+  "model": "GPT-OSS 20B",
+  "accelerator": "NVIDIA H100",
+  "prefix_cache": "off",
+  "comparison": "three detectors across four production scenarios",
+  "tested_configuration": "../examples/benchmark-reproduction/02-four-scenario-request-detector.yaml",
+  "percentile_policy": "Each repeat retains its own request percentiles.",
+  "detectors": [
+    "request concurrency",
+    "utilization QD2",
+    "utilization QD5"
+  ],
+  "accepted_repeats_per_cell": 3
+}

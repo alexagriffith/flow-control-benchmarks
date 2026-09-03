@@ -1,0 +1,12 @@
+candidate,shape,valid,qualificationPass,requiredStageSaturationPeak,result
+requests,prefill,True,False,0.046875,"valid nonqualifying screen: both flows completed and progressed without errors, but request-count admission materially under-reported the observed prefill pressure"
+tokens,prefill,True,True,1.884025,"valid qualifying screen: token-only admission detected prefill pressure and preserved progress, but the peer p95 TTFT ratio exceeded the later 2.0x business guardrail"
+hybrid,prefill,True,True,1.8850875,"valid qualifying screen: hybrid detected prefill pressure and preserved progress, but did not improve the one-repeat peer latency tradeoff versus token-only"
+hybrid,decode,True,True,1.03125,"valid qualifying screen: hybrid used its request ceiling to detect long-output decode pressure and preserved progress, but peer latency still exceeded the later business guardrail"
+tokens,decode,True,False,0.64,valid nonqualifying screen: token-only preserved progress and low peer latency but did not detect the frozen long-output decode pressure without estimated future output tokens
+requests,decode,True,False,0.515625,"valid nonqualifying screen for the runtime-aligned 128-request recipe: all requests completed cleanly, but its ceiling was predictably nonbinding at the selected 64-request operating point; this does not show that request-count mode cannot protect decode when tuned to that point"
+,,,,0.09375,
+,,,,1.015625,
+,,,,1.0677,
+,prefill,,,1.8878875,
+,decode,,,1.015625,

@@ -19,6 +19,13 @@ accepted matched runs per policy.
 - [Benchmark configuration](../examples/benchmark-reproduction/04-slo-deadline-ordering.yaml)
 - [Reviewed evidence chart](../assets/slo-deadline-ordering.svg)
 
+## Evidence
+
+[Run summaries](summary.csv), [request outcomes](request-results.csv),
+[traffic samples](traffic-samples.csv), [system metrics](system-metrics.csv),
+[validation records](run-evidence.csv), [run contract](run-config.json), and
+[scenario](scenario.json).
+
 ## Scope
 
 Use this policy when callers provide meaningful deadlines and lower precedence

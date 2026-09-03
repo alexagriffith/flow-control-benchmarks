@@ -1,0 +1,20 @@
+{
+  "arrival_mode": "frozen open-loop Poisson replay",
+  "duration_seconds": 240,
+  "request_shape": {
+    "input_tokens": 512,
+    "output_tokens": 128
+  },
+  "accepted_repeats_per_cell": 3,
+  "detectors": [
+    "request concurrency",
+    "utilization QD2",
+    "utilization QD5"
+  ],
+  "scenarios": [
+    "priority tiers",
+    "Batch isolation",
+    "consolidation",
+    "same-priority fairness"
+  ]
+}

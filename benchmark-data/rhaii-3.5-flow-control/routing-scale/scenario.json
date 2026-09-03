@@ -1,0 +1,7 @@
+{
+  "model_replicas": [
+    1,
+    2
+  ],
+  "accepted_repeats_per_topology": 3
+}

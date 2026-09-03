@@ -1,0 +1,10 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+async-gated-block-1,async-gated,1,true,accepted run,1410,241,4768,passed
+fixed-sync-block-1,fixed-sync,1,true,accepted run,1410,241,4659,passed
+sync-aimd-block-1,sync-aimd,1,true,accepted run,1410,241,4752,passed
+async-gated-block-2,async-gated,2,true,accepted run,1410,241,4768,passed
+fixed-sync-block-2,fixed-sync,2,true,accepted run,1410,241,4768,passed
+sync-aimd-block-2,sync-aimd,2,true,accepted run,1410,241,4768,passed
+async-gated-block-3,async-gated,3,true,accepted run,1410,241,4768,passed
+fixed-sync-block-3,fixed-sync,3,true,accepted run,1410,241,4768,passed
+sync-aimd-block-3,sync-aimd,3,true,accepted run,1410,241,4768,passed

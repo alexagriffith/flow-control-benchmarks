@@ -14,6 +14,11 @@ signal for downstream quota, attribution, or settlement logic.
 - [Normalized analysis](analysis.json)
 - [Benchmark configuration](../examples/benchmark-reproduction/07-request-cost-metadata.yaml)
 
+## Evidence
+
+[Request outcomes](request-results.csv), [validation record](run-evidence.json),
+and [run contract](run-config.json).
+
 ## Scope
 
 This test establishes exact metadata propagation. Identity, pricing, ledger,

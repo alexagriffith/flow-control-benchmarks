@@ -1,0 +1,4 @@
+{
+  "arrival_mode": "open-loop Poisson",
+  "accepted_repeats_per_candidate": 3
+}

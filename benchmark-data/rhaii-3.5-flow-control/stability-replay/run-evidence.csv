@@ -1,0 +1,2 @@
+run_name,comparison,repeat,accepted,evidence_scope,request_rows,traffic_sample_rows,system_metric_rows,validation_result
+30-minute-replay,long-replay,1,true,accepted run,14889,22089,0,accepted completion; repeatability boundary exceeded
