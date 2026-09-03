@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "result_id": "slo_deadline_ordering",
+  "result": {
+    "promotion_status": "headline",
+    "accepted_matched_runs_per_policy": 3,
+    "values_are": "median of per-run values",
+    "comparisons": {
+      "250_ms_objective": {
+        "fcfs_p95_ttft_ms": 870.163,
+        "slo_ordering_p95_ttft_ms": 412.984,
+        "fcfs_fraction_meeting_objective": 0.414261,
+        "slo_ordering_fraction_meeting_objective": 0.721562
+      },
+      "500_ms_objective": {
+        "fcfs_p95_ttft_ms": 827.121,
+        "slo_ordering_p95_ttft_ms": 591.203,
+        "fcfs_fraction_meeting_objective": 0.704403,
+        "slo_ordering_fraction_meeting_objective": 0.90566
+      },
+      "no_objective": {
+        "fcfs_p95_ttft_ms": 825.785,
+        "slo_ordering_p95_ttft_ms": 1495.019
+      }
+    },
+    "all_requests_completed": true,
+    "claim_boundary": "Use only when callers provide meaningful deadlines and lower precedence for requests without a deadline is acceptable."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "result_id": "request_cost_metadata",
+  "result": {
+    "promotion_status": "supporting",
+    "usage_bearing_requests": 200,
+    "exact_token_sum_matches": 200,
+    "requests_without_usage": 20,
+    "correctly_omitted_cost": 20,
+    "claim_boundary": "Exact metadata propagation only; no billing ledger, quota enforcement, or provisioned-throughput guarantee was tested."
+  }
+}

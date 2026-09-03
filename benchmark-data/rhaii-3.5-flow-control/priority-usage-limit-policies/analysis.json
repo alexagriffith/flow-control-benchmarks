@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "result_id": "priority_usage_limit_policies",
+  "result": {
+    "promotion_status": "headline",
+    "accepted_repeats_per_policy": 3,
+    "values_are": "median of per-run values",
+    "fixed_holdback_050": {
+      "platinum_p95_ttft_ms": 135,
+      "gold_p95_ttft_ms": 133,
+      "bronze_p95_ttft_ms": 66045,
+      "endpoint_picker_peak_queue_requests": 1250
+    },
+    "soft_reflective": {
+      "platinum_p95_ttft_ms": 200,
+      "gold_p95_ttft_ms": 318,
+      "bronze_p95_ttft_ms": 6219,
+      "endpoint_picker_peak_queue_requests": 143
+    },
+    "claim_boundary": "Directional one-GPU tradeoff evidence; not an equivalence test or universal threshold."
+  }
+}

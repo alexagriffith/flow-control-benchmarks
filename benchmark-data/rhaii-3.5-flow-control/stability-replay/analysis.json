@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "result_id": "long_replay",
+  "result": {
+    "promotion_status": "boundary_only",
+    "display_name": "stability boundary evidence",
+    "duration_minutes": 30,
+    "completed_requests": 14889,
+    "planned_requests": 14889,
+    "surge_1_premium_p95_ttft_ms": 673,
+    "surge_2_premium_p95_ttft_ms": 885,
+    "surge_to_surge_change_percent": 31.5,
+    "repeatability_guardrail_percent": 20,
+    "claim_boundary": "Completion and drain evidence only; the repeatability guardrail did not pass."
+  }
+}

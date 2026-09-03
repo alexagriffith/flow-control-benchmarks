@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "result_id": "four_scenario_reproduction",
+  "result": {
+    "promotion_status": "supporting",
+    "scenarios": [
+      "priority tiers",
+      "Batch isolation",
+      "consolidation",
+      "same-priority fairness"
+    ],
+    "detector_configurations": 3,
+    "accepted_repeats_per_configuration": 3,
+    "accepted_runs": 36,
+    "successful_requests": 303093,
+    "claim_boundary": "Mechanism-level reproduction on the tested release; detector calibration does not isolate an image-version effect."
+  }
+}

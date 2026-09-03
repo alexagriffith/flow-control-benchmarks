@@ -2,15 +2,12 @@
 
 This package documents Red Hat AI Inference 3.5 running pinned OpenDataHub
 builds of the llm-d router Endpoint Picker. It contains normalized results,
-two reviewed evidence charts, focused analyses for soft provisioned
-throughput (PT) and prefill/decode (P/D) flow control, and the sanitized active
-configuration for the P/D recipe. The Batch eviction study uses a separately
-labeled experimental Endpoint Picker build.
+per-study analysis records, two reviewed evidence charts, sanitized Kubernetes
+configuration examples, and the active configuration for the prefill/decode (P/D)
+recipe. The Batch eviction study uses a separately labeled experimental
+Endpoint Picker build.
 
-## Business question
-
-How should a shared inference service protect requests with tighter latency
-objectives while still using available GPU capacity for other work?
+## How should a shared service protect latency objectives and use available capacity?
 
 **Answer:** first measure the service's capacity against its latency objective.
 Then apply the control at the point where pressure occurs: SLO deadline
@@ -42,23 +39,24 @@ research evidence from a certified-product-image claim.
 [`results.json`](results.json) is the normalized public result record, and
 [`manifest.json`](manifest.json) records a Secure Hash Algorithm 256-bit
 (SHA-256) hash for every published file. A hash is a file fingerprint: the
-validator recalculates it and reports if a file changed after review. The soft
-PT and P/D rows also have focused analyses. The P/D row includes the exact
-active plugin graph used by the accepted recipe.
+validator recalculates it and reports if a file changed after review. Each row
+links to its study directory. The P/D row also includes the exact active plugin
+graph used by the accepted recipe.
 
 | Evidence group | Tested comparison | Public record | Configuration |
 | --- | --- | --- | --- |
-| Calibration | Capacity and service-level-objective (SLO) sweep | [`results.json`](results.json) | Values in result record |
-| Reproduction | Priority tiers, Batch isolation, consolidation, and same-priority fairness | [`results.json`](results.json) | Values in result record |
-| Calibration | Request concurrency versus queue-depth utilization (QD2 and QD5) | [`results.json`](results.json) | Values in result record |
-| New | First-come, first-served (FCFS) versus SLO deadline ordering | [`results.json`](results.json) | Values in result record |
-| New | Fixed priority holdback versus soft-reflective ceilings | [`results.json`](results.json) | Values in result record |
-| New | Fixed synchronous, synchronous additive-increase/multiplicative-decrease (AIMD), and metrics-gated Async Batch dispatch | [`results.json`](results.json) | Values in result record |
-| New | Eviction off versus on at 25% and 50% reserve | [`results.json`](results.json) | Values in result record |
-| New | Request-cost response metadata | [`results.json`](results.json) | Values in result record |
-| New | No quota, classifying quota, and blocking quota | [`analysis.json`](features/soft-pt/analysis.json) | Policy values in analysis record |
-| New | Stage-aware P/D admission, fairness, priority reserve, and eviction | [`analysis.json`](features/pd-flow-control/analysis.json) | [`selected-recipe.yaml`](features/pd-flow-control/configuration/selected-recipe.yaml) |
-| Supporting boundary | One-replica versus two-replica routing and 30-minute replay | [`results.json`](results.json) | Values in result record |
+| Calibration | Capacity and service-level-objective (SLO) sweep | [`capacity-envelope/`](capacity-envelope/) | [`01-capacity-request-concurrency.yaml`](examples/benchmark-reproduction/01-capacity-request-concurrency.yaml) |
+| Calibration | Request-concurrency cap selection | [`request-concurrency/`](request-concurrency/) | [`01-capacity-request-concurrency.yaml`](examples/benchmark-reproduction/01-capacity-request-concurrency.yaml) |
+| Reproduction | Priority tiers, Batch isolation, consolidation, and same-priority fairness | [`production-scenarios/`](production-scenarios/) | [`02-four-scenario-request-detector.yaml`](examples/benchmark-reproduction/02-four-scenario-request-detector.yaml) |
+| New | First-come, first-served (FCFS) versus SLO deadline ordering | [`slo-deadline-ordering/`](slo-deadline-ordering/) | [`04-slo-deadline-ordering.yaml`](examples/benchmark-reproduction/04-slo-deadline-ordering.yaml) |
+| New | Fixed priority holdback versus soft-reflective ceilings | [`priority-usage-limit-policies/`](priority-usage-limit-policies/) | [`05-fixed-priority-holdback.yaml`](examples/benchmark-reproduction/05-fixed-priority-holdback.yaml) and [`06-soft-reflective-ceilings.yaml`](examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml) |
+| New | Fixed synchronous, synchronous additive-increase/multiplicative-decrease (AIMD), and metrics-gated Async Batch dispatch | [`batch-dispatch/`](batch-dispatch/) | [Shared-pool starting configuration](examples/getting-started/04-priority-standard-batch.yaml) |
+| New | Eviction off versus on at 25% and 50% reserve | [`batch-eviction/`](batch-eviction/) | [Complete Batch eviction package](../batch-eviction/) |
+| New | Request-cost response metadata | [`request-cost-metadata/`](request-cost-metadata/) | [`07-request-cost-metadata.yaml`](examples/benchmark-reproduction/07-request-cost-metadata.yaml) |
+| New | No quota, classifying quota, and blocking quota | [`soft-pt/`](soft-pt/) | [`09-soft-pt-serving-policy.yaml`](examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml) |
+| New | Stage-aware P/D admission, fairness, priority reserve, and eviction | [`pd-flow-control/`](pd-flow-control/) | [`selected-recipe.yaml`](pd-flow-control/configuration/selected-recipe.yaml) |
+| Supporting boundary | One-replica versus two-replica routing | [`routing-scale/`](routing-scale/) | [`03-two-replica-random-baseline.yaml`](examples/benchmark-reproduction/03-two-replica-random-baseline.yaml) |
+| Supporting boundary | 30-minute completion and repeatability replay | [`stability-replay/`](stability-replay/) | [`02-four-scenario-request-detector.yaml`](examples/benchmark-reproduction/02-four-scenario-request-detector.yaml) |
 
 ## What the campaign showed
 
@@ -78,9 +76,9 @@ Reference packages:
 
 **Takeaway:** 40.6 requests per second was the highest tested rate that met the
 250 ms p95 TTFT objective consistently, so later feature tests used it as the
-operating point. At 50.7 requests per second, p95 TTFT rose to 6,273 ms; that
-run identifies the queueing boundary and explains why peak throughput is not a
-safe operating target.
+operating point. At 50.7 requests per second, p95 TTFT rose to 6,273 ms and
+identified the queueing boundary. The service therefore used 40.6 requests per
+second as its safe operating target.
 
 | Requests per second | p95 TTFT | Interpretation |
 | ---: | ---: | --- |
@@ -115,8 +113,8 @@ The results concurred with the earlier benchmark in four ways:
 
 This campaign added three matched detector configurations: request concurrency,
 utilization QD2, and utilization QD5. The comparison selects a detector for this
-workload; it does not compare exact latency values with the Red Hat AI
-Inference 3.4 utilization-only package.
+workload. Exact cross-version latency comparison requires a separate matched
+test against the Red Hat AI Inference 3.4 utilization-only package.
 
 <sub>Four scenarios × three detector configurations × three accepted repeats
 = 36 accepted runs. The earlier packages remain linked above as the historical
@@ -125,15 +123,15 @@ references.</sub>
 #### Detector calibration
 
 **Takeaway:** request concurrency produced the lowest protected-class p95 TTFT
-for the fixed-size production traces. QD2 and QD5 remain relevant when backend
-queue or KV-cache pressure, rather than request count, best represents load.
+for the fixed-size production traces. QD2 and QD5 represent deployments where
+backend queue or KV-cache pressure is the constrained resource.
 
 Choose a detector whose signal represents the constrained resource, then
 calibrate its limit for the model, request shape, and topology.
 
 <sub>Request concurrency is the primary setting for this package. QD2 and QD5
-are one-run calibration points, not customer-facing p95 evidence or universal
-detector guidance.</sub>
+are one-run calibration points. Deployment guidance requires repeated tests
+with the target model, request shape, and topology.</sub>
 
 ### From new feature runs
 
@@ -141,7 +139,7 @@ The new runs turn the reproduced mechanism into configuration choices:
 
 | New evidence | Operator takeaway |
 | --- | --- |
-| SLO capacity envelope | Select operating load from the latency objective, not the physical throughput knee. |
+| SLO capacity envelope | Select operating load from the latency objective; use the physical throughput knee as the overload boundary. |
 | SLO deadline ordering | Favor requests with tighter deadlines inside one flow when callers provide meaningful SLO headers. |
 | Priority usage-limit policies | Choose fixed holdback for stronger interactive protection or soft-reflective ceilings for more lower-tier progress. |
 | Metrics-gated Async Batch | Hold Batch outside serving and dispatch it from measured capacity. |
@@ -168,7 +166,7 @@ queueing on the same scale.
 
 **Takeaway:** SLO deadline ordering increased the share of requests meeting the
 250 ms and 500 ms TTFT objectives inside one flow by moving queue time to
-requests without an objective. Every request still completed and the queue
+no-objective requests. Every request still completed and the queue
 drained.
 
 | Result | FCFS | SLO deadline ordering |
@@ -177,16 +175,15 @@ drained.
 | 250 ms objective: requests meeting target | 41.4% | 72.2% |
 | 500 ms objective: median p95 TTFT | 827 ms | 591 ms |
 | 500 ms objective: requests meeting target | 70.4% | 90.6% |
-| Requests without an objective: median p95 TTFT | 826 ms | 1,495 ms |
+| No-objective requests: median p95 TTFT | 826 ms | 1,495 ms |
 
 <img src="assets/slo-deadline-ordering.svg" width="100%" alt="FCFS and SLO ordering compared for requests with 250 millisecond and 500 millisecond TTFT objectives. SLO ordering increased the median share meeting the objectives from 41.4 to 72.2 percent and from 70.4 to 90.6 percent.">
 
 Use this policy when callers send meaningful deadlines and the service accepts
-lower precedence for requests without deadlines.
+lower precedence for no-objective requests.
 
-<sub>Values are medians from three accepted matched runs; raw request
-percentiles were not pooled. Every request completed and each class
-drained.</sub>
+<sub>Values are medians from three accepted matched runs. Each run retains its
+own request percentile. Every request completed and each class drained.</sub>
 
 ## Choose a priority usage-limit policy
 
@@ -199,10 +196,10 @@ soft-reflective ceilings produced more lower-tier progress and a smaller queue.
 | Fixed holdback 0.50 | 135 ms / 133 ms | 66,045 ms / 1,250 |
 | Soft-reflective ceilings | 200 ms / 318 ms | 6,219 ms / 143 |
 
-<sub>Values are medians from three accepted runs per policy; request samples
-were not pooled. Peak Endpoint Picker queue depth was 1,250 requests with fixed
-holdback and 143 with soft-reflective ceilings. The result describes a
-workload-scoped tradeoff, not policy equivalence or a universal threshold.</sub>
+<sub>Values are medians from three accepted runs per policy, with each run kept
+separate. Peak Endpoint Picker queue depth was 1,250 requests with fixed
+holdback and 143 with soft-reflective ceilings. The supported result is a
+workload-scoped tradeoff; deployment thresholds require local calibration.</sub>
 
 ## Protect prefill/decode serving across request shapes
 
@@ -246,8 +243,8 @@ The tested numerical limits describe this model and topology. Recalculate the
 request ceiling, token ceiling, and reserve from the measured prefill and
 decode knees for another deployment.
 
-- [Sanitized tested Endpoint Picker recipe](features/pd-flow-control/configuration/selected-recipe.yaml)
-- [Sanitized P/D analysis](features/pd-flow-control/analysis.json)
+- [Sanitized tested Endpoint Picker recipe](pd-flow-control/configuration/selected-recipe.yaml)
+- [Sanitized P/D analysis](pd-flow-control/analysis.json)
 
 <sub>The detector table reports matched configuration screens. Priority
 results use three counted repeats per traffic shape. Eviction uses three
@@ -297,7 +294,7 @@ vLLM. The canonical [eviction-and-retry sequence](../../assets/readme/batch-evic
 documents the runtime mechanism separately from the measured result below.
 
 **Takeaway:** eviction provided retry-safe overflow recovery. At both reserve
-levels, eviction removed the realtime non-200 outcomes seen without eviction,
+levels, the eviction-on runs removed the realtime non-200 outcomes seen in the eviction-off runs,
 and every Batch job completed exactly once. Reserve provides the normal
 protection; eviction provides the overflow path and adds retry cost.
 
@@ -321,17 +318,17 @@ the figures show the supported reliability and retry-cost result.</sub>
 
 **Takeaway:** the tested plugin exported prompt tokens plus completion tokens
 to Gateway metadata exactly. A later quota or provisioned-throughput service
-can consume this measured signal without placing accounting policy inside the
-Endpoint Picker.
+can consume this measured signal while accounting policy remains downstream of
+the Endpoint Picker.
 
 - All 200 usage-bearing requests matched the expected token cost.
-- All 20 requests without usage completed and correctly omitted the cost.
+- All 20 requests that omitted usage completed and correctly omitted the cost.
 - Downstream accounting services can consume the measured signal for tenant
   attribution, reservation, settlement, or enforcement.
 
-<sub>The functional test proves exact metadata propagation on this Gateway
-path. It does not establish identity, pricing, a billing ledger, quota
-enforcement, or a hard provisioned-throughput guarantee.</sub>
+<sub>The supported claim is exact metadata propagation on this Gateway path.
+Identity, pricing, ledger, quota, and capacity guarantees belong to downstream
+services and require their own validation.</sub>
 
 ## Create a soft preference from quota and priority
 
@@ -351,20 +348,21 @@ points across the three matched blocks. It lowered quota-eligible p95 TTFT in
 two blocks. Background success decreased by 0.35 to 1.28 percentage points,
 which is the measured cost of the preference on this shared pool.
 
-Blocking quota rejected 207 to 208 overage requests per run. Those rejected
-requests are absent from its successful-request latency percentile, so the
-lower median p95 TTFT does not represent all offered quota-eligible work.
+Blocking quota rejected 207 to 208 overage requests per run. Its lower median
+p95 TTFT therefore describes the successful responses only; success ratio
+represents the complete offered stream.
 
-This composition creates an enforceable preference. It does not reserve
-dedicated capacity or establish a provisioned-throughput guarantee. The token
-weights and limits remain specific to the tested fixed request shape.
+This composition creates an enforceable preference on shared capacity. A hard
+provisioned-throughput guarantee requires dedicated capacity controls and a
+separate acceptance test. The token weights and limits remain specific to the
+tested fixed request shape.
 
 ### What the soft-PT proxy did
 
 The Realtime test path was GuideLLM → test-only PT proxy → Envoy Gateway →
 vLLM. Envoy consulted the Endpoint Picker over ExtProc for flow-control and
-endpoint advice; the Endpoint Picker was not a serial HTTP hop. Concurrent
-Batch traffic bypassed the proxy: the Async Processor assigned it priority
+endpoint advice while the client-facing HTTP path remained GuideLLM → proxy →
+Envoy → vLLM. Concurrent Batch traffic bypassed the proxy: the Async Processor assigned it priority
 `-10` before it joined the same Envoy and vLLM request path.
 
 For the quota-eligible test tenant, the proxy stripped caller-supplied
@@ -373,16 +371,15 @@ tokens from Redis. It assigned priority `100` when the reservation succeeded
 and priority `0` to overflow and background traffic. In the blocking arm, it
 returned HTTP 429 for overage instead of forwarding it.
 
-In this test, **settlement meant committing the fixed estimate**, not
-reconciling measured usage. An upstream HTTP 200 changed the reservation state
+In this test, **settlement committed the fixed estimate**. An upstream HTTP 200 changed the reservation state
 from `reserved` to `settled` and kept the 895-token deduction. A non-200
 response changed it to `released` and refunded all 895 tokens. The proxy did
-not parse `response.usage`, calculate actual normalized cost, or charge or
-refund the difference. The request-cost metadata test above proves the
-measured-cost signal separately; the campaign did not connect the two halves
-into one reserve-and-reconcile loop.
+all accounting from the fixed reservation and terminal HTTP status. The
+request-cost metadata test above proves the measured-cost signal separately.
+A later integration can use that signal to reconcile reserved and measured
+cost in one loop.
 
-- [Sanitized soft PT analysis](features/soft-pt/analysis.json)
+- [Sanitized soft PT analysis](soft-pt/analysis.json)
 
 <sub>Values are medians of three per-run values. The comparison contains nine
 accepted runs across three counterbalanced blocks. Each Batch backlog completed
@@ -405,8 +402,7 @@ settings work together at different points in the request path.
 | Protect P/D serving across request shapes | Stage-aware hybrid detector, separate flow identities, round-robin fairness, and measured priority reserve |
 
 A deployment selects the configuration set that matches its operating
-objective. These rows are alternatives and extensions, not stages in one
-required runtime path.
+objective. Treat the rows as independent alternatives and extensions.
 
 ## Public configuration examples
 
@@ -421,8 +417,8 @@ campaign's controlled one-versus-two-replica comparison.
 - [Protected, standard, and retryable Batch work](examples/getting-started/04-priority-standard-batch.yaml)
 - [Soft-reflective priority ceilings with scored routing](examples/getting-started/05-soft-reflective-scored-routing.yaml)
 - [Prefill/decode flow control with hybrid admission](examples/getting-started/06-prefill-decode-hybrid.yaml)
-- [Tested random-routing replica baseline](examples/benchmark-reproduction/03-two-replica-random-baseline.yaml)
-- [Tested P/D Endpoint Picker recipe](features/pd-flow-control/configuration/selected-recipe.yaml)
+- [Benchmark-reproduction configurations](examples/benchmark-reproduction/)
+- [Tested P/D Endpoint Picker recipe](pd-flow-control/configuration/selected-recipe.yaml)
 
 - Use the `llm-d.ai/v1alpha1` Endpoint Picker configuration shape tested by the
   OpenDataHub v0.10 build.
@@ -430,8 +426,8 @@ campaign's controlled one-versus-two-replica comparison.
   from the subsystem that uses it.
 - Replace model, namespace, service, route, and workload-specific capacity
   values with documented placeholders.
-- Keep Async Batch configuration separate because it configures the Batch
-  subsystem rather than an Endpoint Picker plugin.
+- Keep Async Batch configuration separate because it belongs to the Batch
+  subsystem and complements the Endpoint Picker configuration.
 - Mark experimental plugins and required feature flags beside each example.
 
 ## Supporting scale and recovery evidence
@@ -457,7 +453,7 @@ documented boundary.
 | Priority usage-limit comparison | Headline tradeoff between stronger protection and lower-tier progress |
 | Metrics-gated Async Batch | Headline architecture result with its durability requirements |
 | Batch eviction | Headline retry-safe recovery result scoped to the experimental image |
-| Soft PT | Headline composition result for enforceable preference without a hard capacity guarantee |
+| Soft PT | Headline composition result for enforceable preference on shared capacity |
 | P/D flow control | Headline recipe scoped to the tested same-node topology |
 | Four-scenario reproduction, detector calibration, request-cost metadata, and routing scale | Supporting evidence |
 | Stability boundary evidence | The 30-minute replay proves completion and drain; repeatability exceeded its guardrail |

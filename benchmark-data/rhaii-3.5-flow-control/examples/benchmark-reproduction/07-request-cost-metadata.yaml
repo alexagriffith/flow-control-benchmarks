@@ -1,17 +1,10 @@
-# Getting started: protected, standard, and sheddable work.
-#
-# Choose this when interactive and retryable Batch work share one model. The
-# three priority ranks keep progressively more capacity available for work
-# above them. Send negative priority only for work that may be retried.
-#
-# The campaign measured maxConcurrency 128 and 10% detector headroom for
-# GPT-OSS 20B on one H100 per replica. Recalibrate both values for your model.
+# Benchmark reproduction: completed-token cost metadata.
+# The reporter writes prompt plus completion tokens to Envoy metadata.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: flow-control-demo
   labels:
-    # The Gateway below accepts routes from namespaces with this label.
     inference-gateway-access: "true"
 ---
 apiVersion: gateway.networking.k8s.io/v1
@@ -27,7 +20,6 @@ spec:
     parametersRef:
       group: ""
       kind: ConfigMap
-      # Red Hat AI Inference installs this Gateway configuration.
       name: inference-gateway-config
   listeners:
     - name: http
@@ -51,8 +43,7 @@ spec:
     uri: hf://openai/gpt-oss-20b
   parallelism:
     tensor: 1
-  # Two replicas make endpoint scoring meaningful.
-  replicas: 2
+  replicas: 1
   router:
     gateway:
       refs:
@@ -68,30 +59,26 @@ spec:
           featureGates:
             - flowControl
           flowControl:
-            # Stop an unavailable service from building an unlimited queue.
-            defaultRequestTTL: 300s
+            defaultRequestTTL: 3s
             maxBytes: 1073741824
             priorityBands:
-              # Protected work is dispatched before standard work.
               - priority: 100
                 fairnessPolicyRef: round-robin-fairness-policy
                 orderingPolicyRef: fcfs-ordering-policy
-              # Standard work still makes progress whenever capacity is free.
+              - priority: 50
+                fairnessPolicyRef: round-robin-fairness-policy
+                orderingPolicyRef: fcfs-ordering-policy
               - priority: 0
                 fairnessPolicyRef: round-robin-fairness-policy
                 orderingPolicyRef: fcfs-ordering-policy
-              # Bound the retryable queue so Batch cannot consume all memory.
               - priority: -10
-                maxRequests: 1000
                 fairnessPolicyRef: round-robin-fairness-policy
                 orderingPolicyRef: fcfs-ordering-policy
             saturationDetector:
               pluginRef: concurrency-detector
-            usageLimitPolicyPluginRef: priority-holdback
+            usageLimitPolicyPluginRef: static-usage-limit
           plugins:
-            # Read objective and fairness headers from OpenAI requests.
             - type: openai-parser
-            # Count active requests so flow control knows when to queue work.
             - name: inflight-load
               type: inflight-load-producer
               parameters:
@@ -101,34 +88,29 @@ spec:
               parameters:
                 concurrencyMode: requests
                 inFlightLoadProducerName: inflight-load
-                maxConcurrency: 128
-                # Allow a small scheduling buffer around the measured limit.
-                headroom: 0.1
-            # Give different callers at the same priority alternating turns.
+                maxConcurrency: 28
+                headroom: 0
+            - name: static-usage-limit
+              type: static-usage-limit-policy
+              parameters:
+                threshold: 1
             - name: round-robin-fairness-policy
               type: round-robin-fairness-policy
             - name: fcfs-ordering-policy
               type: fcfs-ordering-policy
-            # Three ranks produce ceilings of 100%, 75%, and 50%. Batch pauses
-            # first, standard pauses next, and protected work may use the full
-            # measured limit.
-            - name: priority-holdback
-              type: priority-holdback-policy
+            # This baseline intentionally gives every eligible replica an
+            # equal chance. It does not claim best-endpoint routing.
+            - name: random-picker
+              type: random-picker
+            - name: total-tokens-cost-reporter
+              type: request-attribute-reporter
               parameters:
-                domain: rank
-                shape: linear
-                minCeiling: 0.5
-                maxCeiling: 1
-            # Prefer the eligible replica with less queued model-server work.
-            - name: queue-scorer
-              type: queue-scorer
-            # Select the eligible replica with the highest combined score.
-            - name: max-score-picker
-              type: max-score-picker
-            # Read model-server metrics over the secured Red Hat AI Inference path.
-            - type: metrics-data-source
-              parameters:
-                scheme: https
+                attributes:
+                  - key:
+                      namespace: envoy.lb
+                      name: x-gateway-inference-request-cost
+                    expression: usage.prompt_tokens + usage.completion_tokens
+                    condition: has(usage.prompt_tokens) && has(usage.completion_tokens)
           requestHandler:
             parsers:
               - pluginRef: openai-parser
@@ -136,8 +118,8 @@ spec:
             - name: default
               plugins:
                 - pluginRef: concurrency-detector
-                - pluginRef: queue-scorer
-                - pluginRef: max-score-picker
+                - pluginRef: random-picker
+                - pluginRef: total-tokens-cost-reporter
       template:
         containers:
           - name: main
@@ -184,8 +166,7 @@ spec:
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Send this name in x-llm-d-inference-objective for protected work.
-  name: protected
+  name: priority-100
   namespace: flow-control-demo
 spec:
   priority: 100
@@ -194,14 +175,45 @@ spec:
     kind: InferencePool
     name: flow-control-model-inference-pool
 ---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-cost-metadata-observer
+  namespace: redhat-ods-applications
+spec:
+  workloadSelector:
+    labels:
+      gateway.networking.k8s.io/gateway-name: flow-control-gateway
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: MERGE
+        value:
+          name: envoy.filters.network.http_connection_manager
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            access_log:
+              - name: envoy.access_loggers.file
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
+                  path: /dev/stdout
+                  log_format:
+                    text_format_source:
+                      inline_string: "request_id=%REQ(X-REQUEST-ID)% status=%RESPONSE_CODE% cost=%DYNAMIC_METADATA(envoy.lb:x-gateway-inference-request-cost)% duration_ms=%DURATION% route=%ROUTE_NAME%\n"
+---
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Negative priority marks work that may be delayed or rejected under load.
-  name: batch
+  name: priority-50
   namespace: flow-control-demo
 spec:
-  priority: -10
+  priority: 50
   poolRef:
     group: inference.networking.k8s.io
     kind: InferencePool
@@ -210,11 +222,22 @@ spec:
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Send this name for ordinary work that may wait behind protected work.
-  name: standard
+  name: priority-0
   namespace: flow-control-demo
 spec:
   priority: 0
+  poolRef:
+    group: inference.networking.k8s.io
+    kind: InferencePool
+    name: flow-control-model-inference-pool
+---
+apiVersion: llm-d.ai/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: priority-minus-10
+  namespace: flow-control-demo
+spec:
+  priority: -10
   poolRef:
     group: inference.networking.k8s.io
     kind: InferencePool

@@ -10,37 +10,91 @@ ROOT = Pathname.new(__dir__).parent
 PACKAGE = ROOT.join("benchmark-data/rhaii-3.5-flow-control")
 README = PACKAGE.join("README.md")
 RESULTS = PACKAGE.join("results.json")
-ANALYSIS = PACKAGE.join("features/pd-flow-control/analysis.json")
-RECIPE = PACKAGE.join("features/pd-flow-control/configuration/selected-recipe.yaml")
-SOFT_PT_ANALYSIS = PACKAGE.join("features/soft-pt/analysis.json")
+ANALYSIS = PACKAGE.join("pd-flow-control/analysis.json")
+RECIPE = PACKAGE.join("pd-flow-control/configuration/selected-recipe.yaml")
+SOFT_PT_ANALYSIS = PACKAGE.join("soft-pt/analysis.json")
 MANIFEST = PACKAGE.join("manifest.json")
-EXAMPLE_FILES = [
+GETTING_STARTED_FILES = [
   PACKAGE.join("examples/getting-started/01-two-priority-scored-routing.yaml"),
   PACKAGE.join("examples/getting-started/02-slo-deadline-ordering.yaml"),
   PACKAGE.join("examples/getting-started/03-same-priority-fairness.yaml"),
   PACKAGE.join("examples/getting-started/04-priority-standard-batch.yaml"),
   PACKAGE.join("examples/getting-started/05-soft-reflective-scored-routing.yaml"),
-  PACKAGE.join("examples/getting-started/06-prefill-decode-hybrid.yaml"),
-  PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
+  PACKAGE.join("examples/getting-started/06-prefill-decode-hybrid.yaml")
 ].freeze
+REPRODUCTION_FILES = [
+  PACKAGE.join("examples/benchmark-reproduction/01-capacity-request-concurrency.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/02-four-scenario-request-detector.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/04-slo-deadline-ordering.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/05-fixed-priority-holdback.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/07-request-cost-metadata.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml"),
+  PACKAGE.join("examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml")
+].freeze
+EXAMPLE_FILES = (GETTING_STARTED_FILES + REPRODUCTION_FILES).freeze
+
+STUDY_RESULTS = {
+  "capacity-envelope" => "capacity_envelope",
+  "request-concurrency" => "request_concurrency_cap",
+  "production-scenarios" => "four_scenario_reproduction",
+  "slo-deadline-ordering" => "slo_deadline_ordering",
+  "priority-usage-limit-policies" => "priority_usage_limit_policies",
+  "batch-dispatch" => "batch_dispatch",
+  "batch-eviction" => "batch_eviction",
+  "request-cost-metadata" => "request_cost_metadata",
+  "routing-scale" => "routing_scale",
+  "stability-replay" => "long_replay"
+}.freeze
 
 ALLOWED_FILES = %w[
   README.md
   assets/capacity-slo-envelope.svg
   assets/slo-deadline-ordering.svg
+  batch-dispatch/README.md
+  batch-dispatch/analysis.json
+  batch-eviction/README.md
+  batch-eviction/analysis.json
+  capacity-envelope/README.md
+  capacity-envelope/analysis.json
   examples/README.md
+  examples/benchmark-reproduction/01-capacity-request-concurrency.yaml
+  examples/benchmark-reproduction/02-four-scenario-request-detector.yaml
   examples/benchmark-reproduction/03-two-replica-random-baseline.yaml
+  examples/benchmark-reproduction/04-slo-deadline-ordering.yaml
+  examples/benchmark-reproduction/05-fixed-priority-holdback.yaml
+  examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml
+  examples/benchmark-reproduction/07-request-cost-metadata.yaml
+  examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml
+  examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml
   examples/getting-started/01-two-priority-scored-routing.yaml
   examples/getting-started/02-slo-deadline-ordering.yaml
   examples/getting-started/03-same-priority-fairness.yaml
   examples/getting-started/04-priority-standard-batch.yaml
   examples/getting-started/05-soft-reflective-scored-routing.yaml
   examples/getting-started/06-prefill-decode-hybrid.yaml
-  features/pd-flow-control/analysis.json
-  features/pd-flow-control/configuration/selected-recipe.yaml
-  features/soft-pt/analysis.json
   manifest.json
+  pd-flow-control/README.md
+  pd-flow-control/analysis.json
+  pd-flow-control/configuration/selected-recipe.yaml
+  priority-usage-limit-policies/README.md
+  priority-usage-limit-policies/analysis.json
+  production-scenarios/README.md
+  production-scenarios/analysis.json
+  request-concurrency/README.md
+  request-concurrency/analysis.json
+  request-cost-metadata/README.md
+  request-cost-metadata/analysis.json
   results.json
+  routing-scale/README.md
+  routing-scale/analysis.json
+  slo-deadline-ordering/README.md
+  slo-deadline-ordering/analysis.json
+  soft-pt/README.md
+  soft-pt/analysis.json
+  stability-replay/README.md
+  stability-replay/analysis.json
 ].freeze
 
 APPROVED_SVGS = %w[
@@ -134,7 +188,7 @@ EXAMPLE_FILES.each do |path|
          "#{path.basename} priorities differ between flow control and objectives")
 end
 
-EXAMPLE_FILES.reject { |path| path.basename.to_s.include?("random-baseline") }.each do |path|
+GETTING_STARTED_FILES.each do |path|
   service = YAML.load_stream(path.read).find { |document| document["kind"] == "LLMInferenceService" }
   profiles = service.dig("spec", "router", "scheduler", "config", "inline",
                          "schedulingProfiles")
@@ -145,7 +199,7 @@ EXAMPLE_FILES.reject { |path| path.basename.to_s.include?("random-baseline") }.e
   end
 end
 
-soft_path = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("soft-reflective") }
+soft_path = PACKAGE.join("examples/getting-started/05-soft-reflective-scored-routing.yaml")
 soft_service = YAML.load_stream(soft_path.read).find do |document|
   document["kind"] == "LLMInferenceService"
 end
@@ -156,7 +210,7 @@ assert(soft_inline.fetch("plugins").any? do |plugin|
   plugin["name"] == "soft-reflective" && plugin["type"] == "soft-reflective-ceiling-policy"
 end, "soft-reflective example must declare its tested policy plugin")
 
-pd_path = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("prefill-decode") }
+pd_path = PACKAGE.join("examples/getting-started/06-prefill-decode-hybrid.yaml")
 pd_documents = YAML.load_stream(pd_path.read)
 pd_service = pd_documents.find { |document| document["kind"] == "LLMInferenceService" }
 pd_inline = pd_service.dig("spec", "router", "scheduler", "config", "inline")
@@ -179,7 +233,7 @@ assert(pd_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "priority-ho
 assert(pd_inline.fetch("schedulingProfiles").map { |profile| profile.fetch("name") } ==
        %w[prefill decode], "P/D example must define separate prefill and decode profiles")
 
-random_example = EXAMPLE_FILES.find { |path| path.basename.to_s.include?("random-baseline") }
+random_example = PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
 random_baseline = YAML.load_stream(random_example.read).find do |document|
   document["kind"] == "LLMInferenceService"
 end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles", 0, "plugins")
@@ -187,8 +241,86 @@ end.dig("spec", "router", "scheduler", "config", "inline", "schedulingProfiles",
 assert(random_baseline == %w[concurrency-detector random-picker],
        "replica baseline must preserve the tested predictor-free profile")
 
+slo_path = PACKAGE.join("examples/benchmark-reproduction/04-slo-deadline-ordering.yaml")
+slo_inline = YAML.load_stream(slo_path.read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+slo_bands = slo_inline.dig("flowControl", "priorityBands").to_h do |band|
+  [band.fetch("priority"), band.fetch("orderingPolicyRef")]
+end
+assert(slo_bands == {
+  100 => "slo-deadline-ordering-policy",
+  50 => "fcfs-ordering-policy",
+  0 => "fcfs-ordering-policy",
+  -10 => "fcfs-ordering-policy"
+}, "SLO reproduction configuration differs from the accepted ordering graph")
+
+fixed_path = PACKAGE.join("examples/benchmark-reproduction/05-fixed-priority-holdback.yaml")
+fixed_inline = YAML.load_stream(fixed_path.read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+fixed_plugin = fixed_inline.fetch("plugins").find { |plugin| plugin["name"] == "priority-holdback" }
+assert(fixed_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "priority-holdback" &&
+       fixed_plugin.fetch("parameters") == {
+         "domain" => "rank", "shape" => "linear", "minCeiling" => 0.5, "maxCeiling" => 1
+       }, "fixed-holdback reproduction configuration differs from the accepted policy")
+
+reflective_path = PACKAGE.join("examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml")
+reflective_inline = YAML.load_stream(reflective_path.read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+assert(reflective_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "soft-reflective" &&
+       reflective_inline.fetch("plugins").any? do |plugin|
+         plugin["name"] == "soft-reflective" && plugin["type"] == "soft-reflective-ceiling-policy"
+       end, "soft-reflective reproduction configuration differs from the accepted policy")
+
+cost_path = PACKAGE.join("examples/benchmark-reproduction/07-request-cost-metadata.yaml")
+cost_inline = YAML.load_stream(cost_path.read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+cost_reporter = cost_inline.fetch("plugins").find do |plugin|
+  plugin["name"] == "total-tokens-cost-reporter"
+end
+cost_attribute = cost_reporter.dig("parameters", "attributes", 0)
+assert(cost_attribute.dig("key", "namespace") == "envoy.lb" &&
+       cost_attribute.dig("key", "name") == "x-gateway-inference-request-cost" &&
+       cost_attribute["expression"] == "usage.prompt_tokens + usage.completion_tokens",
+       "request-cost reproduction configuration differs from the accepted reporter")
+
+pt_path = PACKAGE.join("examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml")
+pt_documents = YAML.load_stream(pt_path.read)
+pt_inline = pt_documents.find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+pt_detector = pt_inline.fetch("plugins").find { |plugin| plugin["name"] == "concurrency-detector" }
+pt_policy = JSON.parse(pt_documents.find do |document|
+  document["kind"] == "ConfigMap" && document.dig("metadata", "name") == "soft-pt-classifier-policy"
+end.dig("data", "policy.json"))
+assert(pt_detector.fetch("parameters").slice("concurrencyMode", "maxConcurrency", "headroom") == {
+  "concurrencyMode" => "requests", "maxConcurrency" => 28, "headroom" => 0
+}, "soft-PT serving detector differs from the accepted configuration")
+assert(pt_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "static-usage-limit",
+       "soft-PT serving policy must preserve the accepted static ceiling")
+assert(pt_policy.dig("tested_request", "estimated_normalized_tokens") == 895 &&
+       pt_policy.dig("entitlement", "rate_normalized_tokens_per_second") == 4475 &&
+       pt_policy.dig("entitlement", "burst_normalized_tokens") == 8950,
+       "soft-PT classifier policy differs from the accepted values")
+
 assert(results.fetch("results").keys.sort == REQUIRED_RESULT_GROUPS.sort,
        "normalized result inventory differs from the reviewed promotion set")
+
+STUDY_RESULTS.each do |directory, result_id|
+  study_readme = PACKAGE.join(directory, "README.md").read
+  study_analysis = JSON.parse(PACKAGE.join(directory, "analysis.json").read)
+  assert(study_readme.lines.first&.start_with?("# "),
+         "#{directory} README must open with its study question")
+  assert(study_readme.include?("**Takeaway:**"),
+         "#{directory} README must state its takeaway")
+  assert(study_analysis["result_id"] == result_id,
+         "#{directory} analysis has the wrong result_id")
+  assert(study_analysis["result"] == results.dig("results", result_id),
+         "#{directory} analysis differs from results.json")
+end
 
 assert(readme.scan(/(?:!\[[^\]]*\]\(|<img\s+[^>]*src=")[^)"]*\.svg/).length == 2,
        "README must embed exactly the two approved SVGs")
@@ -201,12 +333,28 @@ end
          "README contains unfinished publication language: #{phrase}")
 end
 
-link_targets = readme.scan(/\[[^\]]*\]\(([^)]+)\)/).flatten +
-               readme.scan(/<img\s+[^>]*src="([^"]+)"/).flatten
-link_targets.reject { |target| target.match?(%r{\A(?:https?://|#)}) }.each do |target|
-  clean_target = target.split("#", 2).first
-  assert(README.dirname.join(clean_target).exist?, "missing README target #{target}")
+PACKAGE.glob("**/README.md").each do |readme_path|
+  content = readme_path.read
+  assert(!content.match?(/^## Business question$/i),
+         "#{readme_path.relative_path_from(PACKAGE)} uses a generic Business question heading")
+  assert(!content.match?(/\bnot\b/i),
+         "#{readme_path.relative_path_from(PACKAGE)} contains reactionary 'not' wording")
+
+  link_targets = content.scan(/\[[^\]]*\]\(([^)]+)\)/).flatten +
+                 content.scan(/<img\s+[^>]*src="([^"]+)"/).flatten
+  link_targets.reject { |target| target.match?(%r{\A(?:https?://|#)}) }.each do |target|
+    clean_target = target.split("#", 2).first
+    assert(readme_path.dirname.join(clean_target).exist?,
+           "missing target #{target} in #{readme_path.relative_path_from(PACKAGE)}")
+  end
 end
+
+public_text = PACKAGE.glob("**/*").select(&:file?).map(&:read).join("\n")
+assert(public_text.include?("x-llm-d-inference-objective") &&
+       public_text.include?("x-llm-d-inference-fairness-id"),
+       "examples must document the current llm-d objective and fairness headers")
+assert(!public_text.match?(/x-gateway-inference-(?:objective|fairness-id)/),
+       "package contains deprecated Gateway objective or fairness headers")
 
 text_files = files.select { |path| path.end_with?(".md", ".json", ".yaml", ".svg") }
 sanitization_patterns = {
@@ -298,13 +446,13 @@ assert(selected.dig("priority_ceiling_policy", "maximum") == holdback["maxCeilin
        "analysis maximum priority ceiling differs from recipe")
 
 assert(results.dig("results", "pd_flow_control", "analysis") ==
-       "features/pd-flow-control/analysis.json", "results record has wrong P/D analysis link")
+       "pd-flow-control/analysis.json", "results record has wrong P/D analysis link")
 assert(results.dig("results", "pd_flow_control", "configuration") ==
-       "features/pd-flow-control/configuration/selected-recipe.yaml",
+       "pd-flow-control/configuration/selected-recipe.yaml",
        "results record has wrong P/D recipe link")
 
 assert(results.dig("results", "soft_pt", "analysis") ==
-       "features/soft-pt/analysis.json", "results record has wrong soft PT analysis link")
+       "soft-pt/analysis.json", "results record has wrong soft PT analysis link")
 assert(soft_pt_analysis.dig("test_design", "accepted_runs") == 9,
        "soft PT analysis must contain nine accepted runs")
 assert(soft_pt_analysis["selected_policy"] == "classifying_quota",

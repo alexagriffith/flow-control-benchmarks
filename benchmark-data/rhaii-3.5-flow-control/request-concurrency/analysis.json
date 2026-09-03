@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "result_id": "request_concurrency_cap",
+  "result": {
+    "promotion_status": "supporting",
+    "operating_point_requests_per_second": 40.6,
+    "headroom": 0.1,
+    "candidates": {
+      "96": {
+        "accepted_repeats": 3,
+        "objective_passes": 1,
+        "median_p95_ttft_ms": 257.467
+      },
+      "128": {
+        "accepted_repeats": 3,
+        "objective_passes": 3,
+        "median_p95_ttft_ms": 143.111
+      }
+    },
+    "selected_cap": 128,
+    "claim_boundary": "Workload-specific detector calibration, not a universal concurrency limit."
+  }
+}

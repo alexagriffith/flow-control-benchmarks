@@ -1,5 +1,5 @@
-# Getting started: prefill/decode flow control with hybrid admission.
-# Hybrid admission covers both large prompts and long-running generations.
+# Benchmark reproduction: prefill/decode flow control with hybrid admission.
+# This preserves the selected policy and scored P/D routing graph.
 apiVersion: v1
 kind: Namespace
 metadata:

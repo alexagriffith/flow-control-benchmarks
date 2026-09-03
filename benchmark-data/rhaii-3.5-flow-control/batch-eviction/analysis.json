@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "result_id": "batch_eviction",
+  "result": {
+    "promotion_status": "headline_with_experimental_image_scope",
+    "accepted_matched_pairs_per_reserve": 12,
+    "reserve_levels": {
+      "25_percent": {
+        "realtime_non_200_without_eviction": 15,
+        "realtime_non_200_with_eviction": 0,
+        "eviction_events": 452,
+        "unique_evicted_requests": 385,
+        "mean_batch_p95_completion_without_eviction_seconds": 58.69,
+        "mean_batch_p95_completion_with_eviction_seconds": 69.66,
+        "batch_p95_completion_change_percent": 18.7
+      },
+      "50_percent": {
+        "realtime_non_200_without_eviction": 11,
+        "realtime_non_200_with_eviction": 0,
+        "eviction_events": 189,
+        "batch_p95_completion_change_seconds": 5.41,
+        "batch_p95_completion_change_percent": 9.4
+      }
+    },
+    "all_batch_jobs_completed_exactly_once": true,
+    "claim_boundary": "Eviction is retry-safe overflow recovery for eligible work. The paired runs did not establish a stable successful-response p95 TTFT improvement."
+  }
+}

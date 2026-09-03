@@ -178,7 +178,7 @@ spec:
 apiVersion: llm-d.ai/v1alpha2
 kind: InferenceObjective
 metadata:
-  # Send this name in x-gateway-inference-objective for protected work.
+  # Send this name in x-llm-d-inference-objective for protected work.
   name: protected
   namespace: flow-control-demo
 spec:

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "result_id": "routing_scale",
+  "result": {
+    "promotion_status": "supporting",
+    "accepted_counterbalanced_runs": 6,
+    "one_to_two_replica_served_rps_per_gpu_change_percent": 0.39,
+    "premium_burst_p95_ttft_change_percent": 7.35,
+    "claim_boundary": "Routing-scale completion evidence, not a latency scale-out claim."
+  }
+}

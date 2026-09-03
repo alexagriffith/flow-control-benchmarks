@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "result_id": "batch_dispatch",
+  "result": {
+    "promotion_status": "headline_with_durability_boundary",
+    "accepted_counterbalanced_blocks_per_control": 3,
+    "realtime_objective_p95_ttft_ms_max": 250,
+    "controls": {
+      "fixed_synchronous": {
+        "objective_passes": 0,
+        "median_realtime_surge_p95_ttft_ms": 546,
+        "realtime_http_429": 47,
+        "median_batch_drain_seconds": 212
+      },
+      "synchronous_aimd": {
+        "objective_passes": 1,
+        "median_realtime_surge_p95_ttft_ms": 305,
+        "realtime_http_429": 12,
+        "median_batch_drain_seconds": 287
+      },
+      "metrics_gated_async": {
+        "objective_passes": 2,
+        "median_realtime_surge_p95_ttft_ms": 249,
+        "realtime_http_429": 42,
+        "median_batch_drain_seconds": 234
+      }
+    },
+    "all_planned_batch_requests_completed": true,
+    "claim_boundary": "Selected for this retry-safe shared-pool workload. Restart-safe operation requires durable queue state, reconstructable ownership, and startup reconciliation."
+  }
+}

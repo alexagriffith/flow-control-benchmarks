@@ -176,7 +176,7 @@
     },
     "soft_pt": {
       "promotion_status": "headline_with_composition_scope",
-      "analysis": "features/soft-pt/analysis.json",
+      "analysis": "soft-pt/analysis.json",
       "accepted_runs": 9,
       "counterbalanced_blocks": 3,
       "selected_policy": "classifying_quota",
@@ -187,8 +187,8 @@
     },
     "pd_flow_control": {
       "promotion_status": "headline_with_topology_scope",
-      "analysis": "features/pd-flow-control/analysis.json",
-      "configuration": "features/pd-flow-control/configuration/selected-recipe.yaml",
+      "analysis": "pd-flow-control/analysis.json",
+      "configuration": "pd-flow-control/configuration/selected-recipe.yaml",
       "claim_boundary": "One pinned same-node GPT-OSS 20B topology with one TP1 prefill pod and one TP1 decode pod, each on one H100."
     },
     "routing_scale": {
