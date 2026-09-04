@@ -17,6 +17,7 @@ accepted matched runs per policy.
 
 - [Normalized analysis](analysis.json)
 - [Benchmark configuration](../examples/benchmark-reproduction/04-slo-deadline-ordering.yaml)
+- [Executable traffic scenario and commands](../../../pipeline/rhaii35/#run-the-slo-comparison)
 - [Reviewed evidence chart](../assets/slo-deadline-ordering.svg)
 
 ## Evidence

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "description": "Priority protection test under a synthetic decode-heavy pressure shape.",
+  "scenarios": [
+    {
+      "name": "priority_tiers_decode",
+      "duration_s": 330,
+      "analysis_windows": [
+        {"name": "dominant-solo", "start_s": 60, "end_s": 120},
+        {"name": "contention", "start_s": 180, "end_s": 240},
+        {"name": "drain", "start_s": 240, "end_s": 330}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "pd-priority-standard-decode-dominant",
+          "priority": 0,
+          "objective": "standard",
+          "input_tokens": 512,
+          "output_tokens": 4096,
+          "phases": [{"start_s": 0, "duration_s": 240, "concurrency": 64}]
+        },
+        {
+          "fairness_id": "pd-priority-high-balanced-peer",
+          "priority": 100,
+          "objective": "pd-protected",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [{"start_s": 120, "duration_s": 120, "concurrency": 2}]
+        }
+      ]
+    }
+  ]
+}
