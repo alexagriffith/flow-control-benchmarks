@@ -12,10 +12,10 @@
     "batch_eviction_router_image": "sha256:12552e243168ebc9ccd6905acda939adc7cf55ccc9214097e91ab569cc648c01"
   },
   "files": {
-    "README.md": "6c6a1494cb98d7d929f89b6e4e295a5c967be70862732c8f5d3104e1c0eea5b4",
+    "README.md": "b046b1fa7ab5c9a0194cb97bae9cc9756d2d1bb7c030682ed809170acc1b102f",
     "assets/capacity-slo-envelope.svg": "3eb1696a228827b58b66e1b319691c73d90a958d58ad58f18211f0a0b4266b65",
     "assets/slo-deadline-ordering.svg": "4dc7e9f6bfc39b8b737568644d21d51087728ec220570c2a3bfad20cd91d6ca7",
-    "batch-dispatch/README.md": "47feeb5357739abfca384d2a588ce9f6d318acc20be4cc4b62dee21875b89692",
+    "batch-dispatch/README.md": "e9fcabab45e7317654c22fc81f65f5373fa9137dd83b34fcca8e19a53b9a912f",
     "batch-dispatch/analysis.json": "24def3e4eee101b8377749bfbb959696a4f4248adbca8390e647f02977fe4549",
     "batch-dispatch/control-summary.csv": "d107d9a84c729bafb61b35bf6181044ffb1a41f3e0fd1f9d0c14fbee51cbac9a",
     "batch-dispatch/request-results.csv": "ff06bebc2f1cb6c6a753a6e8e0e92662ad45d28fe977989ae1787dc88e3b54ad",
@@ -56,7 +56,7 @@
     "examples/getting-started/04-priority-standard-batch.yaml": "ae7bdce1772a4e93748eb79e1f5677029c75fd5e0e8d05712c2be8c8d44c2f36",
     "examples/getting-started/05-soft-reflective-scored-routing.yaml": "736ff185eee36215e9f9898cb17e9e9193d72fb87f8ea59bde043f6e00d826b0",
     "examples/getting-started/06-prefill-decode-hybrid.yaml": "b39d3bbfe73c6d79a1047643724abb47b5f7570aadc82500b33f09888a3a0cd7",
-    "pd-flow-control/README.md": "ab3e404ad2b274ed47f9e82d73158eee8faa8f24a573fc6c841b2fe79e44e51f",
+    "pd-flow-control/README.md": "b7f3e633d9e480a1348b0e8acfee7dbae23c8b8d68ae89a148dfd52334a578f1",
     "pd-flow-control/analysis.json": "98e5ec2e27fbf284493db7753d0d47a2fc0c56f992517f197aaa27b2ad0b5b36",
     "pd-flow-control/configuration/selected-recipe.yaml": "44754893a04ddca1f75acb049019788f6535c177ec09598a18463e57a7eeb67f",
     "pd-flow-control/detector-screens.csv": "ae66b2a393ede9c653ef989cffaf87913e6e5c87f42afe1204c45dbd91c5d977",
