@@ -12,10 +12,10 @@
     "batch_eviction_router_image": "sha256:12552e243168ebc9ccd6905acda939adc7cf55ccc9214097e91ab569cc648c01"
   },
   "files": {
-    "README.md": "6c6a1494cb98d7d929f89b6e4e295a5c967be70862732c8f5d3104e1c0eea5b4",
+    "README.md": "b046b1fa7ab5c9a0194cb97bae9cc9756d2d1bb7c030682ed809170acc1b102f",
     "assets/capacity-slo-envelope.svg": "3eb1696a228827b58b66e1b319691c73d90a958d58ad58f18211f0a0b4266b65",
     "assets/slo-deadline-ordering.svg": "4dc7e9f6bfc39b8b737568644d21d51087728ec220570c2a3bfad20cd91d6ca7",
-    "batch-dispatch/README.md": "47feeb5357739abfca384d2a588ce9f6d318acc20be4cc4b62dee21875b89692",
+    "batch-dispatch/README.md": "e9fcabab45e7317654c22fc81f65f5373fa9137dd83b34fcca8e19a53b9a912f",
     "batch-dispatch/analysis.json": "24def3e4eee101b8377749bfbb959696a4f4248adbca8390e647f02977fe4549",
     "batch-dispatch/control-summary.csv": "d107d9a84c729bafb61b35bf6181044ffb1a41f3e0fd1f9d0c14fbee51cbac9a",
     "batch-dispatch/request-results.csv": "ff06bebc2f1cb6c6a753a6e8e0e92662ad45d28fe977989ae1787dc88e3b54ad",

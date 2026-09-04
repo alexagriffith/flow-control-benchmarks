@@ -50,7 +50,7 @@ graph used by the accepted recipe.
 | Reproduction | Priority tiers, Batch isolation, consolidation, and same-priority fairness | [`production-scenarios/`](production-scenarios/) | [`02-four-scenario-request-detector.yaml`](examples/benchmark-reproduction/02-four-scenario-request-detector.yaml) |
 | New | First-come, first-served (FCFS) versus SLO deadline ordering | [`slo-deadline-ordering/`](slo-deadline-ordering/) | [`04-slo-deadline-ordering.yaml`](examples/benchmark-reproduction/04-slo-deadline-ordering.yaml) |
 | New | Fixed priority holdback versus soft-reflective ceilings | [`priority-usage-limit-policies/`](priority-usage-limit-policies/) | [`05-fixed-priority-holdback.yaml`](examples/benchmark-reproduction/05-fixed-priority-holdback.yaml) and [`06-soft-reflective-ceilings.yaml`](examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml) |
-| New | Fixed synchronous, synchronous additive-increase/multiplicative-decrease (AIMD), and metrics-gated Async Batch dispatch | [`batch-dispatch/`](batch-dispatch/) | [Shared-pool starting configuration](examples/getting-started/04-priority-standard-batch.yaml) |
+| New | Direct fixed-concurrency, direct 429-responsive, and metrics-gated queued Batch dispatch | [`batch-dispatch/`](batch-dispatch/) | [Shared-pool starting configuration](examples/getting-started/04-priority-standard-batch.yaml) |
 | New | Eviction off versus on at 25% and 50% reserve | [`batch-eviction/`](batch-eviction/) | [Complete Batch eviction package](../batch-eviction/) |
 | New | Request-cost response metadata | [`request-cost-metadata/`](request-cost-metadata/) | [`07-request-cost-metadata.yaml`](examples/benchmark-reproduction/07-request-cost-metadata.yaml) |
 | New | No quota, classifying quota, and blocking quota | [`soft-pt/`](soft-pt/) | [`09-soft-pt-serving-policy.yaml`](examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml) |
@@ -147,7 +147,7 @@ The new runs turn the reproduced mechanism into configuration choices:
 | SLO capacity envelope | Select operating load from the latency objective; use the physical throughput knee as the overload boundary. |
 | SLO deadline ordering | Favor requests with tighter deadlines inside one flow when callers provide meaningful SLO headers. |
 | Priority usage-limit policies | Choose fixed holdback for stronger interactive protection or soft-reflective ceilings for more lower-tier progress. |
-| Metrics-gated Async Batch | Hold Batch outside serving and dispatch it from measured capacity. |
+| Metrics-gated queued Batch dispatch | Hold Batch outside serving and dispatch it from measured capacity. |
 | Batch eviction rerun | Use eviction as retry-safe overflow recovery after Batch has entered vLLM. |
 | Request-cost metadata | Export measured completed-token cost for a future quota or provisioned-throughput layer. |
 | Soft PT | Use a trusted external quota classifier to give in-budget work higher priority while forwarding overage at standard priority. |
@@ -258,20 +258,28 @@ remain separate.</sub>
 
 ## Dispatch Batch from measured capacity
 
-**Takeaway:** metrics-gated Async Batch was the only tested dispatch control to
-meet the predeclared realtime target in two of three blocks. It drained Batch
-53 seconds faster than synchronous AIMD at the median.
+**Takeaway:** metrics-gated queued dispatch met the realtime 250-ms p95 TTFT
+target in two of three test blocks, more often than either direct-dispatch
+control. It drained Batch 53 seconds faster than the 429-responsive direct
+control at the median.
 
-| Dispatch control | Realtime during surge | Median Batch drain |
+| Batch dispatch method | Realtime result during surge | Median Batch drain |
 | --- | ---: | ---: |
-| Fixed synchronous | 0/3 passes · 546 ms p95 · 47 HTTP 429 | 212 s |
-| Synchronous AIMD | 1/3 passes · 305 ms p95 · 12 HTTP 429 | 287 s |
-| Metrics-gated Async | 2/3 passes · 249 ms p95 · 42 HTTP 429 | 234 s |
+| Direct, fixed concurrency | Target met in 0 of 3 blocks · 546 ms p95 · 47 HTTP 429 | 212 s |
+| Direct, 429-responsive concurrency | Target met in 1 of 3 blocks · 305 ms p95 · 12 HTTP 429 | 287 s |
+| Queued, metrics-gated dispatch | Target met in 2 of 3 blocks · 249 ms p95 · 42 HTTP 429 | 234 s |
 
-A target pass means realtime p95 TTFT remained at or below 250 ms during the
-declared surge window. All three controls completed every planned Batch
-request. Synchronous AIMD produced 12 realtime HTTP 429 responses across the
-matrix; metrics-gated Async produced 42.
+Each method ran once in each of three counterbalanced test blocks. A block met
+the target when realtime p95 TTFT remained at or below 250 ms during the
+declared surge window. Thus, 0 of 3 means the method missed the target in all
+three blocks; 2 of 3 means it met the target twice. All three methods completed
+every planned Batch request.
+
+The fixed direct method kept 30 Batch requests active regardless of serving
+pressure. The 429-responsive direct method also started at 30; an HTTP 429
+halved its active-request limit to a minimum of 5, and successful responses
+increased the limit one request at a time. The metrics-gated method held Batch
+in a queue and adjusted dispatch from the number of requests running in vLLM.
 
 Batch dispatch and Batch eviction act at different points. Dispatch decides
 when queued work enters serving. Eviction recovers capacity after Batch is
@@ -281,7 +289,7 @@ already running inside vLLM.
 control. The selection applies to this retry-safe shared-pool workload and
 includes the Redis and Async Processor durability requirements below.</sub>
 
-### Async durability requirements
+### Queued-dispatch durability requirements
 
 Clean operation, queued cancellation, Async worker replacement, Endpoint
 Picker replacement, and temporary Redis connectivity loss retained request
@@ -456,7 +464,7 @@ documented boundary.
 | SLO capacity envelope | Headline result for choosing an operating point from a latency objective |
 | SLO deadline ordering | Headline conditional policy for flows with meaningful deadline metadata |
 | Priority usage-limit comparison | Headline tradeoff between stronger protection and lower-tier progress |
-| Metrics-gated Async Batch | Headline architecture result with its durability requirements |
+| Metrics-gated queued Batch dispatch | Headline architecture result with its durability requirements |
 | Batch eviction | Headline retry-safe recovery result scoped to the experimental image |
 | Soft PT | Headline composition result for enforceable preference on shared capacity |
 | P/D flow control | Headline recipe scoped to the tested same-node topology |
