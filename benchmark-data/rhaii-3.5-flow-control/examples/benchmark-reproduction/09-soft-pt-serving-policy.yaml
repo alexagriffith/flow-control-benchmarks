@@ -62,7 +62,7 @@ spec:
           featureGates:
             - flowControl
           flowControl:
-            defaultRequestTTL: 300s
+            defaultRequestTTL: 3s
             maxBytes: 1073741824
             priorityBands:
               - priority: 100
@@ -185,6 +185,7 @@ data:
     {
       "schema_version": 1,
       "policy_id": "soft-pt-v1",
+      "synthetic_tenant": "pt-entitled",
       "model": "openai/gpt-oss-20b",
       "normalization_version": "test-v1",
       "weights": {
@@ -206,6 +207,7 @@ data:
         "overflow": "priority-0",
         "batch": "priority-minus-10"
       },
+      "redis_key_prefix": "flow-control-soft-pt:v1",
       "redis_failure_policy": "never-promote"
     }
 ---

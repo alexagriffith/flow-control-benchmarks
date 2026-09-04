@@ -1,8 +1,45 @@
 {
+  "schema_version": 1,
   "accepted_blocks": 3,
-  "controls": [
-    "no-quota",
-    "classifying-quota",
-    "blocking-quota"
-  ]
+  "block_order": [
+    [
+      "no-quota",
+      "classifying-quota",
+      "blocking-quota"
+    ],
+    [
+      "blocking-quota",
+      "no-quota",
+      "classifying-quota"
+    ],
+    [
+      "classifying-quota",
+      "blocking-quota",
+      "no-quota"
+    ]
+  ],
+  "realtime": {
+    "driver": "GuideLLM 0.7.0",
+    "manifest": "../../../pipeline/soft-pt/traces/manifest.json",
+    "duration_seconds": 240,
+    "flows": [
+      "pt-entitled",
+      "pt-background"
+    ],
+    "requests_per_flow": 1410,
+    "input_tokens": 511,
+    "output_tokens": 128
+  },
+  "batch": {
+    "driver": "OpenAI-compatible Batch API",
+    "requests": 4752,
+    "priority": -10,
+    "input_tokens": 511,
+    "output_tokens": 128,
+    "generated_sha256": "6aad5d8d87d9a53ab13bd219c83730b6b9b2792746639bf83a47f57ae6edffa0"
+  },
+  "policy": {
+    "classifier": "../../../pipeline/soft-pt/classifier_proxy.py",
+    "configuration": "../../../pipeline/soft-pt/policy.json"
+  }
 }

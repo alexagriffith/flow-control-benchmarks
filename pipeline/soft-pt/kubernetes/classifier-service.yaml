@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: soft-pt-classifier
+  labels:
+    app.kubernetes.io/name: soft-pt-classifier
+    app.kubernetes.io/part-of: flow-control-benchmark
+spec:
+  selector:
+    app: flow-control-benchmark-runner
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090

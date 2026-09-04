@@ -1,11 +1,15 @@
 # Benchmark pipeline
 
-The upstream v0.9.0 campaign used one benchmark implementation with two traffic drivers.
+The repository uses the smallest traffic driver that represents the behavior
+under test. All drivers send OpenAI-compatible requests through the Gateway and
+retain the issued schedule, request outcomes, and serving metrics.
 
-| Test type | Traffic driver | When it was used |
+| Traffic driver | When it is used | Why |
 |---|---|---|
-| Closed loop | [`benchmark.py`](benchmark.py) | Engine, detector, request-count, and token-admission sweeps. The runner keeps a configured number of requests in flight. |
-| Open loop | GuideLLM 0.7.0 through [`run_guidellm_scenario.py`](run_guidellm_scenario.py) | Production scenarios, workload-shape comparisons, batch interference, routing, scaling, and stability. Requests follow a fixed Poisson arrival schedule, independent of completion time. |
+| [`benchmark.py`](benchmark.py) | Closed-loop engine, detector, request-count, and token-admission sweeps | It keeps a configured number of requests in flight, which makes capacity knees easy to bracket. |
+| GuideLLM 0.7.0 through [`run_guidellm_scenario.py`](run_guidellm_scenario.py) | Open-loop production scenarios, workload-shape comparisons, routing, scaling, stability, and the realtime side of soft PT | It replays a fixed arrival schedule without slowing the offered load when responses slow down. |
+| OpenAI-compatible Batch API and Async Processor | Batch dispatch, eviction, and the Batch side of soft PT | These tests require queued-job lifecycle, retry, cancellation, and drain evidence that a direct request generator does not provide. |
+| [`soft-pt/classifier_proxy.py`](soft-pt/classifier_proxy.py) before GuideLLM traffic | Soft provisioned-throughput classification | It supplies the trusted quota decision and scheduling-header rewrite that GuideLLM does not perform. |
 
 [`guidellm_trace.py`](guidellm_trace.py) imports the same scenario and traffic logic from `benchmark.py`. Both paths use the same prompt construction, headers, metric capture, proof gates, and artifact schema.
 
@@ -132,7 +136,11 @@ Counted flow-control runs must not use `--allow-missing`.
 
 For upstream packages, the scenario file, seed, runner hash, image, and tested configuration reproduce the issued traffic contract. GuideLLM creates the requests again; it does not feed saved model responses back into the run. GPU timing and model output are not expected to match bit-for-bit on another cluster; compare the repeated latency and throughput distributions under the same hardware and software contract.
 
-The batch-eviction packages publish the tested configuration, accepted data, and deterministic artifact-validation commands. Their original Async Processor traffic harness is not yet part of this public pipeline.
+The Batch packages publish the tested configuration, accepted data, and
+deterministic artifact-validation commands. The soft-PT package also publishes
+its [classifier, exact GuideLLM traces, Batch input generator, and one-arm
+runner](soft-pt/). The original general-purpose Batch dispatch and eviction
+orchestrator is not yet part of this public pipeline.
 
 ## Red Hat AI Inference 3.5 feature scenarios
 

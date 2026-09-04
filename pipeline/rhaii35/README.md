@@ -4,6 +4,11 @@ These scenarios replay the traffic shapes used to test SLO deadline ordering
 and prefill/decode (P/D) flow control. They send requests to a deployed
 Endpoint Picker and model service. They do not simulate the Endpoint Picker.
 
+[`launch_guidellm_replay.py`](launch_guidellm_replay.py) runs exact,
+synchronized GuideLLM traces against an explicit endpoint without assuming
+that the Endpoint Picker, Gateway proxy, and model server share a pod. The
+[soft provisioned-throughput replay](../soft-pt/) uses this path.
+
 ## What each scenario tests
 
 | Test | Scenario | Traffic mode | Configuration |
