@@ -1,4 +1,4 @@
-# RHAII 3.5 SLO and prefill/decode traffic
+# Red Hat AI Inference 3.5 SLO and prefill/decode traffic
 
 These scenarios replay the traffic shapes used to test SLO deadline ordering
 and prefill/decode (P/D) flow control. They send requests to a deployed
@@ -8,11 +8,11 @@ Endpoint Picker and model service. They do not simulate the Endpoint Picker.
 
 | Test | Scenario | Traffic mode | Configuration |
 | --- | --- | --- | --- |
-| SLO ordering | [`slo-deadline-ordering.json`](slo-deadline-ordering.json) | Fixed Poisson arrivals with 250 ms, 500 ms, and absent TTFT headers in one flow | [SLO deadline ordering](../../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/04-slo-deadline-ordering.yaml) |
-| Same-priority progress under prefill pressure | [`pd-same-priority-prefill.json`](pd-same-priority-prefill.json) | 20,000-token prompts start first; a smaller peer joins later | [P/D hybrid admission](../../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
-| Same-priority progress under decode pressure | [`pd-same-priority-decode.json`](pd-same-priority-decode.json) | 4,096-token generations start first; a smaller peer joins later | [P/D hybrid admission](../../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
-| Priority protection under prefill pressure | [`pd-priority-prefill.json`](pd-priority-prefill.json) | Standard-priority large prompts start first; a priority-100 peer joins later | [P/D hybrid admission and holdback](../../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
-| Priority protection under decode pressure | [`pd-priority-decode.json`](pd-priority-decode.json) | Standard-priority long generations start first; a priority-100 peer joins later | [P/D hybrid admission and holdback](../../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
+| SLO ordering | [`slo-deadline-ordering.json`](scenarios/slo-deadline-ordering.json) | Fixed Poisson arrivals with 250 ms, 500 ms, and absent TTFT headers in one flow | [SLO deadline ordering](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/04-slo-deadline-ordering.yaml) |
+| Same-priority progress under prefill pressure | [`pd-same-priority-prefill.json`](scenarios/pd-same-priority-prefill.json) | 20,000-token prompts start first; a smaller peer joins later | [P/D hybrid admission](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
+| Same-priority progress under decode pressure | [`pd-same-priority-decode.json`](scenarios/pd-same-priority-decode.json) | 4,096-token generations start first; a smaller peer joins later | [P/D hybrid admission](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
+| Priority protection under prefill pressure | [`pd-priority-prefill.json`](scenarios/pd-priority-prefill.json) | Standard-priority large prompts start first; a priority-100 peer joins later | [P/D hybrid admission and holdback](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
+| Priority protection under decode pressure | [`pd-priority-decode.json`](scenarios/pd-priority-decode.json) | Standard-priority long generations start first; a priority-100 peer joins later | [P/D hybrid admission and holdback](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml) |
 
 The P/D request shapes are synthetic pressure tests. Measure the request and
 token knees again before using their numerical limits with another model,
@@ -53,9 +53,9 @@ Run the equal-deadline arm first, then the mixed-deadline arm. Both arms use
 the same generated arrival schedule for a given seed.
 
 ```bash
-SCENARIO=pipeline/examples/rhaii35-feature-scenarios/slo-deadline-ordering.json
+SCENARIO=pipeline/rhaii35/scenarios/slo-deadline-ordering.json
 
-pipeline/run-feature-in-cluster.sh \
+pipeline/rhaii35/run-in-cluster.sh \
   slo-equal results/slo-equal results/live-status.json .cache/prompts \
   "$SCENARIO" -- \
   --arrival-mode poisson \
@@ -67,7 +67,7 @@ pipeline/run-feature-in-cluster.sh \
   --drain-timeout 300 \
   --vllm-prefix-caching off
 
-pipeline/run-feature-in-cluster.sh \
+pipeline/rhaii35/run-in-cluster.sh \
   slo-mixed results/slo-mixed results/live-status.json .cache/prompts \
   "$SCENARIO" -- \
   --arrival-mode poisson \
@@ -100,9 +100,9 @@ export MAX_TOKEN_CONCURRENCY=80000
 export FLOW_CONTROL_HEADROOM=0.1
 export ADD_ESTIMATED_OUTPUT_TOKENS=false
 
-SCENARIO=pipeline/examples/rhaii35-feature-scenarios/pd-priority-prefill.json
+SCENARIO=pipeline/rhaii35/scenarios/pd-priority-prefill.json
 
-pipeline/run-feature-in-cluster.sh \
+pipeline/rhaii35/run-in-cluster.sh \
   canonical results/pd-priority-prefill results/live-status.json .cache/prompts \
   "$SCENARIO" -- \
   --arrival-mode closed_loop \
@@ -126,8 +126,8 @@ The launcher removes its CPU benchmark pod after copying the artifacts. Set
 
 ## Accepted result packages
 
-- [SLO deadline-ordering data](../../../benchmark-data/rhaii-3.5-flow-control/slo-deadline-ordering/)
-- [P/D flow-control data](../../../benchmark-data/rhaii-3.5-flow-control/pd-flow-control/)
+- [SLO deadline-ordering data](../../benchmark-data/rhaii-3.5-flow-control/slo-deadline-ordering/)
+- [P/D flow-control data](../../benchmark-data/rhaii-3.5-flow-control/pd-flow-control/)
 
 The accepted packages report repeated results from the tested RHAII 3.5
 deployment. A new replay must preserve its own configuration, request rows,

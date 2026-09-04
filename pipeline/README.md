@@ -136,14 +136,14 @@ The batch-eviction packages publish the tested configuration, accepted data, and
 
 ## Red Hat AI Inference 3.5 feature scenarios
 
-The [SLO and P/D feature scenarios](examples/rhaii35-feature-scenarios/) add the
+The [SLO and P/D feature runners](rhaii35/) add the
 two traffic paths that need more control than the general GuideLLM runs:
 
-- `slo_scenario_runner.py` keeps all deadline classes in one fairness flow and
+- `rhaii35/slo_scenario_runner.py` keeps all deadline classes in one fairness flow and
   sends each request's `x-llm-d-slo-ttft-ms` header.
-- `pd_stage_sampler.py` records prefill, decode, and Endpoint Picker metrics in
+- `rhaii35/pd_stage_sampler.py` records prefill, decode, and Endpoint Picker metrics in
   one time series.
-- `run-feature-in-cluster.sh` runs either path against a deployed service,
+- `rhaii35/run-in-cluster.sh` runs either path against a deployed service,
   copies the evidence locally, propagates validation failures, and removes its
   CPU benchmark pod by default.
 

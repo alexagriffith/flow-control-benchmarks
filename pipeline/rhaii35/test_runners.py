@@ -9,15 +9,15 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 
-PIPELINE = Path(__file__).resolve().parent
+PACKAGE = Path(__file__).resolve().parent
+PIPELINE = PACKAGE.parent
 sys.path.insert(0, str(PIPELINE))
 
 import benchmark
-import pd_stage_sampler
-import slo_scenario_runner
+from rhaii35 import pd_stage_sampler, slo_scenario_runner
 
 
-EXAMPLES = PIPELINE / "examples" / "rhaii35-feature-scenarios"
+EXAMPLES = PACKAGE / "scenarios"
 
 
 class FakeSession:

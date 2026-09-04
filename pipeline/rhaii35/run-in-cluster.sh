@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage="usage: run-feature-in-cluster.sh <canonical|slo-mixed|slo-equal> <local-output-dir> <local-live-status-file> <prompt-cache-dir> <scenario-file> -- [benchmark args]"
+usage="usage: pipeline/rhaii35/run-in-cluster.sh <canonical|slo-mixed|slo-equal> <local-output-dir> <local-live-status-file> <prompt-cache-dir> <scenario-file> -- [benchmark args]"
 
 mode=${1:?$usage}
 local_output_dir=${2:?$usage}
@@ -24,9 +24,10 @@ case "$mode" in
 esac
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
+pipeline_dir=$(cd "$script_dir/.." && pwd)
 namespace=${BENCHMARK_RUNNER_NAMESPACE:-default}
 pod=${BENCHMARK_RUNNER_POD:-flow-control-benchmark-runner}
-manifest=${BENCHMARK_RUNNER_MANIFEST:-$script_dir/kubernetes/benchmark-runner.yaml}
+manifest=${BENCHMARK_RUNNER_MANIFEST:-$pipeline_dir/kubernetes/benchmark-runner.yaml}
 cleanup_runner=${BENCHMARK_RUNNER_CLEANUP:-true}
 remote_root=/work/current
 remote_runner=$remote_root/runner
@@ -91,7 +92,7 @@ runner_applied=1
 kubectl wait -n "$namespace" --for=condition=Ready pod/"$pod" --timeout=600s
 kubectl exec -n "$namespace" "$pod" -c runner -- \
   sh -lc "rm -rf '$remote_root' && mkdir -p '$remote_runner' '$remote_input/prompt-pools' '$remote_output'"
-kubectl cp --retries=5 "$script_dir/." "$namespace/$pod:$remote_runner" -c runner
+kubectl cp --retries=5 "$pipeline_dir/." "$namespace/$pod:$remote_runner" -c runner
 kubectl cp --retries=5 "$prompt_cache_dir/." "$namespace/$pod:$remote_input/prompt-pools" -c runner
 kubectl cp --retries=5 "$scenario_file" "$namespace/$pod:$remote_input/scenario.json" -c runner
 
@@ -123,7 +124,7 @@ benchmark_command=(python3 "$remote_runner/benchmark.py" "${remote_args[@]}")
 if [[ "$mode" == "slo-mixed" || "$mode" == "slo-equal" ]]; then
   slo_header_mode=${mode#slo-}
   benchmark_command=(
-    python3 "$remote_runner/slo_scenario_runner.py"
+    python3 "$remote_runner/rhaii35/slo_scenario_runner.py"
     --canonical-runner "$remote_runner/benchmark.py"
     --slo-header-mode "$slo_header_mode"
     "${remote_args[@]}"
@@ -151,7 +152,7 @@ if [[ "$pd_stage_capture" == "true" ]]; then
   kubectl exec -n "$namespace" "$pod" -c runner -- \
     sh -c 'echo $$ > "$1"; shift; exec "$@"' \
     sh "$remote_sampler_pid" env "${sampler_env[@]}" \
-    python3 "$remote_runner/pd_stage_sampler.py" \
+    python3 "$remote_runner/rhaii35/pd_stage_sampler.py" \
       --prefill-url "$PREFILL_METRICS_URL" \
       --decode-url "$DECODE_METRICS_URL" \
       --endpoint-picker-url "$EPP_METRICS_URL" \
