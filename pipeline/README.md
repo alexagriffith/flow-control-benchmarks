@@ -134,4 +134,22 @@ For upstream packages, the scenario file, seed, runner hash, image, and tested c
 
 The batch-eviction packages publish the tested configuration, accepted data, and deterministic artifact-validation commands. Their original Async Processor traffic harness is not yet part of this public pipeline.
 
+## Red Hat AI Inference 3.5 feature scenarios
+
+The [SLO and P/D feature scenarios](examples/rhaii35-feature-scenarios/) add the
+two traffic paths that need more control than the general GuideLLM runs:
+
+- `slo_scenario_runner.py` keeps all deadline classes in one fairness flow and
+  sends each request's `x-llm-d-slo-ttft-ms` header.
+- `pd_stage_sampler.py` records prefill, decode, and Endpoint Picker metrics in
+  one time series.
+- `run-feature-in-cluster.sh` runs either path against a deployed service,
+  copies the evidence locally, propagates validation failures, and removes its
+  CPU benchmark pod by default.
+
+The published scenarios cover same-priority progress and explicit-priority
+protection under prefill-heavy and decode-heavy pressure. The linked README
+contains the commands, output contract, tested configurations, and accepted
+result packages.
+
 Rejected and partial attempts remain outside `benchmark-data/`. Public packages contain no customer names, credentials, private cluster identifiers, or local paths.

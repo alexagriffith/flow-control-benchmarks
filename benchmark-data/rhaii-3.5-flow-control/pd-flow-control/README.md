@@ -39,6 +39,7 @@ all three matched pairs.
 - [Focused analysis](analysis.json)
 - [Reviewed Endpoint Picker recipe](configuration/selected-recipe.yaml)
 - [Complete P/D deployment example](../examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml)
+- [Executable P/D scenarios and commands](../../../pipeline/examples/rhaii35-feature-scenarios/#run-a-pd-scenario)
 
 ## Evidence
 
