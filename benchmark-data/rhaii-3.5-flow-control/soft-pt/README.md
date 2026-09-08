@@ -19,7 +19,15 @@ that rejected work.
 
 - [Focused analysis](analysis.json)
 - [Serving-side configuration and classifier policy](../examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml)
+- [Runnable classifier, exact GuideLLM traces, and Batch input generator](../../../pipeline/soft-pt/)
 - [Request-cost metadata study](../request-cost-metadata/)
+
+GuideLLM 0.7.0 replayed the two realtime schedules. The Redis-backed
+classifier removed caller-supplied objectives and assigned the trusted
+priority before forwarding each request. The Batch API and metrics-gated
+Async Processor ran the priority -10 backlog separately. The [replay
+package](../../../pipeline/soft-pt/) publishes each part and explains why the
+classifier and Batch code are needed in addition to GuideLLM.
 
 ## Evidence
 

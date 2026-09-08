@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "description": "Same-priority progress test under a synthetic prefill-heavy pressure shape.",
+  "scenarios": [
+    {
+      "name": "same_priority_prefill",
+      "duration_s": 330,
+      "analysis_windows": [
+        {"name": "dominant-solo", "start_s": 60, "end_s": 120},
+        {"name": "contention", "start_s": 180, "end_s": 240},
+        {"name": "drain", "start_s": 240, "end_s": 330}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "pd-equal-prefill-dominant",
+          "priority": 0,
+          "objective": "standard",
+          "input_tokens": 20000,
+          "output_tokens": 128,
+          "phases": [{"start_s": 0, "duration_s": 240, "concurrency": 4}]
+        },
+        {
+          "fairness_id": "pd-equal-balanced-peer",
+          "priority": 0,
+          "objective": "standard",
+          "input_tokens": 1024,
+          "output_tokens": 128,
+          "phases": [{"start_s": 120, "duration_s": 120, "concurrency": 2}]
+        }
+      ]
+    }
+  ]
+}

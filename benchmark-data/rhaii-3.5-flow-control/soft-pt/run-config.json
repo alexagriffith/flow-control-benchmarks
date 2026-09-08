@@ -7,6 +7,22 @@
   "prefix_cache": "off",
   "comparison": "no quota, classifying quota, and blocking quota",
   "tested_configuration": "../examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml",
+  "traffic_driver": {
+    "realtime": "GuideLLM 0.7.0 synchronized trace replay",
+    "batch": "OpenAI-compatible Batch API with metrics-gated Async Processor",
+    "policy": "external Redis-backed soft-PT classifier"
+  },
+  "replay_package": "../../../pipeline/soft-pt/",
+  "realtime_duration_seconds": 240,
+  "realtime_requests_per_flow": 1410,
+  "batch_requests": 4752,
+  "request_shape": {
+    "input_tokens": 511,
+    "output_tokens": 128
+  },
+  "endpoint_picker_request_limit": 28,
+  "endpoint_picker_headroom": 0,
+  "default_request_ttl": "3s",
   "percentile_policy": "Each repeat retains its own request percentiles.",
   "accepted_counterbalanced_blocks": 3
 }

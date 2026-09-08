@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "description": "One-flow SLO ordering trace for equal-deadline and mixed-deadline comparisons.",
+  "scenarios": [
+    {
+      "name": "same_flow_slo_deadline_ordering",
+      "duration_s": 90,
+      "analysis_windows": [
+        {"name": "baseline", "start_s": 5, "end_s": 18},
+        {"name": "overload", "start_s": 25, "end_s": 60},
+        {"name": "recovery", "start_s": 70, "end_s": 88}
+      ],
+      "tenants": [
+        {
+          "fairness_id": "slo-class-250ms",
+          "flow_fairness_id": "slo-ordering-shared-flow",
+          "deadline_class": "250ms",
+          "slo_ttft_ms": 250,
+          "priority": 100,
+          "objective": "priority-100",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 20, "rate_rps": 8},
+            {"start_s": 20, "duration_s": 45, "rate_rps": 18},
+            {"start_s": 65, "duration_s": 25, "rate_rps": 8}
+          ]
+        },
+        {
+          "fairness_id": "slo-class-500ms",
+          "flow_fairness_id": "slo-ordering-shared-flow",
+          "deadline_class": "500ms",
+          "slo_ttft_ms": 500,
+          "priority": 100,
+          "objective": "priority-100",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 20, "rate_rps": 8},
+            {"start_s": 20, "duration_s": 45, "rate_rps": 18},
+            {"start_s": 65, "duration_s": 25, "rate_rps": 8}
+          ]
+        },
+        {
+          "fairness_id": "slo-class-without-deadline",
+          "flow_fairness_id": "slo-ordering-shared-flow",
+          "deadline_class": "without-deadline",
+          "slo_ttft_ms": null,
+          "priority": 100,
+          "objective": "priority-100",
+          "input_tokens": 512,
+          "output_tokens": 128,
+          "phases": [
+            {"start_s": 0, "duration_s": 20, "rate_rps": 8},
+            {"start_s": 20, "duration_s": 45, "rate_rps": 18},
+            {"start_s": 65, "duration_s": 25, "rate_rps": 8}
+          ]
+        }
+      ]
+    }
+  ]
+}
