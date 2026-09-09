@@ -3,8 +3,8 @@
 Dedicated GPU pools protect latency-sensitive products, but peak-sized pools
 sit idle when demand drops. Shared GPU capacity reduces that waste by running
 mixed-priority and batch workloads on the same GPUs. The tradeoff is latency
-isolation. Realtime products still need SLOs and service guarantees when other
-workloads use the same serving capacity.
+isolation. Realtime products still need service-level objectives (SLOs) and
+service guarantees when other workloads use the same serving capacity.
 
 Flow control manages request admission for shared GPU capacity under pressure.
 When the pool is overloaded, flow control applies configured priority and
@@ -20,7 +20,7 @@ higher-priority work.
 Each result section states its aggregation, repeat count, units, and evidence
 source.
 
-<sub>Evidence [claim matrix](docs/readme-claim-matrix.md) · [priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [detector comparison](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/consolidation/) · [batch eviction](benchmark-data/batch-eviction/)</sub>
+<sub>Evidence [claim matrix](docs/readme-claim-matrix.md) · [RHAII 3.5 campaign](benchmark-data/rhaii-3.5-flow-control/) · [priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [batch eviction](benchmark-data/batch-eviction/)</sub>
 
 ## Architecture
 
@@ -95,13 +95,77 @@ must keep waiting in EPP.
 | Lower-priority work absorbs the wait. | [Batch isolation](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/) |
 | Same-priority fairness prevents one tenant from starving its peers. | [Peer fairness](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/same-priority-fairness/) |
 | Admission tuning changes the latency tradeoff. | [Detector comparison](benchmark-data/upstream-flow-control-v0.9.0/results.html#production) |
+| The latency objective selected an operating load below the measured overload boundary. | [RHAII 3.5 capacity envelope](benchmark-data/rhaii-3.5-flow-control/capacity-envelope/) |
+| Deadline ordering increased the share of requests meeting their latency objectives within one flow. | [RHAII 3.5 deadline ordering](benchmark-data/rhaii-3.5-flow-control/slo-deadline-ordering/) |
+| Stage-aware admission, fairness, and priority reserve protected prefill/decode (P/D) serving under the tested request shapes. | [RHAII 3.5 P/D flow control](benchmark-data/rhaii-3.5-flow-control/pd-flow-control/) |
 | Running batch exposes the boundary of admission control. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) |
+| Metrics-gated dispatch keeps queued Batch work outside serving until capacity is available. | [RHAII 3.5 Batch dispatch](benchmark-data/rhaii-3.5-flow-control/batch-dispatch/) |
 | Reserved capacity protected realtime latency after dispatch. | [Batch eviction](benchmark-data/batch-eviction/) |
+
+## RHAII 3.5: From Latency Objectives to Configuration
+
+The Red Hat AI Inference (RHAII) 3.5 campaign tested how shared GPU serving can
+meet latency objectives while other workloads remain active. The primary
+tests used a pinned Open Data Hub router build from the llm-d v0.10 development
+line. P/D tests used a later build with stage-aware admission; eviction tests
+used an experimental build. The [tested stack](benchmark-data/rhaii-3.5-flow-control/#tested-stack)
+records each image.
+
+| Decision | Tested result | Operator takeaway |
+|---|---|---|
+| Select the operating load | The selected load met the latency objectives before queueing increased sharply at higher load. | Measure the highest request rate that consistently meets the service's latency objectives. |
+| Order requests within one flow | More requests met their deadlines; requests without a deadline waited longer. | Use SLO ordering when callers supply latency objectives and the service accepts longer waits for requests without an objective. |
+| Keep P/D workloads progressing | Hybrid admission detected both prefill-heavy and decode-heavy pressure. Both equal-priority flows completed their requests with round-robin fairness. | Give workloads separate fairness IDs, then add priority reserve when one workload needs stronger latency protection. |
+| Control Batch dispatch | Dispatch based on serving metrics met the realtime 250 ms p95 time-to-first-token (TTFT) target in two of three test blocks. Fixed direct dispatch met the target in zero blocks; direct dispatch adjusted after HTTP 429 responses met the target in one. | Use serving metrics to limit how quickly queued Batch requests enter vLLM, and check realtime latency under contention. |
+| Recover capacity after Batch starts | Eviction reduced realtime non-200 responses to zero at both tested reserve levels. Every Batch job completed exactly once, with increased completion time. | Combine priority reserve with eviction when Batch requests can be interrupted and retried within the completion-time budget. |
+
+<sub>Batch eviction: 12 matched eviction-off/on pairs at each reserve level, using the experimental router build. Batch p95 completion time increased 18.7% at 25% reserve and 9.4% at 50% reserve. The rerun did not establish a consistent improvement in successful-response p95 TTFT. Evidence: [eviction results](benchmark-data/rhaii-3.5-flow-control/batch-eviction/).</sub>
+
+### Select Operating Load from the Latency Objective
+
+Use the latency objective to select the operating load. The sweep identified
+40.6 requests per second as the operating point before queueing increased
+sharply at the next tested load.
+
+<img src="benchmark-data/rhaii-3.5-flow-control/assets/capacity-slo-envelope.svg" width="100%" alt="The RHAII 3.5 capacity sweep shows p95 time to first token remaining below the 250 millisecond objective at 30.4 and 40.6 requests per second, then increasing sharply at 50.7 and 55.8 requests per second.">
+
+<sub>GPT-OSS 20B on one H100, 512 input tokens and 128 output tokens, prefix caching off. Objectives: p95 TTFT at or below 250 ms and p95 time per output token at or below 25 ms. At 40.6 requests per second, request cap 128 with 10% headroom passed three of three repeats. Evidence: [capacity sweep](benchmark-data/rhaii-3.5-flow-control/capacity-envelope/) · [request-cap comparison](benchmark-data/rhaii-3.5-flow-control/request-concurrency/).</sub>
+
+### Help Queued Requests Meet Their Latency Objectives
+
+First-come, first-served (FCFS) orders requests by arrival within one flow.
+SLO ordering gives earlier deadlines precedence. In the matched tests, more
+requests met the 250 ms and 500 ms TTFT objectives, while requests without an
+objective waited longer. Every request completed.
+
+<img src="benchmark-data/rhaii-3.5-flow-control/assets/slo-deadline-ordering.svg" width="100%" alt="FCFS and SLO deadline ordering compared for requests with 250 millisecond and 500 millisecond time-to-first-token objectives. SLO ordering increased the median share meeting both objectives.">
+
+<sub>Medians from three accepted runs per policy, with one shared priority and fairness ID. The share meeting the objective improved even though p95 TTFT remained above each objective. Evidence: [deadline-ordering comparison](benchmark-data/rhaii-3.5-flow-control/slo-deadline-ordering/).</sub>
+
+### P/D Configuration Recipe
+
+The tested recipe used one GPT-OSS 20B prefill pod and one decode pod, each on
+one H100 on the same node. Hybrid admission measures request and token load
+for each stage and uses the higher stage saturation to control dispatch.
+
+| Workload requirement | Configuration |
+|---|---|
+| Mixed prompt and generation pressure in P/D serving | Use hybrid admission. The tested values were `maxConcurrency: 64`, `maxTokenConcurrency: 80000`, and `headroom: 0.1`. Measure both limits for the deployed model, topology, and traffic. |
+| Equal-priority workloads must both progress | Give each workload a separate fairness ID and use round-robin fairness. |
+| One workload needs stronger latency protection | Send the higher-priority workload at `100` and the standard workload at `0`. Keep the three configured bands in the linked YAML to preserve the tested ceilings of `1.0` and `0.75`. Check higher-priority latency and standard-workload progress together. |
+| Retryable work may be interrupted | Use the configured priority `-10` band, whose tested ceiling is `0.5`. Enable eviction when the client or Async Processor retries interrupted requests within a defined retry limit. |
+
+A service with two traffic classes leaves the configured `-10` band unused.
+The separate [Batch dispatch comparison](benchmark-data/rhaii-3.5-flow-control/batch-dispatch/)
+tests how to hold Batch requests in an external queue before sending them to serving.
+
+Start with the [sanitized P/D recipe](benchmark-data/rhaii-3.5-flow-control/pd-flow-control/configuration/selected-recipe.yaml) or the [complete public configuration examples](benchmark-data/rhaii-3.5-flow-control/examples/getting-started/). The [campaign README](benchmark-data/rhaii-3.5-flow-control/) contains the run design, repeated results, configuration files, and claim boundaries.
 
 ## Evidence Map
 
 | Suite | Test purpose | Configuration |
 |---|---|---|
+| [RHAII 3.5 flow control](benchmark-data/rhaii-3.5-flow-control/) | Capacity from latency objectives, deadline ordering, P/D anti-starvation, Batch dispatch, and eviction recovery. | Open Data Hub build from the llm-d v0.10 development line. Each package records its tested image, workload, configuration, repeats, and evidence boundary. |
 | [RHAII 3.4 flow control](benchmark-data/rhaii-3.4-flow-control/) | Saturation detector behavior under priority tiers, batch isolation, consolidation, and fairness tests. | Utilization detector with queue-depth saturation. Scheduler image is pinned in the package evidence. |
 | [Upstream request-count admission](benchmark-data/upstream-flow-control-v0.9.0/) | Request-count and token-aware admission tests, including `maxConcurrency` tuning and production-shaped scenarios. | Upstream v0.9 was used because request-count admission was not available in the RHAII 3.4 scheduler image. |
 | [Batch eviction](benchmark-data/batch-eviction/) | Reserved capacity for realtime latency, plus eviction and retry after lower-priority batch work has entered vLLM. | Experimental PR build with request-count admission, `maxConcurrency=48`, vLLM `max-num-seqs=96`, and batch eviction enabled. |
@@ -236,14 +300,14 @@ case. EPP selects an eligible lower-priority Batch request and signals Envoy to
 end its vLLM stream. The Async Processor then safely retries the same request.
 
 With reserved capacity, eviction, and retry, Realtime p95 TTFT stayed near the
-Realtime-only baseline at 348 ms. Median Batch completions increased from 1,648
+Realtime-only baseline at 348 ms. Median batch completions increased from 1,648
 to 1,798 per 300-second run. Together, priority holdback protects new
 higher-priority requests before dispatch, while eviction and retry reclaim
 capacity from eligible lower-priority work already inside vLLM.
 
-<img src="assets/readme/batch-retry-value.svg" width="100%" alt="Two matched comparisons show reserved capacity protecting Realtime latency and eviction plus retry recovering Batch completions while reserved capacity remains fixed">
+<img src="assets/readme/batch-retry-value.svg" width="100%" alt="Two matched comparisons show reserved capacity protecting realtime latency and eviction plus retry recovering batch completions while reserved capacity remains fixed">
 
-<sub>Left: reserved capacity lowered Realtime p95 TTFT from 561 to 341 ms. Right: with reserved capacity held constant, eviction and retry increased median Batch completions from 1,648 to 1,798 per 300-second run.</sub>
+<sub>Left: reserved capacity lowered realtime p95 TTFT from 561 to 341 ms. Right: with reserved capacity held constant, eviction and retry increased median batch completions from 1,648 to 1,798 per 300-second run.</sub>
 
 <img src="assets/readme/batch-protection.svg" width="100%" alt="Three independent bars show Realtime p95 TTFT at 342 milliseconds without Batch, 561 milliseconds with Batch and no controls, and 348 milliseconds with Batch, reserved capacity, and eviction">
 
@@ -275,15 +339,15 @@ Endpoint Picker.
 
 <br>
 
-Realtime, Standard, and queued Batch requests from the Async Processor enter the same
+Realtime, Standard, and batch inference requests sent by Async Processor enter the same
 Inference Gateway. The Endpoint Picker admits each request and selects a vLLM
 worker, but Gateway and Envoy own the HTTP stream to that worker.
 
-<img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime and Standard HTTP clients, plus queued Batch requests from the Async Processor, converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
+<img src="assets/readme/shared-inference-boundaries.svg" width="100%" alt="Realtime and Standard HTTP clients, plus batch inference requests sent by Async Processor in this benchmark, converge on Inference Gateway and Envoy. Gateway and Envoy consult the llm-d Endpoint Picker over ExtProc, then open the request stream to the selected vLLM worker in the shared InferencePool.">
 
 | Component | Responsibility | Operational significance |
 |---|---|---|
-| Inference request producers | Send realtime, Standard, or queued Batch inference requests. Async Processor is the Batch HTTP caller in this benchmark path. | All three request classes converge on the same Inference Gateway; Batch API job submission occurs earlier in a separate path. |
+| Inference request producers | Send realtime, Standard, or Batch inference requests. Async Processor is the Batch HTTP caller in this benchmark path. | All three request classes converge on the same Inference Gateway; Batch API job submission occurs earlier in a separate path. |
 | Inference Gateway / Envoy | Owns the HTTP stream, sends request headers and body chunks to EPP over ExtProc, and applies EPP's response. | Gateway/Envoy—not EPP—opens the selected upstream vLLM stream. |
 | Request handling | Reads headers and the parsed inference body, then resolves the routing objective. | This is the first in-process EPP stage, not a separate service. |
 | Flow classification | Combines the fairness identity and request priority into a flow key. | The flow key determines which EPP policy queue owns the request. |
@@ -396,6 +460,11 @@ by both paths.
 | Consolidation preserved realtime priority. | Cost savings depend on workload mix, utilization targets, and the platform team's service objectives. |
 | Admission settings changed where latency landed. | Admission policy controls request ordering. Serving capacity still comes from vLLM and the GPU pool. |
 | Reserved capacity protected realtime traffic after batch work had entered vLLM. | The single-model data shows latency protection at the tested load. The two-model data shows eviction and retry across model replicas, not latency scaling. |
+| A latency objective selected the tested operating point. | The 40.6 requests-per-second value applies to the tested model, topology, request shape, and objectives. Another deployment needs its own sweep. |
+| SLO deadline ordering increased target attainment within one flow. | Callers must provide meaningful deadlines, and the service must accept more waiting for requests without an objective. |
+| Both equal-priority P/D flows made progress and completed their requests. | Accepted runs contained no 60-second starvation interval. Priority reserve was tested separately for higher-priority latency protection. The numerical limits apply to the tested same-node topology. |
+| Metrics-gated dispatch controlled when queued Batch work entered serving. | The result applies to the tested retry-safe queue and requires durable ownership and recovery around the Async Processor. |
+| Eviction recovered capacity after Batch entered serving. | Eviction applies only to explicitly eligible, retry-owned work and adds completion delay and recomputation. |
 
 The `slo_proof_valid` flag in package analysis means the scenario passed the
 benchmark data-quality gate. A production SLO proof remains separate. A full
@@ -403,18 +472,18 @@ SLO proof needs a named target, declared load, success-rate target, end-to-end
 latency, time per output token, backend pressure metrics, and enough repeats
 for the claim being made.
 
-## Evidence Links
+## Published Evidence and References
 
 | Topic | Status | Note | Link |
 |---|---|---|---|
-| Combined evidence page | ⚠️ Review or retire | It duplicates the README and predates the latest narrative. | [benchmark-data/results.html](benchmark-data/results.html) |
-| RHAII 3.4 saturation detector | ✅ Current | The accepted saturation-detector package remains the source of record. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
-| Upstream v0.9 tuning and scenarios | 🟡 In progress | Package summaries and tuning scenarios are being refreshed. | [benchmark-data/upstream-flow-control-v0.9.0/](benchmark-data/upstream-flow-control-v0.9.0/) |
-| Batch eviction | 🟡 In progress | The evidence is published; the narrative and visuals are still being refined. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
-| Claim matrix | ✅ Current | Claims, evidence, and boundaries match the current README. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
-| Runner and reproduction | ✅ Current | The runner, artifact contract, validation, and reproduction paths are documented. | [pipeline/README.md](pipeline/README.md) |
-| SLO proof protocol | 📋 Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
-| Benchmark | 🔎 Needs audit | This standalone narrative overlaps the README and has not been reconciled with the latest architecture and eviction work. | [benchmark.html](benchmark.html) |
-| Flow-control guide | 🔎 Needs audit | The guide is useful, but its architecture and capacity-control explanations need a final consistency pass. | [learn/flow-control.html](learn/flow-control.html) |
-| Interactive journey | ✅ Current | The interactive mechanism walkthrough remains usable as published. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
-| Flow Control Flight Recorder | ✅ Current | The linked repository is active and supports the published benchmark-package format. | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |
+| RHAII 3.5 campaign | Current | The published campaign contains 12 evidence groups, sanitized configurations, replay runners, and package validation. | [benchmark-data/rhaii-3.5-flow-control/](benchmark-data/rhaii-3.5-flow-control/) |
+| RHAII 3.4 saturation detector | Current | The accepted saturation-detector package remains the source of record. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
+| Upstream v0.9 tuning and scenarios | Report review | The evidence packages are published; the grouped report is being checked against the latest claim boundaries. | [benchmark-data/upstream-flow-control-v0.9.0/](benchmark-data/upstream-flow-control-v0.9.0/) |
+| Batch eviction | Current | The published single-model, two-model, and RHAII 3.5 rerun packages document reserve, eviction, retry, and their evidence boundaries. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
+| Claim matrix | Current | The matrix maps each front-page claim to its evidence, configuration, and boundary. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
+| Runner and reproduction | Current | The published feature runners cover the RHAII 3.5 SLO and P/D replay paths. | [pipeline/README.md](pipeline/README.md) |
+| SLO proof protocol | Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
+| Benchmark report | Review | The standalone report covers the earlier benchmark and requires a consistency pass for the RHAII 3.5 additions. | [benchmark.html](benchmark.html) |
+| Flow-control guide | Mechanism reference | The guide explains the mechanism; the campaign packages remain the source for measured results and configuration values. | [learn/flow-control.html](learn/flow-control.html) |
+| Interactive journey | Mechanism reference | The interactive walkthrough explains request flow and policy behavior; campaign packages contain the measured evidence. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
+| Flow Control Flight Recorder | Current | The linked repository is active and supports the published benchmark-package format. | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |
