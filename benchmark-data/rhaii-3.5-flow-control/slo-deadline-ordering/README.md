@@ -17,8 +17,14 @@ accepted matched runs per policy.
 
 - [Normalized analysis](analysis.json)
 - [Benchmark configuration](../examples/benchmark-reproduction/04-slo-deadline-ordering.yaml)
-- [Executable traffic scenario and commands](../../../pipeline/rhaii35/#run-the-slo-comparison)
+- [Ordering-policy comparison and header examples](../../../pipeline/rhaii35/#run-the-slo-comparison)
 - [Reviewed evidence chart](../assets/slo-deadline-ordering.svg)
+
+For an FCFS-versus-deadline-ordering comparison, use mixed-deadline traffic
+with both router policies. The `slo-equal` and `slo-mixed` example commands
+change request deadlines; the router policy remains unchanged until you
+update `orderingPolicyRef`. Reproducing this comparison requires that policy
+change.
 
 ## Evidence
 

@@ -54,7 +54,42 @@ the benchmark must also validate Prometheus ingestion.
 
 ## Run the SLO comparison
 
-Run the equal-deadline arm first, then the mixed-deadline arm. Both arms use
+### Published comparison: change queue order
+
+The [published results](../../benchmark-data/rhaii-3.5-flow-control/slo-deadline-ordering/)
+compare first-come, first-served (FCFS) with SLO deadline ordering. Both policies
+receive requests with 250 ms, 500 ms, and absent time-to-first-token (TTFT)
+objectives, at the same priority and fairness ID.
+
+For this comparison, use `slo-mixed` in both runs and change only
+`orderingPolicyRef` in the priority-100 entry of `flowControl.priorityBands`:
+
+| Run | `orderingPolicyRef` | Traffic mode |
+| --- | --- | --- |
+| Arrival order | `fcfs-ordering-policy` | `slo-mixed` |
+| Deadline order | `slo-deadline-ordering-policy` | `slo-mixed` |
+
+The [example configuration](../../benchmark-data/rhaii-3.5-flow-control/examples/benchmark-reproduction/04-slo-deadline-ordering.yaml)
+defines both plugins and selects deadline ordering for priority 100. The runner
+does not switch the deployed ordering policy. Drain the previous run, apply
+the selected policy, and verify the effective router configuration before
+starting traffic. Keep the model, capacity limits, request schedule, and other
+settings unchanged; save each run in a separate output directory.
+
+This describes the comparison to run; a complete replay of the accepted runs
+still needs the original schedule and deployment inputs to be matched and
+verified. The one-repeat example below is not an exact replay of the published
+three-repeat comparison.
+
+### Header example: change request deadlines
+
+The commands below keep the deployed ordering policy unchanged. `slo-equal`
+sets every request's TTFT objective to 500 ms; `slo-mixed` sends 250 ms, 500 ms,
+and absent objectives. These modes change request headers, not the router's
+ordering policy, so running one of each is a different comparison from FCFS
+versus deadline ordering.
+
+Use the deadline-ordering configuration for this example. Both commands use
 the same generated arrival schedule for a given seed.
 
 ```bash
