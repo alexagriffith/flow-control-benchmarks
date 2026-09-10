@@ -42,7 +42,8 @@ def main() -> int:
                 if result["overflow"] or result["brokenImages"] or result["retiredMap"] or result["clippedOverviewTables"] or not result["h1"]:
                     errors.append(str(result))
                 if name == "index.html":
-                    assert page.get_by_role("link", name="RHAII 3.5 benchmark takeaways", exact=False).count() == 1
+                    assert page.locator('a[href="benchmark.html"]').count() == 0
+                    assert page.locator('a[href="sections.html"]').count() == 1
                 if name == "sections.html":
                     assert page.get_by_text("All 12 evidence groups", exact=True).count() == 1
                 if name == "benchmark.html":

@@ -68,8 +68,8 @@ def validate() -> list[str]:
                 if unquote(parsed.fragment) not in Page(target.read_text()).ids:
                     errors.append(f"{name}: missing HTML anchor {link}")
     index = (ROOT / "index.html").read_text()
-    if 'href="benchmark.html"' not in index or 'href="sections.html"' not in index:
-        errors.append("Landing page must link the takeaways and evidence index")
+    if 'href="benchmark.html"' in index or 'href="sections.html"' not in index:
+        errors.append("Landing page must route campaign reports through the evidence index")
     if 'href="exports/' in index:
         errors.append("Landing page offers outdated downloadable snapshots")
     sections = (ROOT / "sections.html").read_text()
