@@ -317,6 +317,35 @@ assert(pd_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "priority-ho
 assert(pd_inline.fetch("schedulingProfiles").map { |profile| profile.fetch("name") } ==
        %w[prefill decode], "P/D example must define separate prefill and decode profiles")
 
+# Preserve the historical admission-only P/D configuration. A declared headroom
+# value does not enable the detector's Filter interface; profile wiring does.
+pd_reproduction_path = PACKAGE.join("examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml")
+pd_reproduction_inline = YAML.load_stream(pd_reproduction_path.read).find do |document|
+  document["kind"] == "LLMInferenceService"
+end.dig("spec", "router", "scheduler", "config", "inline")
+{
+  "selected recipe" => recipe,
+  "getting-started P/D example" => pd_inline,
+  "P/D reproduction example" => pd_reproduction_inline
+}.each do |label, config|
+  assert(config.dig("flowControl", "saturationDetector", "pluginRef") == "concurrency-detector",
+         "#{label} must retain the tested admission detector")
+  profiles = config.fetch("schedulingProfiles").to_h do |profile|
+    [profile.fetch("name"), profile.fetch("plugins").map { |entry| entry.fetch("pluginRef") }]
+  end
+  assert(profiles == {
+    "prefill" => %w[prefill-filter queue-scorer max-score-picker],
+    "decode" => %w[decode-filter queue-scorer max-score-picker]
+  }, "#{label} must preserve the tested profiles; endpoint filtering requires separate evidence")
+end
+assert(analysis.dig("selected_recipe", "endpoint_filter_enabled") == false,
+       "P/D analysis must identify the inactive endpoint filter")
+assert(analysis.dig("selected_recipe", "headroom_effect") ==
+       "inactive: neither scheduling profile includes the concurrency detector as an endpoint filter",
+       "P/D analysis must distinguish configured headroom from active filtering")
+assert(PACKAGE.join("pd-flow-control/README.md").read.include?("Earlier recipe comments incorrectly described an active 10% scheduling buffer."),
+       "P/D documentation must retain the headroom correction")
+
 random_example = PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
 random_baseline = YAML.load_stream(random_example.read).find do |document|
   document["kind"] == "LLMInferenceService"

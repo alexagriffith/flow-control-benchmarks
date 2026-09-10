@@ -150,12 +150,16 @@ for each stage and uses the higher stage saturation to control dispatch.
 
 | Workload requirement | Configuration |
 |---|---|
-| Mixed prompt and generation pressure in P/D serving | Use hybrid admission. The tested values were `maxConcurrency: 64`, `maxTokenConcurrency: 80000`, and `headroom: 0.1`. Measure both limits for the deployed model, topology, and traffic. |
+| Mixed prompt and generation pressure in P/D serving | Use hybrid admission. The tested admission limits were `maxConcurrency: 64` and `maxTokenConcurrency: 80000`. Measure both limits for the deployed model, topology, and traffic. |
 | Equal-priority workloads must both progress | Give each workload a separate fairness ID and use round-robin fairness. |
 | One workload needs stronger latency protection | Send the higher-priority workload at `100` and the standard workload at `0`. Keep the three configured bands in the linked YAML to preserve the tested ceilings of `1.0` and `0.75`. Check higher-priority latency and standard-workload progress together. |
 | Retryable work may be interrupted | Use the configured priority `-10` band, whose tested ceiling is `0.5`. Enable eviction when the client or Async Processor retries interrupted requests within a defined retry limit. |
 
 A service with two traffic classes leaves the configured `-10` band unused.
+
+The P/D recipe retains `headroom: 0.1` from the saved configuration, but neither
+scheduling profile enables the concurrency detector as an endpoint filter.
+Headroom was inactive in these P/D runs; the results establish no headroom benefit.
 The separate [Batch dispatch comparison](benchmark-data/rhaii-3.5-flow-control/batch-dispatch/)
 tests how to hold Batch requests in an external queue before sending them to serving.
 

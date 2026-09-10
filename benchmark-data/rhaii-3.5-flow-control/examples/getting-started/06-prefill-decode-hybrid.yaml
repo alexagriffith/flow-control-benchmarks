@@ -130,7 +130,8 @@ spec:
                 inFlightLoadProducerName: inflight-load
                 maxConcurrency: 64
                 maxTokenConcurrency: 80000
-                # Allow a 10% scheduling buffer around the measured limits.
+                # Retained from the saved configuration; inactive because the
+                # scheduling profiles do not include the detector as a filter.
                 headroom: 0.1
             - name: round-robin-fairness-policy
               type: round-robin-fairness-policy

@@ -248,6 +248,11 @@ The tested numerical limits describe this model and topology. Recalculate the
 request ceiling, token ceiling, and reserve from the measured prefill and
 decode knees for another deployment.
 
+The P/D recipe retains `headroom: 0.1`, but its scheduling profiles omit the
+detector's endpoint filter. Headroom was inactive in these runs. See the
+[headroom correction](pd-flow-control/#headroom-correction) for the configuration
+boundary and corrected interpretation.
+
 - [Sanitized tested Endpoint Picker recipe](pd-flow-control/configuration/selected-recipe.yaml)
 - [Sanitized P/D analysis](pd-flow-control/analysis.json)
 

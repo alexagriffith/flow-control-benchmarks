@@ -9,7 +9,7 @@
 # but a two-class service does not send it. Use -10 only for work that may be
 # stopped and retried. In-flight eviction is a separate optional setting.
 #
-# The values 64, 80,000, 0.1, and 0.5 came from this benchmark. They fit one
+# The admission limits 64 and 80,000 and holdback minimum 0.5 came from this benchmark. They fit one
 # GPT-OSS 20B prefill pod and one decode pod, each using one H100 on the same
 # node. Measure new limits before using this recipe with another model,
 # request shape, replica count, or topology.
@@ -106,10 +106,9 @@ plugins:
       inFlightLoadProducerName: inflight-load
       maxConcurrency: 64
       maxTokenConcurrency: 80000
-      # Allow a 10% scheduling buffer at the limit: 64 requests becomes 70, and
-      # 80,000 tokens becomes 88,000. The buffer avoids blocking every new
-      # dispatch as soon as load touches the measured limit. Priority holdback,
-      # configured below, still determines how much each priority may use.
+      # Retained from the saved run configuration. Headroom affects only the
+      # detector's endpoint filter. Neither scheduling profile below includes
+      # that filter, so headroom is inactive in this tested P/D recipe.
       headroom: 0.1
 
   - name: round-robin-fairness-policy

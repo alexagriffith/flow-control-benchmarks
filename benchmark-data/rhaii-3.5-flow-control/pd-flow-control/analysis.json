@@ -21,6 +21,8 @@
     "max_concurrency": 64,
     "max_token_concurrency": 80000,
     "headroom": 0.1,
+    "endpoint_filter_enabled": false,
+    "headroom_effect": "inactive: neither scheduling profile includes the concurrency detector as an endpoint filter",
     "fairness": "round-robin",
     "ordering_within_priority": "FCFS",
     "priority_ceiling_policy": {
