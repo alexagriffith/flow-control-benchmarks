@@ -209,30 +209,83 @@
       <td><p>Flow control changes when and in what order requests dispatch. Total model capacity still comes from the workers.</p><p style="margin-top:8px;margin-bottom:0">When demand exceeds that capacity, lower-priority work absorbs more of the wait so higher-priority work can dispatch first.</p></td>
     </tr></tbody>
   </table>
-  <div class="figure">
-  <svg viewBox="0 0 920 235" role="img" aria-label="Two regimes of one saturation gradient: under the ceiling, requests pass straight through; at or over it, priority bands decide who waits">
-    <text x="18" y="24" font-size="14" font-weight="700" fill="var(--ink, #151515)">How pool saturation changes dispatch</text>
-    <rect x="18" y="42" width="430" height="140" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="34" y="66" font-size="12" font-weight="800" fill="var(--green, #1f8a5f)">SATURATION UNDER THE CEILING · dispatching</text>
-    <circle cx="60" cy="106" r="7" fill="var(--green, #1f8a5f)"/><circle cx="86" cy="106" r="7" fill="var(--gold, #d59a00)"/><circle cx="112" cy="106" r="7" fill="var(--blue, #1c78d8)"/>
-    <line x1="130" y1="106" x2="330" y2="106" stroke="var(--arrow, #9a9a9a)" stroke-width="2"/>
-    <path d="M330 100 l10 6 l-10 6z" fill="var(--arrow, #9a9a9a)"/>
-    <rect x="222" y="88" width="8" height="36" rx="3" fill="var(--green-bar-soft, #cfe7db)"/>
-    <rect x="352" y="86" width="78" height="40" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
-    <text x="391" y="110" font-size="11" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">vLLM</text>
-    <text x="34" y="164" font-size="11.5" fill="var(--muted, #5f6368)">Requests move straight through. Flow control is invisible.</text>
-    <rect x="472" y="42" width="430" height="140" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="488" y="66" font-size="12" font-weight="800" fill="var(--red-deep, #b23b3b)">AT THE CEILING · POLICY QUEUES HOLD NEW WORK</text>
-    <rect x="488" y="80" width="70" height="14" rx="7" fill="var(--green, #1f8a5f)"/><text x="566" y="91" font-size="10" fill="var(--muted, #5f6368)">premium dispatches first</text>
-    <rect x="488" y="100" width="50" height="14" rx="7" fill="var(--gold, #d59a00)"/><text x="546" y="111" font-size="10" fill="var(--muted, #5f6368)">standard waits behind</text>
-    <rect x="488" y="120" width="90" height="14" rx="7" fill="var(--blue, #1c78d8)"/><text x="586" y="131" font-size="10" fill="var(--muted, #5f6368)">batch absorbs the queue</text>
-    <rect x="770" y="76" width="8" height="64" rx="3" fill="var(--red-mid, #e4837f)"/>
-    <rect x="806" y="88" width="78" height="40" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
-    <text x="845" y="112" font-size="11" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">vLLM</text>
-    <text x="488" y="164" font-size="11.5" fill="var(--muted, #5f6368)">New work queues by band. The policy decides who goes next.</text>
-    <text x="460" y="216" font-size="12" fill="var(--ink-soft, #4a4a4a)" text-anchor="middle">Each dispatch cycle measures pool saturation and compares the value with the configured ceiling.</text>
+  <figure class="figure">
+  <svg viewBox="0 0 920 420" role="img" aria-label="Two stacked request paths. With available capacity, requests pass through the open Endpoint Picker to vLLM. When the pool is saturated, a saturation signal reaches the dispatch gate. The highest eligible priority request advances while standard and batch requests wait in their policy queues.">
+    <text x="18" y="28" font-size="16" font-weight="750" fill="var(--ink, #151515)">How saturation changes request dispatch</text>
+
+    <rect x="18" y="48" width="884" height="120" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
+    <text x="38" y="76" font-size="12.5" font-weight="800" fill="var(--green, #1f8a5f)">AVAILABLE CAPACITY</text>
+    <rect x="74" y="96" width="132" height="50" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
+    <text x="140" y="125" font-size="12.5" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">Requests</text>
+    <circle cx="105" cy="137" r="5" fill="var(--green, #1f8a5f)"/>
+    <circle cx="140" cy="137" r="5" fill="var(--gold, #d59a00)"/>
+    <circle cx="175" cy="137" r="5" fill="var(--blue, #1c78d8)"/>
+    <line x1="206" y1="121" x2="339" y2="121" stroke="var(--arrow, #8a8d90)" stroke-width="2.25"/>
+    <path d="M339 115 l11 6 l-11 6z" fill="var(--arrow, #8a8d90)"/>
+    <rect x="354" y="90" width="212" height="62" rx="9" fill="var(--green-tint, #e8f5ee)" stroke="var(--green, #1f8a5f)"/>
+    <text x="460" y="116" font-size="13" font-weight="750" fill="var(--ink, #151515)" text-anchor="middle">Endpoint Picker</text>
+    <text x="460" y="138" font-size="11.5" font-weight="800" fill="var(--green, #1f8a5f)" text-anchor="middle">DISPATCH OPEN</text>
+    <line x1="566" y1="121" x2="713" y2="121" stroke="var(--green, #1f8a5f)" stroke-width="2.5"/>
+    <path d="M713 115 l11 6 l-11 6z" fill="var(--green, #1f8a5f)"/>
+    <rect x="728" y="96" width="118" height="50" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
+    <text x="787" y="126" font-size="13" font-weight="750" fill="var(--ink, #151515)" text-anchor="middle">vLLM</text>
+
+    <rect x="18" y="186" width="884" height="216" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
+    <text x="38" y="214" font-size="12.5" font-weight="800" fill="var(--red-deep, #b23b3b)">POOL SATURATED</text>
+
+    <rect x="48" y="282" width="126" height="58" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
+    <text x="111" y="306" font-size="12" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">New</text>
+    <text x="111" y="325" font-size="12" font-weight="700" fill="var(--ink, #151515)" text-anchor="middle">requests</text>
+    <line x1="174" y1="311" x2="221" y2="311" stroke="var(--arrow, #8a8d90)" stroke-width="2.25"/>
+    <path d="M221 305 l11 6 l-11 6z" fill="var(--arrow, #8a8d90)"/>
+
+    <rect x="236" y="232" width="330" height="150" rx="10" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
+    <text x="401" y="253" font-size="11" font-weight="750" fill="var(--muted, #5f6368)" text-anchor="middle">PRIORITY QUEUES</text>
+
+    <rect x="254" y="266" width="294" height="28" rx="6" fill="var(--green-tint, #e8f5ee)" stroke="var(--green, #1f8a5f)"/>
+    <text x="270" y="284" font-size="11" font-weight="750" fill="var(--green, #1f8a5f)">HIGHER PRIORITY</text>
+    <rect x="432" y="273" width="24" height="14" rx="4" fill="var(--green, #1f8a5f)"/>
+    <rect x="462" y="273" width="24" height="14" rx="4" fill="var(--green, #1f8a5f)" opacity="0.82"/>
+    <rect x="492" y="273" width="24" height="14" rx="4" fill="var(--green, #1f8a5f)" opacity="0.64"/>
+
+    <rect x="254" y="306" width="294" height="28" rx="6" fill="var(--gold-tint, #fdf6e6)" stroke="var(--gold, #d59a00)"/>
+    <text x="270" y="324" font-size="11" font-weight="700" fill="var(--ink-soft, #4a4a4a)">STANDARD</text>
+    <rect x="402" y="313" width="24" height="14" rx="4" fill="var(--gold, #d59a00)"/>
+    <rect x="432" y="313" width="24" height="14" rx="4" fill="var(--gold, #d59a00)" opacity="0.86"/>
+    <rect x="462" y="313" width="24" height="14" rx="4" fill="var(--gold, #d59a00)" opacity="0.72"/>
+    <rect x="492" y="313" width="24" height="14" rx="4" fill="var(--gold, #d59a00)" opacity="0.58"/>
+
+    <rect x="254" y="346" width="294" height="28" rx="6" fill="var(--blue-tint, #eef5fc)" stroke="var(--blue, #1c78d8)"/>
+    <text x="270" y="364" font-size="11" font-weight="700" fill="var(--ink-soft, #4a4a4a)">BATCH</text>
+    <rect x="372" y="353" width="24" height="14" rx="4" fill="var(--blue, #1c78d8)"/>
+    <rect x="402" y="353" width="24" height="14" rx="4" fill="var(--blue, #1c78d8)" opacity="0.9"/>
+    <rect x="432" y="353" width="24" height="14" rx="4" fill="var(--blue, #1c78d8)" opacity="0.8"/>
+    <rect x="462" y="353" width="24" height="14" rx="4" fill="var(--blue, #1c78d8)" opacity="0.7"/>
+    <rect x="492" y="353" width="24" height="14" rx="4" fill="var(--blue, #1c78d8)" opacity="0.6"/>
+
+    <rect x="646" y="220" width="112" height="45" rx="8" fill="var(--red-tint, #fcebea)" stroke="var(--red-mid, #e4837f)"/>
+    <text x="702" y="239" font-size="10.5" font-weight="750" fill="var(--red-deep, #b23b3b)" text-anchor="middle">SATURATION</text>
+    <text x="702" y="255" font-size="10.5" font-weight="800" fill="var(--red-deep, #b23b3b)" text-anchor="middle">AT CEILING</text>
+    <line x1="702" y1="265" x2="702" y2="282" stroke="var(--red-mid, #e4837f)" stroke-width="2.25"/>
+    <path d="M696 282 l6 10 l6-10z" fill="var(--red-mid, #e4837f)"/>
+
+    <path d="M548 280 C590 280 595 321 635 321" fill="none" stroke="var(--green, #1f8a5f)" stroke-width="2.5"/>
+    <path d="M635 315 l11 6 l-11 6z" fill="var(--green, #1f8a5f)"/>
+    <line x1="548" y1="320" x2="590" y2="320" stroke="var(--arrow, #8a8d90)" stroke-width="2"/>
+    <path d="M594 314 L606 326 M606 314 L594 326" fill="none" stroke="var(--red-mid, #e4837f)" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="548" y1="360" x2="590" y2="360" stroke="var(--arrow, #8a8d90)" stroke-width="2"/>
+    <path d="M594 354 L606 366 M606 354 L594 366" fill="none" stroke="var(--red-mid, #e4837f)" stroke-width="3.5" stroke-linecap="round"/>
+
+    <rect x="646" y="292" width="112" height="58" rx="9" fill="var(--green-tint, #e8f5ee)" stroke="var(--green, #1f8a5f)"/>
+    <text x="702" y="316" font-size="11.5" font-weight="750" fill="var(--ink, #151515)" text-anchor="middle">Dispatch</text>
+    <text x="702" y="335" font-size="11.5" font-weight="750" fill="var(--ink, #151515)" text-anchor="middle">gate</text>
+    <line x1="758" y1="321" x2="796" y2="321" stroke="var(--green, #1f8a5f)" stroke-width="2.5"/>
+    <path d="M796 315 l11 6 l-11 6z" fill="var(--green, #1f8a5f)"/>
+    <rect x="812" y="292" width="66" height="58" rx="8" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
+    <text x="845" y="326" font-size="13" font-weight="750" fill="var(--ink, #151515)" text-anchor="middle">vLLM</text>
   </svg>
-  </div>
+    <figcaption>Below saturation, requests pass through without queueing. At saturation, flow control holds requests in policy queues and advances the highest eligible request to backend scheduling.</figcaption>
+  </figure>
   <div class="note">Flow control can protect time per output token for streams already running by holding new requests in Endpoint Picker queues when the pool is full.</div>
   <h3 style="margin-top:22px">How pool saturation is calculated</h3>
   <p>Each model replica reports a saturation value. The Endpoint Picker averages the replica values across the pool. For the utilization detector, the higher of queue-depth pressure and KV-cache pressure determines each replica's value.</p>
@@ -807,7 +860,7 @@
   </table>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/metrics/metrics.go">metrics/metrics.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/main/pkg/epp/flowcontrol/controller/internal/processor.go">flowcontrol/controller/internal/processor.go</a></div>
   <p style="margin-top:12px">Sweep each hardware and model pair to find where throughput stops improving and queueing begins. Use that capacity boundary to size the pool and tune where flow control starts holding new work.</p>
-  <p>The <a href="../benchmark-data/results.html">published benchmark evidence</a> includes configuration sweeps, production traffic, scale tests, and claim boundaries.</p>
+  <p>The <a href="../sections.html">published benchmark evidence pages</a> include configuration sweeps, production traffic, scale tests, and claim boundaries.</p>
 </section>
 
 </main>

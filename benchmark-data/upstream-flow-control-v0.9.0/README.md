@@ -50,7 +50,7 @@ The scenario, seed, and runner hash reproduce the issued GuideLLM traffic. Laten
 
 | Business question | One-sentence answer | Evidence |
 |---|---|---|
-| Does the selected configuration protect priority traffic? | Higher-priority realtime traffic stayed faster across all four traffic patterns; three scenarios met the repeat-stability gate, while batch isolation remained directional evidence. | [Production scenarios](production-scenarios/) |
+| Does the selected configuration preserve priority and fairness under surge traffic? | Lower-priority work absorbed most of the queuing delay in three mixed-priority scenarios. In a separate same-priority test, two peers remained below 700 ms p95 TTFT while the bursting tenant reached 12,097 ms. | [Production scenarios](production-scenarios/) |
 | How much can running batch increase realtime latency? | Under request-count admission, running batch increased realtime p95 TTFT from 133 ms to 15,378 ms. | [Batch interference baseline](batch-interference/) |
 | Which admission method better protects realtime traffic in a mixed workload? | Request-count admission produced lower realtime latency, while input-token admission lowered long-context and batch latency. | [Mixed production workload](mixed-production-workload/) |
 | How do chat and agentic output shapes change latency? | Every request completed, but the longer agentic output produced higher p95 TTFT. | [Selected workload shapes](selected-workload-shapes/) |

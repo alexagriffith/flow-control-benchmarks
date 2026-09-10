@@ -126,6 +126,14 @@ Counted flow-control runs must not use `--allow-missing`.
 
 ## Validation and publication
 
+For the website, run `python3 pipeline/validate_website.py` and
+`python3 pipeline/validate_website_browser.py` before publishing. The browser
+check requires Python Playwright with Chromium installed. After GitHub Pages
+finishes deploying, repeat the browser check with
+`--base-url https://alexagriffith.github.io/flow-control-benchmarks`.
+The website index is `sections.html`; `benchmark.html` contains the RHAII 3.5
+takeaways. Campaign reports retain their own runtime and evidence boundaries.
+
 1. Put each accepted capability set under `benchmark-data/` with its own README, configuration, analysis, request data, traffic samples, system metrics, and proof gates. Include the executable scenario and traffic command when the public runner supports the test.
 2. Generate each public-safe tested configuration with `python3 pipeline/generate_package_configs.py`.
 3. Generate the data-bound architecture and result visuals with `python3 pipeline/generate_package_visuals.py`.

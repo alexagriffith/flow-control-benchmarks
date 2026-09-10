@@ -24,6 +24,8 @@ def inspect_page(page) -> dict[str, object]:
           const bars = [...document.querySelectorAll('.bar')];
           const heatCells = [...document.querySelectorAll('.heat-cell')];
           const figures = [...document.querySelectorAll('figure')];
+          const outcomeIntervals = [...document.querySelectorAll('.outcome-interval')];
+          const promotedOutcomeImages = [...document.querySelectorAll('.outcome-evidence-visual')];
           const color = (element) => getComputedStyle(element).backgroundColor;
           const overflowing = figures.filter((figure) =>
             !figure.classList.contains('architecture-diagram') &&
@@ -32,6 +34,12 @@ def inspect_page(page) -> dict[str, object]:
           return {
             horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
             figureCount: figures.length,
+            outcomeCardCount: document.querySelectorAll('.outcome-card').length,
+            outcomeRowCount: document.querySelectorAll('.outcome-row').length,
+            labeledOutcomePlotCount: document.querySelectorAll('.outcome-plot[role="img"][aria-label]').length,
+            promotedOutcomeImageCount: promotedOutcomeImages.length,
+            loadedPromotedOutcomeImageCount: promotedOutcomeImages.filter((image) => image.complete && image.naturalWidth > 0).length,
+            zeroWidthOutcomeIntervals: outcomeIntervals.filter((interval) => interval.getBoundingClientRect().width <= 0).length,
             sweepSvgCount: document.querySelectorAll('.sweep-svg').length,
             phaseSvgCount: document.querySelectorAll('.phase-svg').length,
             trafficSvgCount: document.querySelectorAll('.traffic-svg').length,
@@ -67,7 +75,13 @@ def main() -> int:
             reports[name] = result
 
             expected = {
-                "figureCount": 36,
+                "figureCount": 22,
+                "outcomeCardCount": 4,
+                "outcomeRowCount": 10,
+                "labeledOutcomePlotCount": 3,
+                "promotedOutcomeImageCount": 1,
+                "loadedPromotedOutcomeImageCount": 1,
+                "zeroWidthOutcomeIntervals": 0,
                 "sweepSvgCount": 7,
                 "phaseSvgCount": 1,
                 "trafficSvgCount": 4,

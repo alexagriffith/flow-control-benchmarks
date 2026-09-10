@@ -275,8 +275,8 @@ def validate_production_scenarios_package(errors: list[str], root: Path) -> None
     )
     required_readme_values = {
         "Platinum 404 ms", "Gold 511 ms", "Silver 656 ms", "Batch 13,264 ms",
-        "Realtime 442 ms", "Standard 515 ms", "Batch 13,077 ms",
-        "Realtime tenants 509 and 556 ms", "Standard burst 25,892 ms",
+        "realtime 442 ms", "Standard 515 ms", "Batch 13,077 ms",
+        "realtime tenants 509 and 556 ms", "Standard burst 25,892 ms",
         "Overloaded tenant 12,097 ms", "peers 527 and 570 ms",
         "ranges extended to 619 and 675 ms", "4,711 and 4,567 ms",
         "5,117 and 4,906 ms", "5,023 and 4,519 ms",

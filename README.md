@@ -475,16 +475,21 @@ for the claim being made.
 
 ## Published Evidence and References
 
+The [website evidence index](https://alexagriffith.github.io/flow-control-benchmarks/sections.html)
+links the campaign reports and reproduction packages. Most packages disable
+prefix caching; the upstream prefix-routing package enables caching and reports
+that comparison separately.
+
 | Topic | Status | Note | Link |
 |---|---|---|---|
 | RHAII 3.5 campaign | Current | The published campaign contains 12 evidence groups, sanitized configurations, replay runners, and package validation. | [benchmark-data/rhaii-3.5-flow-control/](benchmark-data/rhaii-3.5-flow-control/) |
-| RHAII 3.4 saturation detector | Current | The accepted saturation-detector package remains the source of record. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
-| Upstream v0.9 tuning and scenarios | Report review | The evidence packages are published; the grouped report is being checked against the latest claim boundaries. | [benchmark-data/upstream-flow-control-v0.9.0/](benchmark-data/upstream-flow-control-v0.9.0/) |
+| RHAII 3.4 saturation detector | Historical reference | The accepted saturation-detector package records the earlier runtime and test conditions. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
+| Upstream v0.9 tuning and scenarios | Published | The visual report links measured results, tested configurations, and evidence boundaries for the v0.9 campaign. | [HTML report](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/upstream-flow-control-v0.9.0/results.html) |
 | Batch eviction | Current | The published single-model, two-model, and RHAII 3.5 rerun packages document reserve, eviction, retry, and their evidence boundaries. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
 | Claim matrix | Current | The matrix maps each front-page claim to its evidence, configuration, and boundary. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
 | Runner and reproduction | Current | The published feature runners cover the RHAII 3.5 SLO and P/D replay paths. | [pipeline/README.md](pipeline/README.md) |
 | SLO proof protocol | Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
-| Benchmark report | Review | The standalone report covers the earlier benchmark and requires a consistency pass for the RHAII 3.5 additions. | [benchmark.html](benchmark.html) |
+| Benchmark takeaways | Published | The RHAII 3.5 overview connects capacity, deadline ordering, P/D, and Batch results to configurations and replay instructions. | [HTML overview](https://alexagriffith.github.io/flow-control-benchmarks/benchmark.html) |
 | Flow-control guide | Mechanism reference | The guide explains the mechanism; the campaign packages remain the source for measured results and configuration values. | [learn/flow-control.html](learn/flow-control.html) |
 | Interactive journey | Mechanism reference | The interactive walkthrough explains request flow and policy behavior; campaign packages contain the measured evidence. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
 | Flow Control Flight Recorder | Current | The linked repository is active and supports the published benchmark-package format. | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |

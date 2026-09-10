@@ -9,7 +9,6 @@ import re
 from collections import Counter, defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
-from statistics import median
 
 
 def require(condition: bool, message: str, errors: list[str]) -> None:
@@ -120,9 +119,10 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
 
     require(parser.tags["main"] == 1, "grouped report must contain exactly one main element", errors)
     require(parser.tags["h1"] == 1, "grouped report must contain exactly one h1", errors)
-    require(parser.classes["scenario"] == 4, "grouped report must contain four production-scenario visuals", errors)
-    require(parser.tags["figure"] == 36, "grouped report visual inventory changed", errors)
-    require(parser.classes["evidence-card"] == 13, "grouped report evidence-card inventory changed", errors)
+    require(parser.classes["outcome-card"] == 4, "grouped report must contain four production-scenario visuals", errors)
+    require(parser.tags["figure"] == 22, "grouped report visual inventory changed", errors)
+    require(parser.classes["evidence-card"] == 0, "grouped report restored thumbnail evidence cards", errors)
+    require(parser.classes["package"] == 12, "grouped report evidence-link inventory changed", errors)
     require(parser.classes["sweep-chart"] == 7, "grouped report sweep-chart inventory changed", errors)
     require(parser.classes["range-chart"] == 2, "grouped report range-chart inventory changed", errors)
     require(parser.classes["heatmap"] == 1, "grouped report heatmap inventory changed", errors)
@@ -139,7 +139,7 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require("font-size: clamp(" not in text, "grouped report restored viewport-scaled typography", errors)
     require_text(
         text,
-        "Can one shared model pool protect priority traffic across different request shapes and a larger model pool?</p>\n      <p><strong>Answer:</strong> Flow control protected higher-priority realtime traffic",
+        "Can one shared model pool enforce priority and fairness under bursty, production-shaped traffic?</p>\n      <p><strong>Answer:</strong> Across three mixed-priority scenarios",
         "top business question is not followed by its direct answer",
         errors,
     )
@@ -157,10 +157,12 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     )
     require(".bar { display: block;" in text, "grouped report bars can collapse to zero width", errors)
     require(
-        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery { grid-template-columns: 1fr; }" in text,
+        ".result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .config-selection, .config-path { grid-template-columns: 1fr; }" in text,
         "grouped report responsive grid collapse changed",
         errors,
     )
+    require_text(text, "Twelve evidence suites form one decision path.", "configuration decision map changed", errors)
+    require(parser.classes["config-step"] == 4, "configuration decision phase inventory changed", errors)
 
     engine = read_json(data / "engine-configuration" / "analysis.json")
     admission = read_json(data / "request-and-token-admission-calibration" / "analysis.json")
@@ -222,21 +224,28 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     require_text(text, "Exact input-token count", "size-aware option changed", errors)
     require_text(text, 'data-shared-axis="true"', "priority-tuning latency chart lost its shared axis", errors)
     require_text(text, "Shared y-axis: p95 TTFT in milliseconds (log scale)", "priority-tuning latency scale disclosure changed", errors)
-    require_text(text, '4,163 ms</span><i class="heat-gradient"></i><span>41,909 ms', "heatmap legend changed", errors)
+    require(parser.classes["heat-cell"] == 9, "heatmap cells changed", errors)
+    require_text(text, '<span class="heat-cell" data-value="4163">4,163 ms</span>', "heatmap minimum label changed", errors)
+    require_text(text, '<span class="heat-cell" data-value="41909">41,909 ms</span>', "heatmap maximum label changed", errors)
 
     selected = production["selected_configuration_results"]
     for scenario, workloads in selected.items():
         for workload, result in workloads.items():
             value = round(result["median_p95_ttft_ms"])
+            if scenario == "consolidation":
+                require_text(text, f"{value:,} ms", f"{scenario} {workload} promoted visual value changed", errors)
+                continue
             require_text(text, f'data-value="{value}"', f"{scenario} {workload} chart value changed", errors)
             require_text(text, f'>{value:,} ms<', f"{scenario} {workload} display value changed", errors)
+    require_text(text, 'src="../../assets/readme/consolidation.svg"', "promoted consolidation visual changed", errors)
+    require_text(text, "During the consolidation surge", "consolidation visual description changed", errors)
     require_text(text, "Nine matched runs; HTTP 429: 5/3,498, 1/7,014, and 0/13,950", "scale evidence scope changed", errors)
     require_text(text, "Traffic sent during each surge", "production traffic title changed", errors)
     require_text(text, "requests/s", "production traffic y-axis unit changed", errors)
     for expected_range in (
         "Platinum 368–486 ms; Gold 414–594 ms",
-        "Realtime ranged from 371–669 ms",
-        "A 503–558 ms; B 505–599 ms",
+        "realtime ranged from 371–669 ms",
+        "realtime A 503–558 ms; realtime B 505–599 ms",
         "B 508–619 ms; C 563–675 ms",
     ):
         require_text(text, expected_range, f"production uncertainty changed: {expected_range}", errors)
@@ -286,21 +295,6 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     batch_running = batch["by_arm"]["realtime with batch already running"]["realtime_surge_p95_ttft_ms"]["median"]
     for value in (realtime_only, batch_running):
         require_text(text, f'data-value="{round(value)}"', "batch-interference value changed", errors)
-    batch_eviction_summary = data.parent / "batch-eviction" / "single-model-replica" / "summary.csv"
-    batch_eviction_rows = list(csv.DictReader(batch_eviction_summary.open(newline="")))
-    batch_eviction_by_scenario: dict[str, list[float]] = defaultdict(list)
-    for row in batch_eviction_rows:
-        batch_eviction_by_scenario[row["scenario"]].append(float(row["realtime_p95_ttft_ms"]))
-    for values in batch_eviction_by_scenario.values():
-        value = round(median(values))
-        require(
-            f'data-value="{value}"' in text or f"{value} ms" in text,
-            f"batch-eviction p95 TTFT changed: {value} ms",
-            errors,
-        )
-    require(sum(int(row["evicted_batch_requests"]) for row in batch_eviction_rows) == 38, "batch-eviction count changed", errors)
-    require(sum(int(row["async_retried_requests"]) for row in batch_eviction_rows) == 38, "batch retry count changed", errors)
-    require(sum(int(row["batch_duplicate_results"]) for row in batch_eviction_rows) == 0, "batch duplicate count changed", errors)
     scale_topologies = list(scaling["topologies"].values())
     scale_throughput = "|".join(f"{topology['median_served_rps_per_gpu']:.3f}" for topology in scale_topologies)
     scale_latency = "|".join(str(round(topology["median_premium_burst_p95_ttft_ms"])) for topology in scale_topologies)
@@ -331,17 +325,19 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
         "long-stability/", "prefix-cache-routing/", "request-concurrency-priority-tuning/",
     )
     require(all(f'href="{link}"' in text for link in package_links), "grouped report package links changed", errors)
-    require_text(text, 'href="../batch-eviction/single-model-replica/results.html"', "batch-eviction package link changed", errors)
-    require_text(text, "separate experimental batch-eviction build", "batch-eviction build boundary changed", errors)
+    require("../batch-eviction/" not in text, "batch-eviction evidence returned to the stable v0.9 report", errors)
+    require_text(text, "Priority-specific reserve and in-flight eviction are outside this report.", "v0.9 version boundary changed", errors)
 
     required_claims = (
-        "Higher-priority realtime traffic stayed faster across four production-shaped scenarios.",
-        "Across the three stable scenarios, retained realtime tenants recorded median p95 time to first token (TTFT) from 404 to 570 ms.",
+        "The tests showed two distinct protections: priority separation and same-priority fairness.",
+        "Across the three repeat-stable scenarios, latency-sensitive tiers or peer tenants recorded median p95 time to first token (TTFT) from 404 to 570 ms.",
+        "The extra margin tolerates brief per-replica overshoot; it does not hold capacity aside for a priority tier.",
+        "Round-robin was the tested policy, not the stable v0.9 default.",
         "uses its own labeled y-axis range",
         "every scenario used the same surge window so differences in latency reflect the traffic mix and policy behavior",
         "The plots compare request count and queue depth with the same prompts, traffic, model, GPU, and three repeats.",
-        "Flow control was engaged and policy queues were active in every retained run.",
-        "Reserved capacity and eviction are covered separately.",
+        "Flow control engaged and policy queues were active in every retained run.",
+        "This test defines the boundary of stable v0.9 admission control; after-dispatch recovery is outside this report.",
         "HTTP 429: 5/3,498 at one replica, 1/7,014 at two, and 0/13,950 at four.",
         "sparse 429s prevent a rejection-free claim at every pool size.",
         "No fixed service-level objective is claimed.",
@@ -369,8 +365,8 @@ def validate_upstream_report(errors: list[str], root: Path) -> None:
     ):
         require(link in root_readme, f"root README evidence link changed: {link}", errors)
     require(
-        "Most packages disable prefix caching" in root_readme
-        and "prefix-routing package enables caching" in root_readme,
+        "Most packages disable prefix caching" in " ".join(root_readme.split())
+        and "prefix-routing package enables caching" in " ".join(root_readme.split()),
         "root README cache boundary changed",
         errors,
     )

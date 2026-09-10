@@ -24,11 +24,11 @@ reference.
 
 ## Result
 
-Realtime median p95 TTFT increased from 133 ms to 15,378 ms when batch work was
+realtime median p95 TTFT increased from 133 ms to 15,378 ms when batch work was
 already running in vLLM. The increase was 15,245 ms, or 115.3x the
 realtime-only reference.
 
-| Realtime result | Realtime only | Batch already running |
+| realtime result | realtime only | Batch already running |
 |---|---:|---:|
 | Median p95 TTFT | 133 ms | 15,378 ms |
 | Median p99 TTFT | 147 ms | 18,294 ms |

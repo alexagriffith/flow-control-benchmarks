@@ -2,20 +2,21 @@
 
 ## Business question
 
-Can one shared model server protect priority traffic across four production
-patterns while lower-priority or overloaded work absorbs the queue?
+Can one shared model server preserve priority separation and same-priority
+fairness across production-shaped surge traffic?
 
-**Answer.** Higher-priority realtime traffic stayed faster across all four
-traffic patterns; three scenarios met the repeat-stability gate, while batch
-isolation showed the same ordering in every repeat but remained directional.
+**Answer.** Lower-priority work absorbed most of the queuing delay in three
+mixed-priority scenarios, while in a separate same-priority test with
+round-robin explicitly configured, two peer tenants remained below 700 ms p95
+TTFT as the bursting tenant reached 12,097 ms.
 
 <!-- generated:package-visuals -->
 
 ## Visual summary
 
-![Realtime protection under production traffic tested serving path](architecture.svg)
+![realtime protection under production traffic tested serving path](architecture.svg)
 
-![Realtime protection under production traffic benchmark results](results.svg)
+![realtime protection under production traffic benchmark results](results.svg)
 
 [Tested configuration](tested-config.yaml)
 
@@ -35,18 +36,19 @@ aggregated across scenarios.
 
 ## Selected configuration
 
-The request-count detector kept stable median realtime p95 TTFT below 700 ms
-in priority tiers, consolidation, and same-priority fairness. Batch isolation
-showed the same ordering, but its repeat spread was too wide for a stable point
-estimate.
+The request-count detector kept stable median p95 TTFT below 700 ms for the
+latency-sensitive tiers in priority tiers and consolidation, and for the two
+peer tenants in same-priority fairness. Batch isolation retained subsecond
+realtime and Standard medians while Batch reached 13,077 ms, but its repeat
+spread was too wide for a stable point estimate.
 
 In same-priority fairness, peer medians were 527 and 570 ms, with ranges extended to 619 and 675 ms.
 
 | Scenario | Measured result during the surge |
 |---|---|
 | Priority tiers | Platinum 404 ms; Gold 511 ms; Silver 656 ms; Batch 13,264 ms p95 TTFT |
-| Batch isolation | Directional medians: Realtime 442 ms; Standard 515 ms; Batch 13,077 ms p95 TTFT |
-| Consolidation | Realtime tenants 509 and 556 ms; Standard burst 25,892 ms p95 TTFT |
+| Batch isolation | Directional medians: realtime 442 ms; Standard 515 ms; Batch 13,077 ms p95 TTFT |
+| Consolidation | realtime tenants 509 and 556 ms; Standard burst 25,892 ms p95 TTFT |
 | Same-priority fairness | Overloaded tenant 12,097 ms; peers 527 and 570 ms p95 TTFT |
 
 Each selected scenario uses three repeats. All requests succeeded, flow
@@ -63,7 +65,7 @@ with queue-depth 2 and queue-depth 5 in every matched consolidation run. It
 also kept both same-priority peers below 700 ms while queue-depth 2 produced
 peer p95 TTFT above 4,400 ms.
 
-| Scenario | Detector | Realtime p95 TTFT |
+| Scenario | Detector | realtime p95 TTFT |
 |---|---|---:|
 | Consolidation | Request count 128, 10% headroom | 509 and 556 ms |
 | Consolidation | Queue depth 2 | 4,711 and 4,567 ms |
@@ -82,6 +84,9 @@ formal statistical-significance claim.
 - vLLM used `max-num-seqs=128` and `max-num-batched-tokens=8192`.
 - The selected detector used request cap 128 with 10% headroom, or 15% for
   batch isolation.
+- The benchmark explicitly configured round-robin fairness within each priority
+  band and first-come-first-served ordering within each tenant queue. Stable
+  v0.9 defaults to global-strict fairness when no fairness policy is configured.
 - Traffic used open-loop Poisson arrivals with noisy sinusoidal phases, a timed
   surge, and recovery.
 - Each request used 511 input tokens and 128 output tokens.

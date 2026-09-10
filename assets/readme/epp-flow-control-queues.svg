@@ -19,30 +19,30 @@
   <rect x="12" y="48" width="1196" height="500" rx="9" fill="#ffffff" stroke="#dde3ea"/>
 
   <!-- Incoming request metadata. -->
-  <rect x="20" y="72" width="230" height="454" rx="9" fill="#fbfcfd" stroke="#dde3ea"/>
+  <rect x="20" y="72" width="230" height="365" rx="9" fill="#fbfcfd" stroke="#dde3ea"/>
   <text x="34" y="100" class="lane">INCOMING REQUESTS</text>
   <text x="34" y="124" class="small">x-llm-d-inference-objective</text>
   <text x="34" y="140" class="small">x-llm-d-inference-fairness-id</text>
 
-  <rect x="34" y="160" width="202" height="70" rx="7" fill="#f3fbf9" stroke="#087f72"/>
-  <text x="50" y="184" class="box-title">A1 · A2</text>
-  <text x="50" y="205" class="item">realtime · priority 100</text>
-  <text x="50" y="220" class="small">fairness · tenant-a</text>
+  <rect x="42" y="158" width="186" height="54" rx="7" fill="#f3fbf9" stroke="#087f72"/>
+  <text x="56" y="177" class="box-title">A1 · A2</text>
+  <text x="56" y="196" class="item">realtime · priority 100</text>
+  <text x="56" y="208" class="small">fairness · tenant-a</text>
 
-  <rect x="34" y="245" width="202" height="70" rx="7" fill="#f3fbf9" stroke="#087f72"/>
-  <text x="50" y="269" class="box-title">B1</text>
-  <text x="50" y="290" class="item">realtime · priority 100</text>
-  <text x="50" y="305" class="small">fairness · tenant-b</text>
+  <rect x="42" y="224" width="186" height="54" rx="7" fill="#f3fbf9" stroke="#087f72"/>
+  <text x="56" y="243" class="box-title">B1</text>
+  <text x="56" y="262" class="item">realtime · priority 100</text>
+  <text x="56" y="274" class="small">fairness · tenant-b</text>
 
-  <rect x="34" y="330" width="202" height="70" rx="7" fill="#fffaf5" stroke="#c56a00"/>
-  <text x="50" y="354" class="box-title">C1 · C2</text>
-  <text x="50" y="375" class="item">batch · priority -10</text>
-  <text x="50" y="390" class="small">fairness · tenant-c</text>
+  <rect x="42" y="290" width="186" height="54" rx="7" fill="#fffaf5" stroke="#c56a00"/>
+  <text x="56" y="309" class="box-title">C1 · C2</text>
+  <text x="56" y="328" class="item">batch · priority -10</text>
+  <text x="56" y="340" class="small">fairness · tenant-c</text>
 
-  <rect x="34" y="415" width="202" height="70" rx="7" fill="#fffaf5" stroke="#c56a00"/>
-  <text x="50" y="439" class="box-title">D1</text>
-  <text x="50" y="460" class="item">batch · priority -10</text>
-  <text x="50" y="475" class="small">fairness · tenant-d</text>
+  <rect x="42" y="356" width="186" height="54" rx="7" fill="#fffaf5" stroke="#c56a00"/>
+  <text x="56" y="375" class="box-title">D1</text>
+  <text x="56" y="394" class="item">batch · priority -10</text>
+  <text x="56" y="406" class="small">fairness · tenant-d</text>
 
   <!-- Endpoint Picker and nested flow-control subsystem. -->
   <rect x="270" y="72" width="930" height="454" rx="9" fill="#f8fcfb" stroke="#087f72" stroke-width="2"/>

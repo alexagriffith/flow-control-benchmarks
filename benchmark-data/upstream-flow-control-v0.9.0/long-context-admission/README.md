@@ -49,7 +49,7 @@ queue activation.
 ## Method
 
 - One Endpoint Picker served two vLLM model replicas, each on one NVIDIA H100.
-- Realtime chat used 1,024 input tokens and 128 output tokens at a steady noisy
+- realtime chat used 1,024 input tokens and 128 output tokens at a steady noisy
   rate.
 - Standard-priority pressure used a timed burst of 20,000 input tokens and 128
   output tokens.

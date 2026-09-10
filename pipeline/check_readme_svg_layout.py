@@ -8,6 +8,7 @@ close to the canvas edge, and stale labels that have already been rejected.
 
 from __future__ import annotations
 
+import math
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -32,8 +33,14 @@ REJECTED_TEXT = (
 
 @dataclass(frozen=True)
 class Box:
+    min_x: float
+    min_y: float
     width: float
     height: float
+
+
+Matrix = tuple[float, float, float, float, float, float]
+IDENTITY: Matrix = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
 
 def local_name(tag: str) -> str:
@@ -58,10 +65,10 @@ def svg_box(svg: ET.Element) -> Box:
     if view_box:
         parts = [float(part) for part in re.split(r"\s+", view_box.strip())]
         if len(parts) == 4:
-            return Box(parts[2], parts[3])
+            return Box(parts[0], parts[1], parts[2], parts[3])
     width = num(svg.attrib.get("width"))
     height = num(svg.attrib.get("height"))
-    return Box(width, height)
+    return Box(0.0, 0.0, width, height)
 
 
 def text_bounds(text: ET.Element) -> tuple[float, float, float, float]:
@@ -83,6 +90,65 @@ def text_bounds(text: ET.Element) -> tuple[float, float, float, float]:
     top = y - size
     bottom = y + size * 0.35
     return left, top, right, bottom
+
+
+def multiply(left: Matrix, right: Matrix) -> Matrix:
+    a1, b1, c1, d1, e1, f1 = left
+    a2, b2, c2, d2, e2, f2 = right
+    return (
+        a1 * a2 + c1 * b2,
+        b1 * a2 + d1 * b2,
+        a1 * c2 + c1 * d2,
+        b1 * c2 + d1 * d2,
+        a1 * e2 + c1 * f2 + e1,
+        b1 * e2 + d1 * f2 + f1,
+    )
+
+
+def transform_matrix(value: str | None) -> Matrix:
+    result = IDENTITY
+    if not value:
+        return result
+    for name, raw_args in re.findall(r"([A-Za-z]+)\s*\(([^)]*)\)", value):
+        args = [
+            float(part)
+            for part in re.findall(r"-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?", raw_args)
+        ]
+        op = IDENTITY
+        if name == "matrix" and len(args) == 6:
+            op = tuple(args)  # type: ignore[assignment]
+        elif name == "translate" and args:
+            op = (1.0, 0.0, 0.0, 1.0, args[0], args[1] if len(args) > 1 else 0.0)
+        elif name == "scale" and args:
+            sy = args[1] if len(args) > 1 else args[0]
+            op = (args[0], 0.0, 0.0, sy, 0.0, 0.0)
+        elif name == "rotate" and args:
+            angle = math.radians(args[0])
+            rotate = (math.cos(angle), math.sin(angle), -math.sin(angle), math.cos(angle), 0.0, 0.0)
+            if len(args) >= 3:
+                cx, cy = args[1], args[2]
+                op = multiply(
+                    multiply((1.0, 0.0, 0.0, 1.0, cx, cy), rotate),
+                    (1.0, 0.0, 0.0, 1.0, -cx, -cy),
+                )
+            else:
+                op = rotate
+        result = multiply(result, op)
+    return result
+
+
+def transformed_bounds(
+    bounds: tuple[float, float, float, float], matrix: Matrix
+) -> tuple[float, float, float, float]:
+    left, top, right, bottom = bounds
+    a, b, c, d, e, f = matrix
+    points = [
+        (a * x + c * y + e, b * x + d * y + f)
+        for x, y in ((left, top), (right, top), (right, bottom), (left, bottom))
+    ]
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return min(xs), min(ys), max(xs), max(ys)
 
 
 def element_bounds(element: ET.Element) -> tuple[float, float, float, float] | None:
@@ -112,10 +178,10 @@ def element_bounds(element: ET.Element) -> tuple[float, float, float, float] | N
 def inside_canvas(bounds: tuple[float, float, float, float], box: Box) -> bool:
     left, top, right, bottom = bounds
     return (
-        left >= -EDGE_PAD
-        and top >= -EDGE_PAD
-        and right <= box.width + EDGE_PAD
-        and bottom <= box.height + EDGE_PAD
+        left >= box.min_x - EDGE_PAD
+        and top >= box.min_y - EDGE_PAD
+        and right <= box.min_x + box.width + EDGE_PAD
+        and bottom <= box.min_y + box.height + EDGE_PAD
     )
 
 
@@ -137,17 +203,24 @@ def validate_svg(path: Path) -> list[str]:
     if box.width <= 0 or box.height <= 0:
         errors.append(f"{path.relative_to(ROOT)} has no usable width/height or viewBox")
         return errors
-    for element in svg.iter():
-        if any(parent in element.tag for parent in ("defs", "marker")):
-            continue
-        bounds = element_bounds(element)
-        if bounds and not inside_canvas(bounds, box):
-            name = local_name(element.tag)
-            label = "".join(element.itertext()).strip()
-            suffix = f" ({label[:48]})" if label else ""
-            errors.append(
-                f"{path.relative_to(ROOT)} has out-of-bounds {name}{suffix}: {bounds}"
-            )
+    def visit(element: ET.Element, parent_matrix: Matrix, ignored: bool = False) -> None:
+        name = local_name(element.tag)
+        ignored = ignored or name in ("defs", "marker")
+        matrix = multiply(parent_matrix, transform_matrix(element.attrib.get("transform")))
+        if not ignored:
+            bounds = element_bounds(element)
+            if bounds:
+                bounds = transformed_bounds(bounds, matrix)
+                if not inside_canvas(bounds, box):
+                    label = "".join(element.itertext()).strip()
+                    suffix = f" ({label[:48]})" if label else ""
+                    errors.append(
+                        f"{path.relative_to(ROOT)} has out-of-bounds {name}{suffix}: {bounds}"
+                    )
+        for child in element:
+            visit(child, matrix, ignored)
+
+    visit(svg, IDENTITY)
     return errors
 
 

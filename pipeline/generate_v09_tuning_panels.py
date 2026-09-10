@@ -129,6 +129,10 @@ def fmt_latency(value_ms: float) -> str:
     return f"{value_ms / 1000:.1f} s" if value_ms >= 1000 else f"{value_ms:.0f} ms"
 
 
+def fmt_latency_ms(value_ms: float) -> str:
+    return f"{value_ms:,.0f} ms"
+
+
 def log_latency_x(value_ms: float, left: float, right: float, low_seconds: float = 0.3, high_seconds: float = 30.0) -> float:
     seconds = min(high_seconds, max(low_seconds, value_ms / 1000.0))
     low, high = math.log10(low_seconds), math.log10(high_seconds)
@@ -164,13 +168,14 @@ def log_marker_row(
     value_x: float,
     marker: str = "square",
     font_size: int = 10,
+    formatter=fmt_latency,
 ) -> None:
     x = log_latency_x(value_ms, left, right)
     bar_end = max(x, left + 48)
     parts.append(text(label_x, y + 4, label, font_size, 720, INK))
     parts.append(f'<rect x="{left:.1f}" y="{y - 5:.1f}" width="{right - left:.1f}" height="10" rx="5" fill="#edf1f4"/>')
     parts.append(f'<rect x="{left:.1f}" y="{y - 5:.1f}" width="{bar_end - left:.1f}" height="10" rx="5" fill="{color}"/>')
-    parts.append(text(value_x, y + 4, fmt_latency(value_ms), font_size, 800, color, "end"))
+    parts.append(text(value_x, y + 4, formatter(value_ms), font_size, 800, color, "end"))
 
 
 def panel_header(title: str, unit: str, takeaway: str, color: str) -> str:
@@ -751,7 +756,7 @@ def render_batch_isolation_takeaway_svg() -> str:
     package = root / "benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/analysis.json"
     results = json.loads(package.read_text())["selected_configuration_results"]
     rows = [
-        ("Realtime", results["realtime"]["median_p95_ttft_ms"], teal),
+        ("realtime", results["realtime"]["median_p95_ttft_ms"], teal),
         ("Standard", results["standard"]["median_p95_ttft_ms"], blue),
         ("Batch", results["batch"]["median_p95_ttft_ms"], orange),
     ]
@@ -796,7 +801,7 @@ def render_scenario_latency_svg(
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{width - 20}" height="{height - 20}" rx="6" fill="#ffffff" stroke="{LINE}"/>',
-        text(34, 38, "Median surge p95 TTFT (seconds, log scale)", 12, 700, MUTED),
+        text(34, 38, "Median surge p95 TTFT (ms, log scale)", 12, 700, MUTED),
         f'<rect x="28" y="52" width="{width - 56}" height="{height - 76}" rx="6" fill="#fbfcfd" stroke="{LINE}"/>',
     ]
     one_second_x = log_latency_x(1000, chart_left, chart_right)
@@ -804,7 +809,15 @@ def render_scenario_latency_svg(
         f'<rect x="{chart_left:.1f}" y="{axis_top:.1f}" width="{one_second_x - chart_left:.1f}" '
         f'height="{axis_bottom - axis_top:.1f}" fill="#eef8f6" opacity="0.75"/>'
     )
-    log_latency_axis(parts, chart_left, chart_right, axis_top, axis_bottom, font_size=11)
+    log_latency_axis(
+        parts,
+        chart_left,
+        chart_right,
+        axis_top,
+        axis_bottom,
+        ticks=((0.3, "300 ms"), (1.0, "1,000 ms"), (3.0, "3,000 ms"), (10.0, "10,000 ms"), (30.0, "30,000 ms")),
+        font_size=11,
+    )
     for row_index, (label, value, color) in enumerate(rows):
         log_marker_row(
             parts,
@@ -817,6 +830,7 @@ def render_scenario_latency_svg(
             right=chart_right,
             value_x=840,
             font_size=11,
+            formatter=fmt_latency_ms,
         )
     parts.append("</svg>\n")
     return "".join(parts)
@@ -847,13 +861,13 @@ def render_batch_isolation_section_svg() -> str:
     package = root / "benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/analysis.json"
     results = json.loads(package.read_text())["selected_configuration_results"]
     rows = [
-        ("Real-time", results["realtime"]["median_p95_ttft_ms"], teal),
+        ("realtime", results["realtime"]["median_p95_ttft_ms"], teal),
         ("Standard", results["standard"]["median_p95_ttft_ms"], blue),
         ("Batch", results["batch"]["median_p95_ttft_ms"], orange),
     ]
     return render_scenario_latency_svg(
         rows,
-        "Real-time and standard traffic stayed below one second median surge p95 TTFT while batch exceeded 13 seconds.",
+        "realtime and standard traffic stayed below one second median surge p95 TTFT while batch exceeded 13 seconds.",
         chart_left=170.0,
     )
 
@@ -900,7 +914,7 @@ def render_batch_isolation_traffic_svg() -> str:
         return bottom - value / ceiling * (bottom - top)
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Measured request rate during the selected batch-isolation repeat shows batch traffic filling the shared pool while real-time and standard traffic remain steady">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Measured request rate during the selected batch-isolation repeat shows batch traffic filling the shared pool while realtime and standard traffic remain steady">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="6" fill="#ffffff" stroke="{LINE}"/>',
         text(left, 26, "Requests per second", 10, 700, MUTED),
@@ -916,7 +930,7 @@ def render_batch_isolation_traffic_svg() -> str:
     for tenant in tenants:
         points = " ".join(f"{x(second):.1f},{y(value):.1f}" for second, value in rates[tenant])
         parts.append(f'<polyline points="{points}" fill="none" stroke="{colors[tenant]}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>')
-    legend = [("Real-time", "realtime"), ("Standard", "standard"), ("Batch", "batch")]
+    legend = [("realtime", "realtime"), ("Standard", "standard"), ("Batch", "batch")]
     for index, (label, tenant) in enumerate(legend):
         lx = 250 + index * 190
         parts.append(f'<line x1="{lx}" y1="270" x2="{lx+28}" y2="270" stroke="{colors[tenant]}" stroke-width="4"/>')
@@ -1160,9 +1174,9 @@ def render_dispatch_path_svg() -> str:
 
 
 def render_batch_interference_takeaway_svg() -> str:
-    """Compare real-time latency with vertical log-scale columns."""
+    """Compare realtime latency with vertical log-scale columns."""
     orange = "#c56a00"
-    values = [("Real-time only", 0.133, "133 ms", "#667180"), ("Batch running", 15.378, "15.4 s", orange)]
+    values = [("realtime only", 0.133, "133 ms", "#667180"), ("Batch running", 15.378, "15.4 s", orange)]
     height = 300
     top, bottom = 62.0, 236.0
     log_min, log_max = math.log10(0.1), math.log10(30.0)
@@ -1172,12 +1186,12 @@ def render_batch_interference_takeaway_svg() -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Batch in vLLM raised real-time p95 TTFT from 133 ms to 15.4 seconds">',
+        f'role="img" aria-label="Batch in vLLM raised realtime p95 TTFT from 133 ms to 15.4 seconds">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="4" fill="{orange}" rx="6"/>',
-        text(38, 40, "Real-time p95 TTFT (seconds, log scale)", 12, 700, MUTED),
+        text(38, 40, "realtime p95 TTFT (seconds, log scale)", 12, 700, MUTED),
     ]
     for seconds in (0.1, 0.3, 1, 3, 10, 30):
         yp = y(seconds)
@@ -1250,14 +1264,14 @@ def render_mixed_takeaway_svg() -> str:
     bar_w = 88
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Request-count admission lowered real-time p95 time to first token by 920 milliseconds; input-token admission made batch p95 time to first token about 3 times lower.">',
+        f'role="img" aria-label="Request-count admission lowered realtime p95 time to first token by 920 milliseconds; input-token admission made batch p95 time to first token about 3 times lower.">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
         f'<rect x="20" y="10" width="{PANEL_W}" height="4" fill="{blue}" rx="6"/>',
         text(38, 42, "Median surge p95 TTFT", 12, 740, MUTED),
         f'<rect x="38" y="{TAKEAWAY_INNER_TOP}" width="382" height="{inner_h}" fill="#f7f8fa" stroke="{LINE}" rx="6"/>',
-        text(56, 91, "Real-time", 12, 760, INK),
+        text(56, 91, "realtime", 12, 760, INK),
     ]
     prem_max = tok_premium
     for index, (label, value, color) in enumerate(
@@ -1452,7 +1466,7 @@ def render_batch_eviction_takeaway_svg() -> str:
         return f'<marker id="{marker_id}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="{color}"/></marker>'
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Reserved capacity dispatches real-time requests while batch waits in the Endpoint Picker. After an eligible running batch is evicted, the Endpoint Picker sends a retryable response through Gateway and Envoy, Envoy resets the vLLM stream, and the batch client retries through the same Gateway, Endpoint Picker, and vLLM request path.">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Reserved capacity dispatches realtime requests while batch waits in the Endpoint Picker. After an eligible running batch is evicted, the Endpoint Picker sends a retryable response through Gateway and Envoy, Envoy resets the vLLM stream, and the batch client retries through the same Gateway, Endpoint Picker, and vLLM request path.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect width="{WIDTH}" height="{height}" fill="#ffffff"/>',
         f'<rect x="10" y="10" width="{WIDTH - 20}" height="{height - 20}" rx="8" fill="#ffffff" stroke="{LINE}"/>',
@@ -1466,7 +1480,7 @@ def render_batch_eviction_takeaway_svg() -> str:
         text(764, 99, "running capacity", 7.2, 650, MUTED, "middle"),
         arrow("M172 103 H222", gray, "gray-arrow"),
         f'<rect x="244" y="82" width="382" height="28" rx="5" fill="#ffffff" stroke="{teal}"/>',
-        text(260, 100, "real-time", 8.2, 760, teal),
+        text(260, 100, "realtime", 8.2, 760, teal),
         ''.join(f'<rect x="{330 + i * 14}" y="91" width="9" height="10" rx="2" fill="{teal}"/>' for i in range(3)),
         arrow("M626 96 H704", teal, "teal-arrow", 2.0),
         f'<rect x="244" y="118" width="382" height="28" rx="5" fill="#fff8f0" stroke="{orange}"/>',
@@ -1612,7 +1626,7 @@ def render_batch_retry_evidence_svg() -> str:
 
 
 def render_batch_eviction_data_svg(root: Path) -> str:
-    """Compare each condition directly with the real-time-only TTFT reference."""
+    """Compare each condition directly with the realtime-only TTFT reference."""
     teal = "#087f72"
     source = root / "benchmark-data/batch-eviction/single-model-replica/summary.csv"
     grouped: dict[str, list[float]] = {}
@@ -1621,8 +1635,8 @@ def render_batch_eviction_data_svg(root: Path) -> str:
             grouped.setdefault(row["scenario"], []).append(float(row["realtime_p95_ttft_ms"]))
     reference = statistics.median(grouped["Realtime only"])
     scenarios = [
-        ("Real-time only", "Realtime only", "#65717e"),
-        ("Batch, no protection", "Realtime with batch and no protection", "#b83232"),
+        ("realtime only", "Realtime only", "#65717e"),
+        ("batch, no protection", "Realtime with batch and no protection", "#b83232"),
         ("Reserved capacity", "Realtime with reserved capacity", "#087f72"),
         ("Reserved + eviction", "Realtime with reserved capacity, batch eviction, and retry", "#087f72"),
     ]
@@ -1636,10 +1650,10 @@ def render_batch_eviction_data_svg(root: Path) -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" '
-        f'role="img" aria-label="Real-time-only p95 time to first token measured 342 milliseconds. Unprotected batch measured 561 milliseconds. Reserved capacity measured 341 milliseconds and reserved capacity with eviction measured 348 milliseconds.">',
+        f'role="img" aria-label="realtime-only p95 time to first token measured 342 milliseconds. Unprotected batch measured 561 milliseconds. Reserved capacity measured 341 milliseconds and reserved capacity with eviction measured 348 milliseconds.">',
         '<style>text{font-family:system-ui,-apple-system,sans-serif}</style>',
         f'<rect x="1" y="1" width="{WIDTH - 2}" height="{height - 2}" rx="6" fill="#ffffff" stroke="{LINE}"/>',
-        text(28, 30, "Real-time p95 TTFT (milliseconds)", 10, 700, MUTED),
+        text(28, 30, "realtime p95 TTFT (milliseconds)", 10, 700, MUTED),
         text(852, 30, f"Reference line: {reference:.0f} ms", 9, 750, "#22313f", "end"),
     ]
     for tick in (0, 200, 400, 600):
@@ -1666,7 +1680,7 @@ def render_routing_takeaway_svg() -> str:
     comparisons = json.loads(source.read_text())["overall_latency_comparison"]
     rows = [row for row in comparisons if row["metric"] == "p95 TTFT"]
     labels = {
-        "realtime-chat": "Real-time chat",
+        "realtime-chat": "realtime chat",
         "agentic": "Agentic",
         "standard-long-context": "Standard long context",
         "batch-long-context": "Batch long context",
@@ -1683,7 +1697,7 @@ def render_routing_takeaway_svg() -> str:
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
-        f'role="img" aria-label="Prefix-aware routing lowered p95 TTFT for real-time chat, agentic, and batch requests, while standard long-context p95 TTFT increased.">',
+        f'role="img" aria-label="Prefix-aware routing lowered p95 TTFT for realtime chat, agentic, and batch requests, while standard long-context p95 TTFT increased.">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect width="{width}" height="{height}" fill="{PAGE}"/>',
         f'<rect x="10" y="10" width="{width - 20}" height="{height - 20}" fill="{SURFACE}" stroke="{LINE}" rx="6"/>',
@@ -1743,7 +1757,7 @@ def render_detector_comparison_takeaway_svg(root: Path) -> str:
         ),
     ]
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Request-count admission kept real-time p95 TTFT lower than queue-depth detection in two directly compared scenarios">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-label="Request-count admission kept realtime p95 TTFT lower than queue-depth detection in two directly compared scenarios">',
         f'<style>text{{font-family:system-ui,-apple-system,sans-serif}}</style>',
         f'<rect x="1" y="1" width="{WIDTH - 2}" height="{height - 2}" fill="{SURFACE}" stroke="{LINE}"/>',
     ]

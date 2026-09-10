@@ -53,6 +53,21 @@
     .result-grid strong { display: block; font-size: 27px; line-height: 1.08; }
     .result-grid p, .result-grid span { margin: 12px 0 0; color: #b9c5d0; line-height: 1.5; }
     .result-grid small { color: #67d4c7; font-weight: 750; }
+    .config-selection { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 0 28px; border-top: 3px solid var(--teal); background: var(--surface); }
+    .config-selection-title { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .config-selection > div { min-width: 0; padding: 17px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .config-selection > div:first-child { border-left: 1px solid var(--line); }
+    .config-selection strong { display: block; margin-bottom: 5px; font-size: 13px; }
+    .config-selection span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .config-path { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; counter-reset: phase; }
+    .config-step { position: relative; min-width: 0; padding: 20px 18px 18px; border: 1px solid var(--line); background: var(--surface); }
+    .config-step::before { counter-increment: phase; content: counter(phase); display: flex; width: 28px; height: 28px; align-items: center; justify-content: center; margin-bottom: 15px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 800; }
+    .config-step:not(:last-child)::after { content: "→"; position: absolute; z-index: 2; top: 24px; right: -13px; width: 12px; color: var(--teal); font-size: 18px; font-weight: 800; text-align: center; }
+    .config-step h3 { margin: 0; font-size: 18px; line-height: 1.2; }
+    .config-step > p { min-height: 66px; margin: 8px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .suite-list { display: grid; gap: 7px; }
+    .suite-list a { padding-top: 7px; border-top: 1px solid var(--line); color: var(--blue); font-size: 12px; font-weight: 750; line-height: 1.35; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .config-decision { margin: 16px 0 0; padding-top: 14px; border-top: 2px solid var(--teal); color: var(--ink); font-size: 12px; font-weight: 750; line-height: 1.45; }
     .business-table-wrap { overflow-x: auto; border-top: 3px solid var(--blue); background: var(--surface); }
     .business-table { min-width: 820px; margin: 0; }
     .business-table th:first-child { width: 34%; }
@@ -63,8 +78,14 @@
     .business-table td:nth-child(2) { color: var(--muted); }
     .business-table a { color: var(--blue); font-weight: 750; text-underline-offset: 3px; }
     .configuration-summary { max-width: 900px; margin: -4px 0 26px; color: var(--muted); font-size: 17px; line-height: 1.55; }
-    .architecture-diagram { margin: 0 0 30px; overflow-x: auto; border: 1px solid var(--line); border-top: 3px solid var(--teal); background: var(--surface); }
-    .architecture-svg { display: block; width: 100%; min-width: 760px; height: auto; }
+    .architecture-diagram { margin: 0 0 30px; overflow: hidden; border: 1px solid var(--line); border-top: 3px solid var(--teal); background: var(--surface); }
+    .architecture-diagram img { display: block; width: 100%; height: auto; }
+    .architecture-diagram figcaption { padding: 12px 18px 14px; color: var(--muted); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); }
+    .report-visual { margin: 0 0 30px; overflow: hidden; border: 1px solid var(--line); border-top: 3px solid var(--blue); background: var(--surface); }
+    .report-visual img { display: block; width: 100%; height: auto; }
+    .report-visual figcaption { padding: 12px 18px 14px; color: var(--muted); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); }
+    .calibration-details { margin: 0 0 22px; }
+    .calibration-details .chart-grid { padding: 0 18px 18px; }
     .arch-boundary { fill: #fff; stroke: #aebac6; stroke-width: 1.5; }
     .arch-boundary.epp { stroke: var(--teal); stroke-width: 2.5; }
     .arch-subsystem { fill: #f5f7f9; stroke: #cbd4dd; stroke-width: 1; }
@@ -92,9 +113,10 @@
     .decision-table strong { font-size: 13px; }
     .decision-table span { color: var(--muted); font-size: 12px; line-height: 1.45; }
     .decision-table .signal { color: var(--ink); font-weight: 750; }
-    .headroom-guide { margin: 18px 0 0; border: 1px solid var(--line); background: var(--surface); }
-    .headroom-guide img { display: block; width: 100%; height: auto; }
-    .headroom-guide figcaption { padding: 12px 18px 14px; color: var(--muted); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); }
+    .headroom-guide { margin: 18px 0 0; padding: 18px; border: 1px solid var(--line); border-top: 3px solid var(--blue); background: var(--surface); }
+    .headroom-guide h4 { margin: 0 0 8px; font-size: 17px; }
+    .headroom-guide p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .headroom-guide code { color: var(--ink); font-weight: 750; }
     .capacity-note { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.4; }
     .section-evidence { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .band { padding: 62px 0; border-bottom: 1px solid var(--line); }
@@ -114,10 +136,6 @@
     .chart h4 { margin: 18px 0 7px; font-size: 11px; color: var(--muted); text-transform: uppercase; }
     .takeaway { margin: 7px 0 20px; color: var(--muted); line-height: 1.45; }
     .caption { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
-    .report-embed-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
-    .report-embed-links a { padding: 8px 14px; border: 1px solid var(--line); border-radius: 4px; color: var(--blue); font-size: 13px; font-weight: 700; text-decoration: none; background: var(--surface); }
-    .report-embed-links a:hover { border-color: var(--blue); }
-    .report-embed-frame { display: block; width: 100%; height: min(920px, 85vh); border: 1px solid var(--line); background: #f3f5f7; }
     .metric-split { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
     .bar-chart { position: relative; }
     .bar-row { display: grid; grid-template-columns: 118px 1fr 78px; gap: 10px; align-items: center; min-height: 31px; }
@@ -130,6 +148,11 @@
     .bar.violet { background: var(--violet); }
     .bar-value { text-align: right; font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .sweep-chart, .phase-chart { margin-top: 16px; }
+    .sweep-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 8px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .sweep-key span { display: inline-flex; align-items: center; gap: 6px; }
+    .sweep-key i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; background: var(--teal); }
+    .sweep-key i.latency { background: var(--amber); }
+    .sweep-key i.premium { background: var(--blue); }
     .sweep-svg, .phase-svg { display: block; width: 100%; height: auto; overflow: visible; }
     .plot-grid { stroke: #dfe5eb; stroke-width: 1; vector-effect: non-scaling-stroke; }
     .plot-axis { fill: var(--muted); font-size: 12px; }
@@ -166,14 +189,39 @@
     .heat-label { display: flex; flex-direction: column; justify-content: center; padding: 9px 7px; border: 1px solid var(--line); font-size: 11px; font-weight: 750; }
     .heat-label small { margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 600; }
     .heat-cell { display: flex; min-height: 54px; align-items: center; justify-content: center; padding: 7px; border: 1px solid rgba(21,32,43,.08); background: #eef2f5; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 10px; }
-    .heat-gradient { width: 120px; height: 8px; background: linear-gradient(90deg, rgba(197,106,0,.17), rgba(197,106,0,.85)); }
     .screening { display: inline-block; margin-top: 4px; padding: 2px 4px; border: 1px solid currentColor; color: var(--amber); font-size: 8px; line-height: 1; text-transform: uppercase; }
     .bar-key { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 2px 0 14px; color: var(--muted); font-size: 10px; }
     .bar-key span { display: inline-flex; align-items: center; gap: 5px; }
     .swatch { width: 14px; height: 4px; background: var(--key); }
     .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
     .scenario { border-top-color: var(--teal); }
+    .production-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .outcome-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: -8px 0 18px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .outcome-key span { display: inline-flex; align-items: center; gap: 6px; }
+    .outcome-key i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; background: #8ca9a4; }
+    .outcome-key i.dot { width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+    .outcome-key i.area { width: 18px; height: 11px; border-right: 1px dashed #9aa7b4; border-radius: 0; background: rgba(8,127,114,.08); }
+    .outcome-card { margin: 0; padding: 22px; border: 1px solid var(--line); border-top: 3px solid var(--teal); background: var(--surface); min-width: 0; }
+    .outcome-card--wide { grid-column: 1 / -1; }
+    .outcome-card h3 { margin: 0; font-size: 21px; line-height: 1.2; }
+    .outcome-card .takeaway { min-height: 66px; }
+    .outcome-evidence-visual { display: block; width: 100%; height: auto; margin-top: 18px; }
+    .outcome-plot { margin-top: 18px; }
+    .outcome-axis, .outcome-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) 76px; gap: 10px; }
+    .outcome-axis { align-items: end; min-height: 30px; }
+    .outcome-axis-track { position: relative; height: 28px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+    .outcome-axis-track span { position: absolute; bottom: 5px; left: var(--x); transform: translateX(-50%); white-space: nowrap; }
+    .outcome-axis-track span:first-child { transform: none; }
+    .outcome-axis-track span:last-child { transform: translateX(-100%); }
+    .outcome-row { align-items: center; min-height: 34px; }
+    .outcome-label { font-size: 11px; font-weight: 750; line-height: 1.2; }
+    .outcome-track { position: relative; height: 18px; border-bottom: 1px solid #dfe5eb; background: linear-gradient(to right, rgba(8,127,114,.055) 0 26.1%, transparent 26.1% 100%); }
+    .outcome-track::after { content: ""; position: absolute; top: 0; bottom: -1px; left: 26.1%; border-left: 1px dashed #9aa7b4; }
+    .outcome-interval { position: absolute; z-index: 1; top: 8px; left: var(--low); width: calc(var(--high) - var(--low)); height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--tone) 52%, #ffffff); }
+    .outcome-point { position: absolute; z-index: 2; top: 3px; left: var(--mid); width: 13px; height: 13px; border: 2px solid var(--surface); border-radius: 50%; transform: translateX(-50%); background: var(--tone); box-shadow: 0 0 0 1px var(--tone); }
+    .outcome-value { color: var(--tone); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .outcome-caption { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .outcome-caption a { color: var(--blue); font-weight: 750; text-underline-offset: 3px; }
     .latency-chart { position: relative; padding-top: 30px; }
     .axis { position: absolute; top: 0; left: 128px; right: 56px; height: 22px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; }
     .axis span { position: absolute; bottom: 4px; transform: translateX(-50%); white-space: nowrap; }
@@ -208,6 +256,7 @@
     .traffic-axis-label { fill: var(--muted); font-size: 10px; }
     .traffic-method { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .comparison-set { margin-top: 52px; }
+    #detectors .comparison-set { margin-top: 0; }
     .comparison-set > .section-head { grid-template-columns: minmax(0, 820px); }
     .comparison-answer { max-width: 940px; margin: 24px 0 0; padding-top: 18px; border-top: 2px solid var(--teal); font-size: 20px; line-height: 1.45; }
     .pair-key { display: flex; gap: 18px; margin-bottom: 12px; color: var(--muted); font-size: 10px; }
@@ -231,24 +280,16 @@
     .package { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
     .package a { font-weight: 750; text-decoration-thickness: 1px; text-underline-offset: 3px; }
     .package span { color: var(--muted); font-size: 12px; text-align: right; }
-    .evidence-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 30px; }
-    .evidence-card { margin: 0; overflow: hidden; border: 1px solid var(--line); border-top: 3px solid var(--blue); background: var(--surface); }
-    .evidence-card.teal { border-top-color: var(--teal); }
-    .evidence-card.amber { border-top-color: var(--amber); }
-    .evidence-card.violet { border-top-color: var(--violet); }
-    .evidence-card.red { border-top-color: var(--red); }
-    .evidence-card figcaption { padding: 18px 20px 16px; }
-    .evidence-card h3 { margin: 0; font-size: 18px; }
-    .evidence-card p { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-    .evidence-card a { display: block; color: inherit; text-decoration: none; }
-    .evidence-card img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-top: 1px solid var(--line); background: #f8fafb; }
-    .evidence-card a:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
     footer { padding: 30px 0 50px; color: var(--muted); font-size: 12px; line-height: 1.5; }
     @media (max-width: 820px) {
       .topbar-inner { align-items: flex-start; padding: 14px 0; }
       nav { display: none; }
       .hero h1 { font-size: 48px; }
-      .result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .evidence-gallery { grid-template-columns: 1fr; }
+      .result-grid, .chart-grid, .chart-grid.three, .scenario-grid, .packages, .section-head, .traffic-grid, .config-selection, .config-path { grid-template-columns: 1fr; }
+      .production-results { grid-template-columns: 1fr; }
+      .config-selection > div { border-left: 1px solid var(--line); }
+      .config-step:not(:last-child)::after { content: "↓"; top: auto; right: 50%; bottom: -17px; width: 18px; transform: translateX(50%); background: var(--page); }
+      .config-step > p { min-height: 0; }
       .decision-table { grid-template-columns: 120px 145px 1fr; overflow-x: auto; }
       .detector-map { grid-template-columns: 1fr; }
       .detector-map > div { border-right: 0; border-bottom: 1px solid var(--line); }
@@ -282,6 +323,13 @@
       .decision-table { display: block; }
       .decision-table > div { display: grid; grid-template-columns: 1fr; padding: 12px 0; border-bottom: 1px solid var(--line); }
       .decision-table strong, .decision-table span { padding: 4px 14px; border-bottom: 0; }
+      .outcome-card .takeaway { min-height: 0; }
+      .outcome-axis, .outcome-row { grid-template-columns: 88px minmax(0, 1fr) 64px; gap: 6px; }
+      .outcome-label, .outcome-value { font-size: 10px; }
+      .outcome-axis-track { font-size: 8px; }
+      .calibration-details .plot-axis { font-size: 16px; }
+      .calibration-details .plot-value { font-size: 18px; }
+      .calibration-details .plot-selected-label { font-size: 15px; }
     }
   </style>
 </head>
@@ -292,9 +340,9 @@
       <nav aria-label="Report sections">
         <a href="../../sections.html">All sections</a>
         <a href="#result">Result</a>
-        <a href="#questions">Questions</a>
         <a href="#configuration">Configuration</a>
         <a href="#production">Production traffic</a>
+        <a href="#detectors">Admission signals</a>
         <a href="#workloads">Workloads</a>
         <a href="#scale">Scale and recovery</a>
         <a href="#packages">Evidence</a>
@@ -305,19 +353,19 @@
   <main>
     <header class="hero" id="result">
       <h1>Flow control benchmark: Endpoint Picker v0.9.0</h1>
-      <p>Can one shared model pool protect priority traffic across different request shapes and a larger model pool?</p>
-      <p><strong>Answer:</strong> Flow control protected higher-priority realtime traffic, and separate tests showed which admission setting fit each workload shape.</p>
+      <p>Can one shared model pool enforce priority and fairness under bursty, production-shaped traffic?</p>
+      <p><strong>Answer:</strong> Across three mixed-priority scenarios, lower-priority work absorbed most of the queuing delay. In a separate same-priority test, two peer tenants remained below 700 ms p95 TTFT while a bursting tenant waited longer. Separate tests identified the tradeoffs among request-count, token-count, and backend-pressure admission signals.</p>
     </header>
 
     <section class="result-band" aria-label="Benchmark result">
       <div class="result-grid">
         <div>
-          <h2>Higher-priority realtime traffic stayed faster across four production-shaped scenarios.</h2>
-          <p>Three scenarios met the repeat-stability gate. Batch isolation showed the same ordering in every repeat, but its latency spread was too wide for a stable point estimate.</p>
+          <h2>The tests showed two distinct protections: priority separation and same-priority fairness.</h2>
+          <p>Lower-priority work absorbed most of the queuing delay in three mixed-priority scenarios. In the fourth, configured round-robin fairness kept peer tenants moving within one priority band. Three scenarios met the repeat-stability gate; batch isolation remained directional evidence.</p>
         </div>
         <div>
-          <strong>Steady realtime latency</strong>
-          <span>Across the three stable scenarios, retained realtime tenants recorded median p95 time to first token (TTFT) from 404 to 570 ms.</span>
+          <strong>Measured latency under surge</strong>
+          <span>Across the three repeat-stable scenarios, latency-sensitive tiers or peer tenants recorded median p95 time to first token (TTFT) from 404 to 570 ms.</span>
           <small>Flow control engaged in every retained run</small>
         </div>
         <div>
@@ -328,78 +376,125 @@
       </div>
     </section>
 
-    <section class="band white" id="questions">
+    <section class="band white" id="configuration">
       <div class="section-head">
-        <h2>Business questions</h2>
+        <h2>How the benchmark chose its configuration</h2>
+        <p>Twelve evidence suites form one decision path. Calibration established a production starting point; later suites tested where it held, where another signal helped, and where stable v0.9 admission control stopped.</p>
       </div>
-      <div class="business-table-wrap">
-        <table class="business-table">
-          <thead>
-            <tr><th>Business question</th><th>Answer</th><th>Evidence</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Can realtime and lower-priority traffic share the same GPU?</td>
-              <td>Higher-priority realtime traffic stayed faster in all four scenarios; three met the repeat-stability gate, while batch isolation remained directional evidence.</td>
-              <td><a href="production-scenarios/">Production traffic</a></td>
-            </tr>
-            <tr>
-              <td>Which detector produced lower realtime latency?</td>
-              <td>Request-count admission kept realtime p95 TTFT lower than queue-depth detection in both matched production scenarios.</td>
-              <td><a href="#production">Detector comparison</a></td>
-            </tr>
-            <tr>
-              <td>When should admission count requests, tokens, or backend pressure?</td>
-              <td>Count requests for similarly sized, latency-sensitive traffic; count input tokens when prompt sizes vary materially; use queue depth or KV-cache pressure as reactive backend signals.</td>
-              <td><a href="#admission-guide">Admission guide</a></td>
-            </tr>
-            <tr>
-              <td>What does headroom change?</td>
-              <td>It prevents lower-priority work from consuming the final portion of the selected admission limit, leaving room for higher-priority bursts.</td>
-              <td><a href="#headroom-guide">Headroom</a></td>
-            </tr>
-            <tr>
-              <td>How much can running batch interfere with realtime traffic?</td>
-              <td>Under request-count admission, running batch increased realtime p95 TTFT from 133 ms to 15,378 ms.</td>
-              <td><a href="batch-interference/">Batch interference</a></td>
-            </tr>
-            <tr>
-              <td>Can realtime latency be protected after batch starts?</td>
-              <td>Reserved capacity kept realtime p95 TTFT near its realtime-only reference, and experimental eviction safely retried interrupted batch work.</td>
-              <td><a href="../batch-eviction/single-model-replica/results.html">Eviction and retry</a></td>
-            </tr>
-            <tr>
-              <td>Should admission count requests or input tokens?</td>
-              <td>Request count produced lower realtime latency, while input-token admission lowered long-context and batch latency in the mixed workload.</td>
-              <td><a href="mixed-production-workload/">Mixed workload</a></td>
-            </tr>
-            <tr>
-              <td>Does the service recover after repeated surges?</td>
-              <td>The queue drained after both surges and every request completed.</td>
-              <td><a href="long-stability/">Long stability</a></td>
-            </tr>
-            <tr>
-              <td>Does per-GPU throughput hold as the model pool grows?</td>
-              <td>Served throughput per GPU stayed within 0.6% from one to four model replicas.</td>
-              <td><a href="multi-replica-scaling/">Model-pool scaling</a></td>
-            </tr>
-            <tr>
-              <td>Where did prefix-aware routing help most?</td>
-              <td>Premium chat improved most, with 22% lower median p95 TTFT; broader gains were limited because both replicas already had about a 74% cache-hit rate, while affinity routing increased route imbalance and long-context latency.</td>
-              <td><a href="prefix-cache-routing/">Prefix routing</a></td>
-            </tr>
-          </tbody>
-        </table>
+      <h3 class="config-selection-title">Configuration carried into the four production scenarios</h3>
+      <div class="config-selection" aria-label="Configuration carried into the production scenarios">
+        <div><strong>vLLM concurrency</strong><span>128 maximum sequences</span></div>
+        <div><strong>vLLM token budget</strong><span>8,192 maximum batched tokens</span></div>
+        <div><strong>Endpoint Picker admission</strong><span>128 in-flight requests with 10% detector headroom; 15% in batch isolation</span></div>
+        <div><strong>Queue policies tested</strong><span>Round-robin fairness across tenant flows; first-come-first-served ordering within each flow</span></div>
       </div>
+      <div class="config-path" aria-label="Four phases of the v0.9 benchmark campaign">
+        <article class="config-step">
+          <h3>Set engine capacity</h3>
+          <p>Find an execution point that keeps the GPU fed without paying a large tail-latency penalty.</p>
+          <div class="suite-list">
+            <a href="engine-configuration/">Engine capacity and configuration</a>
+          </div>
+          <p class="config-decision">Carried forward: 128 sequences and an 8,192-token scheduler budget.</p>
+        </article>
+        <article class="config-step">
+          <h3>Choose admission signals</h3>
+          <p>Compare proactive request or token accounting with reactive queue-depth and KV-cache pressure.</p>
+          <div class="suite-list">
+            <a href="request-and-token-admission-calibration/">Request and token admission</a>
+            <a href="utilization-detector-calibration/">Utilization detector calibration</a>
+            <a href="request-concurrency-priority-tuning/">Earlier request-cap priority tuning</a>
+          </div>
+          <p class="config-decision">Carried forward: request count 128 as the production starting point; other signals remained workload-specific options.</p>
+        </article>
+        <article class="config-step">
+          <h3>Test production behavior</h3>
+          <p>Exercise priority, fairness, request-shape variation, and the boundary created by work already running in vLLM.</p>
+          <div class="suite-list">
+            <a href="production-scenarios/">Production scenarios</a>
+            <a href="selected-workload-shapes/">Selected workload shapes</a>
+            <a href="mixed-production-workload/">Mixed production workload</a>
+            <a href="long-context-admission/">Long-context admission</a>
+            <a href="batch-interference/">Batch interference</a>
+          </div>
+          <p class="config-decision">Decision: keep request count as the reference, test input tokens for heterogeneous prompts, and state the after-dispatch limit explicitly.</p>
+        </article>
+        <article class="config-step">
+          <h3>Harden the result</h3>
+          <p>Check whether the selected starting point survives more replicas, repeated surges, and a different routing strategy.</p>
+          <div class="suite-list">
+            <a href="multi-replica-scaling/">Model-pool scaling</a>
+            <a href="long-stability/">Long stability</a>
+            <a href="prefix-cache-routing/">Prefix-cache routing</a>
+          </div>
+          <p class="config-decision">Boundary: scale and recovery held in the tested topology; prefix-aware routing did not justify a default change.</p>
+        </article>
+      </div>
+      <p class="section-evidence">The production scenarios used one H100, one model replica, random routing, and prefix caching off unless a package states otherwise. Each linked suite records its own method, repeats, and claim boundary.</p>
     </section>
 
-    <section class="band" id="configuration">
+    <section class="band" id="production">
       <div class="section-head">
-        <h2>How the configuration was selected</h2>
-        <p>Two layers were tuned before production traffic: the Endpoint Picker decides what may enter, and vLLM decides how much work may run.</p>
+        <h2>What happened under production-shaped surges?</h2>
+        <p>Three scenarios ask how priority tiers share one model pool. A fourth asks whether peers within one priority band keep receiving dispatch turns.</p>
+      </div>
+      <p class="outcome-key" aria-label="Key for the three production range plots">Range-plot key:<span><i class="dot"></i>Dot: median run</span><span><i></i>Line: minimum–maximum across three repeats</span><span><i class="area"></i>Pale area: under 1 second, shown as a reference—not an SLO</span></p>
+      <div class="production-results">
+        <figure class="outcome-card">
+          <h3>Priority tiers</h3>
+          <p class="takeaway">Platinum, Gold, and Silver recorded subsecond median p95 TTFT; Bronze Batch reached 13.3 seconds.</p>
+          <div class="outcome-plot" role="img" aria-label="Priority tiers. Median surge p95 time to first token was 404 milliseconds for Platinum, 511 milliseconds for Gold, 656 milliseconds for Silver, and 13.3 seconds for Bronze Batch. Lines show the observed range across three repeats.">
+            <div class="outcome-axis" aria-hidden="true"><span></span><div class="outcome-axis-track"><span style="--x:0%">0.3 s</span><span style="--x:26.1%">1 s</span><span style="--x:50%">3 s</span><span style="--x:76.1%">10 s</span><span style="--x:100%">30 s</span></div><span></span></div>
+            <div class="outcome-row" style="--low:4.43%;--mid:6.49%;--high:10.47%;--tone:var(--teal)"><span class="outcome-label">Platinum</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="404"></i></span><span class="outcome-value">404 ms</span></div>
+            <div class="outcome-row" style="--low:7.01%;--mid:11.56%;--high:14.85%;--tone:#a97800"><span class="outcome-label">Gold</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="511"></i></span><span class="outcome-value">511 ms</span></div>
+            <div class="outcome-row" style="--low:14.78%;--mid:16.99%;--high:20.68%;--tone:var(--blue)"><span class="outcome-label">Silver</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="656"></i></span><span class="outcome-value">656 ms</span></div>
+            <div class="outcome-row" style="--low:79.10%;--mid:82.28%;--high:88.58%;--tone:var(--amber)"><span class="outcome-label">Bronze Batch</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="13264"></i></span><span class="outcome-value">13,264 ms</span></div>
+          </div>
+          <figcaption class="outcome-caption">Dot: median of each run's surge-window p95 TTFT. Line: observed minimum–maximum across three repeats. Ranges: Platinum 368–486 ms; Gold 414–594 ms; Silver 592–778 ms; Bronze Batch 11,458–17,728 ms. <a href="production-scenarios/priority-tiers/">Open evidence package</a>.</figcaption>
+        </figure>
+        <figure class="outcome-card">
+          <h3>Batch isolation</h3>
+          <p class="takeaway">realtime and Standard recorded lower p95 TTFT than Batch in every repeat, but their repeat spread exceeded the stability gate.</p>
+          <div class="outcome-plot" role="img" aria-label="Batch isolation. Median surge p95 time to first token was 442 milliseconds for realtime, 515 milliseconds for Standard, and 13.1 seconds for Batch. Lines show the observed range across three repeats; realtime and Standard exceeded the repeat-stability gate.">
+            <div class="outcome-axis" aria-hidden="true"><span></span><div class="outcome-axis-track"><span style="--x:0%">0.3 s</span><span style="--x:26.1%">1 s</span><span style="--x:50%">3 s</span><span style="--x:76.1%">10 s</span><span style="--x:100%">30 s</span></div><span></span></div>
+            <div class="outcome-row" style="--low:4.59%;--mid:8.41%;--high:17.42%;--tone:var(--teal)"><span class="outcome-label">realtime</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="442"></i></span><span class="outcome-value">442 ms</span></div>
+            <div class="outcome-row" style="--low:8.10%;--mid:11.75%;--high:26.51%;--tone:var(--blue)"><span class="outcome-label">Standard</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="515"></i></span><span class="outcome-value">515 ms</span></div>
+            <div class="outcome-row" style="--low:79.04%;--mid:81.97%;--high:85.30%;--tone:var(--amber)"><span class="outcome-label">Batch</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="13077"></i></span><span class="outcome-value">13,077 ms</span></div>
+          </div>
+          <figcaption class="outcome-caption"><strong>Directional evidence.</strong> realtime ranged from 371–669 ms (1.81×); Standard ranged from 436–1,017 ms (2.33×), above the 1.5× stability gate. Batch ranged from 11,425–15,242 ms. <a href="production-scenarios/batch-isolation/">Open evidence package</a>.</figcaption>
+        </figure>
+        <figure class="outcome-card outcome-card--wide" id="consolidation-result">
+          <h3>Consolidation</h3>
+          <img class="outcome-evidence-visual" src="../../assets/readme/consolidation.svg" width="900" height="292" alt="During the consolidation surge, realtime tenants A and B remained near 500 milliseconds p95 time to first token while the lower-priority Standard burst reached about 25,900 milliseconds.">
+          <figcaption class="outcome-caption">The figure combines median outstanding requests across three repeats with the median of each run's 100–175 second surge-window p95 TTFT. Median surge p95 TTFT: realtime A 509 ms; realtime B 556 ms; Standard 25,892 ms. Exact ranges: realtime A 503–558 ms; realtime B 505–599 ms; Standard 22,833–27,307 ms. Configuration: one H100, one model replica, request-count limit 128, 10% detector headroom, prefix cache off. This is descriptive evidence from the tested single-GPU topology, not a universal latency guarantee. <a href="production-scenarios/consolidation/">Open evidence package</a>.</figcaption>
+        </figure>
+        <figure class="outcome-card">
+          <h3>Same-priority fairness</h3>
+          <p class="takeaway">With round-robin explicitly configured, peers B and C stayed below 700 ms while tenant A generated the burst.</p>
+          <div class="outcome-plot" role="img" aria-label="Same-priority fairness. Median surge p95 time to first token was 12.1 seconds for bursting tenant A, 527 milliseconds for peer B, and 570 milliseconds for peer C. Lines show the observed range across three repeats.">
+            <div class="outcome-axis" aria-hidden="true"><span></span><div class="outcome-axis-track"><span style="--x:0%">0.3 s</span><span style="--x:26.1%">1 s</span><span style="--x:50%">3 s</span><span style="--x:76.1%">10 s</span><span style="--x:100%">30 s</span></div><span></span></div>
+            <div class="outcome-row" style="--low:76.68%;--mid:80.28%;--high:84.88%;--tone:var(--amber)"><span class="outcome-label">Burster A</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="12097"></i></span><span class="outcome-value">12,097 ms</span></div>
+            <div class="outcome-row" style="--low:11.44%;--mid:12.23%;--high:15.73%;--tone:var(--teal)"><span class="outcome-label">Peer B</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="527"></i></span><span class="outcome-value">527 ms</span></div>
+            <div class="outcome-row" style="--low:13.67%;--mid:13.94%;--high:17.61%;--tone:var(--blue)"><span class="outcome-label">Peer C</span><span class="outcome-track"><i class="outcome-interval"></i><i class="outcome-point" data-value="570"></i></span><span class="outcome-value">570 ms</span></div>
+          </div>
+          <figcaption class="outcome-caption">Dot: median of each run's surge-window p95 TTFT. Line: observed minimum–maximum across three repeats. Peer ranges across three repeats: B 508–619 ms; C 563–675 ms. Round-robin was the tested policy, not the stable v0.9 default. <a href="production-scenarios/same-priority-fairness/">Open evidence package</a>.</figcaption>
+        </figure>
+      </div>
+      <p class="section-evidence">Priority tiers, Consolidation, and Same-priority fairness used 10% detector headroom; Batch isolation used 15%. Flow control engaged and policy queues were active in every retained run. The pale area in the three range plots ends at one second as a reading aid, not a declared service-level objective.</p>
+      <details class="traffic-panel"><summary id="traffic-title">Traffic sent during each surge</summary><div class="method"><div class="traffic-grid" id="traffic-grid"></div><p class="traffic-method">Each plot shows requests sent per second from 60 to 210 seconds and uses its own labeled y-axis range. The similar shapes are intentional: every scenario used the same surge window so differences in latency reflect the traffic mix and policy behavior. Prefix caching was off.</p></div></details>
+    </section>
+
+    <section class="band" id="configuration-details">
+      <div class="section-head">
+        <h2>Configuration evidence</h2>
+        <p>The Endpoint Picker controls what may enter; vLLM controls how much work may run. The decision map above links every suite, while this section keeps the mechanism and detailed calibration available for review.</p>
       </div>
       <p class="configuration-summary">These sweeps selected a starting configuration for the production tests. vLLM limits control how much work runs at once; Endpoint Picker limits control when new work queues. Tighter admission reduced realtime latency by shifting more waiting to lower-priority work.</p>
       <figure class="architecture-diagram">
+        <img src="../../assets/readme/epp-flow-control-queues.svg" alt="Requests enter the Endpoint Picker with an inference objective and a fairness identity, represented by a tenant label in these tests. The EPP combines the fairness identity and priority into a flow key, stores each flow in its own queue within a priority band, and selects a flow queue and its head request before dispatch.">
+        <figcaption>Priority selects a band. Fairness selects a flow within that band; in these runs, each fairness identity represented one tenant. Ordering selects that flow queue's head request. These benchmarks explicitly configured round-robin fairness; stable v0.9 defaults to global-strict fairness.</figcaption>
+      </figure>
+      <div hidden>
         <svg class="architecture-svg" viewBox="0 0 1120 430" role="img" aria-labelledby="architecture-title architecture-desc">
           <title id="architecture-title">Flow-control configuration architecture</title>
           <desc id="architecture-desc">Requests enter the Endpoint Picker with priority and size information. RequestConcurrencyDetector or UtilizationDetector signals control priority queues and headroom before dispatch to vLLM. vLLM queue depth and KV-cache pressure return as utilization signals.</desc>
@@ -460,8 +555,12 @@
           <path class="arch-signal" d="M942 340 V395 H505 V340"></path>
           <text class="arch-flow-label" x="724" y="416" text-anchor="middle">vLLM waiting requests and KV-cache pressure feed the utilization detector</text>
         </svg>
+      </div>
+      <figure class="report-visual">
+        <img src="../../assets/readme/admission-request-tradeoff.svg" alt="Connected scatterplot showing throughput and p95 time to first token across request caps from 16 through 160, with the selected cap of 128 highlighted.">
+        <figcaption>Closed-loop request-count calibration on one H100. Moving from cap 128 to 160 added 3% steady throughput while p95 TTFT increased 17%. Caps 16–96 were single calibration runs; caps 128 and 160 used three repeats. <a href="request-and-token-admission-calibration/">Open the evidence package.</a></figcaption>
       </figure>
-      <div class="chart-grid">
+      <details class="calibration-details"><summary>Seven calibration figures and selection details</summary><div class="chart-grid">
         <figure class="chart">
           <h3>vLLM active-request limit: 128 kept tail latency lower</h3>
           <p class="takeaway">Allowing 192 instead of 128 active requests added 1.4 requests/s, while p99 TTFT rose from 1,888 to 2,613 ms.</p>
@@ -489,7 +588,7 @@
         <figure class="chart wide violet">
           <h3>Lower request limits protected premium latency but made standard traffic wait longer</h3>
           <p class="takeaway">The 48-request limit produced the lowest premium p95 TTFT. Increasing the limit admitted more standard work sooner, but premium latency rose.</p>
-          <div class="sweep-chart" role="img" aria-label="Earlier two-tier request-count tuning comparing premium and standard p95 TTFT in milliseconds on one shared logarithmic y-axis from limits 32 through 128." data-labels="32|48|64|96|128" data-throughput="568|461|582|761|907" data-latency="12722|7808|5207|3714|2697" data-throughput-label="Premium p95 TTFT (ms)" data-latency-label="Standard p95 TTFT (ms)" data-x-label="In-flight request limit" data-shared-axis="true" data-selected="1"></div>
+          <div class="sweep-chart" role="img" aria-label="Earlier two-tier request-count tuning comparing premium and standard p95 TTFT in milliseconds on one shared logarithmic y-axis from limits 32 through 128." data-labels="32|48|64|96|128" data-throughput="568|461|582|761|907" data-latency="12722|7808|5207|3714|2697" data-throughput-label="Premium p95 TTFT (ms)" data-latency-label="Standard p95 TTFT (ms)" data-x-label="In-flight request limit" data-shared-axis="true" data-selected="1" data-show-all-values="true"></div>
           <figcaption class="caption">Both lines use the same logarithmic y-axis in milliseconds. This is a latency tradeoff between priority tiers, not a throughput comparison.</figcaption>
         </figure>
         <figure class="chart amber">
@@ -502,10 +601,9 @@
           <h3>Token-count admission handled mixed request sizes better than the output estimate</h3>
           <p class="takeaway">Counting exact prompt tokens served 21.4 requests/s; adding the output estimate reduced throughput to 6.8 requests/s.</p>
           <div class="heatmap" role="img" aria-label="Mixed-size admission calibration showing p95 TTFT for short, medium, and long requests across three admission methods."><span></span><span class="heat-head">Short</span><span class="heat-head">Medium</span><span class="heat-head">Long</span><span class="heat-label">Request count<small>18.8 RPS</small></span><span class="heat-cell" data-value="8419">8,419 ms</span><span class="heat-cell" data-value="5659">5,659 ms</span><span class="heat-cell" data-value="4163">4,163 ms</span><span class="heat-label">Input tokens<small>21.4 RPS</small></span><span class="heat-cell" data-value="6621">6,621 ms</span><span class="heat-cell" data-value="5213">5,213 ms</span><span class="heat-cell" data-value="6352">6,352 ms</span><span class="heat-label">Input + output estimate<small>6.8 RPS</small><span class="screening">one run</span></span><span class="heat-cell" data-value="41909">41,909 ms</span><span class="heat-cell" data-value="27952">27,952 ms</span><span class="heat-cell" data-value="13962">13,962 ms</span></div>
-          <div class="heat-legend"><span>4,163 ms</span><i class="heat-gradient"></i><span>41,909 ms</span></div>
           <figcaption class="caption">Token-count admission is <code>concurrencyMode: tokens</code>: it estimates load from prompt size instead of treating every request equally. Request count and exact input tokens have three matched repeats.</figcaption>
         </figure>
-      </div>
+      </div></details>
       <details><summary>Selected settings</summary><div class="method"><table><thead><tr><th>Layer</th><th>Setting</th><th>Use</th></tr></thead><tbody><tr><td>vLLM execution</td><td>128 maximum sequences; 8,192 maximum batched tokens</td><td>Limits active requests and the token budget per scheduler step</td></tr><tr><td>Endpoint Picker admission</td><td>128 in-flight requests; 10% detector headroom</td><td>Uses a relaxed endpoint-filter boundary above the 128-request saturation reference</td></tr><tr><td>Batch isolation</td><td>128 in-flight requests; 15% detector headroom</td><td>Uses a larger endpoint-filter cushion; it does not reserve capacity by priority</td></tr><tr><td>Size-aware option</td><td>Exact input-token count</td><td>Accounts for prompt size when request counts misstate load</td></tr></tbody></table></div></details>
       <section class="admission-guide" id="admission-guide" aria-labelledby="admission-guide-title">
         <h3 id="admission-guide-title">Choosing an admission signal</h3>
@@ -516,33 +614,22 @@
           <div role="row"><strong role="cell">Waiting queue</strong><span class="signal" role="cell">UtilizationDetector: queue-depth signal</span><span role="cell">Use as a reactive signal for backend queue growth. In the matched production comparisons it reacted later than request count and produced higher realtime TTFT.</span></div>
           <div role="row"><strong role="cell">KV-cache pressure</strong><span class="signal" role="cell">UtilizationDetector: KV-cache signal</span><span role="cell">Use as a memory-pressure guardrail for long prompts and large KV-cache demand. The sweep calibrated activation thresholds; it did not establish a latency-optimal default.</span></div>
         </div>
-        <figure class="headroom-guide" id="headroom-guide">
-          <img src="../headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and detector headroom filtering each model replica against its safety boundary.">
-          <figcaption>Reserved capacity asks whether this priority may dispatch. Detector headroom asks which replica may receive the request.</figcaption>
-        </figure>
-        <p class="section-evidence"><strong>Version boundary:</strong> stable v0.9 provides a uniform pool-level usage limit and per-replica detector headroom. Priority-specific reserve and batch eviction were measured separately on the experimental eviction build.</p>
+        <div class="headroom-guide" id="headroom-guide">
+          <h4>Headroom changes replica eligibility, not priority capacity</h4>
+          <p><code>endpoint filtering boundary = detector capacity × (1 + headroom)</code></p>
+          <p>For the selected request-count setting, 128 requests with 10% headroom produces a filtering boundary of 140.8. The extra margin tolerates brief per-replica overshoot; it does not hold capacity aside for a priority tier.</p>
+        </div>
+        <p class="section-evidence"><strong>v0.9 scope:</strong> This report covers stable v0.9's uniform pool-level usage limit and per-replica detector headroom. Priority-specific reserve and in-flight eviction are outside this report.</p>
         <div class="decision-table" role="table" aria-label="Capacity controls and their effect">
           <div role="row"><strong role="cell">Detector headroom</strong><span class="signal" role="cell"><code>saturationDetector.headroom</code></span><span role="cell">Relaxes the endpoint filter above the detector's request or token limit. It tolerates brief overshoot but does not reserve capacity by priority.</span></div>
           <div role="row"><strong role="cell">Uniform reserve</strong><span class="signal" role="cell"><code>static-usage-limit-policy.threshold</code></span><span role="cell">Sets one dispatch ceiling for every priority. A value below 1.0 holds the same fraction of capacity back from all traffic.</span></div>
-          <div role="row"><strong role="cell">Priority reserve</strong><span class="signal" role="cell"><code>priority-holdback-policy</code></span><span role="cell">Sets lower ceilings for lower priorities. In the eviction benchmark, three ranks mapped to 50% for batch, 75% for standard, and 100% for realtime.</span></div>
-          <div role="row"><strong role="cell">Batch eviction</strong><span class="signal" role="cell"><code>flowControl.enableEviction</code></span><span role="cell">Acts after dispatch. It stops eligible negative-priority batch already running in vLLM; a retry owner must resubmit that work.</span></div>
         </div>
       </section>
     </section>
 
-    <section class="band white" id="production">
-      <div class="section-head"><h2>Production scenario benchmarks</h2><p>Can the selected configuration preserve priority and fairness under matched production traffic?</p></div>
-      <div class="scenario-grid">
-        <figure class="chart scenario"><h3>Priority tiers</h3><p class="takeaway">Higher-priority tiers stayed lower while batch absorbed the longest wait.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Platinum</span><div class="bar-track"><i class="bar teal" data-value="404"></i></div><span class="bar-value">404 ms</span></div><div class="bar-row"><span class="bar-label">Gold</span><div class="bar-track"><i class="bar teal" data-value="511"></i></div><span class="bar-value">511 ms</span></div><div class="bar-row"><span class="bar-label">Silver</span><div class="bar-track"><i class="bar amber" data-value="656"></i></div><span class="bar-value">656 ms</span></div><div class="bar-row"><span class="bar-label">Batch</span><div class="bar-track"><i class="bar red" data-value="13264"></i></div><span class="bar-value">13,264 ms</span></div></div><figcaption class="caption">Log scale. Realtime ranges across three repeats: Platinum 368–486 ms; Gold 414–594 ms. Flow control was engaged.</figcaption></figure>
-        <figure class="chart scenario"><h3>Batch isolation</h3><p class="takeaway">Realtime stayed faster than batch in every repeat, but the realtime result varied too much for a stable point estimate.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Realtime median</span><div class="bar-track"><i class="bar teal" data-value="442"></i></div><span class="bar-value">442 ms</span></div><div class="bar-row"><span class="bar-label">Standard median</span><div class="bar-track"><i class="bar amber" data-value="515"></i></div><span class="bar-value">515 ms</span></div><div class="bar-row"><span class="bar-label">Batch median</span><div class="bar-track"><i class="bar red" data-value="13077"></i></div><span class="bar-value">13,077 ms</span></div></div><figcaption class="caption">Directional evidence. Realtime ranged from 371–669 ms (1.81× spread) and standard from 436–1,017 ms (2.33×), above the 1.5× repeat-stability gate. Medians remain visible for transparency.</figcaption></figure>
-        <figure class="chart scenario"><h3>Consolidation</h3><p class="takeaway">Both realtime tenants stayed below 600 ms during the standard burst.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Realtime A</span><div class="bar-track"><i class="bar teal" data-value="509"></i></div><span class="bar-value">509 ms</span></div><div class="bar-row"><span class="bar-label">Realtime B</span><div class="bar-track"><i class="bar teal" data-value="556"></i></div><span class="bar-value">556 ms</span></div><div class="bar-row"><span class="bar-label">Standard</span><div class="bar-track"><i class="bar amber" data-value="25892"></i></div><span class="bar-value">25,892 ms</span></div></div><figcaption class="caption">Log scale. Realtime ranges across three repeats: A 503–558 ms; B 505–599 ms. Flow control was engaged.</figcaption></figure>
-        <figure class="chart scenario"><h3>Same-priority fairness</h3><p class="takeaway">Both peers stayed below 700 ms while the burster absorbed most of the delay.</p><div class="latency-chart bar-chart" data-scale="log" data-min="300" data-max="30000"><div class="axis"><span style="left:0">300 ms</span><span style="left:26.1%">1 s</span><span style="left:50%">3 s</span><span style="left:76.1%">10 s</span><span style="left:100%">30 s</span></div><div class="bar-row"><span class="bar-label">Burster A</span><div class="bar-track"><i class="bar red" data-value="12097"></i></div><span class="bar-value">12,097 ms</span></div><div class="bar-row"><span class="bar-label">Peer B</span><div class="bar-track"><i class="bar teal" data-value="527"></i></div><span class="bar-value">527 ms</span></div><div class="bar-row"><span class="bar-label">Peer C</span><div class="bar-track"><i class="bar teal" data-value="570"></i></div><span class="bar-value">570 ms</span></div></div><figcaption class="caption">Log scale. Peer ranges across three repeats: B 508–619 ms; C 563–675 ms. Flow control was engaged.</figcaption></figure>
-      </div>
-      <p class="section-evidence">Each chart shows median surge p95 TTFT across three repeats. Flow control was engaged and policy queues were active in every retained run.</p>
-      <section class="traffic-panel" aria-labelledby="traffic-title"><h3 id="traffic-title">Traffic sent during each surge</h3><div class="traffic-grid" id="traffic-grid"></div><p class="traffic-method">Each plot shows requests sent per second from 60 to 210 seconds and uses its own labeled y-axis range. The similar shapes are intentional: every scenario used the same surge window so differences in latency reflect the traffic mix and policy behavior. Prefix caching was off.</p></section>
-
+    <section class="band white" id="detectors">
       <div class="comparison-set"><div class="section-head"><h2>Which admission signal protected realtime latency sooner: in-flight requests or the vLLM waiting queue?</h2></div><div class="detector-map" aria-label="Admission methods compared in this benchmark"><div><strong>In-flight request limit</strong><span>Stops dispatch before admitted requests exceed the configured limit.</span></div><div><strong>Waiting-queue threshold</strong><span>Stops dispatch after requests have already formed a queue inside vLLM.</span></div><div><strong>In-flight token limit</strong><span>Accounts for prompt size and was tested separately under mixed and long-context traffic.</span></div></div><p class="section-evidence">The plots compare request count and queue depth with the same prompts, traffic, model, GPU, and three repeats. Token-count results appear under <a href="#workloads">Workload behavior</a>.</p><div class="chart-grid">
-        <figure class="chart"><h3>Consolidation: realtime p95 TTFT by admission signal</h3><p class="takeaway">Request count acted before a vLLM queue formed; both realtime tenants remained near 0.5 seconds.</p><div class="range-chart" data-min="0" data-max="6000"><div class="range-axis"><span style="left:0">0 ms</span><span style="left:50%">3,000 ms</span><span style="left:100%">6,000 ms</span></div><div class="range-group"><h4>In-flight requests: limit 128</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">509 ms</span><span hidden data-low="503" data-value="509" data-high="558"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">556 ms</span><span hidden data-low="505" data-value="556" data-high="599"></span></div></div><div class="range-group"><h4>vLLM waiting queue: threshold 2</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,711 ms</span><span hidden data-low="4102" data-value="4711" data-high="5360"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,567 ms</span><span hidden data-low="4024" data-value="4567" data-high="5057"></span></div></div><div class="range-group"><h4>vLLM waiting queue: threshold 5</h4><div class="range-row"><span class="range-label">Realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">5,117 ms</span><span hidden data-low="4729" data-value="5117" data-high="5254"></span></div><div class="range-row peer"><span class="range-label">Realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,906 ms</span><span hidden data-low="4657" data-value="4906" data-high="5498"></span></div></div></div><figcaption class="range-note">Dot: median p95 TTFT. Line: observed minimum to maximum across three repeats.</figcaption></figure>
+        <figure class="chart"><h3>Consolidation: realtime p95 TTFT by admission signal</h3><p class="takeaway">Request count acted before a vLLM queue formed; both realtime tenants remained near 0.5 seconds.</p><div class="range-chart" data-min="0" data-max="6000"><div class="range-axis"><span style="left:0">0 ms</span><span style="left:50%">3,000 ms</span><span style="left:100%">6,000 ms</span></div><div class="range-group"><h4>In-flight requests: limit 128</h4><div class="range-row"><span class="range-label">realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">509 ms</span><span hidden data-low="503" data-value="509" data-high="558"></span></div><div class="range-row peer"><span class="range-label">realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">556 ms</span><span hidden data-low="505" data-value="556" data-high="599"></span></div></div><div class="range-group"><h4>vLLM waiting queue: threshold 2</h4><div class="range-row"><span class="range-label">realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,711 ms</span><span hidden data-low="4102" data-value="4711" data-high="5360"></span></div><div class="range-row peer"><span class="range-label">realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,567 ms</span><span hidden data-low="4024" data-value="4567" data-high="5057"></span></div></div><div class="range-group"><h4>vLLM waiting queue: threshold 5</h4><div class="range-row"><span class="range-label">realtime A</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">5,117 ms</span><span hidden data-low="4729" data-value="5117" data-high="5254"></span></div><div class="range-row peer"><span class="range-label">realtime B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,906 ms</span><span hidden data-low="4657" data-value="4906" data-high="5498"></span></div></div></div><figcaption class="range-note">Dot: median p95 TTFT. Line: observed minimum to maximum across three repeats.</figcaption></figure>
         <figure class="chart teal"><h3>Same-priority fairness: peer p95 TTFT by admission signal</h3><p class="takeaway">Request count preserved both peers near 0.5 seconds while one same-priority tenant generated the surge.</p><div class="range-chart" data-min="0" data-max="6000"><div class="range-axis"><span style="left:0">0 ms</span><span style="left:50%">3,000 ms</span><span style="left:100%">6,000 ms</span></div><div class="range-group"><h4>In-flight requests: limit 128</h4><div class="range-row"><span class="range-label">Peer B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">527 ms</span><span hidden data-low="508" data-value="527" data-high="619"></span></div><div class="range-row peer"><span class="range-label">Peer C</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">570 ms</span><span hidden data-low="563" data-value="570" data-high="675"></span></div></div><div class="range-group"><h4>vLLM waiting queue: threshold 2</h4><div class="range-row"><span class="range-label">Peer B</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">5,023 ms</span><span hidden data-low="4716" data-value="5023" data-high="5080"></span></div><div class="range-row peer"><span class="range-label">Peer C</span><div class="range-track"><i class="range-line"></i><i class="range-dot"></i></div><span class="range-value">4,519 ms</span><span hidden data-low="4464" data-value="4519" data-high="4769"></span></div></div></div><figcaption class="range-note">Dot: median p95 TTFT. Line: observed minimum to maximum across three repeats.</figcaption></figure>
       </div><p class="comparison-answer"><strong>Answer:</strong> In both production comparisons, the in-flight request limit protected realtime latency sooner. Median p95 TTFT remained near 0.5 seconds; waiting-queue detection reacted after backend queueing began, and median p95 TTFT rose to roughly 4.5–5.1 seconds.</p></div>
     </section>
@@ -550,11 +637,10 @@
     <section class="band" id="workloads">
       <div class="section-head"><h2>Workload behavior</h2><p>Request size, response length, and work already running inside vLLM changed which admission setting worked best.</p></div>
       <div class="chart-grid">
-        <figure class="chart red"><h3>Batch interference can sharply increase realtime latency</h3><p class="takeaway">Realtime p95 TTFT rose from 133 ms to 15,378 ms after running batch occupied vLLM capacity.</p><div class="latency-chart bar-chart" data-scale="log" data-min="100" data-max="20000"><div class="axis"><span style="left:0">100 ms</span><span style="left:43.5%">1 s</span><span style="left:87%">10 s</span><span style="left:100%">20 s</span></div><div class="bar-row"><span class="bar-label">Realtime only</span><div class="bar-track"><i class="bar teal" data-value="133"></i></div><span class="bar-value">133 ms</span></div><div class="bar-row"><span class="bar-label">Batch running</span><div class="bar-track"><i class="bar red" data-value="15378"></i></div><span class="bar-value">15,378 ms</span></div></div><figcaption class="caption">Log scale. Three matched repeats per condition. Reserved capacity and eviction are covered separately.</figcaption></figure>
+        <figure class="chart red"><h3>Admission control cannot reclaim work already running in vLLM</h3><p class="takeaway">realtime p95 TTFT rose from 133 ms to 15,378 ms after running Batch occupied vLLM capacity.</p><div class="latency-chart bar-chart" data-scale="log" data-min="100" data-max="20000"><div class="axis"><span style="left:0">100 ms</span><span style="left:43.5%">1 s</span><span style="left:87%">10 s</span><span style="left:100%">20 s</span></div><div class="bar-row"><span class="bar-label">realtime only</span><div class="bar-track"><i class="bar teal" data-value="133"></i></div><span class="bar-value">133 ms</span></div><div class="bar-row"><span class="bar-label">Batch running</span><div class="bar-track"><i class="bar red" data-value="15378"></i></div><span class="bar-value">15,378 ms</span></div></div><figcaption class="caption">Log scale. Three matched repeats per condition. This test defines the boundary of stable v0.9 admission control; after-dispatch recovery is outside this report.</figcaption></figure>
         <figure class="chart"><h3>The agentic workload produced higher TTFT while per-token latency stayed similar</h3><p class="takeaway">The agentic test used larger prompts, longer outputs, and a lower request rate. It recorded higher TTFT than chat, but this comparison does not isolate one cause.</p><div class="metric-split"><div><h4>Surge p95 TTFT (ms)</h4><div class="bar-chart" data-max="1500"><div class="bar-row"><span class="bar-label">Chat</span><div class="bar-track"><i class="bar teal" data-value="420"></i></div><span class="bar-value">420 ms</span></div><div class="bar-row"><span class="bar-label">Agentic</span><div class="bar-track"><i class="bar amber" data-value="1352"></i></div><span class="bar-value">1,352 ms</span></div></div></div><div><h4>Surge p95 TPOT (ms/token)</h4><div class="bar-chart" data-max="40"><div class="bar-row"><span class="bar-label">Chat</span><div class="bar-track"><i class="bar teal" data-value="34.988"></i></div><span class="bar-value">35.0 ms/token</span></div><div class="bar-row"><span class="bar-label">Agentic</span><div class="bar-track"><i class="bar amber" data-value="30.385"></i></div><span class="bar-value">30.4 ms/token</span></div></div></div></div><figcaption class="caption">Three single-tenant repeats per request shape; all requests completed.</figcaption></figure>
         <figure class="chart violet"><h3>Admission method changed which priority absorbed the wait</h3><p class="takeaway">Request count lowered premium p95 TTFT; input-token admission produced more even latency across tiers.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--blue)"></i>Request count</span><span><i class="swatch" style="--key:var(--violet)"></i>Exact input tokens</span></div><div class="pair-axis"><span>1,500 ms</span><span>9,000 ms</span></div><div class="paired" data-min="1500" data-max="9000"><div class="pair-row"><span class="bar-label">Premium</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="1994"></i><i class="marker violet" data-value="2914"></i></div><span class="pair-values">1,994 / 2,914 ms</span></div><div class="pair-row"><span class="bar-label">Gold</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="2745"></i><i class="marker violet" data-value="2836"></i></div><span class="pair-values">2,745 / 2,836 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="5150"></i><i class="marker violet" data-value="3076"></i></div><span class="pair-values">5,150 / 3,076 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="8654"></i><i class="marker violet" data-value="2832"></i></div><span class="pair-values">8,654 / 2,832 ms</span></div></div><p class="decision-line">Use request count when premium latency is the first objective. Test input-token admission when more even service across request sizes matters.</p></figure>
         <figure class="chart teal"><h3>Exact input-token admission did not consistently improve long-context TTFT</h3><p class="takeaway">Across eight paired seeds, neither admission method was consistently faster.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--blue)"></i>Request count</span><span><i class="swatch" style="--key:var(--teal)"></i>Exact input tokens</span></div><div class="pair-axis"><span>250 ms</span><span>500 ms</span></div><div class="paired" data-min="250" data-max="500"><div class="pair-row"><span class="bar-label">101</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="350.3"></i><i class="marker token" data-value="342.9"></i></div><span class="pair-values">350 / 343 ms</span></div><div class="pair-row"><span class="bar-label">102</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="340.5"></i><i class="marker token" data-value="341.4"></i></div><span class="pair-values">340 / 341 ms</span></div><div class="pair-row"><span class="bar-label">103</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="289.6"></i><i class="marker token" data-value="314.3"></i></div><span class="pair-values">290 / 314 ms</span></div><div class="pair-row"><span class="bar-label">104</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="350.6"></i><i class="marker token" data-value="323.7"></i></div><span class="pair-values">351 / 324 ms</span></div><div class="pair-row"><span class="bar-label">105</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="278.2"></i><i class="marker token" data-value="291.2"></i></div><span class="pair-values">278 / 291 ms</span></div><div class="pair-row"><span class="bar-label">106</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="382.3"></i><i class="marker token" data-value="355.5"></i></div><span class="pair-values">382 / 356 ms</span></div><div class="pair-row"><span class="bar-label">107</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="344.8"></i><i class="marker token" data-value="361.9"></i></div><span class="pair-values">345 / 362 ms</span></div><div class="pair-row"><span class="bar-label">108</span><div class="pair-track"><i class="pair-line"></i><i class="marker" data-value="492.2"></i><i class="marker token" data-value="366.1"></i></div><span class="pair-values">492 / 366 ms</span></div></div><figcaption class="caption">Paired p95 TTFT by seed. Mean difference: 16.4 ms; 95% confidence interval: -23.9 to 56.8 ms.</figcaption></figure>
-        <figure class="chart wide violet report-embed"><h3>Batch eviction and retry (experimental build)</h3><p class="takeaway">Reserved capacity held realtime p95 TTFT near 342 ms (reference 342 ms, batch without protection 561 ms, reserved capacity 341 ms, eviction and retry 348 ms). Evicted batch requests were retried; each job produced one final result. The report below covers four matched scenarios, the retry path, and a searchable 12-run database.</p><div class="report-embed-links"><a href="../batch-eviction/single-model-replica/results.html">Open results</a><a href="../batch-eviction/single-model-replica/results.html#proof">Matched proof</a></div><iframe class="report-embed-frame" title="Batch eviction benchmark report" src="../batch-eviction/single-model-replica/results.html#proof" loading="lazy"></iframe><figcaption class="caption">This evidence comes from a separate experimental batch-eviction build. Three matched repeats per scenario; prefix caching off.</figcaption></figure>
       </div>
     </section>
 
@@ -562,8 +648,8 @@
       <div class="section-head"><h2>Scale, recovery, and routing</h2><p>The selected configuration was tested across larger model pools, repeated surges, and cache-aware routing.</p></div>
       <div class="chart-grid three">
         <figure class="chart"><h3>Per-GPU throughput held as the model pool grew</h3><p class="takeaway">Served RPS per GPU varied by at most 0.6% across one, two, and four replicas.</p><div class="sweep-chart" role="img" aria-label="Model-pool scaling comparing served requests per second per GPU and premium surge p95 TTFT at one, two, and four replicas." data-labels="1 replica|2 replicas|4 replicas" data-throughput="4.293|4.317|4.302" data-latency="374|340|322" data-throughput-label="Throughput (requests/s/GPU)" data-latency-label="Premium p95 TTFT (ms)"></div><figcaption class="caption">Premium p95 TTFT ranges: 366–416 ms, 332–349 ms, and 306–349 ms. HTTP 429: 5/3,498 at one replica, 1/7,014 at two, and 0/13,950 at four. Throughput scaled cleanly; sparse 429s prevent a rejection-free claim at every pool size.</figcaption></figure>
-        <figure class="chart amber"><h3>Realtime latency recovered after both sustained surges</h3><p class="takeaway">Flow control engaged twice; final p95 TTFT returned to 290 ms from a 299 ms baseline, with zero preemptions.</p><div class="phase-chart" role="img" aria-label="Premium p95 TTFT across baseline, two surge periods, two recoveries, and the final phase." data-labels="Baseline|Surge 1|Recovery 1|Surge 2|Recovery 2|Final" data-values="299|1760|127|1227|279|290"></div><figcaption class="caption">One 30-minute run, 14,889 completed requests, cache off.</figcaption></figure>
-        <figure class="chart violet"><h3>Prefix-aware routing helped some workloads but not the full mix</h3><p class="takeaway">The tested prompts did not create enough additional prefix reuse to offset uneven routing: realtime and batch improved, while standard long-context traffic slowed.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--amber)"></i>Random</span><span><i class="swatch" style="--key:var(--violet)"></i>Prefix-aware</span></div><div class="pair-axis"><span>500 ms</span><span>60,000 ms · log scale</span></div><div class="paired" data-min="500" data-max="60000" data-scale="log"><div class="pair-row"><span class="bar-label">Realtime</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="1195"></i><i class="marker violet" data-value="936"></i></div><span class="pair-values">1,195 / 936 ms</span></div><div class="pair-row"><span class="bar-label">Agentic</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="4364"></i><i class="marker violet" data-value="3946"></i></div><span class="pair-values">4,364 / 3,946 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="10324"></i><i class="marker violet" data-value="12635"></i></div><span class="pair-values">10,324 / 12,635 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="49763"></i><i class="marker violet" data-value="44462"></i></div><span class="pair-values">49,763 / 44,462 ms</span></div></div><figcaption class="caption">Overall p95 TTFT by workload across three repeats per routing mode. Standard was 22% slower with prefix-aware routing. Cache hit rate did not increase, and median route imbalance rose from 0.9% to 19.1%.</figcaption><p class="decision-line">Random routing remains the reference setting for this workload because prefix-aware routing did not improve latency consistently across tiers.</p></figure>
+        <figure class="chart amber"><h3>realtime latency recovered after both sustained surges</h3><p class="takeaway">Flow control engaged twice; final p95 TTFT returned to 290 ms from a 299 ms baseline, with zero preemptions.</p><div class="phase-chart" role="img" aria-label="Premium p95 TTFT across baseline, two surge periods, two recoveries, and the final phase." data-labels="Baseline|Surge 1|Recovery 1|Surge 2|Recovery 2|Final" data-values="299|1760|127|1227|279|290"></div><figcaption class="caption">One 30-minute run, 14,889 completed requests, cache off.</figcaption></figure>
+        <figure class="chart violet"><h3>Prefix-aware routing helped some workloads but not the full mix</h3><p class="takeaway">The tested prompts did not create enough additional prefix reuse to offset uneven routing: realtime and batch improved, while standard long-context traffic slowed.</p><div class="pair-key"><span><i class="swatch" style="--key:var(--amber)"></i>Random</span><span><i class="swatch" style="--key:var(--violet)"></i>Prefix-aware</span></div><div class="pair-axis"><span>500 ms</span><span>60,000 ms · log scale</span></div><div class="paired" data-min="500" data-max="60000" data-scale="log"><div class="pair-row"><span class="bar-label">realtime</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="1195"></i><i class="marker violet" data-value="936"></i></div><span class="pair-values">1,195 / 936 ms</span></div><div class="pair-row"><span class="bar-label">Agentic</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="4364"></i><i class="marker violet" data-value="3946"></i></div><span class="pair-values">4,364 / 3,946 ms</span></div><div class="pair-row"><span class="bar-label">Standard</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="10324"></i><i class="marker violet" data-value="12635"></i></div><span class="pair-values">10,324 / 12,635 ms</span></div><div class="pair-row"><span class="bar-label">Batch</span><div class="pair-track"><i class="pair-line"></i><i class="marker amber" data-value="49763"></i><i class="marker violet" data-value="44462"></i></div><span class="pair-values">49,763 / 44,462 ms</span></div></div><figcaption class="caption">Overall p95 TTFT by workload across three repeats per routing mode. Standard was 22% slower with prefix-aware routing. Cache hit rate did not increase, and median route imbalance rose from 0.9% to 19.1%.</figcaption><p class="decision-line">Random routing remains the reference setting for this workload because prefix-aware routing did not improve latency consistently across tiers.</p></figure>
       </div>
       <details><summary>Method and claim boundaries</summary><div class="method"><table><thead><tr><th>Area</th><th>Method</th><th>Boundary</th></tr></thead><tbody><tr><td>Production scenarios</td><td>Open-loop Poisson traffic, noisy sinusoidal phases, three repeats, cache off</td><td>One H100 and one model replica</td></tr><tr><td>Detector comparison</td><td>Three matched repeats for request count and queue depth</td><td>Descriptive medians and ranges; queue-depth-5 fairness remains calibration-only</td></tr><tr><td>Calibration sweeps</td><td>Closed-loop fixed concurrency</td><td>Configuration selection; production traffic carries the latency claim</td></tr><tr><td>Scale</td><td>One Endpoint Picker with one, two, and four model replicas</td><td>Scope: one Endpoint Picker</td></tr><tr><td>Prefix routing</td><td>Two model replicas, cache on, shared-prefix traffic</td><td>High repeat variance; no default change</td></tr><tr><td>Metrics</td><td>Requests, policy queues, vLLM running and waiting, KV cache, preemptions, routes</td><td>Absolute latency depends on model, hardware, request shape, and load</td></tr></tbody></table></div></details>
     </section>
@@ -573,20 +659,19 @@
         <h2>Evidence packages</h2>
         <p>Each package includes configuration, request data, traffic samples, system metrics, proof gates, and claim limits.</p>
       </div>
-      <div class="evidence-gallery">
-        <figure class="evidence-card"><figcaption><h3>Engine capacity and configuration</h3><p>128 maximum sequences and 8,192 batched tokens provided the tested balance; higher sequence limits added little throughput and increased output-token latency.</p></figcaption><a href="engine-configuration/"><img src="engine-configuration/results.svg" alt="Engine configuration sweep results"></a></figure>
-        <figure class="evidence-card teal"><figcaption><h3>Request and token admission</h3><p>In this one-GPU calibration, a 128-request cap preserved lower TTFT with a small throughput tradeoff; input-token admission changed the tradeoff for mixed sizes.</p></figcaption><a href="request-and-token-admission-calibration/"><img src="request-and-token-admission-calibration/results.svg" alt="Request and token admission calibration results"></a></figure>
-        <figure class="evidence-card amber"><figcaption><h3>Utilization detector calibration</h3><p>Queue depth reacts to requests waiting inside vLLM; KV-cache thresholds react to memory pressure. Both need workload-specific calibration.</p></figcaption><a href="utilization-detector-calibration/"><img src="utilization-detector-calibration/results.svg" alt="Utilization detector calibration results"></a></figure>
-        <figure class="evidence-card violet"><figcaption><h3>Request-concurrency priority tuning</h3><p>The 48-request limit produced the lowest premium p95 TTFT in this earlier two-repeat study, while tighter limits made standard traffic wait longer.</p></figcaption><a href="request-concurrency-priority-tuning/"><img src="request-concurrency-priority-tuning/results.svg" alt="Request concurrency priority tuning results"></a></figure>
-        <figure class="evidence-card"><figcaption><h3>Production scenarios</h3><p>Higher-priority realtime traffic stayed faster across four traffic patterns; three scenarios met the repeat-stability gate.</p></figcaption><a href="production-scenarios/"><img src="production-scenarios/results.svg" alt="Four production scenario results"></a></figure>
-        <figure class="evidence-card red"><figcaption><h3>Batch interference</h3><p>Without protection for work already running in vLLM, batch increased realtime median p95 TTFT from 133 ms to 15,378 ms.</p></figcaption><a href="batch-interference/"><img src="batch-interference/results.svg" alt="Batch interference results"></a></figure>
-        <figure class="evidence-card teal"><figcaption><h3>Selected workload shapes</h3><p>Every chat and agentic request completed; the larger, lower-rate agentic shape recorded higher first-token latency.</p></figcaption><a href="selected-workload-shapes/"><img src="selected-workload-shapes/results.svg" alt="Selected workload shape results"></a></figure>
-        <figure class="evidence-card violet"><figcaption><h3>Mixed production workload</h3><p>Request count lowered realtime latency; input-token admission lowered long-context and batch latency under the same mixed traffic.</p></figcaption><a href="mixed-production-workload/"><img src="mixed-production-workload/results.svg" alt="Mixed production workload results"></a></figure>
-        <figure class="evidence-card teal"><figcaption><h3>Long-context admission</h3><p>Exact input-token admission detected large-request pressure, but it did not produce a statistically significant realtime TTFT improvement across eight paired seeds.</p></figcaption><a href="long-context-admission/"><img src="long-context-admission/results.svg" alt="Long-context admission comparison results"></a></figure>
-        <figure class="evidence-card"><figcaption><h3>Model pool scaling</h3><p>Served throughput per GPU stayed within 0.6% from one to four replicas; the four-replica runs served every offered request.</p></figcaption><a href="multi-replica-scaling/"><img src="multi-replica-scaling/results.svg" alt="Model pool scaling results"></a></figure>
-        <figure class="evidence-card amber"><figcaption><h3>Long stability</h3><p>The queue drained after both surges, realtime latency returned to its earlier range, and all 14,889 requests completed.</p></figcaption><a href="long-stability/"><img src="long-stability/results.svg" alt="Long stability results"></a></figure>
-        <figure class="evidence-card violet"><figcaption><h3>Prefix-cache routing</h3><p>Premium chat improved most. Broader gains were limited because cache hits stayed flat while affinity increased route imbalance and long-context latency.</p></figcaption><a href="prefix-cache-routing/"><img src="prefix-cache-routing/results.svg" alt="Prefix-cache routing comparison results"></a></figure>
-        <figure class="evidence-card teal"><figcaption><h3>Experimental batch eviction and retry</h3><p>Reserved capacity restored realtime p95 TTFT near its reference. Interrupted batch work was retried to completion.</p></figcaption><a href="../batch-eviction/single-model-replica/results.html"><img src="../batch-eviction/single-model-replica/results.svg" alt="Batch eviction and retry results"></a></figure>
+      <div class="packages">
+        <div class="package"><a href="engine-configuration/">Engine capacity and configuration</a><span>vLLM sequence and token limits</span></div>
+        <div class="package"><a href="request-and-token-admission-calibration/">Request and token admission</a><span>request and prompt-token limits</span></div>
+        <div class="package"><a href="utilization-detector-calibration/">Utilization detector calibration</a><span>queue depth and KV-cache pressure</span></div>
+        <div class="package"><a href="request-concurrency-priority-tuning/">Request-concurrency priority tuning</a><span>earlier two-tier sweep</span></div>
+        <div class="package"><a href="production-scenarios/">Production scenarios</a><span>priority, isolation, consolidation, fairness</span></div>
+        <div class="package"><a href="batch-interference/">Batch interference</a><span>after-dispatch admission boundary</span></div>
+        <div class="package"><a href="selected-workload-shapes/">Selected workload shapes</a><span>chat and agentic traffic</span></div>
+        <div class="package"><a href="mixed-production-workload/">Mixed production workload</a><span>request-count and token-count admission</span></div>
+        <div class="package"><a href="long-context-admission/">Long-context admission</a><span>eight paired seeds</span></div>
+        <div class="package"><a href="multi-replica-scaling/">Model-pool scaling</a><span>one, two, and four replicas</span></div>
+        <div class="package"><a href="long-stability/">Long stability</a><span>two surges and recovery</span></div>
+        <div class="package"><a href="prefix-cache-routing/">Prefix-cache routing</a><span>random and prefix-aware routing</span></div>
       </div>
     </section>
   </main>
@@ -609,7 +694,9 @@
       const selected = chart.dataset.selected === undefined ? -1 : Number(chart.dataset.selected);
       const sharedAxis = chart.dataset.sharedAxis === "true";
       const zoom = chart.dataset.zoom === "true";
-      const width = 680, height = 320, left = 112, right = 122, top = 78, bottom = 64;
+      const compact = chart.closest(".calibration-details") !== null;
+      const showAllValues = chart.dataset.showAllValues === "true" || !compact;
+      const width = 680, height = compact ? 296 : 320, left = 112, right = 122, top = compact ? 54 : 78, bottom = 64;
       const plotWidth = width - left - right, plotHeight = height - top - bottom;
       const pointInset = 28;
       const x = (index) => labels.length === 1
@@ -630,9 +717,11 @@
       const throughputLabel = chart.dataset.throughputLabel || "Throughput (requests/s)";
       const latencyLabel = chart.dataset.latencyLabel || "p95 TTFT (ms)";
       const xLabel = chart.dataset.xLabel || "Configuration setting";
+      const seriesKey = compact ? `<div class="sweep-key" aria-hidden="true"><span><i class="${sharedAxis ? "premium" : "throughput"}"></i>${throughputLabel}</span><span><i class="latency"></i>${latencyLabel}</span></div>` : "";
       const selectedBand = selected >= 0 ? `<rect class="plot-selected" x="${Math.max(left, x(selected) - 38)}" y="${top - 7}" width="76" height="${plotHeight + 20}"></rect>${svgText(x(selected), top - 14, "selected", "plot-selected-label")}` : "";
       const xLabels = labels.map((value, index) => svgText(x(index), height - 30, value, "plot-axis")).join("");
       const xAxisLabel = svgText(width / 2, height - 7, xLabel, "plot-axis");
+      const metricLabels = compact ? "" : `${svgText(left, 20, throughputLabel, "plot-axis throughput", "start")}${svgText(width - right, 20, latencyLabel, "plot-axis latency", "end")}`;
       if (sharedAxis) {
         const min = 300, max = 15000;
         const yShared = (value) => top + plotHeight - ((Math.log10(value) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * plotHeight;
@@ -640,7 +729,7 @@
         const grid = ticks.map((value) => `<line class="plot-grid" x1="${left}" y1="${yShared(value)}" x2="${width - right}" y2="${yShared(value)}"></line>${svgText(left - 10, yShared(value) + 3, `${number.format(value)} ms`, "plot-axis", "end")}`).join("");
         const premiumPoints = throughput.map((value, index) => `<circle class="plot-point premium" cx="${x(index)}" cy="${yShared(value)}" r="5"></circle>${svgText(x(index), yShared(value) - 11, number.format(value), "plot-value")}`).join("");
         const standardPoints = latency.map((value, index) => `<circle class="plot-point latency" cx="${x(index)}" cy="${yShared(value)}" r="5"></circle>${svgText(x(index), yShared(value) + 19, number.format(value), "plot-value")}`).join("");
-        chart.innerHTML = `<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${svgText(left, 20, throughputLabel, "plot-axis throughput", "start")}${svgText(width - right, 20, latencyLabel, "plot-axis latency", "end")}${svgText(width / 2, 43, "Shared y-axis: p95 TTFT in milliseconds (log scale)", "plot-axis")}<polyline class="plot-line premium" points="${points(throughput, yShared)}"></polyline><polyline class="plot-line latency" points="${points(latency, yShared)}"></polyline>${premiumPoints}${standardPoints}${xLabels}${xAxisLabel}</svg>`;
+        chart.innerHTML = `${seriesKey}<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${metricLabels}${compact ? "" : svgText(width / 2, 43, "Shared y-axis: p95 TTFT in milliseconds (log scale)", "plot-axis")}<polyline class="plot-line premium" points="${points(throughput, yShared)}"></polyline><polyline class="plot-line latency" points="${points(latency, yShared)}"></polyline>${premiumPoints}${standardPoints}${xLabels}${xAxisLabel}</svg>`;
       } else {
         const tickRatios = [0, .5, 1];
         const grid = tickRatios.map((ratio) => {
@@ -649,9 +738,9 @@
           const latencyValue = latencyMax - ratio * (latencyMax - latencyMin);
           return `<line class="plot-grid" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"></line>${svgText(left - 10, y + 3, `${number.format(throughputValue)} req/s`, "plot-axis throughput", "end")}${svgText(width - right + 10, y + 3, `${number.format(latencyValue)} ms`, "plot-axis latency", "start")}`;
         }).join("");
-        const throughputPoints = throughput.map((value, index) => `<circle class="plot-point throughput" cx="${x(index)}" cy="${yThroughput(value)}" r="5"></circle>${svgText(x(index), yThroughput(value) - 11, number.format(value), "plot-value")}`).join("");
-        const latencyPoints = latency.map((value, index) => `<circle class="plot-point latency" cx="${x(index)}" cy="${yLatency(value)}" r="5"></circle>${svgText(x(index), yLatency(value) + 19, number.format(value), "plot-value")}`).join("");
-        chart.innerHTML = `<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${svgText(left, 20, throughputLabel, "plot-axis throughput", "start")}${svgText(width - right, 20, latencyLabel, "plot-axis latency", "end")}<polyline class="plot-line throughput" points="${points(throughput, yThroughput)}"></polyline><polyline class="plot-line latency" points="${points(latency, yLatency)}"></polyline>${throughputPoints}${latencyPoints}${xLabels}${xAxisLabel}</svg>`;
+        const throughputPoints = throughput.map((value, index) => `<circle class="plot-point throughput" cx="${x(index)}" cy="${yThroughput(value)}" r="5"></circle>${showAllValues || index === selected ? svgText(x(index), yThroughput(value) - 11, number.format(value), "plot-value") : ""}`).join("");
+        const latencyPoints = latency.map((value, index) => `<circle class="plot-point latency" cx="${x(index)}" cy="${yLatency(value)}" r="5"></circle>${showAllValues || index === selected ? svgText(x(index), yLatency(value) + 19, number.format(value), "plot-value") : ""}`).join("");
+        chart.innerHTML = `${seriesKey}<svg class="sweep-svg" viewBox="0 0 ${width} ${height}" aria-hidden="true">${selectedBand}${grid}${metricLabels}<polyline class="plot-line throughput" points="${points(throughput, yThroughput)}"></polyline><polyline class="plot-line latency" points="${points(latency, yLatency)}"></polyline>${throughputPoints}${latencyPoints}${xLabels}${xAxisLabel}</svg>`;
       }
     });
 

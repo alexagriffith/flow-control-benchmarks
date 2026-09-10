@@ -363,12 +363,12 @@ def render_batch_eviction_single_results(spec: dict) -> str:
   retry_panel = spec["panels"][1]
   values_by_label = {str(label): float(value) for label, value in latency_panel["rows"]}
   order = [
-      ("Realtime only", "Realtime only", "#2f6fed"),
-      ("Batch with no protection", "Realtime + batch, no protection", "#b83232"),
-      ("Reserved capacity", "Realtime + batch, reserved capacity", "#087f73"),
-      ("Reserved capacity + eviction", "Realtime + batch, eviction and retry", "#6650a4"),
+      ("realtime only", "realtime only", "#2f6fed"),
+      ("batch with no protection", "realtime + batch, no protection", "#b83232"),
+      ("reserved capacity", "realtime + batch, reserved capacity", "#087f73"),
+      ("reserved capacity + eviction", "realtime + batch, eviction and retry", "#6650a4"),
   ]
-  reference = values_by_label.get("Realtime only", 342.0)
+  reference = values_by_label.get("realtime only", 342.0)
   maximum = max(values_by_label.values() or [reference, 561.0])
   chart_max = max(maximum * 1.08, reference * 1.2)
   chart_left, chart_width = 220, 660
@@ -386,8 +386,8 @@ def render_batch_eviction_single_results(spec: dict) -> str:
 
   evicted = int(float(retry_panel["stages"][0][1]))
   retried = int(float(retry_panel["stages"][1][1]))
-  unprotected = values_by_label.get("Batch with no protection", 561.0)
-  protected = values_by_label.get("Reserved capacity", 341.0)
+  unprotected = values_by_label.get("batch with no protection", 561.0)
+  protected = values_by_label.get("reserved capacity", 341.0)
 
   parts = [
       f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
@@ -409,7 +409,7 @@ def render_batch_eviction_single_results(spec: dict) -> str:
       parts.append(text(width - 40, y, fmt(value, "ms"), 16, 800, INK, "end"))
       parts.append(f'<rect x="{chart_left}" y="{y + 8}" width="{chart_width}" height="26" rx="4" fill="#eef1f4"/>')
       parts.append(f'<rect x="{chart_left}" y="{y + 8}" width="{bar_width(value):.1f}" height="26" rx="4" fill="{color}"/>')
-      if key == "Realtime only":
+      if key == "realtime only":
           ref_x = chart_left + bar_width(reference)
           parts.append(f'<line x1="{ref_x:.1f}" y1="{y + 8}" x2="{ref_x:.1f}" y2="{y + 34}" stroke="{color}" stroke-width="2" opacity="0.65"/>')
       parts.append(text(40, y + 48, delta_text(value), 12, 500, MUTED))

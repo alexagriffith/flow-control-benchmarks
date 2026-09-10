@@ -15,7 +15,7 @@ h1{font-size:28px;font-weight:650;letter-spacing:-.02em;margin:0 0 10px}
 p.lede{color:var(--txt2);margin:0 0 36px;max-width:640px}
 .group{margin-bottom:32px}
 .group h2{margin:0 0 6px;font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
-.group > p{margin:0 0 12px;font-size:13px;color:var(--txt3)}
+.group > p{margin:0 0 12px;font-size:13px;color:var(--txt2)}
 .card{display:block;background:var(--card);border:1px solid var(--b1);border-radius:12px;
   padding:18px 20px;margin-bottom:10px;text-decoration:none;color:inherit;transition:border-color .18s}
 .card:hover{border-color:var(--brand)}
@@ -30,35 +30,49 @@ footer a{color:var(--txt2)}
 <main>
   <a class="back" href="index.html">← Home</a>
   <h1>All evidence sections</h1>
-  <p class="lede">Interactive HTML reports for each benchmark campaign. Open in the browser — no need to send someone a file path from the repo.</p>
+  <p class="lede">Results, tested configurations, and replay instructions. Each campaign keeps its own router build, workload, and claim boundaries.</p>
 
   <section class="group">
-    <h2>Overview</h2>
-    <p>Start here to see how the campaigns fit together.</p>
-    <a class="card" href="benchmark-data/results.html">
-      <div class="t">Three-campaign evidence map</div>
-      <div class="d">What each program tested, headline numbers, decision map, and links to detailed pages.</div>
-      <div class="path">benchmark-data/results.html</div>
+    <h2>Red Hat AI Inference 3.5</h2>
+    <a class="card" href="benchmark.html">
+      <div class="t">Capacity, latency objectives, prefill/decode, and Batch</div>
+      <div class="d">Takeaways from the 3.5 campaign, with links to the measured results and configuration recipes.</div>
+    </a>
+    <a class="card" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.5-flow-control">
+      <div class="t">All 12 evidence groups</div>
+      <div class="d">Capacity calibration, production scenarios, deadline ordering, priority policies, Batch dispatch and eviction, request-cost metadata, soft provisioned throughput, P/D, routing, and stability.</div>
+    </a>
+    <a class="card" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.5-flow-control/examples">
+      <div class="t">Getting started and reproduction configurations</div>
+      <div class="d">Example YAMLs and the exact build boundaries for each tested recipe.</div>
+    </a>
+    <a class="card" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/pipeline">
+      <div class="t">Traffic runners and validation</div>
+      <div class="d">GuideLLM usage, specialized test code, replay commands, and checks for the published evidence packages.</div>
     </a>
   </section>
 
   <section class="group">
-    <h2>Campaign reports</h2>
-    <p>Full visual narratives with charts, claim boundaries, and run data.</p>
+    <h2>Earlier campaigns and experimental builds</h2>
+    <p>These reports describe their pinned test environments; results are not a direct cross-version comparison.</p>
     <a class="card" href="benchmark-data/upstream-flow-control-v0.9.0/results.html">
-      <div class="t">Endpoint Picker v0.9.0 production program</div>
+      <div class="t">Upstream Endpoint Picker v0.9.0</div>
       <div class="d">Engine and detector calibration, production scenarios, mixed workloads, scaling, stability, routing, and batch interference.</div>
       <div class="path">benchmark-data/upstream-flow-control-v0.9.0/results.html</div>
     </a>
     <a class="card" href="benchmark-data/batch-eviction/single-model-replica/results.html">
-      <div class="t">Batch eviction — results</div>
+      <div class="t">Experimental Batch eviction</div>
       <div class="d">Matched proof, retry path, 20-scenario inventory, capability boundary, and searchable 12-run database.</div>
       <div class="path">benchmark-data/batch-eviction/single-model-replica/results.html</div>
+    </a>
+    <a class="card" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.4-flow-control">
+      <div class="t">Red Hat AI Inference 3.4</div>
+      <div class="d">The original utilization-detector campaign, including accepted results and test conditions.</div>
     </a>
   </section>
 
   <footer>
-    Main site: <a href="index.html">explainer</a>, <a href="walkthrough.html">walkthrough</a>, and <a href="https://github.com/alexagriffith/flow-control-benchmarks">GitHub repo</a> for CSVs, configs, and SVGs.
+    Main site: <a href="index.html">explainer</a>, <a href="benchmark.html">benchmark</a>, and <a href="https://github.com/alexagriffith/flow-control-benchmarks">GitHub repo</a> for CSVs, configs, and SVGs.
   </footer>
 </main>
 </body>

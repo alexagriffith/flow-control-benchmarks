@@ -27,7 +27,7 @@ input-token admission produced lower long-context and batch latency.
 Request-count admission gave realtime chat the lower surge latency. Input-token
 admission spread latency more evenly across the four workloads.
 
-| Admission method | Realtime p95 TTFT | Agentic p95 TTFT | Long-context p95 TTFT | Batch p95 TTFT | Peak vLLM waiting |
+| Admission method | realtime p95 TTFT | Agentic p95 TTFT | Long-context p95 TTFT | Batch p95 TTFT | Peak vLLM waiting |
 |---|---:|---:|---:|---:|---:|
 | Request count: 128 with 10% headroom | 1,994 ms | 2,745 ms | 5,150 ms | 8,654 ms | 16 requests |
 | Input tokens: 75,000 | 2,914 ms | 2,836 ms | 3,076 ms | 2,832 ms | 43 requests |
@@ -45,7 +45,7 @@ preemptions.
 - One Endpoint Picker v0.9.0 served one GPT-OSS 20B model replica on one NVIDIA H100.
 - Each admission method ran three 180-second repeats using the same deterministic traffic trace.
 - Arrivals used open-loop Poisson timing with noisy sinusoidal baseline, surge, and recovery phases.
-- Realtime chat used 1,024 input and 128 output tokens at priority 100.
+- realtime chat used 1,024 input and 128 output tokens at priority 100.
 - Agentic traffic used 4,096 input and 512 output tokens at priority 50.
 - Long-context and batch traffic used 20,000 input and 128 output tokens at priorities 0 and -10.
 - vLLM used `max-num-seqs=128`, `max-num-batched-tokens=8192`, and a 32,768-token model limit.

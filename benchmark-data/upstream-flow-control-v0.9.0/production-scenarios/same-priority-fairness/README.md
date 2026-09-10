@@ -65,9 +65,11 @@ caching remained off.
 | [`run-config.json`](run-config.json) | Images, topology, engine settings, detector settings, and traffic method. |
 | [`analysis.json`](analysis.json) | Matched detector medians, ranges, run inventory, and claim boundary. |
 
-The queue-depth-5 result is a single-run calibration. Round-robin fairness
-within the priority band prevents starvation; peer TTFT still depends on how
-much work vLLM admits during the burst.
+The queue-depth-5 result is a single-run calibration. With round-robin
+explicitly configured, both peer tenants continued receiving dispatch turns in
+the tested runs; stable v0.9 otherwise defaults to global-strict fairness. This
+benchmark does not prove that starvation is impossible, and peer TTFT still
+depends on how much work vLLM admits during the burst.
 
 ## Reproduce
 

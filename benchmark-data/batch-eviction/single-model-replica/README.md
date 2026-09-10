@@ -41,16 +41,16 @@ The latency values are medians of the per-run p95 across three matched 300-secon
 repeats. All 12 runs passed the data audit. Ten runs completed every offered
 realtime request; the two single-request misses remain in the published data.
 
-![Realtime p95 time to first token across the four matched scenarios](../../../assets/batch-eviction.svg)
+![realtime p95 time to first token across the four matched scenarios](../../../assets/batch-eviction.svg)
 
 ## Matched scenarios
 
 | Scenario | Batch condition | Protection | Question |
 |---|---|---|---|
-| Realtime only | No batch traffic | None required | What is the realtime latency reference? |
-| Realtime with batch and no protection | Batch starts first and can use all request capacity | None | How much does running batch affect realtime latency? |
-| Realtime with reserved capacity | Batch starts first | Capacity remains available for realtime | Can admission policy prevent the interference? |
-| Realtime with batch eviction and retry | Batch starts first | Reserved capacity, eviction, and retry | Can running batch be reclaimed and completed later? |
+| realtime only | No batch traffic | None required | What is the realtime latency reference? |
+| realtime with batch and no protection | Batch starts first and can use all request capacity | None | How much does running batch affect realtime latency? |
+| realtime with reserved capacity | Batch starts first | Capacity remains available for realtime | Can admission policy prevent the interference? |
+| realtime with batch eviction and retry | Batch starts first | Reserved capacity, eviction, and retry | Can running batch be reclaimed and completed later? |
 
 Reserved capacity produced the latency result. Eviction added recovery when
 batch was already running: the Endpoint Picker selected eligible batch and
@@ -64,7 +64,7 @@ Processor retried those requests to completion.
 - Endpoint Picker concurrency detector in request mode with
   `maxConcurrency=48` for the protected scenarios.
 - Priority holdback used a linear rank policy with `minCeiling=0.50`.
-- Realtime traffic began with a 32-request burst and continued as a seeded
+- realtime traffic began with a 32-request burst and continued as a seeded
   open-loop Poisson process with a sinusoidally varying request rate for
   300 seconds.
 - Batch began 60 seconds before realtime traffic and maintained an Async

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08090b">
-<title>llm-d flow control — the machine, re-lit</title>
+<title>Interactive flow-control explainer</title>
 <style>
 /* ============ tokens: dark default, light via media query, data-theme wins ============ */
 :root{
@@ -188,7 +188,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #side{flex:0 0 320px;display:flex;flex-direction:column;gap:10px;min-height:0}
 #card{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:18px 19px;
   display:flex;flex-direction:column;gap:10px}
-#card h2{font-size:19px;font-weight:650;letter-spacing:0;margin:0;line-height:1.15;text-wrap:balance}
+#card h1{font-size:19px;font-weight:650;letter-spacing:0;margin:0;line-height:1.15;text-wrap:balance}
 #stepMeta{display:flex;align-items:center;gap:9px}
 #stepLab{font-size:10.5px;color:var(--txt3)}
 #stepPips{display:flex;gap:5px}
@@ -224,7 +224,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
   #canvasWrap{flex:none;aspect-ratio:1000/580}
   #side{flex:none;flex-direction:row;align-items:stretch}
   #card{flex:1;padding:13px 18px;gap:7px}
-  #card h2{font-size:18px}
+  #card h1{font-size:18px}
   #narr{min-height:0;line-height:1.45}
   #stepNav{margin-top:4px}
   #hints{display:none}
@@ -496,7 +496,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
     </div>
     <div id="side">
       <div id="card">
-        <h2 id="pTitle"></h2>
+        <h1 id="pTitle"></h1>
         <div id="stepMeta"><span id="stepLab"></span><span id="stepPips"></span></div>
         <p id="narr"></p>
         <div id="stepNav">
@@ -505,6 +505,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
         </div>
       </div>
       <div id="hints">
+        <a href="../sections.html">All evidence and RHAII 3.5 results</a><br>
         <kbd>Space</kbd> / <kbd>→</kbd> next step · <kbd>←</kbd> back ·
         <kbd>↓</kbd> <kbd>PgDn</kbd> next page · <kbd>↑</kbd> <kbd>PgUp</kbd> previous ·
         scroll to change pages · click a rail step to jump
@@ -1582,7 +1583,7 @@ const PAGES=[
     cursorAt('b0',1);pop('#g-b0',300);}}
 ]},
 /* ---- 7 · EVIDENCE: service tiers ---- */
-{title:'Evidence — service tiers',group:2,rail:'Tiers',steps:[
+{title:'RHAII 3.4 — service tiers',group:2,rail:'Tiers',steps:[
  {lit:['g-b100','g-b0','g-meter','g-pod1','g-pod2'],
   n:'The priority band did its job under saturation: premium p95 time to first token (TTFT) held <b>1117 ms</b> — the median across repeats, range 1056–1211.',
   run(){setMeter(1.0);setPods(.9,.9,.85,.92);
@@ -1612,7 +1613,7 @@ const PAGES=[
     pop('#g-pod1',100);pop('#g-pod2',250);}}
 ]},
 /* ---- 8 · EVIDENCE: batch isolation ---- */
-{title:'Evidence — batch isolation',group:2,rail:'Batch',steps:[
+{title:'RHAII 3.4 — batch isolation',group:2,rail:'Batch',steps:[
  {lit:['g-tbatch','a-t3','g-gw','g-pod1','g-pod2'],
   n:'The batch band protects the shared service by absorbing low-priority flood traffic. Without flow control, the run produced <b>48,224 rejections</b>.',
   run(){setMeter(1.1);setPods(.95,.95,.95,.95);
@@ -1642,7 +1643,7 @@ const PAGES=[
       <span class="echip">held in EPP memory, upstream of the GPU</span></div>`);}}
 ]},
 /* ---- 9 · EVIDENCE: fairness big-burst ---- */
-{title:'Evidence — the big burst',group:2,rail:'Burst',steps:[
+{title:'RHAII 3.4 — the big burst',group:2,rail:'Burst',steps:[
  {lit:['g-b0','g-cycle'],
   n:'The fairness rule is tested inside one band: one tenant burst to <b>14x</b> its neighbors — <b>82 versus 6</b> requests per second.',
   run(){setFlow('b0',0,'burster · 82 req/s',20);setFlow('b0',1,'peer · 6 req/s',1);setFlow('b0',2,'peer · 6 req/s',1);

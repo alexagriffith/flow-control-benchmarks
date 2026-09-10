@@ -226,7 +226,7 @@ def scenario_package(root: Path, slug: str, title: str, traffic: str) -> dict:
     )
     if slug == "batch-isolation":
         panel_note = "Directional medians: realtime ranged from 371–669 ms and standard from 436–1,017 ms, above the 1.5× repeat-stability gate."
-        package_takeaway = "Realtime stayed faster than batch in every repeat; latency spread was too wide for a stable point estimate."
+        package_takeaway = "realtime stayed faster than batch in every repeat; latency spread was too wide for a stable point estimate."
     panels = [dot("Who waited during the surge", "median p95 TTFT (ms)", selected_rows, panel_note, log=True)]
     matched = data.get("matched_detector_comparisons", {})
     if matched:
@@ -249,13 +249,13 @@ def production_scenarios(root: Path) -> list[dict]:
     for scenario, workloads in data["selected_configuration_results"].items():
         panels.append(dot(scenario.title(), "median surge p95 TTFT (ms)", [(name.title(), values["median_p95_ttft_ms"]) for name, values in workloads.items()], log=True))
     parent = package(
-        str(rel), "Realtime protection under production traffic",
-        "Higher-priority traffic stayed faster across four patterns; three met the repeat-stability gate.",
+        str(rel), "realtime protection under production traffic",
+        "Priority separation and peer fairness were tested in four patterns; three met the repeat-stability gate.",
         ("Noisy sinusoidal traffic", "Priority and fairness queues", "Request count 128", "One shared vLLM replica"), panels,
     )
     children = [
         scenario_package(root, "priority-tiers", "Priority tiers", "Four priority bands"),
-        scenario_package(root, "batch-isolation", "Batch isolation", "Realtime, standard, and batch"),
+        scenario_package(root, "batch-isolation", "Batch isolation", "realtime, standard, and batch"),
         scenario_package(root, "consolidation", "Consolidation", "Two realtime tenants and a standard burst"),
         scenario_package(root, "same-priority-fairness", "Same-priority fairness", "One burster and two peers"),
     ]
@@ -340,9 +340,9 @@ def long_context(root: Path) -> dict:
     return package(
         str(UPSTREAM / "long-context-admission"), "Long-context admission",
         "Exact-token admission activated policy consistently; its latency difference was inconclusive.",
-        ("Realtime plus 20k-token burst", "Request or exact-token admission", "Size-aware policy queue", "Two vLLM replicas"),
+        ("realtime plus 20k-token burst", "Request or exact-token admission", "Size-aware policy queue", "Two vLLM replicas"),
         [
-            paired("Realtime latency across matched seeds", "burst p95 TTFT (ms)", ["Request count", "Exact tokens"], [(f"Seed {p['seed']}", [p["request_p95_ms"], p["token_p95_ms"]]) for p in pairs]),
+            paired("realtime latency across matched seeds", "burst p95 TTFT (ms)", ["Request count", "Exact tokens"], [(f"Seed {p['seed']}", [p["request_p95_ms"], p["token_p95_ms"]]) for p in pairs]),
             dot(
                 "Runs with an active policy queue", "runs",
                 [
@@ -358,7 +358,7 @@ def long_context(root: Path) -> dict:
 def batch_interference(root: Path) -> dict:
     data = load_json(root, f"{UPSTREAM}/batch-interference/analysis.json")
     arms = [
-        ("Realtime only", data["by_arm"]["realtime only"]),
+        ("realtime only", data["by_arm"]["realtime only"]),
         ("Batch preloaded before realtime", data["by_arm"]["realtime with batch already running"]),
     ]
     latency_factor = data["comparison"]["realtime_p95_ttft_factor"]
@@ -367,11 +367,11 @@ def batch_interference(root: Path) -> dict:
     return package(
         str(UPSTREAM / "batch-interference"), "Batch interference",
         "Running batch severely delayed newly arriving realtime requests.",
-        ("Batch starts before realtime", "Flow-control queue", "Batch preloaded inside vLLM", "Realtime latency"),
+        ("batch starts before realtime", "Flow-control queue", "batch preloaded inside vLLM", "realtime latency"),
         [
-            paired(f"Realtime p95 TTFT was {latency_factor:.0f} times the reference", "median p95 TTFT (ms)", ["Realtime only", "Batch already running"], [("Realtime", [arms[0][1]["realtime_surge_p95_ttft_ms"]["median"], arms[1][1]["realtime_surge_p95_ttft_ms"]["median"]])], log=True),
-            paired(f"vLLM peak waiting reached {waiting_peak:.0f} requests", "median peak requests", ["Realtime only", "Batch already running"], [("Waiting requests", [arms[0][1]["max_vllm_waiting"]["median"], arms[1][1]["max_vllm_waiting"]["median"]])]),
-            paired(f"Peak KV-cache use reached {kv_peak:.1f}%", "median peak KV cache (%)", ["Realtime only", "Batch already running"], [("KV-cache use", [arms[0][1]["max_vllm_kv_cache_usage_pct"]["median"], arms[1][1]["max_vllm_kv_cache_usage_pct"]["median"]])]),
+            paired(f"realtime p95 TTFT was {latency_factor:.0f} times the reference", "median p95 TTFT (ms)", ["realtime only", "batch already running"], [("realtime", [arms[0][1]["realtime_surge_p95_ttft_ms"]["median"], arms[1][1]["realtime_surge_p95_ttft_ms"]["median"]])], log=True),
+            paired(f"vLLM peak waiting reached {waiting_peak:.0f} requests", "median peak requests", ["realtime only", "batch already running"], [("Waiting requests", [arms[0][1]["max_vllm_waiting"]["median"], arms[1][1]["max_vllm_waiting"]["median"]])]),
+            paired(f"Peak KV-cache use reached {kv_peak:.1f}%", "median peak KV cache (%)", ["realtime only", "batch already running"], [("KV-cache use", [arms[0][1]["max_vllm_kv_cache_usage_pct"]["median"], arms[1][1]["max_vllm_kv_cache_usage_pct"]["median"]])]),
         ],
         tone="warning",
     )
@@ -449,16 +449,16 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         for row in rows:
             groups.setdefault(row["scenario"], []).append(float(row["realtime_p95_ttft_ms"]))
         display_names = {
-            "Realtime only": "Realtime only",
-            "Realtime with batch and no protection": "Batch with no protection",
-            "Realtime with reserved capacity": "Reserved capacity",
-            "Realtime with reserved capacity, batch eviction, and retry": "Reserved capacity + eviction",
+            "Realtime only": "realtime only",
+            "Realtime with batch and no protection": "batch with no protection",
+            "Realtime with reserved capacity": "reserved capacity",
+            "Realtime with reserved capacity, batch eviction, and retry": "reserved capacity + eviction",
         }
         plot_rows = [(display_names[name], median(values)) for name, values in groups.items()]
         retry_rows = [("Evicted", sum(int(r["evicted_batch_requests"]) for r in rows)), ("Retried", sum(int(r["async_retried_requests"]) for r in rows)), ("One final result", sum(int(r["async_retried_requests"]) for r in rows))]
-        panels = [dot("Realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), process("Safe batch retry", "requests", retry_rows, "Evicted work was retried without duplicate results.")]
-        takeaway = "Realtime traffic remained protected while evicted batch work was safely retried."
-        arch = ("Realtime and batch", "Reserved capacity and eviction", "One vLLM replica", "Retry owner completes batch")
+        panels = [dot("realtime latency across four scenarios", "median p95 TTFT (ms)", plot_rows), process("Safe batch retry", "requests", retry_rows, "Evicted work was retried without duplicate results.")]
+        takeaway = "realtime traffic remained protected while evicted batch work was safely retried."
+        arch = ("realtime and batch", "Reserved capacity and eviction", "One vLLM replica", "Retry owner completes batch")
         results_template = "batch_eviction_single"
     else:
         production = [r for r in rows if r["evidence_role"] == "production evidence"]
@@ -471,7 +471,7 @@ def batch_eviction(root: Path, replicas: int) -> dict:
         )
         panels = [
             dot(
-                "Realtime latency across production repeats", "p95 TTFT (ms)",
+                "realtime latency across production repeats", "p95 TTFT (ms)",
                 [(f"Repeat {i + 1}", float(r["realtime_p95_ttft_ms"])) for i, r in enumerate(production)],
                 latency_takeaway,
             ),
@@ -479,7 +479,7 @@ def batch_eviction(root: Path, replicas: int) -> dict:
             process("Batch eviction and retry", "requests", [("Evicted", sum(int(r["evicted_batch_requests"]) for r in production)), ("Retried", sum(int(r["retried_batch_requests"]) for r in production)), ("Single final result", sum(int(r["single_final_result_matches"]) for r in production))]),
         ]
         takeaway = "Batch eviction and retry worked across two balanced model replicas."
-        arch = ("Realtime and batch", "One Endpoint Picker", "Two vLLM replicas", "Retry owner completes batch")
+        arch = ("realtime and batch", "One Endpoint Picker", "Two vLLM replicas", "Retry owner completes batch")
     spec = package(str(rel), f"Batch eviction: {replicas} model replica{'s' if replicas > 1 else ''}", takeaway, arch, panels)
     if replicas == 1:
         spec["results_template"] = results_template

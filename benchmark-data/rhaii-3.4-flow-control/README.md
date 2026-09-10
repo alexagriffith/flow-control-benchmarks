@@ -2,8 +2,10 @@
 
 This package contains the capacity curve and production scenarios used by the
 main README. The runs used the Red Hat AI Inference 3.4 Tech Preview scheduler
-image from `registry.redhat.io/rhoai/odh-llm-d-inference-scheduler-rhel9` with
-its utilization detector.
+image from `registry.redhat.io/rhoai/odh-llm-d-inference-scheduler-rhel9`
+pinned to digest
+`sha256:bddf686d6eaf1a607e1c697f58165d685944607cb4629648f27e56b2884e3de0`
+with the utilization detector.
 
 [Read the original campaign overview](campaign-overview.md). It preserves the
 README narrative and generated visuals published with this benchmark package.

@@ -71,7 +71,7 @@ decision.
   `max-num-batched-tokens=8192`.
 - The Endpoint Picker used request-concurrency detection with
   `maxConcurrency=48` per model replica and `minCeiling=0.50`.
-- Batch started 60 seconds before realtime traffic. Realtime then ran for 300
+- Batch started 60 seconds before realtime traffic. realtime then ran for 300
   seconds as seeded open-loop Poisson traffic with a sinusoidally varying rate.
 - Prefix caching was disabled. Cache counters remained zero, and vLLM recorded
   no preemptions.

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" id="service-boundaries" width="900" height="326" viewBox="0 0 900 326" role="img" aria-label="Workload convergence and inference routing boundaries: realtime and standard HTTP clients, plus the benchmark's queued batch path through Async Processor, enter the same Inference Gateway and Envoy runtime. Batch traffic does not inherently require Async Processor; this figure shows the asynchronous path used by the benchmark. Gateway and Envoy send request headers and body chunks to the llm-d Endpoint Picker over ExtProc. Inside EPP the parsed request passes through request handling, flow classification, an in-memory policy queue, the dispatch gate, and endpoint selection. EPP returns an ExtProc response that identifies the selected worker through destination-header mutation and dynamic metadata. Gateway and Envoy apply that response and open the upstream request stream to the selected vLLM worker in the shared InferencePool. Batch API job submission is a separate llm-d Batch Gateway path." style="font-family: Inter, &quot;Red Hat Text&quot;, system-ui, -apple-system, &quot;Segoe UI&quot;, sans-serif; background: rgb(255, 255, 255);">
+<svg xmlns="http://www.w3.org/2000/svg" id="service-boundaries" width="900" height="326" viewBox="0 0 900 326" role="img" aria-label="Workload convergence and inference routing boundaries: realtime and standard HTTP clients, plus batch inference requests sent by Async Processor in the benchmark, enter the same Inference Gateway and Envoy runtime. Batch traffic does not inherently require Async Processor; this figure shows the asynchronous path used by the benchmark. Gateway and Envoy send request headers and body chunks to the llm-d Endpoint Picker over ExtProc. Inside EPP the parsed request passes through request handling, flow classification, an in-memory policy queue, the dispatch gate, and endpoint selection. EPP returns an ExtProc response that identifies the selected worker through destination-header mutation and dynamic metadata. Gateway and Envoy apply that response and open the upstream request stream to the selected vLLM worker in the shared InferencePool. Batch API job submission is a separate llm-d Batch Gateway path." style="font-family: Inter, &quot;Red Hat Text&quot;, system-ui, -apple-system, &quot;Segoe UI&quot;, sans-serif; background: rgb(255, 255, 255);">
   <rect width="900" height="326" fill="#ffffff"/>
   <defs>
     <marker id="boundary-arrow" viewBox="0 0 10 10" refX="8.3" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" overflow="visible">
@@ -38,7 +38,7 @@
   </text>
   <rect x="30" y="122" width="146" height="30" rx="4" fill="#fcfaff" stroke="#6f42c1" stroke-width="1.35"/>
   <text x="103" y="133" text-anchor="middle" fill="#151515" font-size="9.8" font-weight="820">
-    <tspan x="103" dy="0">queued batch via</tspan>
+    <tspan x="103" dy="0">batch via</tspan>
     <tspan x="103" dy="12.5">Async Processor</tspan>
   </text>
   <rect x="350" y="42" width="200" height="74" rx="5" fill="#ffffff" stroke="#6a737d" stroke-width="1.35"/>
