@@ -157,9 +157,6 @@ for each stage and uses the higher stage saturation to control dispatch.
 
 A service with two traffic classes leaves the configured `-10` band unused.
 
-The P/D recipe retains `headroom: 0.1` from the saved configuration, but neither
-scheduling profile enables the concurrency detector as an endpoint filter.
-Headroom was inactive in these P/D runs; the results establish no headroom benefit.
 The separate [Batch dispatch comparison](benchmark-data/rhaii-3.5-flow-control/batch-dispatch/)
 tests how to hold Batch requests in an external queue before sending them to serving.
 

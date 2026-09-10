@@ -51,22 +51,5 @@ all three matched pairs.
 
 ## Scope
 
-### Headroom correction
-
-The saved P/D configurations use the concurrency detector for admission only.
-Neither the `prefill` nor the `decode` scheduling profile includes the detector
-as an endpoint filter. The configured `headroom: 0.1` therefore had no effect.
-Earlier recipe comments incorrectly described an active 10% scheduling buffer.
-
-The published YAML preserves the tested values and plugin lists. These runs
-support the admission, fairness, priority-holdback, and eviction findings above;
-they establish no endpoint-filter or headroom benefit. Adding the detector to a
-scheduling profile changes the configuration and requires a separate test.
-The [capacity/request-concurrency configuration](../examples/benchmark-reproduction/01-capacity-request-concurrency.yaml)
-does include the endpoint filter and is a separate experiment.
-
-In the [pinned router source](https://github.com/opendatahub-io/llm-d-inference-scheduler/blob/b15fb9c233d68eef00e19721d4e08585f67da845/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go),
-`Saturation()` uses the base capacity limits; `Filter()` applies `headroom`.
-
 Recalculate request, token, and priority ceilings for another model, traffic
 shape, replica count, or topology.

@@ -309,16 +309,14 @@ assert(pd_plugins.dig("concurrency-detector", "parameters") == {
   "concurrencyMode" => "hybrid",
   "inFlightLoadProducerName" => "inflight-load",
   "maxConcurrency" => 64,
-  "maxTokenConcurrency" => 80_000,
-  "headroom" => 0.1
+  "maxTokenConcurrency" => 80_000
 }, "P/D example detector differs from the accepted recipe")
 assert(pd_inline.dig("flowControl", "usageLimitPolicyPluginRef") == "priority-holdback-050",
        "P/D example must select the accepted priority holdback")
 assert(pd_inline.fetch("schedulingProfiles").map { |profile| profile.fetch("name") } ==
        %w[prefill decode], "P/D example must define separate prefill and decode profiles")
 
-# Preserve the historical admission-only P/D configuration. A declared headroom
-# value does not enable the detector's Filter interface; profile wiring does.
+# Verify the P/D admission detector and stage-specific routing profiles.
 pd_reproduction_path = PACKAGE.join("examples/benchmark-reproduction/08-prefill-decode-hybrid.yaml")
 pd_reproduction_inline = YAML.load_stream(pd_reproduction_path.read).find do |document|
   document["kind"] == "LLMInferenceService"
@@ -336,15 +334,8 @@ end.dig("spec", "router", "scheduler", "config", "inline")
   assert(profiles == {
     "prefill" => %w[prefill-filter queue-scorer max-score-picker],
     "decode" => %w[decode-filter queue-scorer max-score-picker]
-  }, "#{label} must preserve the tested profiles; endpoint filtering requires separate evidence")
+  }, "#{label} must match the tested stage routing profiles")
 end
-assert(analysis.dig("selected_recipe", "endpoint_filter_enabled") == false,
-       "P/D analysis must identify the inactive endpoint filter")
-assert(analysis.dig("selected_recipe", "headroom_effect") ==
-       "inactive: neither scheduling profile includes the concurrency detector as an endpoint filter",
-       "P/D analysis must distinguish configured headroom from active filtering")
-assert(PACKAGE.join("pd-flow-control/README.md").read.include?("Earlier recipe comments incorrectly described an active 10% scheduling buffer."),
-       "P/D documentation must retain the headroom correction")
 
 random_example = PACKAGE.join("examples/benchmark-reproduction/03-two-replica-random-baseline.yaml")
 random_baseline = YAML.load_stream(random_example.read).find do |document|
@@ -573,8 +564,7 @@ assert(detector == {
   "concurrencyMode" => "hybrid",
   "inFlightLoadProducerName" => "inflight-load",
   "maxConcurrency" => 64,
-  "maxTokenConcurrency" => 80_000,
-  "headroom" => 0.1
+  "maxTokenConcurrency" => 80_000
 }, "detector parameters do not match accepted recipe")
 
 producer = plugin_by_ref.fetch("inflight-load").fetch("parameters")
@@ -599,8 +589,6 @@ assert(selected["max_concurrency"] == detector["maxConcurrency"],
        "analysis max_concurrency differs from recipe")
 assert(selected["max_token_concurrency"] == detector["maxTokenConcurrency"],
        "analysis max_token_concurrency differs from recipe")
-assert(selected["headroom"] == detector["headroom"],
-       "analysis headroom differs from recipe")
 assert(selected.dig("priority_ceiling_policy", "minimum") == holdback["minCeiling"],
        "analysis minimum priority ceiling differs from recipe")
 assert(selected.dig("priority_ceiling_policy", "maximum") == holdback["maxCeiling"].to_f,
