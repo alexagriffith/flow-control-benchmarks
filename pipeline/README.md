@@ -132,7 +132,9 @@ check requires Python Playwright with Chromium installed. After GitHub Pages
 finishes deploying, repeat the browser check with
 `--base-url https://alexagriffith.github.io/flow-control-benchmarks`.
 The website index is `sections.html`; `benchmark.html` contains the RHAII 3.5
-takeaways. Campaign reports retain their own runtime and evidence boundaries.
+takeaways. The homepage links to the chart-by-chart `walkthrough.html`. The Batch
+report lives at `benchmark-data/batch-eviction/results.html`, with report-specific
+figures in `assets/` beside it. Campaign data remains in its existing subfolders.
 
 1. Put each accepted capability set under `benchmark-data/` with its own README, configuration, analysis, request data, traffic samples, system metrics, and proof gates. Include the executable scenario and traffic command when the public runner supports the test.
 2. Generate each public-safe tested configuration with `python3 pipeline/generate_package_configs.py`.

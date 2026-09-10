@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="370" viewBox="0 0 900 370" role="img" aria-labelledby="title desc">
+  <title id="title">Median realtime p95 TTFT with eviction off and on at a 36-of-48 Batch ceiling</title>
+  <desc id="desc">The Batch admission ceiling was configured at 36 of 48 requests, or 75 percent, leaving 12 requests, or 25 percent, available for higher-priority traffic. A zero-based bar chart compares three-repeat median realtime p95 time to first token. The median was 1,350 milliseconds with eviction off and 1,055 milliseconds with eviction on, a 22 percent reduction.</desc>
+  <style>
+    text{font-family:Inter,"Red Hat Text",system-ui,-apple-system,"Segoe UI",sans-serif}
+    .ink{fill:#15202b}.muted{fill:#5e6975}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.35px}
+    .axis{font-size:10px;font-weight:700}.group{font-size:13px;font-weight:800}.value{font-size:24px;font-weight:850}
+    .change{font-size:28px;font-weight:850}.body{font-size:12px;font-weight:700}
+  </style>
+  <rect width="900" height="400" fill="#f5f7fa"/>
+  <text x="50" y="34" class="eyebrow" fill="#087f5b">CONFIGURATION · MAXCONCURRENCY 48 · HEADROOM 0% · BATCH CEILING 36</text>
+  <text x="50" y="58" class="body ink">12 requests (25%) reserved for higher-priority traffic · median realtime p95 TTFT</text>
+
+  <g stroke="#d7dee5" stroke-width="1">
+    <line x1="92" y1="82" x2="850" y2="82"/>
+    <line x1="92" y1="159" x2="850" y2="159"/>
+    <line x1="92" y1="236" x2="850" y2="236"/>
+    <line x1="92" y1="314" x2="850" y2="314"/>
+  </g>
+  <g class="axis muted" text-anchor="end">
+    <text x="80" y="86">1,500 ms</text>
+    <text x="80" y="163">1,000</text>
+    <text x="80" y="240">500</text>
+    <text x="80" y="318">0</text>
+  </g>
+  <line x1="92" y1="314" x2="850" y2="314" stroke="#9eabb6" stroke-width="1.4"/>
+
+  <rect x="238" y="106" width="160" height="208" rx="7" fill="#7fa4e8"/>
+  <rect x="544" y="152" width="160" height="162" rx="7" fill="#14946b"/>
+  <text x="318" y="98" class="value ink" text-anchor="middle">1,350 ms</text>
+  <text x="624" y="144" class="value ink" text-anchor="middle">1,055 ms</text>
+  <text x="624" y="188" class="change" fill="#ffffff" text-anchor="middle">−22%</text>
+  <text x="318" y="341" class="group ink" text-anchor="middle">eviction off</text>
+  <text x="624" y="341" class="group ink" text-anchor="middle">eviction on</text>
+</svg>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batch Eviction Benchmark</title>
+  <style>
+    :root {
+      --ink:#1f2328;
+      --muted:#59636e;
+      --line:#d0d7de;
+      --page:#f6f8fa;
+      --green:#087f5b;
+      --green-soft:#eaf7f1;
+      --blue:#0969da;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      color:var(--ink);
+      background:var(--page);
+      font:15px/1.58 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    a { color:var(--blue); }
+    main { width:min(980px,calc(100% - 32px)); margin:28px auto 72px; }
+    header,section {
+      margin-bottom:20px;
+      padding:30px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:10px;
+    }
+    header { border-top:4px solid var(--green); }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin-bottom:7px; font-size:38px; line-height:1.1; letter-spacing:-.03em; }
+    h2 { margin-bottom:16px; font-size:29px; line-height:1.2; letter-spacing:-.022em; }
+    h3 { margin:26px 0 8px; font-size:17px; }
+    .eyebrow,.role {
+      margin-bottom:8px;
+      color:var(--green);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+    }
+    .dek { margin-bottom:0; color:var(--muted); font-size:17px; }
+    nav { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+    nav a {
+      padding:5px 10px;
+      color:var(--ink);
+      background:var(--page);
+      border:1px solid var(--line);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      text-decoration:none;
+    }
+    nav a[aria-current="page"] { color:#076744; background:var(--green-soft); border-color:#9bd7b7; }
+    .copy { max-width:780px; }
+    figure { margin:24px 0; }
+    figure img { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    figcaption { margin-top:8px; color:var(--muted); font-size:12px; }
+    ol,ul { margin:8px 0 0; padding-left:24px; }
+    li { margin-bottom:8px; }
+    li:last-child { margin-bottom:0; }
+    .table-wrap { margin-top:10px; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { padding:11px 12px; text-align:left; vertical-align:top; border:1px solid var(--line); }
+    th { color:var(--muted); background:var(--page); font-size:10px; letter-spacing:.06em; text-transform:uppercase; }
+    td:first-child { width:29%; font-weight:700; }
+    code { padding:.12em .3em; background:rgba(175,184,193,.2); border-radius:4px; font-size:.9em; }
+    footer { padding:4px; color:var(--muted); font-size:12px; }
+    @media (max-width:650px) {
+      main { width:min(100% - 20px,980px); margin-top:10px; }
+      header,section { padding:21px 17px; }
+      h1 { font-size:30px; }
+      h2 { font-size:24px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    
+    <h1>Batch Eviction Benchmark</h1>
+    
+    <nav aria-label="Benchmark navigation">
+      <a href="../../sections.html">All evidence</a>
+      <a href="#configuration-and-tuning">Configuration</a>
+      <a href="#realtime-result">Realtime results</a>
+      <a href="#eviction-result">Eviction and retry</a>
+      <a href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/batch-eviction">Source data</a>
+    </nav>
+  </header>
+
+  <section id="benchmark-overview">
+    <p class="role">Introduction</p>
+    <div class="copy">
+      <h2>Benchmark overview</h2>
+      <p>Realtime and batch requests can share the same GPUs to improve utilization. Shared capacity also creates a scheduling challenge: long-running batch work may already be using the model server when latency-sensitive requests arrive. Priority holdback prevents new lower-priority requests from consuming capacity set aside for higher-priority traffic before dispatch. Priority holdback can't recover capacity from batch requests already running in vLLM. Eviction interrupts an eligible request, frees capacity for higher-priority traffic, and lets Async Processor retry the interrupted request later.</p>
+      <p>In this overview, <strong>high-priority traffic</strong> generally refers to latency-sensitive traffic with the request-and-response pattern typical of interactive or realtime use. <strong>Lower-priority traffic</strong> generally refers to deferrable batch traffic that can finish later.</p>
+    </div>
+
+    <figure>
+      <img src="../../assets/blog-batch-eviction-hero.svg" alt="Blue realtime traffic and purple batch traffic feed one shared model pool. Eviction interrupts an eligible running batch request, freeing capacity for higher-priority traffic while the batch request retries later.">
+      <figcaption>Blue realtime traffic and purple batch traffic enter the same model pool. When higher-priority traffic waits, eviction interrupts an eligible running batch request. That request retries later while the higher-priority request uses the freed capacity.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <h3>The benchmark ran in the following stages</h3>
+      <ol>
+        <li><strong>Established the high-priority baseline.</strong> The benchmark first ran one high-priority traffic flow by itself. The request pattern represented interactive traffic, with no other workload sharing the GPU. The resulting latency and throughput became the reference for later comparisons.</li>
+        <li><strong>Added lower-priority traffic.</strong> Lower-priority traffic started first and shared the model server with high-priority traffic. This stage showed how competition for the same model capacity affected the baseline.</li>
+        <li><strong>Verified the eviction-and-retry mechanism.</strong> The benchmark interrupted an eligible sheddable request already inside the model server, then confirmed that Async Processor could try the request again.</li>
+        <li><strong>Swept the configuration.</strong> The benchmark tested three limits on lower-priority traffic while holding the other request limits and the eviction setting fixed.</li>
+        <li><strong>Ran targeted pressure tests.</strong> Abrupt surges, long prompts, and an eviction-off comparison exposed settings that left too little capacity for high-priority traffic.</li>
+        <li><strong>Compared the four benchmark scenarios.</strong> The benchmark measured the high-priority baseline, shared traffic without controls, pre-dispatch limits, and pre-dispatch limits with eviction and retry using the same 300-second traffic schedule.</li>
+        <li><strong>Repeated the final configuration with two model replicas.</strong> The final test verified the request-level eviction-and-retry path with one Endpoint Picker and two model replicas.</li>
+      </ol>
+
+      <h3>Main takeaways</h3>
+      <ul>
+        <li>With priority holdback, realtime latency returned to the same level as the realtime-only baseline while batch traffic continued to share the GPU.</li>
+        <li>Adding eviction and retry increased median batch completions by 9% during the same 300-second window while reserved capacity remained fixed.</li>
+        <li>Eviction did not permanently drop any observed batch work: every evicted request completed after retry, with one final result and no duplicates. The tradeoffs were recomputation and longer batch latency.</li>
+        <li>In this benchmark, reserving 50% of request capacity produced the best tested balance between realtime latency and batch capacity.</li>
+        <li>The two-model-replica tests showed the same eviction-and-retry behavior as the single-model-replica tests.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="terms-and-definitions">
+    <p class="role">Terms to define</p>
+    <div class="copy">
+      <h2>Terms and definitions</h2>
+    </div>
+
+    <h3>Language used in this benchmark</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Term</th><th>How it is used here</th></tr></thead>
+        <tbody>
+          <tr><td>High-priority traffic / realtime</td><td><strong>High-priority traffic</strong> generally refers to latency-sensitive traffic with the request-and-response pattern typical of interactive or realtime use. <strong>realtime</strong> is the benchmark label for the workload assigned priority <code>100</code>. The benchmark label does not define a universal production profile.</td></tr>
+          <tr><td>Lower-priority traffic / batch</td><td><strong>Lower-priority traffic</strong> is work that can wait or finish later when more urgent demand needs the shared capacity. <strong>batch</strong> is the benchmark label for requests assigned priority <code>-10</code>. Batch is a configured request classification.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>How llm-d classifies a request</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Term</th><th>How it is used here</th></tr></thead>
+        <tbody>
+          <tr><td><code>InferenceObjective</code></td><td>The request carries <code>x-llm-d-inference-objective</code>, which names an <code>InferenceObjective</code>. The Endpoint Picker resolves that resource, reads its priority for flow control, and uses its pool reference during endpoint selection.</td></tr>
+          <tr><td>Priority</td><td>The integer used to place requests into priority bands. Higher values represent more urgent work. These runs used <code>100</code> for realtime and <code>-10</code> for batch.</td></tr>
+          <tr><td>Sheddable</td><td>Eligible to be interrupted when llm-d must free capacity for higher-priority work. llm-d treats requests with a priority below <code>0</code> as sheddable. A caller with retry support can submit the interrupted work again.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Components in the request path</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Component</th><th>What it does in this benchmark</th></tr></thead>
+        <tbody>
+          <tr><td>Endpoint Picker</td><td>The llm-d component that applies flow control and selects a model replica. In the eviction path, the Endpoint Picker also tracks eligible in-flight requests, selects one to evict, and constructs the HTTP <code>429</code> immediate response that Envoy returns.</td></tr>
+          <tr><td>Envoy</td><td>The proxy carrying the request stream between the caller and vLLM. For an eviction, Envoy returns HTTP <code>429</code> to the caller and ends that request's upstream vLLM stream.</td></tr>
+          <tr><td>vLLM model server</td><td>The component running inference on the GPU. Pre-dispatch controls can stop new work before the work reaches vLLM. Eviction addresses eligible lower-priority work already running in vLLM.</td></tr>
+          <tr><td>Async Processor</td><td>The HTTP caller used for the batch workload in these runs. Async Processor treats the HTTP <code>429</code> eviction response as retryable, waits through backoff, and submits another attempt through the normal request path.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>llm-d configuration and pre-dispatch controls</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Control</th><th>What it changes</th></tr></thead>
+        <tbody>
+          <tr><td>Request-concurrency detector / <code>maxConcurrency</code></td><td><code>maxConcurrency</code> sets the ideal request-count capacity for each replica. The selected configuration used <code>48</code> per replica. Flow control used those per-replica capacities to calculate pool saturation.</td></tr>
+          <tr><td>Headroom</td><td>Headroom raises the per-replica filtering limit above <code>maxConcurrency</code> by the configured fraction. Headroom does not change the pool-wide saturation calculation and does not distinguish among request priorities.</td></tr>
+          <tr><td>Priority holdback / admission ceiling</td><td>The pre-dispatch control that gives lower-priority bands earlier usage limits as the pool fills. When a priority band reaches its limit, new requests in that band wait. <strong>Reserved capacity</strong> describes the resulting capacity left available for higher-priority work. Reserved capacity is not a configuration name.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Eviction and retry after dispatch</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Term</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td>In-flight eviction</td><td>The after-dispatch control. When higher-priority demand is blocked, the Endpoint Picker can select an eligible lower-priority request already running in vLLM. Envoy ends the upstream stream. The request capacity returns to the shared pool after vLLM stops the request.</td></tr>
+          <tr><td>HTTP <code>429</code> / retry / final result</td><td>HTTP <code>429</code> is the retryable response returned for the evicted request in this path. Async Processor retains the same internal request for backoff and starts another attempt later. A final result is the one terminal response produced after success. The benchmark checked for duplicate final results.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <p class="role">System context</p>
+    <div class="copy">
+      <h2>Architecture</h2>
+      <p>These experiments used an Inference Gateway with llm-d providing flow control, plus KServe-managed inference pools running vLLM model servers. This section walks through the shared request path, how batch jobs enter that path, and where the Endpoint Picker applies flow control.</p>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/shared-inference-boundaries.svg" alt="Realtime and standard HTTP clients, plus batch inference requests sent by Async Processor in this benchmark, converge on Inference Gateway and Envoy. Gateway and Envoy consult the Endpoint Picker over ExtProc and open the request stream to the selected vLLM worker.">
+      <figcaption>Realtime, standard, and benchmark batch requests converge on the same Gateway and Envoy path. Envoy calls the Endpoint Picker, applies the selected destination, and opens the upstream stream to the chosen vLLM worker.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <h3>How batch jobs reach the shared serving path</h3>
+      <p>Batch Processor expands each Batch API job into individual inference requests. In the synchronous path, Batch Processor sends each request to the Inference Gateway over HTTP. In the asynchronous path, Batch Processor publishes the requests and Async Processor sends them to the Inference Gateway. This benchmark used the asynchronous path.</p>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/batch-workload-paths.svg" alt="Batch jobs enter through Batch API Server and Batch Processor. In sync mode, Batch Processor sends each inference request over HTTP. In optional async mode, Batch Processor enqueues requests and Async Processor becomes the HTTP caller.">
+      <figcaption>Sync dispatch is the Batch Gateway default, and Batch Processor is the HTTP caller. In optional async mode, Batch Processor publishes individual requests and Async Processor becomes the HTTP caller. This benchmark used the async path.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <h3>Inside the Endpoint Picker</h3>
+      <p>The Endpoint Picker classifies each request by priority and fairness identity. These values form the flow key that places the request in a priority band and tenant queue. The processor dispatches requests as capacity becomes available. After dispatch, the Endpoint Picker tracks eligible lower-priority requests for possible eviction.</p>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/epp-flow-control-queues.svg" alt="Inside the Endpoint Picker, the request objective maps to a priority. The fairness identity and priority form a flow key. Requests form flow queues inside priority bands before dispatch.">
+      <figcaption>Inside the Endpoint Picker, the request objective maps to a priority. The fairness identity and priority form the flow key. Each flow queues inside its priority band, and the processor gates dispatch at the configured limit.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <p>Priority holdback acts before dispatch by limiting lower-priority traffic as the pool fills. Eviction acts after dispatch by interrupting eligible lower-priority work already running in vLLM.</p>
+    </div>
+  </section>
+
+  <section id="configuration-and-tuning">
+    <p class="role">Configuration</p>
+    <div class="copy">
+      <h2>Configuration and tuning</h2>
+      <p><a href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/upstream-flow-control-v0.9.0/request-concurrency-priority-tuning">Earlier request-concurrency tuning</a> tested five settings and found the lowest premium p95 TTFT at <code>maxConcurrency=48</code> per replica. These eviction experiments carried that tested operating point forward. Priority holdback, added in llm-d v0.10, set priority-specific admission ceilings before dispatch. Experimental in-flight eviction handled eligible lower-priority work after dispatch.</p>
+
+      <h3>How the controls differ</h3>
+    </div>
+
+    <figure>
+      <img src="../headroom-vs-reserved-capacity.svg" alt="Priority holdback compares pool saturation with a priority-band ceiling before dispatch. Headroom raises the per-replica request-concurrency threshold used during replica filtering.">
+      <figcaption>Priority holdback sets pool-wide priority-band ceilings before dispatch. Headroom raises the per-replica eligibility threshold for every priority.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <p><code>maxConcurrency</code> defines request-count capacity. Priority holdback creates reserved capacity by stopping lower-priority requests at an earlier admission ceiling. Eviction can recover capacity from eligible lower-priority work already running in vLLM.</p>
+
+      <h3>Choosing reserved capacity</h3>
+      <p>The benchmark compared 25%, 50%, and 75% reserved capacity with eviction enabled. Headroom remained at <code>0%</code> so the per-replica filtering threshold stayed fixed while the priority-holdback ceiling changed. The corresponding batch admission ceilings were 75%, 50%, and 25%.</p>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/reserved-capacity-sweep.svg" alt="Three tested reserved-capacity settings compare median realtime p95 time to first token. The medians were 1,055 milliseconds at 25 percent reserve, 967 milliseconds at 50 percent reserve, and 1,019 milliseconds at 75 percent reserve.">
+      <figcaption>The 50% reserve setting produced the lowest median realtime p95 TTFT in this three-setting sweep. More reserve reduced batch capacity. Less reserve increased pressure and triggered eviction.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <p>For this workload, 50% reserved capacity produced the best tested balance between realtime latency and batch capacity. The result identifies the best of three tested settings, not a universal optimum.</p>
+
+      <h3>What eviction changed at 25% reserve</h3>
+      <p>The eviction-isolation test capped batch at 36 of 48 request positions. This 75% batch ceiling left 12 positions, or 25%, available for higher-priority traffic. The test held the admission setting fixed and compared eviction disabled and enabled.</p>
+    </div>
+
+    <figure>
+      <img src="assets/eviction-isolation-ttft.svg" alt="At a batch admission ceiling of 36 out of 48 requests, median realtime p95 time to first token was 1,350 milliseconds with eviction disabled and 1,055 milliseconds with eviction enabled, a 22 percent reduction.">
+      <figcaption>Across three matched repeats, eviction reduced median realtime p95 TTFT from 1,350 to 1,055 ms. Eviction also interrupted 25 batch requests, caused 9,076 tokens to be recomputed or unreturned, and increased median batch p95 end-to-end latency from 8.51 to 12.24 seconds.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <p>At 25% reserve, eviction improved the realtime median but increased batch computation and latency. At 50% reserve, no evictions occurred in the sweep. For this workload, eviction served as an overflow control rather than a substitute for sufficient reserved capacity.</p>
+
+      <h3>Workload shapes</h3>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Traffic</th><th>Configuration and purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Realtime</td><td>Priority <code>100</code>. The test began with 32 requests, then added requests through a seeded arrival pattern that varied around four requests per second. Short outputs represented latency-sensitive interactive demand.</td></tr>
+          <tr><td>batch</td><td>Priority <code>-10</code>. A 64-job Async Processor backlog started 60 seconds before realtime traffic. Longer outputs kept eligible lower-priority work inside vLLM when higher-priority demand arrived.</td></tr>
+          <tr><td>Standard</td><td>Priority <code>0</code>. A mechanism test confirmed that Standard requests could reclaim capacity from lower-priority batch work. Standard traffic was not part of the final four matched result scenarios.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <section id="realtime-result">
+    <p class="role">Realtime result</p>
+    <div class="copy">
+      <h2>Realtime latency was preserved under mixed load</h2>
+      <p>Without protection, batch traffic increased median realtime p95 TTFT by 64% under mixed load. Priority holdback reduced the mixed-load median by 39% and kept realtime latency at the same measured level as the realtime-only baseline while batch continued to share the GPU. The 1 ms difference between the holdback and baseline medians does not establish a statistical difference.</p>
+    </div>
+
+    <figure>
+      <img src="assets/batch-eviction-outcome.svg" alt="Three zero-based bars show median realtime p95 time to first token. The median was 342 milliseconds for realtime only, 561 milliseconds for realtime plus batch, and 341 milliseconds for realtime plus batch with priority holdback.">
+      <figcaption>Across matched 300-second runs, priority holdback preserved median realtime p95 TTFT at the realtime-only level while batch continued to share the GPU.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Scenario</th><th>Median realtime p95 TTFT</th><th>What the result shows</th></tr></thead>
+        <tbody>
+          <tr><td>Realtime only</td><td>342 ms</td><td>The reference latency without batch traffic.</td></tr>
+          <tr><td>Unprotected mixed traffic</td><td>561 ms</td><td>Batch traffic could fill the shared request budget and increased the realtime median by 64%.</td></tr>
+          <tr><td>Priority holdback</td><td>341 ms</td><td>Batch traffic stopped at the 24-request admission ceiling, leaving half of the 48-request budget for higher-priority traffic.</td></tr>
+          <tr><td>Priority holdback with eviction and retry</td><td>348 ms</td><td>Realtime remained near baseline. Eviction did not improve this median beyond holdback alone.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="copy">
+      <h3>When the realtime burst exceeded the reserve</h3>
+      <p>The 32-request realtime burst exceeded the 24 protected positions, so up to eight requests still waited. Without eviction, those requests waited for batch work to finish naturally. With eviction, realtime could use capacity released by eligible batch work, while Async Processor retried the interrupted work later.</p>
+    </div>
+
+    <figure>
+      <img src="assets/50-percent-reserve-walkthrough.svg" alt="A decision tree shows 24 batch requests occupying half of a 48-request policy budget before 32 realtime requests arrive. Twenty-four realtime requests can start and up to eight wait. Without eviction, the waiting requests rely on natural batch completion. With eviction, eligible batch work stops and retries later after realtime uses the released capacity.">
+      <figcaption>The reserve did not guarantee immediate capacity for all 32 requests in the opening burst. The 38 observed evictions accumulated across three complete runs. They were not eight guaranteed evictions from the opening burst.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <h3>What we learned</h3>
+      <ul>
+        <li><strong>Realtime stayed near baseline in both 50% reserve configurations.</strong> Median realtime p95 TTFT was 341 ms with holdback alone and 348 ms with eviction and retry. Every observed evicted batch request was retried and produced one final result with no duplicates.</li>
+        <li><strong>A stronger eviction test needs sustained after-dispatch contention.</strong> Run the same long batch workload and realtime arrivals with a fixed reserve, first with eviction disabled and then enabled. Measure the wait from realtime arrival to released vLLM capacity. Eviction can improve TTFT only when an interrupted batch stream releases capacity faster than the batch request would finish naturally.</li>
+        <li><strong>Reserved capacity trades batch throughput for realtime protection.</strong> A larger reserve gives realtime more immediate capacity but lowers the batch admission ceiling. A smaller reserve allows more concurrent batch work but increases the chance that realtime waits and eviction activates. The 50% reserve was the best tested balance for this workload.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="eviction-result">
+    <p class="role">Eviction result</p>
+    <div class="copy">
+      <h2>Eviction and retry completed 9% more batch requests while realtime stayed near baseline</h2>
+      <p>With 50% reserved capacity held fixed, eviction and retry increased median batch completions by 9% during the same 300-second window. Realtime median p95 TTFT remained near baseline, and every observed evicted batch request completed through retry.</p>
+
+      <h3>How one eviction and retry completes</h3>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/batch-eviction-mechanism.svg" alt="The Endpoint Picker selects an eligible running batch request. Envoy returns HTTP 429 and ends its vLLM stream. Queued realtime traffic proceeds after capacity becomes available, and Async Processor retries the same batch request later.">
+      <figcaption>The Endpoint Picker selects an eligible running batch request and constructs the HTTP 429 response. Envoy returns the response and ends the upstream stream. Once capacity becomes available, queued realtime traffic can proceed and Async Processor retries the batch request later.</figcaption>
+    </figure>
+
+    <div class="copy">
+      <p>The Endpoint Picker uses the request's stored target replica to identify the stream. Capacity returns to the shared pool after vLLM stops the request. Priority-aware dispatch then selects the next queued request.</p>
+
+      <h3>Measured result</h3>
+    </div>
+
+    <figure>
+      <img src="../../assets/readme/batch-retry-value.svg" alt="At 50 percent reserved capacity, priority holdback reduced median realtime p95 time to first token by 39 percent. With the same reserve fixed, eviction and retry increased median batch completions by 9 percent during the 300-second run.">
+      <figcaption>At 50% reserved capacity, priority holdback reduced median realtime p95 TTFT by 39%. With the same reserve fixed, eviction and retry increased median batch completions by 9%.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Outcome</th><th>Measured result</th><th>Takeaway</th></tr></thead>
+        <tbody>
+          <tr><td>Batch completions</td><td>1,648 to 1,798</td><td>Eviction and retry completed 150 additional batch requests per 300-second run, a 9% increase.</td></tr>
+          <tr><td>Retry completion</td><td>38 of 38 evictions</td><td>Every observed evicted request produced one final result with no duplicates.</td></tr>
+          <tr><td>Realtime latency</td><td>341 ms to 348 ms</td><td>Median realtime p95 TTFT remained near baseline when eviction and retry were added to priority holdback.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="copy">
+      <h3>What happens to interrupted work</h3>
+      <p>Async Processor treats the eviction response as retryable, waits through backoff, and submits the request through normal scheduling again. The retry produces the final result.</p>
+
+      <h3>Retry cost</h3>
+      <p>These runs disabled prefix caching, and vLLM freed the interrupted request's KV-cache blocks. The retry recomputed the prompt. This benchmark does not establish whether a cache-enabled configuration could reuse a matching prefix.</p>
+    </div>
+  </section>
+
+  <footer><a href="../../sections.html">All evidence</a> · <a href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/batch-eviction">Source data</a></footer>
+</main>
+</body>
+</html>

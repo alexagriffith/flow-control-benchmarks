@@ -44,8 +44,20 @@ def main() -> int:
                 if name == "index.html":
                     assert page.locator('a[href="benchmark.html"]').count() == 0
                     assert page.locator('a[href="sections.html"]').count() == 1
+                    assert page.locator('a[href="walkthrough.html"]').count() == 1
                 if name == "sections.html":
-                    assert page.get_by_text("All 12 evidence groups", exact=True).count() == 1
+                    assert page.get_by_text("All 12 test groups and data", exact=True).count() == 1
+                    assert page.locator("a.card").count() == 4
+                    assert page.locator(".resources a").count() == 6
+                    assert page.locator(".resources a").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)") < page.locator(".card .t").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)")
+                if name.startswith("benchmark-data/batch-eviction/"):
+                    assert page.locator("h1").inner_text() == "Batch Eviction Benchmark"
+                    assert page.locator("#realtime-result").count() == 1
+                    if args.base_url:
+                        assert page.url.endswith("/batch-eviction/results.html")
+                if name == "walkthrough.html":
+                    assert page.locator("#operating-point").count() == 1
+                    assert page.locator("#themeBtn").count() == 1
                 if name == "benchmark.html":
                     assert page.locator("#prefill-decode").count() == 1
                     assert page.locator("#deadlines h2").inner_text() == "Prioritize requests with earlier latency deadlines"

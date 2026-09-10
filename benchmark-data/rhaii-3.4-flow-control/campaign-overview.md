@@ -166,7 +166,7 @@ A verification gap earlier in this campaign sent tenants to pools without priori
 
 ## The benchmark
 
-**[How we got the numbers, one pass at a time](../../benchmark.html)** is the longer story behind the results above: what was tested in what order, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.
+**[How we got the numbers, one pass at a time](../../walkthrough.html)** is the longer story behind the results above: what was tested in what order, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.
 
 ## Learn flow control
 

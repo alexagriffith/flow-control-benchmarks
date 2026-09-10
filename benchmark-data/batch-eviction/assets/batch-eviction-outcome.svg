@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="370" viewBox="0 0 900 370" role="img" aria-labelledby="title description" style="font-family:Inter,'Red Hat Text',system-ui,-apple-system,'Segoe UI',sans-serif">
+<title id="title">Priority holdback preserved realtime p95 TTFT under mixed load</title>
+<desc id="description">Three zero-based vertical bars show median realtime p95 time to first token across three 300-second runs: 342 milliseconds for realtime only, 561 milliseconds for realtime plus batch, and 341 milliseconds for realtime plus batch with priority holdback.</desc>
+<rect width="900" height="370" rx="10" fill="#ffffff"/>
+<text x="18" y="156" transform="rotate(-90 18 156)" text-anchor="middle" font-size="11" font-weight="700" fill="#59636e">Median realtime p95 TTFT (ms)</text>
+<line x1="70" y1="286.0" x2="870" y2="286.0" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="290.0" text-anchor="end" font-size="11" fill="#59636e">0</text>
+<line x1="70" y1="242.7" x2="870" y2="242.7" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="246.7" text-anchor="end" font-size="11" fill="#59636e">100</text>
+<line x1="70" y1="199.3" x2="870" y2="199.3" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="203.3" text-anchor="end" font-size="11" fill="#59636e">200</text>
+<line x1="70" y1="156.0" x2="870" y2="156.0" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="160.0" text-anchor="end" font-size="11" fill="#59636e">300</text>
+<line x1="70" y1="112.7" x2="870" y2="112.7" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="116.7" text-anchor="end" font-size="11" fill="#59636e">400</text>
+<line x1="70" y1="69.3" x2="870" y2="69.3" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="73.3" text-anchor="end" font-size="11" fill="#59636e">500</text>
+<line x1="70" y1="26.0" x2="870" y2="26.0" stroke="#d8dee4" stroke-width="1"/>
+<text x="58" y="30.0" text-anchor="end" font-size="11" fill="#59636e">600 ms</text>
+<line x1="84" y1="137.8" x2="862" y2="137.8" stroke="#087f5b" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.72"/>
+<text x="862" y="130.8" text-anchor="end" font-size="10.5" font-weight="750" fill="#087f5b">realtime baseline</text>
+<rect x="115.0" y="137.8" width="130" height="148.2" rx="5" fill="#087f5b"/>
+<text x="180" y="322" text-anchor="middle" font-size="14" font-weight="750" fill="#1f2328">realtime only</text>
+<rect x="385.0" y="42.9" width="130" height="243.1" rx="5" fill="#d45d0b"/>
+<text x="450" y="322" text-anchor="middle" font-size="14" font-weight="750" fill="#1f2328">realtime + batch</text>
+<rect x="655.0" y="138.2" width="130" height="147.8" rx="5" fill="#14946b"/>
+<text x="720" y="322" text-anchor="middle" font-size="14" font-weight="750" fill="#1f2328">realtime + batch</text><rect x="634" y="333" width="172" height="25" rx="12.5" fill="#eaf7f1" stroke="#87c9ab"/><text x="720" y="350" text-anchor="middle" font-size="12.5" font-weight="800" fill="#087f5b">+ priority holdback</text>
+</svg>

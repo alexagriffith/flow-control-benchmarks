@@ -12,12 +12,14 @@ PAGES = (
     "index.html",
     "sections.html",
     "benchmark.html",
+    "walkthrough.html",
     "learn/flow-control.html",
     "learn/flow-control-journey.html",
     "benchmark-data/upstream-flow-control-v0.9.0/results.html",
+    "benchmark-data/batch-eviction/results.html",
     "benchmark-data/batch-eviction/single-model-replica/results.html",
 )
-RETIRED = ("walkthrough.html", "benchmark-data/results.html")
+RETIRED = ("benchmark-data/results.html",)
 REPO = "https://github.com/alexagriffith/flow-control-benchmarks/"
 
 
@@ -70,9 +72,30 @@ def validate() -> list[str]:
     index = (ROOT / "index.html").read_text()
     if 'href="benchmark.html"' in index or 'href="sections.html"' not in index:
         errors.append("Landing page must route campaign reports through the evidence index")
+    if 'href="walkthrough.html"' not in index:
+        errors.append("Landing page must retain the benchmark walkthrough")
     if 'href="exports/' in index:
         errors.append("Landing page offers outdated downloadable snapshots")
     sections = (ROOT / "sections.html").read_text()
+    if sections.count('class="card"') != 4:
+        errors.append("Evidence index must contain four primary report cards")
+    if "Earlier campaigns" in sections or 'class="resources"' not in sections:
+        errors.append("Evidence index must use version headers and subordinate resource links")
+    if 'href="benchmark-data/batch-eviction/results.html"' not in sections:
+        errors.append("Evidence index must use the parent Batch report")
+    reports = {ROOT / "benchmark.html", ROOT / "walkthrough.html"}
+    reports.update(
+        file for file in (ROOT / "benchmark-data").rglob("*.html")
+        if 'http-equiv="refresh"' not in file.read_text()
+    )
+    index_targets = {
+        (ROOT / urlsplit(link).path).resolve()
+        for link in Page(sections).links
+        if not urlsplit(link).scheme and not urlsplit(link).netloc
+    }
+    for report in reports:
+        if report.resolve() not in index_targets:
+            errors.append(f"Evidence index is missing report: {report.relative_to(ROOT)}")
     for campaign in ("rhaii-3.5-flow-control", "rhaii-3.4-flow-control",
                      "upstream-flow-control-v0.9.0", "batch-eviction"):
         if campaign not in sections:
@@ -84,6 +107,12 @@ def validate() -> list[str]:
     pd = overview.split('id="prefill-decode"', 1)[-1].split('id="batch-dispatch"', 1)[0]
     if "headroom" in pd:
         errors.append("P/D overview contains an untested headroom setting")
+    batch = (ROOT / "benchmark-data/batch-eviction/results.html").read_text()
+    if "local review" in batch or ".local-review/" in batch or "review draft" in batch:
+        errors.append("Published Batch report contains review-only navigation")
+    legacy = (ROOT / "benchmark-data/batch-eviction/single-model-replica/results.html").read_text()
+    if 'url=../results.html' not in legacy:
+        errors.append("Old single-model URL must redirect to the parent Batch report")
     return errors
 
 

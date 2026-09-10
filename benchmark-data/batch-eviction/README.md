@@ -1,5 +1,7 @@
 # Batch eviction benchmark data
 
+[Read the Batch Eviction Benchmark](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/batch-eviction/results.html)
+
 These packages test whether lower-priority batch work can share model capacity
 without compromising higher-priority realtime traffic. They cover two deployment
 topologies and keep each claim tied to the evidence that supports it.
