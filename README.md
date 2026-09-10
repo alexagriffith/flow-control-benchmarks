@@ -131,7 +131,7 @@ sharply at the next tested load.
 
 <sub>GPT-OSS 20B on one H100, 512 input tokens and 128 output tokens, prefix caching off. Objectives: p95 TTFT at or below 250 ms and p95 time per output token at or below 25 ms. At 40.6 requests per second, request cap 128 with 10% headroom passed three of three repeats. Evidence: [capacity sweep](benchmark-data/rhaii-3.5-flow-control/capacity-envelope/) · [request-cap comparison](benchmark-data/rhaii-3.5-flow-control/request-concurrency/).</sub>
 
-### Help Queued Requests Meet Their Latency Objectives
+### Prioritize Requests with Earlier Latency Deadlines
 
 First-come, first-served (FCFS) orders requests by arrival within one flow.
 SLO ordering gives earlier deadlines precedence. In the matched tests, more
