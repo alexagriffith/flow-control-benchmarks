@@ -577,7 +577,7 @@ const historyNodes={
 };
 let criteriaSelection=0;
 const sectionSelection={1:0,2:0,3:0,5:0};
-const sectionChoices={1:{title:'',labels:['Scheduled requests','Dependent sessions']},2:{title:'Test a known rate or find a supported range',labels:['Yes: test the required rate','No: sweep arrival rates']},3:{title:'Add one workload at a time',labels:['1. Add first competitor','2. Add next workload','3. Test a workload burst']},5:{title:'Test priority; then ceilings if needed',labels:['1. Request priority','2. Admission ceiling']}};
+const sectionChoices={1:{title:'',labels:['Scheduled requests','Dependent sessions']},2:{title:'Test expected load or find capacity',labels:['Yes: test that demand','No: find the supported range']},3:{title:'Add one workload at a time',labels:['1. Add first competitor','2. Add next workload','3. Test a workload burst']},5:{title:'Test priority; then ceilings if needed',labels:['1. Request priority','2. Admission ceiling']}};
 const detectorSelection={family:'concurrency',mode:'requests'};
 function renderMap(openIds=new Set(),mode='reference'){
  let panelNode,panelSelected;
@@ -595,7 +595,7 @@ function renderMap(openIds=new Set(),mode='reference'){
  if(!history&&n.id===2){edge(`M420 ${y} V${y+32}`);y+=32;rowPanel(rows.filter(([k])=>k==='Verify before the run'));rows=rows.filter(([k])=>k!=='Verify before the run');}
  if(!history&&n.id===5){edge(`M420 ${y} V${y+32}`);y+=32;rowPanel(rows.filter(([k])=>k==='Set the comparison control'));rows=rows.filter(([k])=>k!=='Set the comparison control');}
  if(choices){
- if(n.id===2){edge(`M420 ${y} V${y+26}`);y+=26;parts.push(`<polygon class="r-diamond" points="420,${y} 640,${y+55} 420,${y+110} 200,${y+55}"/>${tx(420,y+50,['Is the required','arrival rate known?'],'r-title')}`);y+=110;}
+ if(n.id===2){edge(`M420 ${y} V${y+26}`);y+=26;parts.push(`<polygon class="r-diamond" points="420,${y} 640,${y+55} 420,${y+110} 200,${y+55}"/>${tx(420,y+50,sectionSelection[1]?['Do you have a target','session-start rate?']:['Do you have a target','requests per second?'],'r-title')}`);y+=110;}
  const fork=y;y+=45;const count=choices.labels.length,w=count===3?230:345;const reasons={1:['Requests arrive independently','Each call follows earlier results'],2:['Replay the forecast or committed demand','Find the latency and throughput boundary'],3:['Interactive plus batch, for example','Keep existing demand unchanged','Raise one workload’s rate, then restore it'],5:['Compare equal and assigned priorities','If assigned priorities still miss latency targets']}[n.id];
  const choiceTitles=choices.labels.map(label=>mapWrap(label,count===3?25:36)),choiceReasons=reasons.map(reason=>mapWrap(reason,count===3?25:36)),choiceHeight=Math.max(...choiceTitles.map((lines,i)=>28+lines.length*24+12+choiceReasons[i].length*24+18));
  choices.labels.forEach((label,i)=>{const cx=count===3?175+245*i:237.5+365*i;edge(`M420 ${fork} V${y-18} H${cx} V${y}`);parts.push(`<g role="button" tabindex="0" class="r-toggle" data-section-choice="${n.id}" data-choice-index="${i}" aria-pressed="${i===selected}"><rect class="${i===selected?'r-diamond':'r-box'}" x="${cx-w/2}" y="${y}" width="${w}" height="${choiceHeight}" rx="8"/>${tx(cx,y+32,choiceTitles[i],'r-label')}${tx(cx,y+32+choiceTitles[i].length*24+12,choiceReasons[i],'r-body')}</g>`);});
@@ -624,8 +624,19 @@ function renderMap(openIds=new Set(),mode='reference'){
 
  function rowPanel(items,label='',n=panelNode,selected=panelSelected){
  for(let itemIndex=0;itemIndex<items.length;itemIndex++){
- const [key,value]=items[itemIndex];if(itemIndex){edge('M420 '+y+' V'+(y+26));y+=26;}
+ let [key,value]=items[itemIndex];
+ if(!history&&['Measure','Output'].includes(key)){
+ const client='time_to_first_token; request_latency — client p95 latency, using exported units.\nrequest_count; error_request_count — completed and failed client records; divide successful records by run duration for requests/s.\noutput_sequence_length — output tokens per request; use request timestamps to derive streaming TPOT.';
+ const queue='llm_d_epp_flow_control_request_queue_duration_seconds — compare outcomes separately.\nllm_d_epp_flow_control_queue_size; llm_d_epp_flow_control_queue_bytes — pending count and bytes by priority.\nllm_d_epp_flow_control_requests_total — Dispatched, RejectedCapacity and EvictedTTL; dispatch is not completion.';
+ value=n.id===2?client:n.id===3?client+'\n'+queue:n.id===4?client+'\nllm_d_epp_flow_control_pool_saturation — detector signal.\nvllm:request_queue_time_seconds; vllm:num_requests_waiting — engine queue pressure.':n.id===6?queue+'\nrequest_count; error_request_count — successful and failed client records by band.\nRequest timestamps — oldest pending age and seconds until the backlog returns to its pre-burst level.':n.id===7?'request_count; error_request_count — completions and failures per fairness identity.\noutput_sequence_length — completed-token share per tenant in the same band.\ntime_to_first_token; request_latency — per-tenant p95 latency.\nRequest timestamps — oldest pending age; compare service shares over the same interval.':client;
+ key='Measure '+(n.id===6?'progress by priority band':n.id===7?'service by tenant':'latency and outcomes');
+ }
+if(itemIndex){edge('M420 '+y+' V'+(y+26));y+=26;}
  const top=y,resultKey=n.id+':'+key,spec=!history&&resultPanels[resultKey];
+ if(!history&&n.id===2&&key==='Traffic model'){
+ const selectedTraffic=sectionSelection[1]||0,options=[['Scheduled requests','Send requests at the chosen requests/s, independently of previous responses.'],['Dependent sessions','Start sessions at the chosen sessions/s; preserve dependencies and tool pauses.']];
+ const tops=y;options.forEach(([title,description],i)=>{const x=60+370*i,cx=x+175;edge('M420 '+(tops-26)+' V'+(tops-14)+' H'+cx+' V'+tops);parts.push('<g role="button" tabindex="0" class="r-toggle" data-section-choice="1" data-choice-index="'+i+'" aria-pressed="'+(selectedTraffic===i)+'"><rect class="'+(selectedTraffic===i?'r-diamond':'r-box')+'" x="'+x+'" y="'+tops+'" width="350" height="140" rx="8"/>'+tx(cx,tops+30,[title],'r-label')+tx(cx,tops+62,mapWrap(description,33),'r-body')+'</g>');});y+=140;edge('M'+(235+370*selectedTraffic)+' '+y+' V'+(y+18)+' H420 V'+(y+32));y+=32;continue;
+ }
  if(!history&&n.id===3&&key==='Chosen comparison'){
  const pairs=[['Interactive only','Interactive + first competitor'],['Current workload mix','Current mix + next workload'],['All workloads steady','One workload: steady → burst → steady']][selected];
  const labels=['Run A','Run B'];let h=110;
@@ -667,7 +678,7 @@ function renderMap(openIds=new Set(),mode='reference'){
  const title=mapWrap(key,66);body.push(tx(80,yy,title,'r-label','start'));yy+=title.length*24+6;
  const points=value.split('\n');for(const point of points){const list=points.length>1,lines=mapWrap(point,list?70:73);
  if(key==='Verify before the run'){const checkId=n.id+':'+points.indexOf(point),checked=!!checkSelection[checkId];body.push('<g role="checkbox" tabindex="0" aria-checked="'+checked+'" data-check-id="'+checkId+'" class="r-toggle"><rect x="82" y="'+(yy-13)+'" width="13" height="13" rx="2" fill="'+(checked?'#3559c7':'#fff')+'" stroke="#8199cc"/>'+(checked?'<path d="M85 '+(yy-7)+' l3 3 l5 -6" stroke="white" fill="none"/>':'')+tx(104,yy,lines,'r-body','start')+'</g>');}
- else{if(list)body.push('<circle cx="88" cy="'+(yy-5)+'" r="2.5" fill="#53627c"/>');body.push(tx(list?102:80,yy,lines,'r-body','start'));}yy+=lines.length*24+7;}
+ else{if(list)body.push(tx(80,yy,[String(points.indexOf(point)+1)+'.'],'r-label','start'));body.push(tx(list?108:80,yy,lines,'r-body','start'));}yy+=lines.length*24+7;}
  yy+=7;
  }
  parts.push('<rect class="r-box '+(history?'r-'+n.state:'')+'" x="60" y="'+top+'" width="720" height="'+(yy-top)+'" rx="8"/>'+body.join(''));y=yy;
