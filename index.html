@@ -51,12 +51,12 @@ p.subtext a:hover{color:var(--txt);border-color:var(--brand)}
 .sections-btn:hover{color:var(--txt);border-color:var(--brand);background:rgba(91,108,240,.08)}
 footer{margin-top:28px;font-size:12.5px;color:var(--txt3)}
 footer a{color:var(--txt3)}
-</style>
+.explainer-links{display:flex;gap:22px;margin-top:12px}.explainer-links a{color:var(--txt2);text-underline-offset:3px}.explainer-links a:hover{color:var(--txt)}a:focus-visible{outline:2px solid var(--brand);outline-offset:4px}</style>
 </head>
 <body>
 <main>
   <h1>Flow control benchmarks</h1>
-  <p class="lede">Measured results and configuration recipes for shared inference.</p>
+  <p class="lede">Decision guide, explainers, and measured benchmark results.</p>
 
   <div class="card">
     <a class="card-main" href="benchmark-decision-map/">
@@ -66,36 +66,19 @@ footer a{color:var(--txt3)}
   </div>
 
   <div class="card">
-    <a class="card-main" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.5-flow-control/examples#before-applying-an-example">
-      <div class="t">Get started</div>
-      <div class="d">Choose an example, configure the deployment, and send requests.</div>
-    </a>
-  </div>
-
-  <div class="card">
-    <a class="card-main" href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.5-flow-control/examples#start-here">
-      <div class="t">Example configurations</div>
-      <div class="d">YAML recipes for priority protection, fairness, deadline ordering, and prefill/decode.</div>
-    </a>
-  </div>
-
-  <div class="card">
-    <a class="card-main" href="learn/flow-control-journey.html">
-      <div class="t">Interactive explainer</div>
-      <div class="d">Watch how the mechanism works.</div>
-    </a>
-  </div>
-
-  <div class="card">
-    <a class="card-main" href="learn/flow-control.html">
-      <div class="t">Written explainer</div>
-      <div class="d">Read it through instead.</div>
-    </a>
+    <div class="card-main">
+      <div class="t">Explainers</div>
+      <div class="d">How flow control works.</div>
+      <nav class="explainer-links" aria-label="Explainers">
+        <a href="learn/flow-control-journey.html">Interactive</a>
+        <a href="learn/flow-control.html">Written</a>
+      </nav>
+    </div>
   </div>
 
   <div class="card">
     <a class="card-main" href="walkthrough.html">
-      <div class="t">Benchmark</div>
+      <div class="t">Benchmark walkthrough</div>
       <div class="d">The evidence, chart by chart.</div>
     </a>
   </div>
@@ -104,9 +87,7 @@ footer a{color:var(--txt3)}
     <a class="sections-btn" href="sections.html">All evidence sections</a>
   </p>
 
-  <p class="subtext">
-    See the <a href="https://github.com/alexagriffith/flow-control-benchmarks">full GitHub repo</a> for data, runner, and charts.
-  </p>
+
 
   <footer>Built against the upstream <a href="https://github.com/llm-d/llm-d">llm-d</a> Endpoint Picker documentation.</footer>
 </main>
