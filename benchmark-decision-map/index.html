@@ -39,14 +39,21 @@
 #example-setup{margin:0 8px 20px;font-size:15px}#example-setup summary{cursor:pointer;color:var(--blue);font-weight:600}#example-setup dl{display:grid;grid-template-columns:135px 1fr;gap:10px 14px}#example-setup dt{font-weight:600}#example-setup dd{margin:0;line-height:1.45}.experiment-detail{border-top:1px solid var(--line);padding:18px 0}.experiment-detail>summary{font-size:17px}.experiment-why{color:var(--muted)}.experiment-detail .reference-map{margin:18px 0}.experiment-setup dl{display:grid;grid-template-columns:135px 1fr;gap:10px 14px}.experiment-setup dt{font-weight:600}.experiment-setup dd{margin:0}.consult-objectives{margin:8px 8px 24px;padding-left:24px;font-size:16px;line-height:1.8}#reference-graph svg{min-width:720px}#reference-graph{margin-top:12px}.history-key{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}.history-key span{padding:3px 8px;border-left:4px solid #759883}.history-key span:nth-child(2){border-color:#b29b68}.history-key span:nth-child(3){border-color:#b27b76}.role-table{width:100%;border-collapse:collapse;font-size:15px}.role-table th,.role-table td{padding:10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}.role-table code{overflow-wrap:anywhere;font-size:13px}#control-roles p{font-size:14px}#control-roles{margin:20px 8px}.experiment-detail{margin:20px 8px;padding:18px 0}.experiment-detail>summary{font-size:18px;line-height:1.5;font-weight:600;color:var(--blue);cursor:pointer}.experiment-detail[open]>summary{margin-bottom:16px}.experiment-detail details{margin:16px 0}.experiment-detail details>summary{font-size:16px;line-height:1.5;font-weight:600;color:var(--blue);cursor:pointer}.role-table{table-layout:fixed;font-size:16px}.role-table th{font-size:15px}.role-table code{font-size:14px}#delay-evidence p,#control-roles p{font-size:16px;line-height:1.5}#example-evidence{font-size:16px}.experiment-detail h3{margin:18px 0 8px}.experiment-detail p{margin:10px 0}#delay-evidence,#control-roles{scroll-margin-top:24px}
 .map-controls{position:sticky;top:0;z-index:3;background:#fff;border-bottom:1px solid #cdd7ec;padding:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}.map-controls button,.map-controls select{font:inherit;border:1px solid #cdd7ec;border-radius:5px;background:white;color:#243f78;padding:7px 10px;cursor:pointer}.map-controls button[aria-pressed="true"]{background:#e3edff;border-color:#3559c7}.map-controls label{margin-left:auto}.map-controls .view-label{margin-left:0}.reference-map{max-width:840px;margin-left:auto!important;margin-right:auto!important}#reference-graph{overflow-anchor:none;height:auto;max-height:none;overflow:visible;padding:12px 0}#reference-graph svg{min-width:0;width:100%;overflow:hidden}.map-context{font-size:14px;color:#53627c;margin:12px 0}.map-controls button:disabled{opacity:.4;cursor:default}.map-controls button:focus-visible{outline:2px solid #3559c7;outline-offset:2px}
 @media(max-width:650px){#reference-graph{overflow-x:auto}#reference-graph svg{min-width:720px}}
-</style></head><body><main><nav class="tabs" role="tablist" aria-label="Flow-control testing"><button id="steps-tab" role="tab" aria-selected="true" aria-controls="steps-panel">Steps</button><button id="reference-tab" role="tab" aria-selected="false" aria-controls="reference-panel" tabindex="-1">Reference</button><button id="example-tab" role="tab" aria-selected="false" aria-controls="example-panel" tabindex="-1">Example</button></nav><section id="steps-panel" role="tabpanel" aria-labelledby="steps-tab"><section class="preflight" aria-labelledby="preflight-heading"><h2 id="preflight-heading">Before the benchmark</h2><ol class="steps"><li><span class="step-number">1</span><span>Define repeatable traffic and the test question.</span></li><li><span class="step-number">2</span><span><a href="verification.html#setup">Verify endpoint, runner, versions and active controls.</a></span></li><li><span class="step-number">3</span><span><a href="verification.html#smoke">Validate a test request.</a> <a href="metrics.html">Check component metrics.</a></span></li></ol></section><h2 class="section-heading">Benchmark</h2><ol class="steps"><li><span class="step-number">1</span><a href="#node-1">Define traffic and criteria</a></li><li><span class="step-number">2</span><a href="#node-2">Measure interactive baseline</a></li><li><span class="step-number">3</span><a href="#node-3">Add competing workloads</a></li><li><span class="step-number">4</span><a href="#node-4">Calibrate detector and limits</a></li><li><span class="step-number">5</span><a href="#node-5">Test interactive protection</a></li><li><span class="step-number">6</span><a href="#node-6">Check lower-priority progress</a></li><li><span class="step-number">7</span><a href="#node-7">Test fairness within a band</a></li><li><span class="step-number">8</span><a href="#node-8">Validate full mix and recovery</a></li></ol></section><section id="reference-panel" role="tabpanel" hidden aria-labelledby="reference-tab"><h2 class="section-heading">Objectives</h2><ol class="consult-objectives"><li>Protect interactive latency from competing work.</li><li>Keep lower-priority work progressing.</li><li>Share service within each priority band.</li></ol><div class="map-controls" role="group" aria-label="Map view"><label class="view-label">View <select id="map-view" aria-label="Map view"><option value="0">Full map</option><option value="1">1. Traffic</option><option value="2">2. Baseline</option><option value="3">3. Competition</option><option value="4">4. Detectors</option><option value="5">5. Protection</option><option value="6">6. Progress</option><option value="7">7. Sharing</option><option value="8">8. Validation</option></select></label><button id="map-prev" aria-label="Previous step">← Previous</button><button id="map-next" aria-label="Next step">Next →</button><button id="map-collapse">Collapse all</button></div><div id="reference-graph" class="reference-map"></div><details id="delay-evidence" class="experiment-detail"><summary>Where did time increase?</summary><h3 id="baseline-investigation">Investigate a baseline failure</h3><ol><li><strong>Did the runner deliver the intended demand?</strong> Check actual send times and attempted/completed/failed counts. If not, fix the runner and repeat the same load.</li><li><strong>Does the same workload miss the latency criteria at low load?</strong> If yes, inspect request sizes, cache preparation and engine processing time. Lower router ceilings cannot remove standalone processing cost.</li><li><strong>Does delay appear only as demand rises?</strong> Use the component measurements below to distinguish router waiting, engine waiting and processing. Several changing components require matched traces.</li><li><strong>Change one identified cause, then repeat the failed load.</strong> Compare against the original result. If the cause is still unknown, collect the missing timing before changing policy.</li></ol><p><a href="#node-2">Return to the baseline test →</a></p><h3>Compare component timing</h3><table class="role-table"><thead><tr><th>Evidence to compare</th><th>What it suggests</th><th>Next test</th></tr></thead><tbody><tr><td><code>llm_d_epp_flow_control_request_queue_duration_seconds</code><br><code>llm_d_epp_flow_control_queue_size</code></td><td>More time waiting for router admission.</td><td>Compare the detector and band ceiling. Check the loaded policy and saturation at the same time.</td></tr><tr><td><code>vllm:request_queue_time_seconds</code><br><code>vllm:num_requests_waiting</code></td><td>More time queued inside the engine.</td><td>Test whether controlling dispatched load reduces this wait without losing required completions.</td></tr><tr><td>Per-request prefill/decode timing; prefix-cache queries and hits</td><td>Processing or cache reuse changed.</td><td>Recheck request sizes, cache preparation and engine configuration before changing router policy.</td></tr><tr><td>Filter logs/traces showing removed candidates; scheduling errors</td><td>Endpoint selection was restricted.</td><td>Check the named filter and its thresholds. Queue metrics alone cannot identify this cause.</td></tr><tr><td>Missing timing, unmatched requests or several components changing</td><td>The cause is not established.</td><td>Collect matching request traces and repeat. Compare stage durations; never subtract unrelated p95 values.</td></tr></tbody></table><p><a href="metrics.html">Metric names and version references →</a></p></details><details id="control-roles" class="experiment-detail"><summary>Control roles and configuration</summary><table class="role-table"><thead><tr><th>Role</th><th>llm-d configuration</th><th>Job</th></tr></thead><tbody><tr><td>Detector</td><td><code>flowControl.saturationDetector.pluginRef</code></td><td>Calculates the load signal.</td></tr><tr><td>Admission ceiling</td><td><code>flowControl.usageLimitPolicyPluginRef</code></td><td>Sets the saturation limit at which a priority band waits.</td></tr><tr><td>Priority and fairness</td><td><code>flowControl.priorityBands</code><br><code>fairnessPolicyRef</code> / <code>orderingPolicyRef</code></td><td>Select queued work for dispatch; sharing within a band is separate from priority between bands.</td></tr><tr><td>Endpoint filter</td><td><code>schedulingProfiles[].plugins[].pluginRef</code></td><td>Filters endpoint candidates before selection.</td></tr><tr><td>vLLM</td><td>Engine scheduler configuration</td><td>Processes dispatched work; router priority alone does not instantly interrupt it.</td></tr></tbody></table><h3>Admission and filtering are different comparisons</h3><p>Match <code>flowControl.saturationDetector.pluginRef</code> and <code>schedulingProfiles[].plugins[].pluginRef</code> to <code>plugins[].name</code>. Inspect the loaded profiles, not only the input YAML.</p><p>At router revision <code>30f06d9c</code>, the loader adds the selected detector to each scheduling profile when it implements filtering. A separately named filter does not remove that injected filter. The detector comparisons here therefore test admission and filtering together under this wiring.</p><p>For request filtering, the threshold is <code>floor(maxConcurrency × (1 + headroom))</code>; token filtering uses <code>maxTokenConcurrency</code> in the same formula. Hybrid excludes an endpoint when either threshold is reached. Holding <code>headroom</code> fixed does not keep these thresholds fixed when their caps change.</p><p>To isolate admission, first establish a supported deployment where the swept detector is absent from the filter chain and the separate filter configuration stays unchanged. That isolation is not established by this guide. An admission-ceiling test can instead hold detector and filter settings fixed and change only the usage-limit policy.</p><p><a href="https://github.com/llm-d/llm-d-router/blob/30f06d9c7c086cfa7ced5f801bddde7a4d000d73/pkg/epp/config/loader/defaults.go#L302">Loader wiring</a> · <a href="https://github.com/llm-d/llm-d-router/blob/30f06d9c7c086cfa7ced5f801bddde7a4d000d73/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go#L183">Filter calculation</a></p><p><code>featureGates</code> chooses the admission path. Disabling <code>flowControl</code> can leave legacy admission active. Verify the deployed version and loaded filters.</p><p><a href="verification.html#setup">Inspect the effective configuration</a> · <a href="metrics.html">Named metrics and collection</a> · <a href="https://github.com/llm-d/llm-d-router/tree/30f06d9c7c086cfa7ced5f801bddde7a4d000d73">Pinned source notes</a></p></details></section><section id="example-panel" role="tabpanel" aria-labelledby="example-tab" hidden><h2 class="section-heading">3.5 results</h2><div id="example-setup"></div><div id="example-graph" class="reference-map"></div><div id="example-evidence"></div></section></main><script>
+
+.map-help{position:fixed;z-index:30;width:410px;max-width:calc(100vw - 24px);max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--paper);border:1px solid #8199ee;border-radius:9px;box-shadow:0 8px 28px #1b294824;font-size:16px;line-height:1.5}
+.map-help header{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--pale);border-radius:9px 9px 0 0}
+.map-help h2{font-size:18px;line-height:1.4;margin:0;flex:1}.map-help-close{font:inherit;color:var(--blue);background:white;border:1px solid var(--line);border-radius:5px;padding:3px 9px;cursor:pointer}
+.map-help-content{overflow:auto;overscroll-behavior:contain;padding:16px 20px}.map-help-content ol{padding-left:23px;margin:0}.map-help-content li{margin:0 0 14px}.map-help-content p{margin:0 0 14px}.map-help-content code{font-family:ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere}.map-help-content h3,.map-help-content h4{margin:0 0 8px}.map-help-content section+section{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}.map-help-content details{margin:12px 0}.map-help-content summary{color:var(--blue);cursor:pointer}
+.map-help-anchor rect,.map-help-anchor polygon{stroke:var(--blue)!important;stroke-width:2.5!important}.map-help-anchor{text-decoration:none}
+@media print{.map-help{display:none}}
+</style></head><body><main><nav class="tabs" role="tablist" aria-label="Flow-control testing"><button id="steps-tab" role="tab" aria-selected="true" aria-controls="steps-panel">Steps</button><button id="reference-tab" role="tab" aria-selected="false" aria-controls="reference-panel" tabindex="-1">Reference</button><button id="example-tab" role="tab" aria-selected="false" aria-controls="example-panel" tabindex="-1">Example</button></nav><section id="steps-panel" role="tabpanel" aria-labelledby="steps-tab"><section class="preflight" aria-labelledby="preflight-heading"><h2 id="preflight-heading">Before the benchmark</h2><ol class="steps"><li><span class="step-number">1</span><span>Define repeatable traffic and the test question.</span></li><li><span class="step-number">2</span><span><a href="verification.html#setup">Verify endpoint, runner, versions and active controls.</a></span></li><li><span class="step-number">3</span><span><a href="verification.html#smoke">Validate a test request.</a> <a href="metrics.html">Check component metrics.</a></span></li></ol></section><p class="map-context">At each stage, open only the controls relevant to the workload: <a href="#node-1">classification, SLO metadata and waiting budgets</a>; <a href="#node-4">token accounting</a>; <a href="#node-5">ceiling alternatives</a>; <a href="#node-6">optional rejection or cancellation</a>; <a href="#node-7">deadline ordering and session fairness</a>; <a href="#node-8">topology and shared accounting</a>. These are proposed comparisons; the Example tab retains recorded results.</p><h2 class="section-heading">Benchmark</h2><ol class="steps"><li><span class="step-number">1</span><a href="#node-1">Define traffic and criteria</a></li><li><span class="step-number">2</span><a href="#node-2">Measure interactive baseline</a></li><li><span class="step-number">3</span><a href="#node-3">Add competing workloads</a></li><li><span class="step-number">4</span><a href="#node-4">Calibrate detector and limits</a></li><li><span class="step-number">5</span><a href="#node-5">Test interactive protection</a></li><li><span class="step-number">6</span><a href="#node-6">Check lower-priority progress</a></li><li><span class="step-number">7</span><a href="#node-7">Test fairness within a band</a></li><li><span class="step-number">8</span><a href="#node-8">Validate full mix and recovery</a></li></ol></section><section id="reference-panel" role="tabpanel" hidden aria-labelledby="reference-tab"><h2 class="section-heading">Objectives</h2><ol class="consult-objectives"><li>Protect interactive latency from competing work.</li><li>Keep lower-priority work progressing.</li><li>Share service within each priority band.</li></ol><div class="map-controls" role="group" aria-label="Map view"><label class="view-label">View <select id="map-view" aria-label="Map view"><option value="0">Full map</option><option value="1">1. Traffic</option><option value="2">2. Baseline</option><option value="3">3. Competition</option><option value="4">4. Detectors</option><option value="5">5. Protection</option><option value="6">6. Progress</option><option value="7">7. Sharing</option><option value="8">8. Validation</option></select></label><button id="map-prev" aria-label="Previous step">← Previous</button><button id="map-next" aria-label="Next step">Next →</button><button id="map-collapse">Collapse all</button></div><div id="reference-graph" class="reference-map"></div><details id="delay-evidence" class="experiment-detail"><summary>Where did time increase?</summary><h3 id="baseline-investigation">Investigate a baseline failure</h3><ol><li><strong>Did the runner deliver the intended demand?</strong> Check actual send times and attempted/completed/failed counts. If not, fix the runner and repeat the same load.</li><li><strong>Does the same workload miss the latency criteria at low load?</strong> If yes, inspect request sizes, cache preparation and engine processing time. Lower router ceilings cannot remove standalone processing cost.</li><li><strong>Does delay appear only as demand rises?</strong> Use the component measurements below to distinguish router waiting, engine waiting and processing. Several changing components require matched traces.</li><li><strong>Change one identified cause, then repeat the failed load.</strong> Compare against the original result. If the cause is still unknown, collect the missing timing before changing policy.</li></ol><p><a href="#node-2">Return to the baseline test →</a></p><h3>Compare component timing</h3><table class="role-table"><thead><tr><th>Evidence to compare</th><th>What it suggests</th><th>Next test</th></tr></thead><tbody><tr><td><code>llm_d_epp_flow_control_request_queue_duration_seconds</code><br><code>llm_d_epp_flow_control_queue_size</code></td><td>More time waiting for router admission.</td><td>Compare the detector and band ceiling. Check the loaded policy and saturation at the same time.</td></tr><tr><td><code>vllm:request_queue_time_seconds</code><br><code>vllm:num_requests_waiting</code></td><td>More time queued inside the engine.</td><td>Test whether controlling dispatched load reduces this wait without losing required completions.</td></tr><tr><td>Per-request prefill/decode timing; prefix-cache queries and hits</td><td>Processing or cache reuse changed.</td><td>Identify processing/cache interference. If contention is the cause, compare reduced dispatched load at matched offered demand and cache preparation; check latency, completions, failures and required progress. Standalone processing cost calls for workload or engine investigation.</td></tr><tr><td>Filter logs/traces showing removed candidates; scheduling errors</td><td>Endpoint selection was restricted.</td><td>Check the named filter and its thresholds. Queue metrics alone cannot identify this cause.</td></tr><tr><td>Missing timing, unmatched requests or several components changing</td><td>The cause is not established.</td><td>Collect matching request traces and repeat. Compare stage durations; never subtract unrelated p95 values.</td></tr></tbody></table><p><a href="metrics.html">Metric names and version references →</a></p></details><details id="control-roles" class="experiment-detail"><summary>Control roles and configuration</summary><table class="role-table"><thead><tr><th>Role</th><th>llm-d configuration</th><th>Job</th></tr></thead><tbody><tr><td>Detector</td><td><code>flowControl.saturationDetector.pluginRef</code></td><td>Calculates the load signal.</td></tr><tr><td>Admission ceiling</td><td><code>flowControl.usageLimitPolicyPluginRef</code></td><td>Sets the saturation limit at which a priority band waits.</td></tr><tr><td>Priority and fairness</td><td><code>flowControl.priorityBands</code><br><code>fairnessPolicyRef</code> / <code>orderingPolicyRef</code></td><td>Select queued work for dispatch; sharing within a band is separate from priority between bands.</td></tr><tr><td>Endpoint filter</td><td><code>schedulingProfiles[].plugins[].pluginRef</code></td><td>Filters endpoint candidates before selection.</td></tr><tr><td>vLLM</td><td>Engine scheduler configuration</td><td>Processes dispatched work; router priority alone does not instantly interrupt it.</td></tr></tbody></table><p><strong>Version boundary:</strong> This guide retains router <code>30f06d9c</code>. At newer <code>8bd261f1</code>, concurrency filtering returns all candidates if every candidate would be filtered. The older pin does not. These behaviors must not be combined in a test interpretation. <a href="https://github.com/llm-d/llm-d-router/blob/8bd261f1af122e76397f44e95b3f2901e40aeecc/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go">Newer implementation</a>.</p><h3>Admission and filtering are different comparisons</h3><p>Match <code>flowControl.saturationDetector.pluginRef</code> and <code>schedulingProfiles[].plugins[].pluginRef</code> to <code>plugins[].name</code>. Inspect the loaded profiles, not only the input YAML.</p><p>At router revision <code>30f06d9c</code>, the loader adds the selected detector to each scheduling profile when it implements filtering. A separately named filter does not remove that injected filter. The detector comparisons here therefore test admission and filtering together under this wiring.</p><p>For request filtering, the threshold is <code>floor(maxConcurrency × (1 + headroom))</code>; token filtering uses <code>maxTokenConcurrency</code> in the same formula. Hybrid excludes an endpoint when either threshold is reached. Holding <code>headroom</code> fixed does not keep these thresholds fixed when their caps change.</p><p>To isolate admission, first establish a supported deployment where the swept detector is absent from the filter chain and the separate filter configuration stays unchanged. That isolation is not established by this guide. An admission-ceiling test can instead hold detector and filter settings fixed and change only the usage-limit policy.</p><p><a href="https://github.com/llm-d/llm-d-router/blob/30f06d9c7c086cfa7ced5f801bddde7a4d000d73/pkg/epp/config/loader/defaults.go#L302">Loader wiring</a> · <a href="https://github.com/llm-d/llm-d-router/blob/30f06d9c7c086cfa7ced5f801bddde7a4d000d73/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go#L183">Filter calculation</a></p><p><code>featureGates</code> chooses the admission path. Disabling <code>flowControl</code> can leave legacy admission active. Verify the deployed version and loaded filters.</p><p><a href="verification.html#setup">Inspect the effective configuration</a> · <a href="metrics.html">Named metrics and collection</a> · <a href="https://github.com/llm-d/llm-d-router/tree/30f06d9c7c086cfa7ced5f801bddde7a4d000d73">Pinned source notes</a></p></details></section><section id="example-panel" role="tabpanel" aria-labelledby="example-tab" hidden><h2 class="section-heading">3.5 results</h2><div id="example-setup"></div><div id="example-graph" class="reference-map"></div><div id="example-evidence"></div></section></main><aside id="map-help" class="map-help" role="dialog" aria-modal="false" aria-labelledby="map-help-title" tabindex="-1" hidden><header><h2 id="map-help-title"></h2><button type="button" class="map-help-close" aria-label="Close map help">Close</button></header><div class="map-help-content"></div></aside><script>
 const tabs=[...document.querySelectorAll('nav.tabs > [role="tab"]')];
 function selectTab(tab){tabs.forEach(t=>{const selected=t===tab;t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!selected;});}
 tabs.forEach((tab,i)=>{tab.addEventListener('click',()=>selectTab(tab));tab.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight'||e.key==='ArrowLeft')next=tabs[(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];if(e.key==='Home')next=tabs[0];if(e.key==='End')next=tabs[tabs.length-1];if(next){e.preventDefault();selectTab(next);next.focus();}});});
 
-function showLinkedNode(){if(location.hash==='#baseline-investigation'){selectTab(document.getElementById('reference-tab'));document.getElementById('delay-evidence').open=true;document.getElementById('baseline-investigation').scrollIntoView({block:'start'});}else if(location.hash==='#control-roles'||location.hash==='#delay-evidence'){selectTab(document.getElementById('reference-tab'));const node=document.getElementById(location.hash.slice(1));node.open=true;node.scrollIntoView({block:'start'});}else if(/^#node-[1-8]$/.test(location.hash)){selectTab(document.getElementById('reference-tab'));if(location.hash==='#node-6'){resultSelection['6:If progress fails']=undefined;}if(referenceFocus)referenceFocus=Number(location.hash.split('-').pop());openReferenceNodes.add(Number(location.hash.split('-').pop()));refreshReference();document.querySelector(location.hash)?.scrollIntoView({block:'start'});}else if(/^#example-node-[1-8]$/.test(location.hash)){selectTab(document.getElementById('example-tab'));openExampleNodes.add(Number(location.hash.split('-').pop()));refreshExample();document.querySelector(location.hash)?.scrollIntoView({block:'start'});}else if(/^#experiment-[a-z]+$/.test(location.hash)){selectTab(document.getElementById('example-tab'));const node=document.querySelector(location.hash);if(node){document.getElementById('example-records').open=true;node.open=true;node.scrollIntoView({block:'start'});}}}
-window.addEventListener('hashchange',showLinkedNode);
-document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const href=a.getAttribute('href');if(a.dataset.ceiling)sectionSelection[5]=1;if(a.dataset.investigate)investigationSelection[Number(a.dataset.investigate)]=true;if(/^#(?:node-[1-8]|example-node-[1-8]|experiment-[a-z]+|control-roles|delay-evidence|baseline-investigation)$/.test(href)){e.preventDefault();if(location.hash!==href)location.hash=href;showLinkedNode();}});
+function showLinkedNode(){if(location.hash==='#baseline-investigation'){selectTab(document.getElementById('reference-tab'));document.getElementById('delay-evidence').open=false;if(referenceFocus&&referenceFocus!==2){referenceFocus=2;refreshReference();}const anchor=document.querySelector('#reference-graph a[href="#baseline-investigation"]');if(anchor){anchor.scrollIntoView({block:'center'});openMapHelp(anchor,'#baseline-investigation');}}else if(location.hash==='#control-roles'||location.hash==='#delay-evidence'){selectTab(document.getElementById('reference-tab'));const node=document.getElementById(location.hash.slice(1));node.open=true;node.scrollIntoView({block:'start'});}else if(/^#node-[1-8]$/.test(location.hash)){selectTab(document.getElementById('reference-tab'));if(location.hash==='#node-6'){resultSelection['6:If progress fails']=undefined;}if(referenceFocus)referenceFocus=Number(location.hash.split('-').pop());openReferenceNodes.add(Number(location.hash.split('-').pop()));refreshReference();document.querySelector(location.hash)?.scrollIntoView({block:'start'});}else if(/^#example-node-[1-8]$/.test(location.hash)){selectTab(document.getElementById('example-tab'));openExampleNodes.add(Number(location.hash.split('-').pop()));refreshExample();document.querySelector(location.hash)?.scrollIntoView({block:'start'});}else if(/^#experiment-[a-z]+$/.test(location.hash)){selectTab(document.getElementById('example-tab'));const node=document.querySelector(location.hash);if(node){document.getElementById('example-records').open=true;node.open=true;node.scrollIntoView({block:'start'});}}}
+window.addEventListener('hashchange',showLinkedNode);window.addEventListener('load',()=>{if(location.hash==='#baseline-investigation')showLinkedNode();});
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const href=a.getAttribute('href');if(a.closest('#reference-graph,#example-graph')&&/^#(?:baseline-investigation|delay-evidence|control-roles|experiment-[a-z]+)$/.test(href)){e.preventDefault();openMapHelp(a,href);return;}if(a.dataset.ceiling)sectionSelection[5]=1;if(a.dataset.investigate)investigationSelection[Number(a.dataset.investigate)]=true;if(/^#(?:node-[1-8]|example-node-[1-8]|experiment-[a-z]+|control-roles|delay-evidence|baseline-investigation)$/.test(href)){e.preventDefault();if(location.hash!==href)location.hash=href;showLinkedNode();}});
 
 /* MAP_RENDER_START */
 function mapEscape(value){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
@@ -68,8 +75,10 @@ const resultPanels={
  '7:Decision':{question:'Did sharing improve without breaking other goals?',options:[['Yes','Keep the policy; validate the complete workload.',8],['No','Restore the previous fairness policy; validate the complete workload.',8],['Cannot tell','Repeat at matched demand and measure every tenant.',7]]},
  '8:If a check fails':{question:'Which configuration failed the same case?',options:[['Only new setting fails','Revert the last change and validate the previous configuration against the full mix.',8],['Both settings fail','Investigate the shared workload, runtime or capacity cause. Repeat the baseline only if standalone traffic also fails or the workload/deployment changed.','delay-evidence'],['Cannot tell','Repair missing measurements and repeat the same case. If the requirement itself is undefined, set it before assigning pass/fail.',1]]}
 };
+resultPanels['2:Did pool admission delay requests?']={question:'Did pool admission delay requests?',options:[['Delay observed','Retain the loaded settings and record admission wait for this baseline. Next, check endpoint filtering; later comparisons must preserve or explicitly vary admission.'],['No delay observed','Record no observed admission delay at this load, then check filtering. This does not establish an unrestricted engine limit.'],['Evidence missing','Collect router admission timing and loaded ceiling evidence; repeat this baseline at the same demand before interpreting its capacity.',2]]};
+resultPanels['2:Did endpoint filtering remove candidates?']={question:'Did endpoint filtering remove candidates?',options:[['Candidates removed','Record the responsible filter and its thresholds. Evaluate this configured-system baseline against the criteria; compare detector/filter changes in step 4 only when the evidence calls for them.'],['None removed','Record no observed filtering at this load. Evaluate the baseline against its criteria, retaining the measured admission behavior.'],['Evidence missing','Collect per-request candidate and filter traces, then repeat this same baseline. Do not infer filter inactivity from queue metrics.',2]]};
 resultPanels['2:Load points']={question:'Select three loads from the sweep',options:[['Low-load reference','Keep the lowest tested load with stable latency and delivered arrivals. Repeat it to establish the reference latency.'],['Operating load','Keep the required demand if it passes. For capacity discovery, keep the highest repeated load meeting every agreed criterion. Use it as the fixed interactive load in step 3.'],['Overload case','Keep the nearest higher tested load that fails a criterion. Test midpoints between passing and failing rates to narrow the boundary. Use a time-bounded replay to compare protection and recovery.']]};
-resultPanels['4:What did the control do?']={...resultPanels['2:Did controls delay or reject work?'],options:[['Delayed or filtered','Compare client outcomes at matched demand; waiting alone is not a benefit.'],['No action observed','Record no observed admission or filter action at this load; judge client outcomes without forcing a queue.'],['Evidence missing','Collect admission and filter traces, then repeat the candidate and control at the same demand.',4]]};
+resultPanels['4:What did the control do?']={...resultPanels['2:Did controls delay or reject work?'],options:[['Delayed or filtered','Compare client outcomes at matched demand; waiting alone is not a benefit.'],['No action observed','Record no admission or filter action at this load. To verify priority behavior, run a separate bounded overload test with fixed stop conditions and recovery measurement. Select production limits by latency, completions, failures and required progress; queueing alone is not a benefit.'],['Evidence missing','Collect admission and filter traces, then repeat the candidate and control at the same demand.',4]]};
 resultPanels['4:Can we compare the result?']={question:'Were engine metrics fresh throughout the run?',options:[['Yes','Compare with the current control and a relevant accounting candidate at matched demand.'],['No','Repair metric collection and repeat the same candidate; a stale signal cannot establish a benefit.',4]]};
 let referenceFocus=0;
 const referenceNodes=[
@@ -79,12 +88,8 @@ const referenceNodes=[
     "short": "Arrivals · request sizes · cache · success",
     "rows": [
       [
-        "What the controls do",
-        "Admission decides whether a queued request can leave the router for model servers. Endpoint filtering removes candidate servers from that request’s selection. Queue capacity bounds waiting requests and bytes."
-      ],
-      [
-        "Priority, fairness and engine scheduling",
-        "Priority selects which router band gets service. Fairness chooses among tenants within a band; ordering chooses the next request. Engine scheduling decides execution on a model server after dispatch."
+        "Control concepts · reference",
+        "Admission decides whether a queued request can leave the router for model servers. Endpoint filtering removes candidate servers from that request’s selection. Queue capacity bounds waiting requests and bytes.\nPriority selects which router band gets service. Fairness chooses among tenants within a band; ordering chooses the next request. Engine scheduling decides execution on a model server after dispatch.\nStep 1 defines the workload and its objectives. Step 2 measures the loaded controls; later experiments compare configuration changes."
       ],
       [
         "Why",
@@ -92,7 +97,7 @@ const referenceNodes=[
       ],
       [
         "Traffic",
-        "Scheduled arrivals or response-dependent sessions.\nKeep the chosen model fixed."
+        "Scheduled arrivals or agentic / multi-turn workflows.\nKeep the chosen model fixed."
       ],
       [
         "Shape",
@@ -104,31 +109,11 @@ const referenceNodes=[
       ],
       [
         "Initial session setup",
-        "Confirm the loaded build, model, endpoint and controls.\nUse a representative request sample; if unavailable, test short and long request shapes separately.\nChoose scheduled request arrivals or dependent sessions to match the test question."
+        "Confirm the loaded build, model, endpoint and controls.\nUse a representative request sample; if unavailable, test short and long request shapes separately.\nChoose scheduled request arrivals or agentic / multi-turn workflows to match the test question."
       ],
       [
         "Attainment",
         "Define the fraction of requests meeting the workload’s latency criteria and its denominator. Include failures; do not improve the score by dropping rejected requests."
-      ],
-      [
-        "Queue budgets before load tests",
-        "Use the loaded per-band limits as the control. If values are unknown, inspect the effective configuration before running.\nAgree the maximum router queue memory, pending-request count and tolerable queue delay. Upstream defaults are a starting control, not tuned values."
-      ],
-      [
-        "Choose maxRequests",
-        "Bound the pending requests that each band may retain. This is queue capacity, not engine concurrency.\nAt fixed traffic, compare a small set of request limits around the loaded value; keep maxBytes and TTL fixed.\nKeep a larger limit only if successful completions improve and queue delay stays within its budget."
-      ],
-      [
-        "Choose maxBytes",
-        "Bound queued request bytes within the router memory budget. Use observed queued request sizes to choose candidates.\nVary maxBytes with maxRequests and TTL fixed; compare queue_bytes, capacity rejection and successful completions.\nOmitted or zero limits use bounded defaults; zero does not mean unlimited."
-      ],
-      [
-        "Choose defaultRequestTTL",
-        "Use the remaining request deadline after measured processing and network time as the initial queue-delay budget.\nCompare shorter, current and longer bounded TTLs with capacity limits fixed. Check deadline attainment, completions and expiry counts.\nThis band TTL applies while candidate endpoints exist. The global noEndpointRequestTTL applies when none exist."
-      ],
-      [
-        "Unknown queue or delay budget",
-        "Begin with short, bounded observations under the loaded configuration. Record peak queue bytes, request count, oldest pending age and rejection causes.\nUse those results to agree memory and delay limits before choosing a configuration. If one limit binds first, test it separately."
       ]
     ],
     "example": "start"
@@ -183,8 +168,20 @@ const referenceNodes=[
         "Endpoint and test request succeed.\nEffective configuration and loaded control values saved.\nClient request records and component metrics available.\nRun duration, maximum backlog and stop conditions set."
       ],
       [
-        "Did controls delay or reject work?",
-        "Queueing or filtering observed: report the configured system’s behavior.\nNo queueing or filtering observed: record that for this tested load.\nEvidence missing: collect admission and endpoint-selection traces before claiming unrestricted engine capacity."
+        "Admission evidence · router",
+        "Admission determines when a queued request can be dispatched to model servers. Keep the loaded configuration fixed for this baseline.\nRouter metrics: llm_d_epp_flow_control_request_queue_duration_seconds and llm_d_epp_flow_control_queue_size; match the active band ceiling and request traces. Separate Dispatched, RejectedCapacity and EvictedTTL outcomes in llm_d_epp_flow_control_requests_total. Queue-capacity rejection and TTL expiry are separate from waiting at an admission ceiling."
+      ],
+      [
+        "Did pool admission delay requests?",
+        "Record observed admission delay separately from endpoint filtering."
+      ],
+      [
+        "Filtering evidence · Endpoint Picker",
+        "Endpoint filtering removes servers from a request’s eligible candidates. This baseline measures existing filters; it does not add one.\nInspect loaded scheduling profiles and per-request candidate/filter traces, including scheduling errors. Missing filter traces are not proof that no endpoint was removed. Queue metrics alone do not identify filtering."
+      ],
+      [
+        "Did endpoint filtering remove candidates?",
+        "Record observed filtering separately from pool admission."
       ],
       [
         "Refine the boundary",
@@ -216,7 +213,7 @@ const referenceNodes=[
       ],
       [
         "Keep the interactive workload matched",
-        "Scheduled requests: use the same interactive arrival schedule.\nDependent sessions: use the same starts, dependencies and tool pauses.\nKeep request sizes, cache preparation and measurement windows unchanged."
+        "Scheduled requests: use the same interactive arrival schedule.\nAgentic / multi-turn workflows: use the same starts, dependencies and tool pauses.\nKeep request sizes, cache preparation and measurement windows unchanged."
       ],
       [
         "Several workloads?",
@@ -244,7 +241,7 @@ const referenceNodes=[
       ],
       [
         "Locate the added delay",
-        "Inspect the baseline’s loaded endpoint filters; this test does not add a filter. Compare admission, engine-queue and processing durations on matched requests.\nIf timing is missing, collect it and repeat this same workload comparison before changing policy.\nIf processing or cache behavior explains the change, correct that cause and repeat the comparison. Do not subtract unrelated p95 values."
+        "Inspect the baseline’s loaded endpoint filters; this test does not add a filter. Compare admission, engine-queue and processing durations on matched requests.\nIf timing is missing, collect it and repeat this same workload comparison before changing policy.\nIdentify processing/cache interference; compare reduced dispatched load if contention is the cause. Keep offered demand and cache preparation matched; judge latency, completions, failures and workload progress. Do not subtract unrelated p95 values."
       ]
     ],
     "example": "priority"
@@ -296,7 +293,7 @@ const referenceNodes=[
       ],
       [
         "First: change request priority",
-        "Run A: assign equal priorities to all workloads.\nRun B: assign the intended workload priorities; replay identical demand.\nChange InferenceObjective.spec.priority; band priority only defines the queue band."
+        "Run A: assign equal priorities to all workloads.\nRun B: assign the intended workload priorities; replay identical demand.\nTo verify behavior under contention, run a separate bounded overload comparison with the same stop conditions in both arms; measure recovery. Production-limit selection still requires agreed latency and progress criteria.\nChange InferenceObjective.spec.priority; band priority only defines the queue band."
       ],
       [
         "@yaml Change classification · InferenceObjective",
@@ -313,26 +310,6 @@ const referenceNodes=[
       [
         "Did priority alone meet the criteria?",
         "Yes: keep the assignment and check every band at 6.\nNo: check remaining queue/processing delay before testing a ceiling.\nCannot tell: repeat the same comparison with complete measurements."
-      ],
-      [
-        "Then: compare admission ceilings",
-        "Run A: retain assigned priorities and the shared admission ceiling.\nRun B: use priority holdback; change only minCeiling between candidate runs.\nLower minCeiling delays the lowest active band sooner; compare protection and that band’s progress."
-      ],
-      [
-        "@yaml Change the lowest-band ceiling · plugin",
-        "plugins:\n  - name: candidate-holdback\n    type: priority-holdback-policy\n    parameters:\n      minCeiling: <candidate-value> # CHANGE: one value per run\n      maxCeiling: <retained-value>  # FIXED\n      shape: <retained-shape>       # FIXED\n      domain: <retained-domain>     # FIXED\nflowControl:\n  usageLimitPolicyPluginRef: candidate-holdback"
-      ],
-      [
-        "Keep fixed during the ceiling sweep",
-        "maxCeiling, shape, domain and active priority mix.\nKeep detector, filters, request priorities and queue budgets unchanged.\nRepeat promising values and the control."
-      ],
-      [
-        "Keep which setting?",
-        "Measure interactive latency/failures and every band’s completions and waits.\nKeep only a setting that meets both protection and progress requirements.\nOtherwise keep the previous setting; missing or inconsistent data means repeat."
-      ],
-      [
-        "Choose ceiling candidates",
-        "Start with the loaded holdback value, if present, and a small set of lower and higher valid values.\nWithout a prior holdback value, run an exploratory sweep within 0 ≤ minCeiling < 1; set stop limits before testing.\nKeep maxCeiling, shape, domain and the active band mix fixed. Refine around values that improve latency without breaking completion or delay requirements."
       ]
     ],
     "example": "priority"
@@ -389,10 +366,6 @@ const referenceNodes=[
       [
         "Measure",
         "Per-tenant completions, wait and normalized service shares.\nAccount for request cost and the chosen window.\nEqual request turns do not imply equal token service."
-      ],
-      [
-        "Choose the initial ordering policy",
-        "Without deadline metadata, retain FCFS as the control.\nWith effective request deadlines, compare FCFS against EDF with fairness fixed; check deadline attainment and service to requests without deadlines.\nEDF needs a priority-configurable queue and orders enqueue time plus effective TTL; requests without deadlines follow those with deadlines."
       ],
       [
         "Choose the fairness comparison",
@@ -606,8 +579,674 @@ const historyNodes={
 };
 let criteriaSelection=0;
 const sectionSelection={1:0,2:0,3:0,5:0};
-const sectionChoices={1:{title:'',labels:['Scheduled requests','Dependent sessions']},2:{title:'Test expected load or find capacity',labels:['Yes: test that demand','No: find the supported range']},3:{title:'Add one workload at a time',labels:['1. Add first competitor','2. Add remaining workloads','3. Test a workload burst']},5:{title:'Test priority; then ceilings if needed',labels:['1. Request priority','2. Admission ceiling']}};
+const sectionChoices={1:{title:'',labels:['Scheduled requests','Agentic / multi-turn workflows']},2:{title:'Test expected load or find capacity',labels:['Yes: test that demand','No: find the supported range']},3:{title:'Add one workload at a time',labels:['1. Add first competitor','2. Add remaining workloads','3. Test a workload burst']},5:{title:'Test priority; then ceilings if needed',labels:['1. Request priority','2. Admission ceiling']}};
 const detectorSelection={family:'concurrency',mode:'requests'};
+const controlBranchOpen={},controlBranchChoice={};
+const controlBranches=[
+  {
+    "id": "ordering",
+    "node": 7,
+    "title": "Choose which queued request goes next",
+    "why": "Use a deadline only when its metadata represents the intended objective.",
+    "question": "Which deadline should affect order?",
+    "options": [
+      {
+        "label": "No deadline",
+        "title": "Retain first-come order",
+        "summary": "Use FCFS when queue arrival order is the intended rule; proceed to the fairness comparison.",
+        "rows": [
+          [
+            "Supported behavior",
+            "fcfs-ordering-policy compares enqueue time. Keep it as the control if deadline metadata is absent or untrusted. Ordering operates inside the selected priority band and fairness scope."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "Queue-wait deadline",
+        "title": "Compare FCFS with EDF",
+        "summary": "Run A: FCFS. Run B: earliest effective queue expiry first.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Change only orderingPolicyRef in the existing band. Keep fairness, TTLs, priorities, detector, ceilings, request schedule and cache fixed."
+          ],
+          [
+            "Evidence to judge",
+            "Compare per-request expiry, successful completions, latency attainment and oldest pending age."
+          ],
+          [
+            "@yaml Queue deadline ordering",
+            "plugins:\n  - name: candidate-ordering\n    type: edf-ordering-policy\nflowControl:\n  priorityBands:\n    - priority: <existing-priority>\n      fairnessPolicyRef: <retained-policy>\n      orderingPolicyRef: candidate-ordering # CHANGE"
+          ],
+          [
+            "Deadline semantics",
+            "edf-ordering-policy compares enqueue time + effective request TTL. A request with no expiry sorts after finite deadlines; equal deadlines use enqueue time. EDF changes order; the queue processor enforces expiry."
+          ]
+        ],
+        "judge": [
+          "Did EDF improve the agreed objective?",
+          "Retain EDF only if every required workload still passes; continue the fairness comparison.",
+          "Restore FCFS; proceed with the previous ordering because EDF did not meet the acceptance rule.",
+          "Repair TTL or request records and repeat FCFS versus EDF at the same demand."
+        ],
+        "failureNext": null
+      },
+      {
+        "label": "First-token deadline",
+        "title": "Compare FCFS with SLO deadline order",
+        "summary": "Run A: FCFS. Run B: earliest received timestamp plus TTFT target first.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Change only orderingPolicyRef. Keep fairness and effective TTL fixed; replay the same TTFT metadata and workload in both runs."
+          ],
+          [
+            "Evidence to judge",
+            "Client first-token attainment over all attempts, failures, completions and per-tenant progress. Count failed or no-content attempts even when TTFT is absent."
+          ],
+          [
+            "@yaml First-token deadline ordering",
+            "plugins:\n  - name: candidate-ordering\n    type: slo-deadline-ordering-policy\nflowControl:\n  priorityBands:\n    - priority: <existing-priority>\n      fairnessPolicyRef: <retained-policy>\n      orderingPolicyRef: candidate-ordering # CHANGE"
+          ],
+          [
+            "Header and scope",
+            "slo-deadline-ordering-policy uses received timestamp + x-llm-d-slo-ttft-ms as integer milliseconds. Zero is accepted. Missing, negative, invalid or overflowing values sort last; ties use received timestamp. It does not use TPOT, expire requests or guarantee their SLO."
+          ]
+        ],
+        "judge": [
+          "Did TTFT attainment improve safely?",
+          "Retain SLO deadline ordering if completion, failure and progress criteria also pass; continue fairness testing.",
+          "Restore FCFS; the deadline ordering did not improve the agreed result. Continue the fairness comparison with FCFS.",
+          "Verify header propagation and per-request timestamps; repeat both ordering policies."
+        ],
+        "failureNext": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/framework/plugins/flowcontrol/ordering/slodeadline/slo_deadline.go",
+      "pkg/epp/config/loader/flowcontrol.go"
+    ]
+  },
+  {
+    "id": "classification",
+    "node": 1,
+    "title": "Verify workload classification",
+    "why": "Priority and tenant identity determine who shares a queue and service.",
+    "question": "Are all workload identities mapped?",
+    "options": [
+      {
+        "label": "Mapped",
+        "title": "Verify the effective bands",
+        "summary": "Send one request for every workload and confirm its resolved objective, priority and fairness identity.",
+        "rows": [
+          [
+            "Setup evidence",
+            "InferenceObjective.spec.poolRef identifies the intended pool in the same namespace; spec.priority assigns request priority. Higher priorities are served first. Send x-llm-d-inference-objective and a stable x-llm-d-inference-fairness-id; verify gateway propagation and resolved values in request traces."
+          ],
+          [
+            "@yaml Objective and band templates",
+            "spec:\n  poolRef:\n    name: <intended-pool>\n  priority: <workload-priority>\n# EndpointPickerConfig, separate resource:\nflowControl:\n  defaultPriorityBand:\n    maxRequests: <bounded-pending-count>\n    maxBytes: <bounded-pending-bytes>\n  defaultNegativePriorityBand:\n    maxRequests: <bounded-pending-count>\n    maxBytes: <bounded-pending-bytes>"
+          ],
+          [
+            "Explicit and fallback bands",
+            "priorityBands configures named numeric priorities. Unlisted priorities get a dynamic band from defaultPriorityBand; negative values use defaultNegativePriorityBand when supplied, otherwise the general template. Test each of four or more intended levels, including a previously unseen level. A band entry does not assign priority to a request."
+          ]
+        ],
+        "judge": [
+          "Did every request resolve as intended?",
+          "Retain the verified mapping and define latency and waiting budgets.",
+          "Correct objective lookup, pool association or header propagation; repeat the classification probes.",
+          "Capture resolved priority and FairnessID before using a multi-tenant result."
+        ],
+        "failureNext": 1
+      },
+      {
+        "label": "Missing or uncertain",
+        "title": "Probe fallback behavior first",
+        "summary": "Include absent, unknown and malformed objective values plus missing fairness identities before load testing.",
+        "rows": [
+          [
+            "Why this matters",
+            "An unresolved objective can fall back to default priority; verify the deployed resolver and route behavior. Missing fairness identities use a shared default identity, so apparently separate tenants may be one flow. Do not interpret that as per-tenant fairness."
+          ],
+          [
+            "Next action",
+            "Assign stable workload/tenant identities or explicitly retain a single shared flow. Repeat the probes until the intended mapping is visible, then use the Mapped branch."
+          ]
+        ],
+        "judge": null
+      }
+    ],
+    "sources": [
+      "apix/v1alpha2/inferenceobjective_types.go",
+      "pkg/epp/metadata/consts.go"
+    ]
+  },
+  {
+    "id": "budgets",
+    "node": 1,
+    "title": "Define latency targets and waiting budgets",
+    "why": "Latency targets describe success; queue TTL limits how long the router may wait.",
+    "question": "Are latency and wait budgets agreed?",
+    "options": [
+      {
+        "label": "Agreed",
+        "title": "Validate request metadata and expiry",
+        "summary": "Compare loaded queue budgets with one candidate budget at identical demand.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Change one global or per-band queue capacity or TTL at a time. Keep offered load, priorities, order, fairness and model processing fixed. Test a saturated pool separately from a pool with no candidates."
+          ],
+          [
+            "Choose capacity and TTL candidates",
+            "Bound the pending requests that each band may retain. This is queue capacity, not engine concurrency.\nAt fixed traffic, compare a small set of request limits around the loaded value; keep maxBytes and TTL fixed.\nKeep a larger limit only if successful completions improve and queue delay stays within its budget.\nBound queued request bytes within the router memory budget. Use observed queued request sizes to choose candidates.\nVary maxBytes with maxRequests and TTL fixed; compare queue_bytes, capacity rejection and successful completions.\nOmitted or zero limits use bounded defaults; zero does not mean unlimited.\nChoose a queue-wait budget from the request deadline and matched per-request processing/network measurements. Never subtract unrelated latency percentiles. Test a small valid set at identical demand; count expiry and client cancellation as failed attempts."
+          ],
+          [
+            "Request metadata",
+            "x-llm-d-slo-ttft-ms and x-llm-d-slo-tpot-ms carry first-token and per output token targets in milliseconds. They are request headers, not InferenceObjective fields. Deadline ordering consumes TTFT; the optional latency admitter consumes positive TTFT/TPOT. Header presence alone enforces neither target."
+          ],
+          [
+            "@yaml Waiting budget fields",
+            "flowControl:\n  maxRequests: <global-pending-count>\n  maxBytes: <global-pending-bytes>\n  defaultRequestTTL: <queue-duration>\n  noEndpointRequestTTL: <empty-pool-duration>\n  priorityBands:\n    - priority: <existing-priority>\n      maxRequests: <band-pending-count>\n      maxBytes: <band-pending-bytes>\n      defaultRequestTTL: <band-queue-duration>"
+          ],
+          [
+            "TTL precedence and cancellation",
+            "x-llm-d-inference-ttl is a positive Go duration, such as milliseconds or seconds with a unit. Invalid, zero and negative headers are ignored. A valid request TTL tightens the applicable operator budget; it cannot extend it. Per-band defaultRequestTTL replaces global nonempty-pool TTL; noEndpointRequestTTL is global. Gateway/client cancellation can end waiting sooner."
+          ],
+          [
+            "Defaults and units",
+            "Global maxRequests/maxBytes omitted or zero means unlimited. Per-band omitted or zero selects bounded defaults: 5000 requests and 1G bytes. Counts and bytes measure pending queue occupancy, not engine in-flight work. defaultRequestTTL defaults to 60s; noEndpointRequestTTL inherits it; explicit 0s disables that regime timeout. Defaults are not recommended workload settings."
+          ],
+          [
+            "Empty versus saturated pool",
+            "When candidates exist but admission is saturated, defaultRequestTTL applies. With no candidates, noEndpointRequestTTL applies. Regime changes refresh the regime budget, subject to the implementation’s overall guard. Queue TTL is not an end-to-end response deadline; test transition and cancellation behavior."
+          ],
+          [
+            "Evidence to judge",
+            "Client attempts, successes, failures and SLO attainment; router pending count/bytes, wait and outcomes separated into RejectedCapacity, EvictedTTL, EvictedNoEndpoints and EvictedContextCancelled."
+          ]
+        ],
+        "judge": [
+          "Did the budget meet latency and progress needs?",
+          "Retain the tested budget; use it unchanged in the baseline comparison.",
+          "Restore the previous budget. Locate capacity, expiry or cancellation failures before testing another budget.",
+          "Repair outcome traces and repeat both budget settings, including empty-pool and saturated-pool cases."
+        ],
+        "failureNext": 1
+      },
+      {
+        "label": "Unknown",
+        "title": "Measure before assigning a target",
+        "summary": "Run the bounded baseline sweep under the loaded configuration; record latency, failures, pending bytes and oldest pending age.",
+        "rows": [
+          [
+            "Bounded starting observations",
+            "Begin with short, bounded observations under the loaded configuration. Record peak queue bytes, request count, oldest pending age and rejection causes.\nUse those results to agree memory and delay limits before choosing a configuration. If one limit binds first, test it separately."
+          ],
+          [
+            "Next action",
+            "Use the measured curve and workload deadline to agree acceptable wait, successful work and failure rate. Until then, report measurements without pass/fail. Do not invent TTFT, TPOT or TTL values."
+          ]
+        ],
+        "judge": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/requestcontrol/admission.go",
+      "apix/config/v1alpha1/endpointpickerconfig_types.go"
+    ]
+  },
+  {
+    "id": "accounting",
+    "node": 4,
+    "title": "Verify the load accounting prerequisite",
+    "why": "Token limits are useful only when their producer represents the workload.",
+    "question": "Will this comparison use token accounting?",
+    "options": [
+      {
+        "label": "Request count only",
+        "title": "Verify request count lifecycle",
+        "summary": "Trace admission, dispatch and completion for representative requests; confirm the named in-flight producer and release behavior.",
+        "rows": [
+          [
+            "Next action",
+            "Keep producer settings fixed during the request-cap sweep. Revisit token accounting if equal request counts hide different costs."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "Tokens or hybrid",
+        "title": "Validate estimates before sweeping caps",
+        "summary": "Run A: the loaded accounting mode. Run B: one justified estimate change, with detector caps and demand fixed.",
+        "rows": [
+          [
+            "Prerequisites",
+            "Verify tokenizer availability, prefix-match producer wiring and cache-hit discounts. If estimating output, verify the outlen-bucket plugin’s output-length buckets against actual completions for each request shape. Do not calibrate token caps against absent or stale producer data."
+          ],
+          [
+            "@yaml In-flight token producer parameters",
+            "plugins:\n  - name: <existing-inflight-producer>\n    type: inflight-load-producer\n    parameters:\n      addEstimatedOutputTokens: <include-output-estimate>\n      maxEstimatedOutputTokens: <optional-estimate-cap>\n      prefixMatchInfoProducerName: <existing-prefix-producer>\n      syncCrossReplicaState: <verified-sync-enabled>"
+          ],
+          [
+            "Producer defaults",
+            "addEstimatedOutputTokens defaults false; omitted maxEstimatedOutputTokens means no estimate cap. The cap must be nonnegative and limits accounting, not generated output length. Empty prefixMatchInfoProducerName uses the default producer. syncCrossReplicaState defaults true but requires a working syncer for shared state."
+          ],
+          [
+            "Stage and release behavior",
+            "Prefill-only accounts discounted input. Decode-only uses estimated output only when addEstimatedOutputTokens is true; otherwise it falls through to discounted input. With output estimates off, first response releases tokens across target profiles; request counts generally persist to completion. The named prefill profile releases its entry early. With estimates on, remaining state persists until end of stream."
+          ],
+          [
+            "Evidence to judge",
+            "Compare predicted/accounted tokens with observed input/output and cache reuse; trace first response, end of stream and cancellation to detect leaks or early release. Then repeat the selected detector sweep with the verified producer fixed."
+          ]
+        ],
+        "judge": [
+          "Does accounting match the tested lifecycle?",
+          "Keep the verified producer; calibrate token or hybrid caps at matched demand.",
+          "Repair tokenizer, cache discounts or release accounting; repeat these probes before selecting token caps.",
+          "Collect per-request producer and completion records; do not infer estimate accuracy from saturation alone."
+        ],
+        "failureNext": 4
+      }
+    ],
+    "sources": [
+      "pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go"
+    ]
+  },
+  {
+    "id": "ceiling-family",
+    "node": 5,
+    "title": "Choose an admission ceiling policy",
+    "why": "Ceilings decide when a priority band waits before model dispatch.",
+    "question": "Does the tested fixed ceiling protect both goals?",
+    "options": [
+      {
+        "label": "Yes",
+        "title": "Retain the fixed ceiling",
+        "summary": "Keep the static policy and validate every lower-priority band at step 6.",
+        "rows": [
+          [
+            "Supported behavior",
+            "static-usage-limit-policy uses threshold. Threshold 1 still gates when saturation reaches 1; it is not a switch that disables admission."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "No: compare holdback",
+        "title": "Compare a fixed ceiling with holdback",
+        "summary": "Run A: retained static ceiling. Run B: priority-dependent ceilings with the same detector and demand.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Change usageLimitPolicyPluginRef to the registered holdback instance. Then sweep minCeiling separately; retain maxCeiling, shape, domain, active priorities, filters and queue budgets."
+          ],
+          [
+            "@yaml Holdback policy",
+            "plugins:\n  - name: candidate-holdback\n    type: priority-holdback-policy\n    parameters:\n      minCeiling: <candidate-lowest-ceiling> # CHANGE\n      maxCeiling: <retained-upper-ceiling>\n      shape: linear\n      domain: <rank-or-value>\nflowControl:\n  usageLimitPolicyPluginRef: candidate-holdback"
+          ],
+          [
+            "Valid range and multiple bands",
+            "minCeiling is required in [0,1); maxCeiling defaults to 1 in (0,1], with minCeiling < maxCeiling. shape supports linear. domain defaults rank: active bands are spaced equally; value preserves numeric priority gaps. With four or more bands, test intermediate-band progress too. One active band uses maxCeiling."
+          ],
+          [
+            "Plugin availability",
+            "Holdback and soft-reflective are Alpha at this pin and require --allow-experimental-plugins. Confirm registration and effective loading before the run."
+          ],
+          [
+            "Evidence to judge",
+            "Client interactive attainment, successful completions and failures; each lower band’s oldest pending age and recovery. Queueing alone is not a benefit."
+          ]
+        ],
+        "judge": [
+          "Does holdback improve protection and retain progress?",
+          "Keep the repeated passing holdback setting and validate every band at step 6.",
+          "Restore the fixed ceiling or compare a less restrictive valid holdback value at the same demand.",
+          "Restore missing per-band records and repeat the fixed and holdback configurations."
+        ],
+        "failureNext": 5
+      },
+      {
+        "label": "No: compare reflective",
+        "title": "Compare the retained ceiling with reflective",
+        "summary": "Run A: the retained static or tested holdback policy. Run B: parameter-free soft-reflective ceilings.",
+        "rows": [
+          [
+            "Practical consequence",
+            "Soft-reflective varies lower-band ceilings using saturation, active-band rank and dispatch-cycle alternation. It does not learn from measured TTFT or TPOT misses. The highest-band ceiling is 1 and remains gated at saturation."
+          ],
+          [
+            "Change / hold fixed",
+            "Change only the ceiling-policy reference between registered instances. Keep detector, filtering, priorities, workload, queue budgets and ordering fixed. Repeat steady load and a bounded burst; do not force saturation just to choose a configuration."
+          ],
+          [
+            "@yaml Soft-reflective ceiling",
+            "plugins:\n  - name: candidate-reflective\n    type: soft-reflective-ceiling-policy\nflowControl:\n  usageLimitPolicyPluginRef: candidate-reflective # CHANGE"
+          ],
+          [
+            "Availability and measurement",
+            "No policy parameters are exposed. Enable Alpha plugins in the verified build. Compare client latency attainment, completions, failures, per-band waits and burst recovery against the retained policy. This changes admission, not queued-request order."
+          ]
+        ],
+        "judge": [
+          "Does reflective improve the agreed result?",
+          "Retain soft-reflective only if the gain repeats and all bands still meet requirements; validate at step 6.",
+          "Restore the previous ceiling policy; reflective did not meet the comparison’s acceptance rule. Recheck every band at step 6.",
+          "Repair saturation and per-band outcome records; repeat the retained policy versus reflective."
+        ],
+        "failureNext": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/framework/plugins/flowcontrol/usagelimits/softreflectiveceiling/policy.go",
+      "pkg/epp/framework/plugins/flowcontrol/usagelimits/priorityholdback/config.go"
+    ]
+  },
+  {
+    "id": "program-fairness",
+    "node": 7,
+    "title": "Consider session-aware sharing",
+    "why": "Conditional: repeated agent or session calls share a stable program identity.",
+    "question": "Should prior program service affect sharing?",
+    "options": [
+      {
+        "label": "No / independent calls",
+        "title": "Retain the tenant fairness comparison",
+        "summary": "Use round-robin versus global-strict with ordering fixed; program-aware state adds no established requirement here.",
+        "rows": [
+          [
+            "Next action",
+            "Proceed to complete-mix validation with the fairness policy that passed the existing tenant comparison."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "Yes: attained service",
+        "title": "Compare fairness using attained service",
+        "summary": "Run A: retained fairness. Run B: program-aware LAS, which combines decayed service and head wait.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Change only fairnessPolicyRef after registering program-aware-fairness with strategy las. Preserve stable program FairnessID, session starts, dependent calls, tool pauses, cache, ordering and priorities."
+          ],
+          [
+            "@yaml Program-aware LAS",
+            "plugins:\n  - name: program-sharing\n    type: program-aware-fairness\n    parameters:\n      strategy: las\n      lasWeightService: <service-weight>\n      lasWeightHeadWait: <head-wait-weight>\n      lasHalfLifeSeconds: <service-decay-seconds>\n      evictionTtlSeconds: <inactive-state-lifetime>\n      evictionSweepSeconds: <cleanup-interval>\nflowControl:\n  priorityBands:\n    - priority: <existing-priority>\n      fairnessPolicyRef: program-sharing # CHANGE"
+          ],
+          [
+            "State and defaults",
+            "Beta policy; strategy defaults las. lasWeightService=0.8, lasWeightHeadWait=0.2, lasHalfLifeSeconds=60; these are source defaults, not recommended settings. Accounted service is prompt tokens + twice completion tokens. evictionTtlSeconds=3600 and evictionSweepSeconds=300 remove stale fairness history, not in-flight inference. Numeric values are nonnegative; sweep interval must be positive."
+          ],
+          [
+            "Evidence to judge",
+            "Per-program completion rate, attained token service, oldest pending age and latency; keep interactive attainment and all bands’ progress as acceptance checks. Fairness is within a band, not a cross-priority guarantee."
+          ]
+        ],
+        "judge": [
+          "Did program service improve without regressions?",
+          "Keep program-aware LAS for the tested session scope and validate the full mix.",
+          "Restore the retained fairness policy; LAS did not satisfy the chosen sharing objective. Validate the full mix with the restored policy.",
+          "Repair stable program identity and session records; repeat both fairness policies."
+        ],
+        "failureNext": null
+      },
+      {
+        "label": "Yes: later turns",
+        "title": "Compare fairness favoring later turns",
+        "summary": "Run A: retained fairness. Run B: program-aware turn priority for agentic / multi-turn workflows.",
+        "rows": [
+          [
+            "Change / hold fixed",
+            "Use program-aware-fairness with strategy turn-priority. Keep the same program identity and workload dependencies; change no ordering, priority or ceiling settings."
+          ],
+          [
+            "@yaml Turn-priority parameters",
+            "plugins:\n  - name: program-sharing\n    type: program-aware-fairness\n    parameters:\n      strategy: turn-priority\n      turnPriorityTimeWeight: <wait-weight>\n      turnPriorityInactivitySeconds: <turn-reset-seconds>\n      evictionTtlSeconds: <inactive-state-lifetime>\n      evictionSweepSeconds: <cleanup-interval>\nflowControl:\n  priorityBands:\n    - priority: <existing-priority>\n      fairnessPolicyRef: program-sharing # CHANGE"
+          ],
+          [
+            "Interpretation and defaults",
+            "Later turns plus waiting time affect rank. turnPriorityTimeWeight defaults 0.05; turnPriorityInactivitySeconds defaults 120. Keep state-cleanup values fixed. Missing identities collapse into the default flow. Measure whole-session completion and first-turn delay as well as later-turn latency."
+          ]
+        ],
+        "judge": [
+          "Did session completion improve safely?",
+          "Retain turn-priority only if first-turn, peer-program and cross-band requirements also pass; validate the full mix.",
+          "Restore the previous fairness policy; later-turn gains did not justify the measured regressions. Validate the full mix with the restored policy.",
+          "Repair turn/identity records and replay the same agentic / multi-turn workflows under both policies."
+        ],
+        "failureNext": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/framework/plugins/flowcontrol/fairness/program-aware/plugin.go"
+    ]
+  },
+  {
+    "id": "rejection",
+    "node": 6,
+    "title": "Decide whether to reject or cancel work",
+    "why": "Conditional: the application can tolerate failed or interrupted attempts.",
+    "question": "Which failure behavior is acceptable?",
+    "options": [
+      {
+        "label": "Neither optional behavior",
+        "title": "Retain bounded waiting",
+        "summary": "Keep optional admitters absent and enableEviction false. Capacity, TTL and client cancellation can still fail requests.",
+        "rows": [
+          [
+            "Next action",
+            "If bounded waiting cannot meet demand, reduce accepted demand or investigate capacity. Do not silently enable retries or cancellation."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "Reject before execution",
+        "title": "Evaluate an optional request admitter",
+        "summary": "Compare the current wait-only configuration with one admitter at identical demand.",
+        "rows": [
+          [
+            "Execution point",
+            "At this pin, request-control admitters run after flow-control admission and data production, before endpoint scheduling/model execution. Their denials are wrapped as Internal by the director; verify the actual gateway/client status, not an assumed HTTP 429."
+          ],
+          [
+            "Choose the admitter",
+            "Use latency-slo-admitter only with calibrated per-endpoint latency predictions and positive SLO metadata for eligible negative-priority requests. Use probabilistic-admitter as a separate saturation-based comparison; it does not predict SLO success. Never change both in one run."
+          ],
+          [
+            "@yaml Prediction-based admitter",
+            "plugins:\n  - name: candidate-slo-admitter\n    type: latency-slo-admitter\n    parameters:\n      latencyPredictionInfoProducerName: <verified-predictor>"
+          ],
+          [
+            "Prediction readiness and fallback",
+            "Only negative priorities are candidates. Positive TTFT or TPOT metadata activates the check. Any endpoint that is cold (KV below 0.02), idle, or has a valid prediction can admit; no predictions anywhere also admits. Partial missing predictions are not a universal fail-open. Compare prediction error by shape, cache and endpoint role before using rejection."
+          ],
+          [
+            "@yaml Alternative saturation admitter",
+            "plugins:\n  - name: candidate-probabilistic\n    type: probabilistic-admitter\n    parameters:\n      queueDepthThreshold: <waiting-threshold>\n      kvCacheUtilThreshold: <cache-fraction>\n      power: <exponent>\n      k: <multiplier>"
+          ],
+          [
+            "Probabilistic behavior",
+            "Negative priorities only. Defaults are queueDepthThreshold=5, kvCacheUtilThreshold=0.8, power=5, k=300. Queue threshold, power and k must be positive; cache fraction must be in (0,1]. Rejection probability is min(saturation^power × k, 1); missing endpoint metrics contribute saturation 1. Hold all but one candidate field fixed."
+          ],
+          [
+            "Evidence to judge",
+            "All attempted requests, successful completions, failures, achieved SLO fraction and retry amplification. Include rejected/no-content attempts in attainment even without latency. Verify producer readiness, loaded plugin execution and client retry behavior."
+          ]
+        ],
+        "judge": [
+          "Did rejection improve useful completed work?",
+          "Retain the tested admitter only if failure budget and every required workload pass; validate the full mix and failure handling.",
+          "Remove the candidate admitter and restore bounded waiting; rejection did not meet the application’s acceptance criteria. Recheck latency and progress with the restored configuration.",
+          "Repair predictions, failure mapping or client attempt records and repeat wait-only versus the admitter."
+        ],
+        "failureNext": null
+      },
+      {
+        "label": "Cancel in-flight work",
+        "title": "Evaluate negative-priority eviction",
+        "summary": "Run A: enableEviction false. Run B: true, only for workloads explicitly safe to interrupt.",
+        "rows": [
+          [
+            "Practical consequence",
+            "This can cancel eligible negative-priority requests already dispatched, unlike admission waiting or pre-execution rejection. Victims must be below the requesting priority; lowest priority then dispatch time orders them. Victim selection and pacing are internal, not exposed tuning knobs."
+          ],
+          [
+            "@yaml In-flight eviction switch",
+            "flowControl:\n  enableEviction: <false-for-A-true-for-B> # CHANGE"
+          ],
+          [
+            "Hold fixed / measure",
+            "Keep workload, queue budgets, detector and ceiling fixed. Record lost token work, truncated streams, client status, retries, tool side effects and resource release after cancellation. The switch defaults false. A closed eviction channel is not proof that all engine work stopped."
+          ]
+        ],
+        "judge": [
+          "Did cancellation protect latency within its failure budget?",
+          "Retain eviction only for the tested interruptible workload classes; validate retry, cancellation and complete-mix recovery.",
+          "Restore enableEviction false; the lost work or failure behavior exceeded the accepted cost. Recheck latency and progress with the restored configuration.",
+          "Trace cancellation through gateway, client and engine; repeat false versus true before retaining eviction."
+        ],
+        "failureNext": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/requestcontrol/director.go",
+      "pkg/epp/framework/plugins/requestcontrol/admitter/latencyslo/plugin.go"
+    ]
+  },
+  {
+    "id": "predictor",
+    "node": 6,
+    "title": "Verify prediction prerequisites",
+    "why": "Only needed before prediction-based rejection; train and observe before enforcing.",
+    "question": "Is prediction accuracy established?",
+    "options": [
+      {
+        "label": "No / not using predictions",
+        "title": "Defer prediction-based rejection",
+        "summary": "Keep latency-slo-admitter absent until predictions are useful for the tested workload.",
+        "rows": [
+          [
+            "Training comparison",
+            "Register the verified latency producer with predictInProduce false to collect training data without predictions. Check cold/warm cache, prompt/output sizes, endpoint roles and per-endpoint coverage. Then enable predictions in an observation comparison before adding the admitter."
+          ],
+          [
+            "Prediction services and readiness",
+            "Verify TRAINING_SERVER_URL and PREDICTION_SERVER_URL plus the native-mode/build setting in the deployed predictor (LATENCY_USE_NATIVE_XGBOOST). Source defaults point to localhost:8000 for training and localhost:8001 for prediction; they do not prove a service exists. Confirm connectivity, successful training/prediction calls and error rates before enabling enforcement. Retain actual service URLs privately."
+          ],
+          [
+            "Active producer fields",
+            "sloBufferFactor defaults 1 and must be positive; contextTTL is integer nanoseconds (default 300000000000, five minutes); streamingMode defaults false; predictInProduce defaults true. endpointRoleLabel identifies roles. prefixMatchInfoProducerName and inFlightLoadProducerName select existing feature producers. useEncoderCacheFeatures defaults false; encoderCacheMatchInfoProducerName is conditional on encoder-cache features."
+          ],
+          [
+            "Accepted but ignored",
+            "samplingMean and maxDecodeTokenSamplesForPrediction are deprecated/ignored at this pin. Do not sweep them or infer a readiness guarantee from their presence."
+          ],
+          [
+            "Next action",
+            "Collect actual-versus-predicted TTFT/TPOT and missing-prediction coverage before choosing the Ready branch."
+          ]
+        ],
+        "judge": null
+      },
+      {
+        "label": "Yes: validate enforcement",
+        "title": "Compare observation with enforcement",
+        "summary": "Keep the trained producer and request SLO headers fixed; add only latency-slo-admitter.",
+        "rows": [
+          [
+            "@yaml Prediction feature wiring",
+            "plugins:\n  - name: <verified-predictor>\n    type: predicted-latency-producer\n    parameters:\n      sloBufferFactor: <retained-positive-factor>\n      contextTTL: <integer-nanoseconds>\n      streamingMode: <retained-streaming-mode>\n      predictInProduce: true\n      endpointRoleLabel: <role-label>\n      prefixMatchInfoProducerName: <prefix-producer>\n      inFlightLoadProducerName: <inflight-producer>\n      useEncoderCacheFeatures: <encoder-features-enabled>\n      encoderCacheMatchInfoProducerName: <encoder-producer>"
+          ],
+          [
+            "Named evidence",
+            "Router · Endpoint Picker Prometheus: llm_d_epp_request_predicted_ttft_seconds; llm_d_epp_request_predicted_tpot_seconds; llm_d_epp_request_slo_violation_total. Join predictions to client observations and inspect missing predictions; these metrics alone do not establish calibration."
+          ],
+          [
+            "Next action",
+            "Use the Reject before execution comparison above. Retain enforcement only if completed useful work, latency attainment and failure budgets all pass."
+          ]
+        ],
+        "judge": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/framework/plugins/requestcontrol/dataproducer/predictedlatency/plugin.go"
+    ]
+  },
+  {
+    "id": "scale",
+    "node": 8,
+    "title": "Validate topology and shared accounting",
+    "why": "Scaling model endpoints differs from scaling Endpoint Picker replicas.",
+    "question": "Which deployment change is being tested?",
+    "options": [
+      {
+        "label": "Model endpoints / P-D",
+        "title": "Repeat the retained recipe on the new topology",
+        "summary": "Run A: the verified topology. Run B: changed replica count or prefill/decode layout, with workload and controls matched.",
+        "rows": [
+          [
+            "Stage partitioning",
+            "With separate prefill/decode stages, inspect each stage’s load and delay. This pin uses the same selected detector across stage partitions and the maximum stage signal; do not invent independent per-stage detector fields. Preserve tokenizer, cache discounts and output-estimation semantics."
+          ],
+          [
+            "Routing and runtime inventory",
+            "Save schedulingProfiles, plugins and weights, scorer/picker names, KV/prefix routing and endpoint roles from the loaded deployment. Hold them fixed unless routing itself is a separate experiment. Verify endpoint discovery, gateway header propagation, timeouts/retries and engine flags. EKS does not require KServe for this guide."
+          ],
+          [
+            "Engine configuration boundary",
+            "Inventory the resolved vLLM sequence, token-batch, context-length, cache, parallelism and scheduling settings separately from router limits. Engine-side priority requires explicit request mapping and engine support. Hold these values fixed; compare an engine or routing change only as a separate experiment supported by stage timing."
+          ],
+          [
+            "Evidence to judge",
+            "Per-stage queue and processing time, cache reuse, successful completions, failures and all priority/tenant objectives. Recalibrate if topology changes the bottleneck; do not transfer a single-replica cap by assumption."
+          ]
+        ],
+        "judge": [
+          "Do the retained controls pass on the new topology?",
+          "Retain the recipe for this tested topology and complete the repeated validation.",
+          "Keep the previous tested scope; recalibrate the affected detector or ceiling on the new topology.",
+          "Repair role, endpoint or stage measurements and repeat both topology cases."
+        ],
+        "failureNext": 8
+      },
+      {
+        "label": "Multiple Endpoint Pickers",
+        "title": "Establish the accounting implementation first",
+        "summary": "Compare one Endpoint Picker with multiple replicas only after confirming how endpoint load is shared.",
+        "rows": [
+          [
+            "Conditional implementation",
+            "At this pin, cross-replica interfaces and configuration exist, but no registered distributed syncer implementation was found in the stock runner. A local in-memory implementation is not distributed synchronization. Require a verified build/integration before making a shared-accounting claim."
+          ],
+          [
+            "Fields to inspect, not a deployable recipe",
+            "dataLayer.crossReplicaSyncerPluginRef selects the implementation. crossReplicaSyncInterval defaults 200ms; crossReplicaPublishTimeout defaults 1s. Verify dataLayer.discovery.peers and endpoints plus the in-flight producer’s syncCrossReplicaState. Omitted syncer reference uses local data; producer true alone does not share it."
+          ],
+          [
+            "Failure comparison",
+            "With a verified integration, compare single versus multiple pickers at the same total offered demand. Then delay or lose peer updates in a bounded failure case. Measure duplicated/undercounted load, stale state, saturation, latency and completions; verify recovery. Shared endpoint counters do not create a global queue or global fairness."
+          ],
+          [
+            "Next action",
+            "Without implementation evidence, retain only single-picker accounting claims and defer shared accounting. With verified synchronization, repeat complete-mix validation and scope the result to that build."
+          ]
+        ],
+        "judge": null
+      }
+    ],
+    "sources": [
+      "pkg/epp/config/loader/configloader.go",
+      "cmd/epp/runner/runner.go"
+    ]
+  }
+];
+for(const b of controlBranches)for(let i=0;i<b.options.length;i++){const o=b.options[i];if(o.judge){const key=b.node+':Control result '+b.id+':'+i;resultPanels[key]={question:o.judge[0],options:[['Criteria met',o.judge[1]],['Criterion failed',o.judge[2],o.failureNext],['Evidence missing',o.judge[3],b.node]]};}}
 function renderMap(openIds=new Set(),mode='reference'){
  let panelNode,panelSelected;
  const history=mode==='example',prefix=history?'example-node-':'node-';
@@ -625,17 +1264,18 @@ function renderMap(openIds=new Set(),mode='reference'){
  if(!history&&n.id===5){edge(`M420 ${y} V${y+32}`);y+=32;rowPanel(rows.filter(([k])=>k==='Set the comparison control'));rows=rows.filter(([k])=>k!=='Set the comparison control');}
  if(choices){
  if(n.id===2){edge(`M420 ${y} V${y+26}`);y+=26;parts.push(`<polygon class="r-diamond" points="420,${y} 640,${y+55} 420,${y+110} 200,${y+55}"/>${tx(420,y+50,sectionSelection[1]?['Is the required workload','level known?']:['Is the required workload','level known?'],'r-title')}`);y+=110;}
- const fork=y;y+=45;const count=choices.labels.length,w=count===3?230:345;const reasons={1:['Requests arrive independently','Each call follows earlier results'],2:['Replay the forecast or committed demand','Find the latency and throughput boundary'],3:['Interactive plus batch, for example','If more remain, add one per comparison','Raise one workload’s rate, then restore it'],5:['Compare equal and assigned priorities','If assigned priorities still miss latency targets']}[n.id];
+ const fork=y;y+=45;const count=choices.labels.length,w=count===3?230:345;const reasons={1:['Requests arrive independently','Each call waits for a response or tool result'],2:['Replay the forecast or committed demand','Find the latency and throughput boundary'],3:['Interactive plus batch, for example','If more remain, add one per comparison','Raise one workload’s rate, then restore it'],5:['Compare equal and assigned priorities','If assigned priorities still miss latency targets']}[n.id];
  const choiceTitles=choices.labels.map(label=>mapWrap(label,count===3?25:36)),choiceReasons=reasons.map(reason=>mapWrap(reason,count===3?25:36)),choiceHeight=Math.max(...choiceTitles.map((lines,i)=>28+lines.length*24+12+choiceReasons[i].length*24+18));
  choices.labels.forEach((label,i)=>{const cx=count===3?175+245*i:237.5+365*i;edge(`M420 ${fork} V${y-18} H${cx} V${y}`);parts.push(`<g role="button" tabindex="0" class="r-toggle" data-section-choice="${n.id}" data-choice-index="${i}" aria-pressed="${i===selected}"><rect class="${i===selected?'r-diamond':'r-box'}" x="${cx-w/2}" y="${y}" width="${w}" height="${choiceHeight}" rx="8"/>${tx(cx,y+32,choiceTitles[i],'r-label')}${tx(cx,y+32+choiceTitles[i].length*24+12,choiceReasons[i],'r-body')}</g>`);});
  y+=choiceHeight;const cx=count===3?175+245*selected:237.5+365*selected;edge(cx===420?`M420 ${y} V${y+40}`:`M${cx} ${y} V${y+20} H420 V${y+40}`);y+=40;
- if(n.id===1)rows=rows.map(([k,v])=>k==='Traffic'?[k,selected?'Fix session starts, request dependencies and tool pauses. Later model calls follow responses.':'Fix the timed request schedule. Requests arrive independently of earlier responses.']:[k,v]);
+ if(n.id===1)rows=rows.map(([k,v])=>k==='Traffic'?[k,selected?'Fix session starts and tool pauses. Each model call waits for an earlier response or tool result.':'Fix the timed request schedule. Requests arrive independently of earlier responses.']:[k,v]);
  if(n.id===2)rows=rows.filter(([k])=>k!==(selected?'Baseline comparison':'Baseline load sweep')&&!(['Refine the boundary','Load points','Find the knee and contention onset'].includes(k)&&!selected));
  if(n.id===3){rows=rows.filter(([k])=>!['Several workloads?','Change only the offered competing load','Measure'].includes(k));rows.unshift(['Chosen comparison','']);}
  if(n.id===5)rows=rows.filter(([k])=>selected?k!=='@yaml Change classification · InferenceObjective'&&k!=='@yaml Fix the static ceiling — plugin settings'&& !['First: change request priority','Keep fixed','Did priority alone meet the criteria?'].includes(k):k!=='@yaml Change the lowest-band ceiling · plugin'&&!['Then: compare admission ceilings','Choose ceiling candidates','Keep fixed during the ceiling sweep','Keep which setting?'].includes(k));
  }else{edge(`M420 ${y} V${y+32}`);y+=32;}
 
 
+ if(!history&&n.id===7&&controlDecisions(n,['ordering'])){P[n.id].bottom=y;suppressedStarts.add(y);return P[n.id];}
  if(choices){
  const keys={1:['Traffic'],2:['Baseline comparison','Baseline load sweep','Refine the boundary'],3:['Chosen comparison'],5:selected?['Then: compare admission ceilings','Choose ceiling candidates','Keep fixed during the ceiling sweep','Keep which setting?']:['First: change request priority','Keep fixed','Did priority alone meet the criteria?']}[n.id];
  const isVariant=k=>keys.includes(k)||(n.id===5&&(k.startsWith('@yaml Change')||k==='@yaml Fix the static ceiling — plugin settings'));const variant=rows.filter(([k])=>isVariant(k));const common=rows.filter(([k])=>!isVariant(k)&&k!=='Why'&&!(n.id===1&&['Criteria','Attainment'].includes(k)));
@@ -646,6 +1286,7 @@ function renderMap(openIds=new Set(),mode='reference'){
  const criteria=[[["Client · AIPerf records and timestamps","TTFT: first response token minus send time.\nStreaming TPOT: (last-token time − first-token time) / (output tokens − 1), for at least two output tokens.\nEnd-to-end latency: terminal response minus send time.\nSuccessful requests/s; failed attempts / all attempts; fraction meeting the chosen latency limits."],["Router · Endpoint Picker Prometheus corroboration","llm_d_epp_request_ttft_seconds\nllm_d_epp_request_streaming_tpot_seconds\nllm_d_epp_request_duration_seconds\nllm_d_epp_request_error_total\nUse client outcomes for acceptance; router metrics may miss earlier failures."],["If targets or demand are unknown","Run the bounded baseline rate sweep in step 2. Show latency, successful throughput and failures at each rate.\nUse that curve with the workload owner to select a latency target and required demand. Until agreed, report measurements without pass/fail."]],[["Client · per-band records","Successful requests/s and completed tokens/s.\nFailed attempts / all attempts; fraction completed by deadline.\nOldest pending-request age from request timestamps.\nRecovery seconds: end of burst until queue depth returns to its pre-burst level."],["Router · Endpoint Picker Prometheus by priority","llm_d_epp_flow_control_queue_size\nRouter · Endpoint Picker Prometheus: llm_d_epp_flow_control_queue_bytes\nRouter · Endpoint Picker Prometheus: llm_d_epp_flow_control_request_queue_duration_seconds\nRouter · Endpoint Picker Prometheus: llm_d_epp_flow_control_requests_total\nSeparate Dispatched, RejectedCapacity and EvictedTTL outcomes. Dispatch is not model completion; a histogram cannot establish the exact longest delay."],["If progress requirements are unknown","Measure each lower-priority workload alone, then in the intended mix with interactive demand fixed.\nCompare completed work, oldest pending age and recovery time. Use the completion deadline or work due per interval to agree minimum progress before selecting protection settings."]],[["Client · per-tenant records","Successful requests, output tokens or measured cost per tenant / total successful service in the same band.\nPer-tenant successful requests/s, failed attempts, p95 latency and oldest pending age.\nKeep x-llm-d-inference-fairness-id stable."],["If the sharing goal is unknown","Start with two tenants at the same priority and matched demand. Raise one tenant’s demand while holding the other steady.\nRepeat round robin and global strict with ordering fixed. Compare dispatch turns, completed-token share and latency.\nChoose the service unit and acceptable deviation with the workload owner; equal turns need not mean equal tokens."]]][criteriaSelection];rowPanel(criteria);
  }
  }else rowPanel(rows);
+ if(!history&&controlDecisions(n,controlBranches.filter(b=>b.id!=='ordering').map(b=>b.id))){P[n.id].bottom=y;suppressedStarts.add(y);return P[n.id];}
  const links=history?n.records.map(record=>['#experiment-'+record,recordLabels[record]+' →']):n.id===2?[['#control-roles','Control roles and configuration →']]:n.id===3?[['#delay-evidence','Open stage measurements →']]:n.id===6?[['#node-5','Configuration selected in step 5 →']]:[];
  if(links.length){y+=16;for(const [href,label]of links){parts.push(`<a href="${href}">${tx(80,y+24,[label],'r-label','start')}</a>`);y+=40;}}
  if(!history&&n.id===3&&selected!==2){
@@ -677,8 +1318,8 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  const top=y,resultKey=n.id+':'+key,spec=!history&&resultPanels[resultKey];
  if(!history&&n.id===2&&key==='Traffic model'){
  finishGroup();y+=26;
- const selectedTraffic=sectionSelection[1]||0,options=[['Scheduled requests','Send requests at the chosen requests/s, independently of previous responses.'],['Dependent sessions','Start sessions at the chosen sessions/s; preserve dependencies and tool pauses.']];
- const tops=y;options.forEach(([title,description],i)=>{const x=60+370*i,cx=x+175;edge('M420 '+(tops-26)+' V'+(tops-14)+' H'+cx+' V'+tops);parts.push('<g role="button" tabindex="0" class="r-toggle" data-section-choice="1" data-choice-index="'+i+'" aria-pressed="'+(selectedTraffic===i)+'"><rect class="'+(selectedTraffic===i?'r-diamond':'r-box')+'" x="'+x+'" y="'+tops+'" width="350" height="140" rx="8"/>'+tx(cx,tops+30,[title],'r-label')+tx(cx,tops+62,mapWrap(description,33),'r-body')+'</g>');});y+=140;edge('M'+(235+370*selectedTraffic)+' '+y+' V'+(y+18)+' H420 V'+(y+32));y+=32;continue;
+ const selectedTraffic=sectionSelection[1]||0,options=[['Scheduled requests','Send requests at the chosen requests/s, independently of previous responses.'],['Agentic / multi-turn workflows','Start sessions at the chosen sessions/s. Each model call waits for an earlier response or tool result; preserve tool pauses.']];
+ const trafficHeight=Math.max(...options.map(([title,description])=>30+mapWrap(title,33).length*24+8+mapWrap(description,33).length*24+18));const tops=y;options.forEach(([title,description],i)=>{const x=60+370*i,cx=x+175;edge('M420 '+(tops-26)+' V'+(tops-14)+' H'+cx+' V'+tops);parts.push('<g role="button" tabindex="0" class="r-toggle" data-section-choice="1" data-choice-index="'+i+'" aria-pressed="'+(selectedTraffic===i)+'"><rect class="'+(selectedTraffic===i?'r-diamond':'r-box')+'" x="'+x+'" y="'+tops+'" width="350" height="'+trafficHeight+'" rx="8"/>'+tx(cx,tops+30,mapWrap(title,33),'r-label')+tx(cx,tops+30+mapWrap(title,33).length*24+8,mapWrap(description,33),'r-body')+'</g>');});y+=trafficHeight;edge('M'+(235+370*selectedTraffic)+' '+y+' V'+(y+18)+' H420 V'+(y+32));y+=32;continue;
  }
  if(!history&&n.id===3&&key==='Chosen comparison'){
  finishGroup();const experimentTop=y,experimentIndex=parts.length;parts.push('');
@@ -693,7 +1334,7 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  }
  if(spec){
  finishGroup();if(compact){edge('M420 '+y+' V'+(y+26));y+=26;}
- const isChoice=resultKey==='2:Load points'||resultKey==='6:Change competing demand',question=mapWrap(spec.question,34),qh=Math.max(94,question.length*24+38);
+ const isChoice=resultKey==='2:Load points'||resultKey==='6:Change competing demand',controlQuestion=resultKey.includes('Control result')||['2:Did pool admission delay requests?','2:Did endpoint filtering remove candidates?'].includes(resultKey),question=mapWrap(spec.question,controlQuestion?26:34),qh=Math.max(controlQuestion?180:94,question.length*24+38);
  parts.push(isChoice?'<rect class="r-box" x="200" y="'+y+'" width="440" height="'+qh+'" rx="8"/>':'<polygon class="r-diamond" points="420,'+y+' 640,'+(y+qh/2)+' 420,'+(y+qh)+' 200,'+(y+qh/2)+'"/>');
  parts.push(tx(420,y+qh/2-(question.length-1)*12+6,question,'r-title'));y+=qh;
  const fork=y,count=spec.options.length,w=(720-16*(count-1))/count,sel=resultSelection[resultKey];y+=36;
@@ -704,7 +1345,7 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  const attrs=((resultKey==='6:If progress fails'&&sel===1)||(resultKey==='5:Did priority alone meet the criteria?'&&sel===1))?' data-ceiling="true"':'';
  parts.push((href?'<a href="#'+href+'"'+attrs+'>':'<g>')+'<rect class="r-box" x="120" y="'+y+'" width="600" height="'+h+'" rx="8"/>'+tx(420,y+28,lines,'r-body')+(href?'</a>':'</g>'));y+=h;
  const returnId=typeof next==='number'?next:typeof next==='string'&&/^node-[1-8]$/.test(next)?Number(next.slice(5)):next==='delay-evidence'?n.id:null;
- if(returnId&&returnId<=n.id&&P[returnId]){edge('M720 '+(y-h/2)+' H810 V'+P[returnId].mid+' H640');P[n.id].redirect=true;}
+ if(returnId&&returnId<=n.id&&P[returnId]){edge('M720 '+(y-h/2)+' H810 V'+P[returnId].mid+' H640');P[n.id].redirect=true;}if(n.id===2&&P[n.id].redirect&&['2:Did pool admission delay requests?','2:Did endpoint filtering remove candidates?'].includes(resultKey))return;
 
  }
  continue;
@@ -714,7 +1355,7 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  const detailOpen=folded&&!!detailSelection[detailKey];
  if(folded){const heading=mapWrap(key,62),hh=Math.max(54,heading.length*24+24);body.push('<g role="button" tabindex="0" class="r-toggle" data-detail-key="'+mapEscape(detailKey)+'" aria-expanded="'+detailOpen+'"><rect x="60" y="'+y+'" width="720" height="'+hh+'" fill="transparent"/>'+tx(80,y+30,heading,'r-label','start')+tx(750,y+30,[detailOpen?'▴':'▾'],'r-arrow')+'</g>');yy=y+hh;if(!detailOpen){if(!compact)parts.push('<rect class="r-box" x="60" y="'+top+'" width="720" height="'+hh+'" rx="8"/>');parts.push(body.join(''));y=yy;continue;}}
  if(key.startsWith('@yaml ')){
- const configKey=n.id+':'+key,expanded=configSelection[configKey]===undefined?n.id===7:!!configSelection[configKey];
+ const configKey=n.id+':'+key,expanded=!!configSelection[configKey];
  body.push('<g role="button" tabindex="0" class="r-toggle" data-config-key="'+mapEscape(configKey)+'" aria-expanded="'+expanded+'"><rect x="60" y="'+y+'" width="720" height="54" fill="transparent"/>'+tx(80,yy,[key.slice(6).replace(/ · YAML| · plugin| — plugin settings/g,'').replace(/^Fix /,'Hold ').replace('Hold the static ceiling','Shared admission ceiling')],'r-label','start')+tx(750,yy,[expanded?'▴':'▾'],'r-arrow')+'</g>');yy=y+54;
  if(expanded){
  const lines=value.split('\n').map(raw=>({change:raw.includes('# CHANGE'),text:raw.replace(/\s+# (?:FIXED|CHANGE).*$/,'')}));
@@ -735,12 +1376,29 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  finishGroup();
  }
 
+
+ function controlDecisions(n,only){
+ if(P[n.id].redirect)return true;
+ for(const b of controlBranches.filter(b=>b.node===n.id&&(!only||only.includes(b.id))&&(b.id!=='ceiling-family'||sectionSelection[5]===1))){
+ const open=!!controlBranchOpen[b.id],selected=controlBranchChoice[b.id],top=y+24;
+ edge('M420 '+y+' V'+top);y=top;const title=mapWrap(b.title,59),why=mapWrap(b.why,69),hh=30+title.length*24+why.length*24+16;
+ parts.push('<rect class="r-box" x="60" y="'+y+'" width="720" height="'+hh+'" rx="8"/><g role="button" tabindex="0" class="r-toggle" data-control-open="'+b.id+'" aria-expanded="'+open+'"><rect x="60" y="'+y+'" width="720" height="'+hh+'" fill="transparent"/>'+tx(80,y+28,title,'r-label','start')+tx(80,y+34+title.length*24,why,'r-body','start')+tx(750,y+28,[open?'▴':'▾'],'r-arrow')+'</g>');
+ y+=hh;if(!open)continue;
+ const q=decision(mapWrap(b.question,26),y,180);const count=b.options.length,w=(720-16*(count-1))/count,labels=b.options.map(o=>mapWrap(o.label,count===3?22:32)),bh=Math.max(72,...labels.map(l=>l.length*24+28));y+=36;
+ b.options.forEach((o,i)=>{const x=60+i*(w+16),cx=x+w/2;edge('M420 '+q.bottom+' V'+(y-18)+' H'+cx+' V'+y);parts.push('<g role="button" tabindex="0" class="r-toggle" data-control-choice="'+b.id+'" data-option-index="'+i+'" aria-pressed="'+(selected===i)+'"><rect class="'+(selected===i?'r-diamond':'r-box')+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+bh+'" rx="8"/>'+tx(cx,y+bh/2-(labels[i].length-1)*12+6,labels[i],'r-label')+'</g>');});
+ y+=bh;
+ if(selected!==undefined){const o=b.options[selected],cx=60+selected*(w+16)+w/2;edge('M'+cx+' '+y+' V'+(y+18)+' H420 V'+(y+36));y+=36;const rows=[[o.title,o.summary],...o.rows];if(o.judge)rows.push(['Control result '+b.id+':'+selected,'']);rowPanel(rows,'',n);y+=24;parts.push('<a href="metrics.html#conditional-controls">'+tx(80,y,['Component metrics and evidence →'],'r-label','start')+'</a>');y+=30;for(const [i,path]of b.sources.entries()){parts.push('<a href="https://github.com/llm-d/llm-d-router/blob/30f06d9c7c086cfa7ced5f801bddde7a4d000d73/'+path+'">'+tx(80,y,['Pinned implementation '+(i+1)+' →'],'r-label','start')+'</a>');y+=28;}if(P[n.id].redirect)return true;}
+ }
+ edge('M420 '+y+' V'+(y+24));y+=24;return false;
+ }
+
  function detectorNode(n){
  panelNode=n;panelSelected=0;
  const top=y,headerHeight=68;
  parts.push(`<rect class="r-box" x="200" y="${y}" width="440" height="${headerHeight}" rx="8"/><g id="node-4" role="button" tabindex="0" data-reference-node="4" data-map-mode="reference" aria-expanded="true" class="r-toggle"><rect x="200" y="${y}" width="440" height="${headerHeight}" fill="transparent"/>${tx(412,y+31,['4. '+n.title])}${tx(412,y+59,['Choose a signal; compare at matched demand'],'r-body')}<text x="621" y="${y+31}" class="r-arrow">▴</text></g>`);
  P[4]={top,mid:top+34};y+=headerHeight;
  y+=24;rowPanel([['Choose a useful starting test','Retain the loaded detector as Run A. Choose a candidate from the signals below, then compare it with A at the same offered demand.'],['Candidate selection','Request count: start here when requests have similar cost. Challenge it if equal counts hide different token sizes.\nToken count: compare when accounted token sizes vary; first verify the producer’s estimates and release timing.\nHybrid: compare when request volume and token-heavy requests stress different limits.\nEngine metrics: compare when engine queue or KV-cache pressure explains the bottleneck and metric freshness is verified.'],['Comprehensive research matrix','For complete comparison coverage, calibrate all four candidates using matched workload levels and acceptance criteria. This is broader than the minimum starting comparison; missing token accounting or stale metrics must be repaired before judging that candidate.']]);
+ if(controlDecisions(n)){P[4].bottom=y;suppressedStarts.add(y);return P[4];}
  const q={bottom:y};y+=48;
  const familyTop=y;
  for(const [family,cx,label]of [['concurrency',275,'In-flight accounting'],['utilization',565,'Engine metrics']]){
@@ -752,7 +1410,7 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  const modesTop=y+70;parts.push(tx(420,y+35,['concurrencyMode'],'r-code'));
  for(const [i,m,label]of [[0,'requests','Request count'],[1,'tokens','Token count'],[2,'hybrid','Hybrid']]){const cx=175+i*245;edge(`M275 ${y} V${modesTop-18} H${cx} V${modesTop}`);parts.push(`<g role="button" tabindex="0" data-detector-mode="${m}" aria-pressed="${detectorSelection.mode===m}" class="r-toggle"><rect class="${detectorSelection.mode===m?'r-diamond':'r-box'}" x="${cx-115}" y="${modesTop}" width="230" height="78" rx="8"/>${tx(cx,modesTop+29,[label])}${tx(cx,modesTop+55,['"'+m+'"'],'r-code')}</g>`);}
  y=modesTop+78;const cx={requests:175,tokens:420,hybrid:665}[detectorSelection.mode];edge(`M${cx} ${y} V${y+25} H420 V${y+45}`);y+=45;
- const common=[['Admission or endpoint filtering?','This comparison tests both together when the detector also filters endpoints.\nInspect flowControl.saturationDetector.pluginRef and loaded scheduling profiles.\nChanging a cap changes its filter threshold even with headroom fixed.'],['Run each configuration','Choose a bounded set: current value and lower/higher candidates.\nAt each value, replay the same offered load and workload/cache conditions.\nRun the higher-load case separately; do not change load during a cap comparison.\nRepeat promising values, the nearest alternative and the current control.'],['Keep router settings fixed','headroom; flowControl.priorityBands.\nflowControl.usageLimitPolicyPluginRef and its plugin parameters.\ninFlightLoadProducerName; producer parameter addEstimatedOutputTokens.'],['Keep workload fixed','Input/output lengths and prefix reuse; same cache preparation.\nScheduled replay: request arrivals. Sessions: starts, dependencies, pauses.\nModel/build, endpoint count, topology and measurement window.'],['Output','Per-workload latency attainment, completed throughput and failures.\nAdmission/engine waits explain where costs moved.'],['Comprehensive comparison','For the complete research matrix, calibrate request, token, hybrid and engine-metric candidates.\nRepeat at matched demand; alternate candidates with the current control.\nChoose by the pre-agreed primary measure: latency or successful throughput.\nRequire every latency, failure and lower-band progress limit to pass.\nSet the required gain and repeat variation before testing.'],['What did the control do?','Admission: inspect queued duration, queue size and the active band ceiling.\nFiltering: inspect candidate removals and the responsible plugin.\nNo waiting or removal observed: record that; do not force a queue.\nEvidence missing: collect it before claiming an admission or filter benefit.']];
+ const common=[['Admission or endpoint filtering?','This comparison tests both together when the detector also filters endpoints.\nInspect flowControl.saturationDetector.pluginRef and loaded scheduling profiles.\nChanging a cap changes its filter threshold even with headroom fixed.'],['Run each configuration','Choose a bounded set: current value and lower/higher candidates.\nAt each value, replay the same offered load and workload/cache conditions.\nRun the higher-load case separately; do not change load during a cap comparison.\nRepeat promising values, the nearest alternative and the current control.'],['Keep router settings fixed','headroom; flowControl.priorityBands.\nflowControl.usageLimitPolicyPluginRef and its plugin parameters.\ninFlightLoadProducerName; producer parameter addEstimatedOutputTokens.'],['Keep workload fixed','Input/output lengths and prefix reuse; same cache preparation.\nScheduled replay: request arrivals. Sessions: starts, dependencies, pauses.\nModel/build, endpoint count, topology and measurement window.'],['Output','Per-workload latency attainment, completed throughput and failures.\nAdmission/engine waits explain where costs moved.'],['Comprehensive comparison','For the complete research matrix, calibrate request, token, hybrid and engine-metric candidates.\nRepeat at matched demand; alternate candidates with the current control.\nChoose by the pre-agreed primary measure: latency or successful throughput.\nRequire every latency, failure and lower-band progress limit to pass.\nSet the required gain and repeat variation before testing.'],['What did the control do?','Admission: inspect queued duration, queue size and the active band ceiling.\nFiltering: inspect candidate removals and the responsible plugin.\nNo waiting or removal observed: record that; queueing is not proof of benefit.\nUse a separate bounded overload test to verify priority behavior, with fixed stop conditions and recovery measurement. Do not select production limits merely to make a queue appear.\nEvidence missing: collect it before claiming an admission or filter benefit.']];
  rows={requests:[['What it measures','Counts in-flight requests; every request contributes one.'],['Configuration','maxConcurrency — reference requests per endpoint.\nDefault: 100; concurrencyMode defaults to requests.'],['Consider when','Request costs are similar enough for one count threshold.'],['Change one field','plugins[].parameters.maxConcurrency in requests mode.\nHold maxTokenConcurrency and the other settings below fixed.'],['Observe','In-flight request count; saturation; admission and engine waits.']],tokens:[['What it measures','Counts accounted tokens, so requests can contribute different amounts.'],['Configuration','maxTokenConcurrency — reference accounted tokens per endpoint.\nDefault: 1,000,000 tokens.'],['Consider when','Request counts hide differing token costs; estimates are usable.'],['Change one field','plugins[].parameters.maxTokenConcurrency in tokens mode.\nUse identical request-size mixes for every candidate value.'],['Observe','Accounted tokens and estimate error; saturation and waits.\nVerify output-token inclusion and release timing.']],hybrid:[['What it measures','Checks both request count and accounted tokens for each endpoint.\nThe larger fraction of its configured reference capacity sets its load signal.'],['Configuration','maxConcurrency + maxTokenConcurrency.\nDefaults: 100 requests + 1,000,000 tokens per endpoint.'],['Consider when','Many small requests and a few token-heavy requests can stress different limits.'],['Change one field at a time','In hybrid mode, sweep maxConcurrency with maxTokenConcurrency fixed.\nThen hold the retained request cap and sweep maxTokenConcurrency.\nCompare the resulting pair against requests mode and tokens mode.'],['Observe','Per endpoint: larger request/token ratio; then pool average.\nCheck whether either dimension catches missed pressure.']]}[detectorSelection.mode].concat(common);
  }else{
  edge(`M565 ${y} V${y+25} H420 V${y+45}`);y+=45;
@@ -770,15 +1428,15 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
 
  }
  function edge(d,label,x,yy){const start=/^M420 ([\d.]+) V/.exec(d);if(start&&suppressedStarts.has(Number(start[1])))return;parts.push(`<path class="r-flow" d="${d}"/>`);if(label)parts.push(tx(x,yy,[label],'r-edge'));}
- function decision(lines,from=y){const t=y+35,h=lines.length>2?144:112;parts.push(`<polygon class="r-diamond" points="420,${t} 620,${t+h/2} 420,${t+h} 220,${t+h/2}"/>${tx(420,t+h/2-(lines.length-1)*12+6,lines)}`);edge(`M420 ${from} V${t}`);y=t+h;return{top:t,mid:t+h/2,bottom:y};}
- function side(x,t,lines,id){const investigation=(id===6&&lines[0]==='Review the failed')||(id===8&&lines[0]==='Compare previous');parts.push(`<a ${investigation?'data-investigate="'+id+'" ':''}href="#${typeof id==='string'?id:prefix+id}"><rect class="r-side" x="${x}" y="${t}" width="165" height="88" rx="7"/>${tx(x+82.5,t+44-(lines.length-1)*12,lines,'r-side-text')}</a>`);return{top:t,bottom:t+88,mid:t+44};}
+ function decision(lines,from=y,minHeight=0){const t=y+35,h=Math.max(minHeight,lines.length>2?144:112);parts.push(`<polygon class="r-diamond" points="420,${t} 620,${t+h/2} 420,${t+h} 220,${t+h/2}"/>${tx(420,t+h/2-(lines.length-1)*12+6,lines)}`);edge(`M420 ${from} V${t}`);y=t+h;return{top:t,mid:t+h/2,bottom:y};}
+ function side(x,t,lines,id){const height=Math.max(88,lines.length*24+16);const investigation=(id===6&&lines[0]==='Review the failed')||(id===8&&lines[0]==='Compare previous');parts.push(`<a ${investigation?'data-investigate="'+id+'" ':''}href="#${typeof id==='string'?id:prefix+id}"><rect class="r-side" x="${x}" y="${t}" width="165" height="${height}" rx="7"/>${tx(x+82.5,t+height/2-(lines.length-1)*12,lines,'r-side-text')}</a>`);return{top:t,bottom:t+height,mid:t+height/2};}
  if(history){
  for(let i=0;i<referenceNodes.length;i++){box(referenceNodes[i]);if(i<referenceNodes.length-1){parts.push(`<path class="r-recorded-flow" d="M420 ${y} V${y+40}"/>`);y+=40;}}
  const from=y;y+=70;const endTop=y;
  for(const [cx,title,lines,href]of [[237.5,'Unified serving',['Request cap 128','Passed 3/3 accepted repeats'],'#example-node-4'],[602.5,'Prefill / decode',['Hybrid 64 requests / 80,000 tokens','Holdback: lowest-band ceiling 0.5','Protected runs passed both shapes'],'#experiment-pd']]){parts.push(`<path class="r-recorded-flow" d="M420 ${from} V${y-25} H${cx} V${y}"/><a href="${href}"><rect class="r-end" x="${cx-172.5}" y="${y}" width="345" height="130" rx="20"/>${tx(cx,y+35,[title])}${tx(cx,y+68,lines,'r-body')}</a>`);}
  y+=165;parts.push(`<a href="https://github.com/alexagriffith/flow-control-benchmarks/tree/main/benchmark-data/rhaii-3.5-flow-control">${tx(420,y,['Published studies and configurations →'],'r-label')}</a>`);y+=35;return outputSvg();
  }
- box(referenceNodes[0]);edge(`M420 ${y} V${y+40}`);y+=40;box(referenceNodes[1]);const d2=decision(['Baseline meets','test criteria?']);const bad=side(20,d2.mid+40,['Investigate','baseline delay'],'baseline-investigation');edge(`M220 ${d2.mid} H102.5 V${bad.top}`,'No',155,d2.mid-12);edge(`M20 ${bad.mid} H8 V${P[2].mid} H200`);const un=history?null:side(655,d2.mid+40,['Set targets or','repair records','Repeat baseline'],2);if(un)edge(`M620 ${d2.mid} H737.5 V${un.top}`,'Cannot judge',720,d2.mid-12);y+=100;edge(`M420 ${d2.bottom} V${y}`,'Yes',445,d2.bottom+35);box(referenceNodes[2]);if(un)edge(`M820 ${un.mid} H826 V${P[2].mid} H640`);const d3=decision(['With the intended mix,','does interactive latency','or failure rate increase?']);const repeat=side(20,d3.mid+40,['Resolve evidence','Repeat step 3'],3);edge(`M220 ${d3.mid} H102.5 V${repeat.top}`,'Unclear',145,d3.mid-12);edge(`M20 ${repeat.mid} H8 V${P[3].mid} H200`);y+=100;const diagnosis=decision(['Did queueing or','filtering add delay?'],d3.bottom);parts.push(`<a href="#delay-evidence" aria-label="Inspect loaded controls and request-stage timings"><title>Open measurements and investigation steps</title><polygon fill="transparent" points="420,${diagnosis.top} 620,${diagnosis.mid} 420,${diagnosis.bottom} 220,${diagnosis.mid}"/></a>`);parts.push(tx(445,d3.bottom+35,['Yes'],'r-edge'));const otherCause=side(20,diagnosis.mid+40,['Correct processing','or cache; retest 3'],'delay-evidence');edge(`M220 ${diagnosis.mid} H102.5 V${otherCause.top}`,'No',132,diagnosis.mid-12);const unknownCause=side(655,diagnosis.mid+40,['Collect timings','Repeat step 3'],'delay-evidence');edge(`M620 ${diagnosis.mid} H737.5 V${unknownCause.top}`,'Unknown',721,diagnosis.mid-12);edge(`M820 ${unknownCause.mid} H826 V${P[3].mid} H640`);edge(`M20 ${otherCause.mid} H8 V${P[3].mid} H200`);y+=145;edge(`M420 ${diagnosis.bottom} V${y}`,'Yes',455,diagnosis.bottom+35);box(referenceNodes[3]);const d4=decision(history?['Did admission make','requests wait?']:['Does a candidate','improve results?']);const fix=side(20,d4.mid+40,history?['Check admission','queue evidence']:['Repair missing data','or repeat tests'],4);edge(`M220 ${d4.mid} H102.5 V${fix.top}`,'Cannot tell',137,d4.mid-12);edge(`M20 ${fix.mid} H8 V${P[4].mid} H200`);const nonbinding=side(655,d4.mid+40,history?['No admission wait','Keep settings']:['Keep current','configuration'],5);edge(`M620 ${d4.mid} H737.5 V${nonbinding.top}`,'No',718,d4.mid-12);y+=110;edge(`M420 ${d4.bottom} V${y}`,history?'Yes':'Yes: use candidate',history?445:510,d4.bottom+35);box(referenceNodes[4]);edge(`M737.5 ${nonbinding.bottom} V${P[5].mid} H640`);edge(`M420 ${y} V${y+40}`);y+=40;box(referenceNodes[5]);if(!history)edge(`M620 ${d3.mid} H832 V${P[5].mid} H640`,'No: keep limits',724,d3.mid-12);const d6=decision(['Latency + progress','criteria met?']);const nc=side(655,d6.mid+40,['Check criteria','and measurements'],6);edge(`M620 ${d6.mid} H737.5 V${nc.top}`,'Unclear',718,d6.mid-12);edge(`M820 ${nc.mid} H826 V${P[6].mid} H640`);const reb=side(20,d6.mid+40,['Review the failed','result at step 6'],6);edge(`M220 ${d6.mid} H102.5 V${reb.top}`,'No',155,d6.mid-12);edge(`M20 ${reb.mid} H8 V${P[6].mid} H200`);y+=100;edge(`M420 ${d6.bottom} V${y}`,history?'Separate test':'Yes',history?491:445,d6.bottom+35);box(referenceNodes[6]);const d7=decision(['Sharing improves;','other criteria still met?']);const keepFair=side(20,d7.mid+40,['Keep previous','sharing policy'],8);edge(`M220 ${d7.mid} H102.5 V${keepFair.top}`,'No',155,d7.mid-12);const repeatFair=side(655,d7.mid+40,['Repeat sharing','comparison'],7);edge(`M620 ${d7.mid} H737.5 V${repeatFair.top}`,'Cannot tell',718,d7.mid-12);edge(`M820 ${repeatFair.mid} H832 V${P[7].mid} H640`);y+=110;edge(`M420 ${d7.bottom} V${y}`,'Yes: use policy',498,d7.bottom+35);box(referenceNodes[7]);edge(`M102.5 ${keepFair.bottom} V${P[8].mid} H200`);const d8=decision(history?['Did every validation','check pass?']:['All criteria met','across repeats?']);const failed=side(20,d8.mid+40,history?['Keep valid results','Recheck failures']:['Compare previous','configuration'],8);edge(`M220 ${d8.mid} H102.5 V${failed.top}`,'No',155,d8.mid-12);const unknown=side(655,d8.mid+40,['Check criteria','and measurements'],8);edge(`M620 ${d8.mid} H737.5 V${unknown.top}`,'Unclear',718,d8.mid-12);edge(`M20 ${failed.mid} H8 V${P[8].mid} H200`);edge(`M820 ${unknown.mid} H826 V${P[8].mid} H640`);y+=135;if(history){edge(`M420 ${d8.bottom} V${y}`,'Yes',447,d8.bottom+35);parts.push(`<rect class="r-end" x="285" y="${y}" width="270" height="75" rx="25"/>${tx(420,y+32,['Keep configuration','for the tested scope'])}`);y+=125;parts.push(`<path class="r-recorded-flow" d="M102.5 ${failed.bottom} V${y+37} H285"/>${tx(264,y-16,['Recorded outcome'],'r-edge')}`);}else edge(`M420 ${d8.bottom} V${y}`,'Yes',445,d8.bottom+35);parts.push(`<rect class="r-end" x="285" y="${y}" width="270" height="75" rx="25"/>${tx(420,y+32,history?['Retain tested recipes','with scoped limits']:['Keep the tested','configuration'])}`);y+=100;
+ box(referenceNodes[0]);edge(`M420 ${y} V${y+40}`);y+=40;box(referenceNodes[1]);const d2=decision(['Baseline meets','test criteria?']);const bad=side(20,d2.mid+40,['Investigate','baseline delay'],'baseline-investigation');edge(`M220 ${d2.mid} H102.5 V${bad.top}`,'No',155,d2.mid-12);edge(`M20 ${bad.mid} H8 V${P[2].mid} H200`);const un=history?null:side(655,d2.mid+40,['Set targets or','repair records','Repeat baseline'],2);if(un)edge(`M620 ${d2.mid} H737.5 V${un.top}`,'Cannot judge',720,d2.mid-12);y+=100;edge(`M420 ${d2.bottom} V${y}`,'Yes',445,d2.bottom+35);box(referenceNodes[2]);if(un)edge(`M820 ${un.mid} H826 V${P[2].mid} H640`);const d3=decision(['With the intended mix,','does interactive latency','or failure rate increase?']);const repeat=side(20,d3.mid+40,['Resolve evidence','Repeat step 3'],3);edge(`M220 ${d3.mid} H102.5 V${repeat.top}`,'Unclear',145,d3.mid-12);edge(`M20 ${repeat.mid} H8 V${P[3].mid} H200`);y+=100;const diagnosis=decision(['Did queueing or','filtering add delay?'],d3.bottom);parts.push(`<a href="#delay-evidence" aria-label="Inspect loaded controls and request-stage timings"><title>Open measurements and investigation steps</title><polygon fill="transparent" points="420,${diagnosis.top} 620,${diagnosis.mid} 420,${diagnosis.bottom} 220,${diagnosis.mid}"/></a>`);parts.push(tx(445,d3.bottom+35,['Yes'],'r-edge'));const otherCause=side(20,diagnosis.mid+40,['Identify processing','or cache contention','Compare reduced','dispatched load','if contention'],'delay-evidence');edge(`M220 ${diagnosis.mid} H102.5 V${otherCause.top}`,'No',132,diagnosis.mid-12);const unknownCause=side(655,diagnosis.mid+40,['Collect timings','Repeat step 3'],'delay-evidence');edge(`M620 ${diagnosis.mid} H737.5 V${unknownCause.top}`,'Unknown',721,diagnosis.mid-12);edge(`M820 ${unknownCause.mid} H826 V${P[3].mid} H640`);y+=145;edge(`M420 ${diagnosis.bottom} V${y}`,'Yes',455,diagnosis.bottom+35);box(referenceNodes[3]);edge(`M20 ${otherCause.mid} H8 V${P[4].mid} H200`);const d4=decision(history?['Did admission make','requests wait?']:['Does a candidate','improve results?']);const fix=side(20,d4.mid+40,history?['Check admission','queue evidence']:['Repair missing data','or repeat tests'],4);edge(`M220 ${d4.mid} H102.5 V${fix.top}`,'Cannot tell',137,d4.mid-12);edge(`M20 ${fix.mid} H8 V${P[4].mid} H200`);const nonbinding=side(655,d4.mid+40,history?['No admission wait','Keep settings']:['Keep current','configuration'],5);edge(`M620 ${d4.mid} H737.5 V${nonbinding.top}`,'No',718,d4.mid-12);y+=110;edge(`M420 ${d4.bottom} V${y}`,history?'Yes':'Yes: use candidate',history?445:510,d4.bottom+35);box(referenceNodes[4]);edge(`M737.5 ${nonbinding.bottom} V${P[5].mid} H640`);edge(`M420 ${y} V${y+40}`);y+=40;box(referenceNodes[5]);if(!history)edge(`M620 ${d3.mid} H832 V${P[5].mid} H640`,'No: keep limits',724,d3.mid-12);const d6=decision(['Latency + progress','criteria met?']);const nc=side(655,d6.mid+40,['Check criteria','and measurements'],6);edge(`M620 ${d6.mid} H737.5 V${nc.top}`,'Unclear',718,d6.mid-12);edge(`M820 ${nc.mid} H826 V${P[6].mid} H640`);const reb=side(20,d6.mid+40,['Review the failed','result at step 6'],6);edge(`M220 ${d6.mid} H102.5 V${reb.top}`,'No',155,d6.mid-12);edge(`M20 ${reb.mid} H8 V${P[6].mid} H200`);y+=100;edge(`M420 ${d6.bottom} V${y}`,history?'Separate test':'Yes',history?491:445,d6.bottom+35);box(referenceNodes[6]);const d7=decision(['Sharing improves;','other criteria still met?']);const keepFair=side(20,d7.mid+40,['Keep previous','sharing policy'],8);edge(`M220 ${d7.mid} H102.5 V${keepFair.top}`,'No',155,d7.mid-12);const repeatFair=side(655,d7.mid+40,['Repeat sharing','comparison'],7);edge(`M620 ${d7.mid} H737.5 V${repeatFair.top}`,'Cannot tell',718,d7.mid-12);edge(`M820 ${repeatFair.mid} H832 V${P[7].mid} H640`);y+=110;edge(`M420 ${d7.bottom} V${y}`,'Yes: use policy',498,d7.bottom+35);box(referenceNodes[7]);edge(`M102.5 ${keepFair.bottom} V${P[8].mid} H200`);const d8=decision(history?['Did every validation','check pass?']:['All criteria met','across repeats?']);const failed=side(20,d8.mid+40,history?['Keep valid results','Recheck failures']:['Compare previous','configuration'],8);edge(`M220 ${d8.mid} H102.5 V${failed.top}`,'No',155,d8.mid-12);const unknown=side(655,d8.mid+40,['Check criteria','and measurements'],8);edge(`M620 ${d8.mid} H737.5 V${unknown.top}`,'Unclear',718,d8.mid-12);edge(`M20 ${failed.mid} H8 V${P[8].mid} H200`);edge(`M820 ${unknown.mid} H826 V${P[8].mid} H640`);y+=135;if(history){edge(`M420 ${d8.bottom} V${y}`,'Yes',447,d8.bottom+35);parts.push(`<rect class="r-end" x="285" y="${y}" width="270" height="75" rx="25"/>${tx(420,y+32,['Keep configuration','for the tested scope'])}`);y+=125;parts.push(`<path class="r-recorded-flow" d="M102.5 ${failed.bottom} V${y+37} H285"/>${tx(264,y-16,['Recorded outcome'],'r-edge')}`);}else edge(`M420 ${d8.bottom} V${y}`,'Yes',445,d8.bottom+35);parts.push(`<rect class="r-end" x="285" y="${y}" width="270" height="75" rx="25"/>${tx(420,y+32,history?['Retain tested recipes','with scoped limits']:['Keep the tested','configuration'])}`);y+=100;
  if(history){parts.push(`<path class="r-recorded-flow" d="M420 ${P[1].bottom} V${P[2].top}"/><path class="r-recorded-flow" d="M420 ${P[2].bottom} V${d2.top}"/><path class="r-recorded-flow" d="M620 ${d2.mid} H832 V${P[4].mid} H640"/>${tx(708,d2.mid-12,['Cap-first path'],'r-edge')}<path class="r-recorded-flow" d="M420 ${P[4].bottom} V${d4.top}"/><path class="r-recorded-flow" d="M420 ${d4.bottom} V${P[5].top}"/><path class="r-recorded-flow" d="M420 ${P[5].bottom} V${P[6].top}"/><path class="r-recorded-flow" d="M420 ${P[7].bottom} V${d7.top}"/><path class="r-recorded-flow" d="M220 ${d7.mid} H102.5 V${keepFair.top}"/><path class="r-recorded-flow" d="M102.5 ${keepFair.bottom} V${P[8].top-18} H260 V${P[8].top}"/><path class="r-recorded-flow" d="M420 ${P[8].bottom} V${d8.top}"/><path class="r-failed-flow" d="M220 ${d8.mid} H102.5 V${failed.top}"/>`);}
  function outputSvg(){const focus=!history&&referenceFocus?P[referenceFocus]:null;const viewTop=focus?Math.max(0,focus.top-12):0;const viewBottom=focus?(P[referenceFocus+1]?P[referenceFocus+1].mid*2-P[referenceFocus+1].top:y):y;return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${viewTop} 840 ${viewBottom-viewTop}" class="${history?'history-map':'reference-map-svg'}" role="group" aria-label="${history?'Recorded tests on the benchmark map':'Flow-control benchmark decision map'}"><defs><marker id="r-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#6c7e9f"/></marker></defs><style>.r-title{font:600 20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#1b2948}.r-body{font:17px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#53627c}.r-label,.r-edge{font:600 17px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#3559c7}.r-side-text{font:17px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#1b2948}.r-arrow{font:18px sans-serif;fill:#3559c7}.r-code{font:15px ui-monospace,monospace;fill:#53627c}.r-yaml-key{fill:#243f78;font-weight:600}.r-yaml-value{fill:#735184}.r-yaml-comment{fill:#6b7280;font-size:12px}.r-inline-code{font-family:ui-monospace,monospace;font-size:14px;fill:#243f78}.r-code-change{fill:#3559c7;font-weight:700}.r-box,.r-side{fill:#fff;stroke:#cdd7ec;stroke-width:2}.r-diamond,.r-end{fill:#f0f4ff;stroke:#8199cc;stroke-width:2}.r-flow{fill:none;stroke:#6c7e9f;stroke-width:2;marker-end:url(#r-head)}.r-recorded{fill:#f0f7f3;stroke:#759883}.r-gap,.r-conditional{fill:#fff9ec;stroke:#b29b68}.r-failed{fill:#fff1ef;stroke:#b27b76}.history-map .r-flow{stroke:#c5ccd8;stroke-dasharray:5 4}.r-recorded-flow{fill:none;stroke:#356f55;stroke-width:3;marker-end:url(#r-head)}.r-failed-flow{fill:none;stroke:#a14a40;stroke-width:3;marker-end:url(#r-head)}.r-toggle{cursor:pointer}.r-toggle:focus{outline:none}.r-toggle:focus-visible rect{stroke:#3559c7;stroke-width:3}</style>${parts.join('')}</svg>`;}
  return outputSvg();
@@ -932,7 +1590,26 @@ function setupMarkup(m){return m.setup?`<details class="experiment-setup"><summa
 document.getElementById('example-setup').innerHTML='<span class="history-key"><span>Tested</span><span>Tested with limits</span></span>';
 const openExampleNodes=new Set();function refreshExample(){document.getElementById('example-graph').innerHTML=renderMap(openExampleNodes,'example').replaceAll('id="r-head"','id="history-head"').replaceAll('url(#r-head)','url(#history-head)');}refreshExample();
 document.getElementById('example-evidence').innerHTML='<details id="example-records"><summary>Study records</summary>'+exampleMaps.map(m=>`<details class="experiment-detail" id="experiment-${m.id}"><summary>${mapEscape(m.question)}</summary>${setupMarkup(m)}<details><summary>Evidence</summary>${m.notes.map(n=>`<p>${mapEscape(n)}</p>`).join('')}<ul>${m.sources.map(([label,path])=>`<li><a href="${path}">${mapEscape(label)}</a></li>`).join('')}</ul></details></details>`).join('')+'</details>';
-for(const elementId of ['reference-graph','example-graph']){const graph=document.getElementById(elementId);graph.addEventListener('click',e=>{const detail=e.target.closest('[data-detail-key]');if(detail){detailSelection[detail.dataset.detailKey]=!detailSelection[detail.dataset.detailKey];refreshReference();return;}const config=e.target.closest('[data-config-key]');if(config){const key=config.dataset.configKey;configSelection[key]=!(configSelection[key]===undefined?key.startsWith('7:'):configSelection[key]);refreshReference();return;}const check=e.target.closest('[data-check-id]');if(check){checkSelection[check.dataset.checkId]=!checkSelection[check.dataset.checkId];refreshReference();return;}const result=e.target.closest('[data-result-key]');if(result){resultSelection[result.dataset.resultKey]=Number(result.dataset.resultIndex);refreshReference();return;}const criterion=e.target.closest('[data-criteria-choice]');if(criterion){criteriaSelection=Number(criterion.dataset.criteriaChoice);refreshReference();return;}const section=e.target.closest('[data-section-choice]');if(section){sectionSelection[Number(section.dataset.sectionChoice)]=Number(section.dataset.choiceIndex);refreshReference();return;}const family=e.target.closest('[data-detector-family]'),choice=e.target.closest('[data-detector-mode]');if(family||choice){if(family)detectorSelection.family=family.dataset.detectorFamily;if(choice)detectorSelection.mode=choice.dataset.detectorMode;refreshReference();return;}const el=e.target.closest('[data-reference-node]');if(!el)return;const id=Number(el.dataset.referenceNode),history=el.dataset.mapMode==='example',open=history?openExampleNodes:openReferenceNodes;open.has(id)?open.delete(id):open.add(id);history?refreshExample():refreshReference();document.getElementById((history?'example-node-':'node-')+id)?.focus({preventScroll:true});});graph.addEventListener('keydown',e=>{if(!['Enter',' '].includes(e.key))return;const el=e.target.closest('[data-reference-node],[data-detector-family],[data-detector-mode],[data-section-choice],[data-criteria-choice],[data-result-key],[data-check-id],[data-config-key],[data-detail-key]');if(el){e.preventDefault();el.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});}
+for(const elementId of ['reference-graph','example-graph']){const graph=document.getElementById(elementId);graph.addEventListener('click',e=>{const controlOpen=e.target.closest('[data-control-open]');if(controlOpen){controlBranchOpen[controlOpen.dataset.controlOpen]=!controlBranchOpen[controlOpen.dataset.controlOpen];refreshReference();return;}const controlChoice=e.target.closest('[data-control-choice]');if(controlChoice){controlBranchChoice[controlChoice.dataset.controlChoice]=Number(controlChoice.dataset.optionIndex);refreshReference();return;}const detail=e.target.closest('[data-detail-key]');if(detail){detailSelection[detail.dataset.detailKey]=!detailSelection[detail.dataset.detailKey];refreshReference();return;}const config=e.target.closest('[data-config-key]');if(config){const key=config.dataset.configKey;configSelection[key]=!configSelection[key];refreshReference();return;}const check=e.target.closest('[data-check-id]');if(check){checkSelection[check.dataset.checkId]=!checkSelection[check.dataset.checkId];refreshReference();return;}const result=e.target.closest('[data-result-key]');if(result){resultSelection[result.dataset.resultKey]=Number(result.dataset.resultIndex);refreshReference();return;}const criterion=e.target.closest('[data-criteria-choice]');if(criterion){criteriaSelection=Number(criterion.dataset.criteriaChoice);refreshReference();return;}const section=e.target.closest('[data-section-choice]');if(section){sectionSelection[Number(section.dataset.sectionChoice)]=Number(section.dataset.choiceIndex);refreshReference();return;}const family=e.target.closest('[data-detector-family]'),choice=e.target.closest('[data-detector-mode]');if(family||choice){if(family)detectorSelection.family=family.dataset.detectorFamily;if(choice)detectorSelection.mode=choice.dataset.detectorMode;refreshReference();return;}const el=e.target.closest('[data-reference-node]');if(!el)return;const id=Number(el.dataset.referenceNode),history=el.dataset.mapMode==='example',open=history?openExampleNodes:openReferenceNodes;open.has(id)?open.delete(id):open.add(id);history?refreshExample():refreshReference();document.getElementById((history?'example-node-':'node-')+id)?.focus({preventScroll:true});});graph.addEventListener('keydown',e=>{if(!['Enter',' '].includes(e.key))return;const el=e.target.closest('[data-control-open],[data-control-choice],[data-reference-node],[data-detector-family],[data-detector-mode],[data-section-choice],[data-criteria-choice],[data-result-key],[data-check-id],[data-config-key],[data-detail-key]');if(el){e.preventDefault();el.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});}
+
+const mapHelp=document.getElementById('map-help');let mapHelpAnchor=null;
+function closeMapHelp(restoreFocus=true){const anchor=mapHelpAnchor;if(anchor){anchor.classList.remove('map-help-anchor');anchor.setAttribute('aria-expanded','false');}mapHelp.hidden=true;mapHelpAnchor=null;if(restoreFocus&&anchor?.isConnected)anchor.focus({preventScroll:true});}
+function placeMapHelp(){if(!mapHelpAnchor?.isConnected){closeMapHelp(false);return;}const r=mapHelpAnchor.getBoundingClientRect(),gap=16,pad=12,w=Math.min(410,innerWidth-pad*2);mapHelp.style.width=w+'px';mapHelp.style.maxHeight=(innerHeight-pad*2)+'px';let left,top;
+if(r.left>=w+gap+pad){left=r.left-w-gap;top=Math.max(pad,Math.min(r.top,innerHeight-mapHelp.offsetHeight-pad));}
+else if(innerWidth-r.right>=w+gap+pad){left=r.right+gap;top=Math.max(pad,Math.min(r.top,innerHeight-mapHelp.offsetHeight-pad));}
+else{left=Math.max(pad,Math.min(r.left,innerWidth-w-pad));const below=innerHeight-r.bottom-gap-pad,above=r.top-gap-pad;const useBelow=below>=above;const room=Math.max(120,useBelow?below:above);mapHelp.style.maxHeight=Math.min(room,innerHeight-pad*2)+'px';top=useBelow?r.bottom+gap:r.top-gap-mapHelp.offsetHeight;top=Math.max(pad,Math.min(top,innerHeight-mapHelp.offsetHeight-pad));}
+mapHelp.style.left=left+'px';mapHelp.style.top=top+'px';}
+function openMapHelp(anchor,href){if(mapHelpAnchor===anchor&&!mapHelp.hidden){closeMapHelp();return;}closeMapHelp(false);const source=document.querySelector(href),content=mapHelp.querySelector('.map-help-content');content.replaceChildren();const baseline=href==='#baseline-investigation';document.getElementById('map-help-title').textContent=baseline?source.textContent:source.querySelector(':scope > summary')?.textContent||'Map reference';
+const nodes=baseline?[source.nextElementSibling,source.nextElementSibling.nextElementSibling]:Array.from(source.children).filter(el=>el.tagName!=='SUMMARY');for(const node of nodes){if(!node)continue;const copy=node.cloneNode(true);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));content.append(copy);}
+if(baseline){const measurements=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Component measurements';measurements.append(summary,source.parentElement.querySelector('table').cloneNode(true));content.insertBefore(measurements,content.lastElementChild);}
+for(const table of content.querySelectorAll('table')){const group=document.createElement('div'),headers=Array.from(table.querySelectorAll('thead th')).map(el=>el.textContent);for(const row of table.querySelectorAll('tbody tr')){const cells=Array.from(row.children),section=document.createElement('section'),heading=document.createElement('h4');heading.innerHTML=cells[0].innerHTML;section.append(heading);cells.slice(1).forEach((cell,i)=>{const p=document.createElement('p'),label=document.createElement('strong');label.textContent=(headers[i+1]||'')+': ';p.append(label);p.insertAdjacentHTML('beforeend',cell.innerHTML);section.append(p);});group.append(section);}table.replaceWith(group);}
+mapHelpAnchor=anchor;anchor.classList.add('map-help-anchor');anchor.setAttribute('aria-haspopup','dialog');anchor.setAttribute('aria-expanded','true');mapHelp.hidden=false;content.scrollTop=0;placeMapHelp();mapHelp.querySelector('button').focus({preventScroll:true});}
+mapHelp.querySelector('.map-help-close').addEventListener('click',()=>closeMapHelp());
+mapHelp.addEventListener('click',e=>{if(e.target.closest('a'))closeMapHelp(false);});
+document.addEventListener('click',e=>{if(!mapHelp.hidden&&!mapHelp.contains(e.target)&&!mapHelpAnchor?.contains(e.target))closeMapHelp(false);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mapHelp.hidden){e.preventDefault();closeMapHelp();}});
+window.addEventListener('resize',()=>{if(!mapHelp.hidden)placeMapHelp();});window.addEventListener('scroll',()=>{if(!mapHelp.hidden)placeMapHelp();},{passive:true});
+
 if(location.hash==='#example')selectTab(document.getElementById('example-tab'));showLinkedNode();
 
 </script></body></html>
