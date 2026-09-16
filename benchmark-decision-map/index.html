@@ -153,7 +153,7 @@ const referenceNodes=[
       ],
       [
         "Why repeat the baseline?",
-        "Repeat the same baseline load to measure normal run-to-run variation. Later configuration gains must exceed that variation; overlapping results need more evidence."
+        "Repeat the same baseline load to measure normal run-to-run variation. Later configuration gains must exceed that variation. If results overlap, collect more evidence."
       ],
       [
         "Measure",
@@ -1363,7 +1363,7 @@ if(itemIndex&&!compact){edge('M420 '+y+' V'+(y+26));y+=26;}
  continue;
  }
  beginGroup();let body=[],yy=y+28;
- const detailKey=n.id+':'+key,folded=label!=='expanded'&&!history&&!key.startsWith('@yaml ')&&key!=='Verify before the run'&&value.length>240;
+ const detailKey=n.id+':'+key,folded=label!=='expanded'&&!history&&!key.startsWith('@yaml ')&&!['Verify before the run','Offered load and objective'].includes(key)&&value.length>240;
  const detailOpen=folded&&!!detailSelection[detailKey];
  if(folded){const heading=mapWrap(key,62),hh=Math.max(54,heading.length*24+24);body.push('<g role="button" tabindex="0" class="r-toggle" data-detail-key="'+mapEscape(detailKey)+'" aria-expanded="'+detailOpen+'"><rect x="60" y="'+y+'" width="720" height="'+hh+'" fill="transparent"/>'+tx(80,y+30,heading,'r-label','start')+tx(750,y+30,[detailOpen?'▴':'▾'],'r-arrow')+'</g>');yy=y+hh;if(!detailOpen){if(!compact)parts.push('<rect class="r-box" x="60" y="'+top+'" width="720" height="'+hh+'" rx="8"/>');parts.push(body.join(''));y=yy;continue;}}
  if(key.startsWith('@yaml ')){
