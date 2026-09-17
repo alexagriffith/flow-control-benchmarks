@@ -2,6 +2,24 @@
 
 September 16, 2026. V1 covers public copy, learner correctness, replay readability, controls and narrow evidence-claim corrections. This plan covers the remaining additions.
 
+## Review the existing views first
+
+Walk every learner step and optional mode at desktop and narrow widths. Check the rendered story, technical accuracy, wording, clutter, controls and request routes. Record findings per view and fix them before expanding the learner. Apply the same review to public navigation and the decision-guide entrypoints.
+
+## Deeper learning
+
+Queue a dedicated Learn entry or second tab after the current cleanup. Cover every detector plugin, then the related policies and configuration. Each lesson should explain purpose, input signals, calculation, the decision it controls, configuration, dependencies, interactions and a concrete example. Bind implementation details and evidence to their versions. Map existing coverage before adding another view.
+
+Initial coverage map, checked against router `bb2113e4`:
+
+| Plugin | Learning topics |
+|---|---|
+| `utilization-detector` | Engine waiting, KV-cache pressure, endpoint and pool scores, stale telemetry, filtering. |
+| `concurrency-detector` | Request, token and hybrid modes, accounting lifetime, limits, headroom and endpoint filtering. |
+| Related policies and producers | Priority ceilings, fairness, ordering, token-accounting dependencies and how they connect to dispatch. |
+
+Request, token and hybrid are three modes of the concurrency detector. Prefill/decode aggregation is a topology topic shared by both detector lessons. Check each target build before presenting its behavior as available.
+
 ## Keep the published decision guide
 
 The [decision guide](../benchmark-decision-map/) already covers detector selection, token-accounting prerequisites, priority ceilings, fairness, deadline ordering, rejection, prediction, eviction, prefill/decode and conditional shared accounting. Its router reference is `30f06d9c`.

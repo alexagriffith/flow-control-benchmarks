@@ -188,8 +188,8 @@
     <text x="18" y="98" font-size="12" fill="var(--muted, #5f6368)">2048-token prompt, 512-token reply</text>
     <rect x="330" y="84" width="560" height="18" rx="9" fill="var(--blue, #1c78d8)"/>
     <text x="336" y="98" font-size="11" font-weight="700" fill="var(--on-accent, #ffffff)">occupies compute and KV cache for the whole decode loop</text>
-    <text x="18" y="140" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Measured on one GPU at 160 concurrent requests, the short shape cleared 165 requests per second and the long shape cleared 27.</text>
-    <text x="18" y="160" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Request rate treats both requests equally. Measured GPU time differs.</text>
+    <text x="18" y="140" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Longer prompts and replies can require more compute and KV-cache capacity.</text>
+    <text x="18" y="160" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Illustration · bar lengths are schematic.</text>
   </svg>
   </div>
   <div class="grid4" style="margin-top:12px">
@@ -603,7 +603,7 @@
     <text x="484" y="176" font-size="11" fill="var(--green, #1f8a5f)" text-anchor="middle">a new request re-pins the tenant's queue</text>
   </svg>
   </div>
-  <div class="note">Tenants appear, serve, and vanish on their own. Idle bands are collected the same way, on their own timeout.</div>
+  <div class="note">Unused flows are collected after their last lease is released and the idle timeout expires. Configured priority bands stay registered.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/flowcontrol/registry/leasing.go">flowcontrol/registry/leasing.go</a> · <a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a></div>
 </section>
 

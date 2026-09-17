@@ -41,3 +41,48 @@ with sync_playwright() as pw:
         page.close()
     browser.close()
 print("PASS: Settings keyboard/focus, legacy replay layers, saturation colors, fixed counters at two widths and themes")
+
+# The previous audit missed transient overlays and option-to-option state changes.
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
+    page = browser.new_page(viewport={"width": 1844, "height": 1265}, reduced_motion="reduce")
+    page.goto((ROOT / "learn/flow-control-journey.html").as_uri())
+    page.evaluate("setAuto(false,true);go(1,0)")
+    assert page.evaluate("""(()=>{
+      for(let i=0;i<=100;i++){
+        burstWave(i/100,true);
+        const waiting=[...$('#burstWaitCells').children].some(e=>+e.getAttribute('opacity')>0);
+        const full=[...$('#burstSlots').children].every(e=>e.getAttribute('fill')==='var(--brand)');
+        if(waiting&&!full)return false;
+      }return true;
+    })()"""), "Overflow shown with unused illustrated capacity"
+    page.evaluate("go(2,0)")
+    assert page.evaluate("""(()=>{
+      for(const id of ['kneeValueLabel','kneeLatencyLabel','kneeClimbLabel']){
+        const r=document.getElementById(id).getBBox();
+        for(const path of $('#kneeViz').querySelectorAll('path')){
+          for(let d=0;d<=path.getTotalLength();d+=1){
+            const p=path.getPointAtLength(d);
+            if(p.x>r.x-2&&p.x<r.x+r.width+2&&p.y>r.y-2&&p.y<r.y+r.height+2)return false;
+          }
+        }
+      }return true;
+    })()"""), "Chart label intersects a plotted line"
+    assert page.evaluate("(()=>{const r=$('#kneeClimbLabel').getBBox();return r.x>+$('#kneeSchematicThreshold').getAttribute('x1')+4})()"), "Caption touches the threshold marker"
+    page.evaluate("go(10,0);$('#lessonDetails details').open=true")
+    page.select_option("#policyChoice", "ceilings")
+    assert page.locator("#g-bm10").evaluate("e=>e.classList.contains('lit')")
+    assert page.locator("#g-meter").evaluate("e=>e.classList.contains('lit')")
+    page.select_option("#policyChoice", "fairness")
+    assert page.locator("#g-b0").evaluate("e=>e.classList.contains('lit')")
+    assert not page.locator("#haltBanner").is_visible(), "Eligible state shows a waiting banner"
+    assert page.locator("#haltBanner").inner_text()==""
+    assert not page.locator("#evidence").is_visible(), "Stale ceiling evidence after selecting fairness"
+    page.emulate_media(reduced_motion="no-preference")
+    page.evaluate("setAuto(false,true);go(7,2)")
+    assert page.locator('#fld-b100-1 circle[opacity="1"]').count()==0, "GC scene discards a queued request"
+    assert page.locator("#fl-b100-1").evaluate("e=>e.style.opacity==='1'")
+    page.wait_for_timeout(1750)
+    assert page.locator("#fl-b100-1").evaluate("e=>e.style.opacity==='0'")
+    browser.close()
+print("PASS: burst occupancy, chart-label clearance, policy selection state and empty-flow cleanup")
