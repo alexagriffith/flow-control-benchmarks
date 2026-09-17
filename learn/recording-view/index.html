@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Flow control · recording view</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0d1117;color:#eef1f6;font:14px system-ui}
+    iframe{display:block;width:100vw;height:100dvh;border:0}
+    #tools{position:fixed;z-index:10;top:12px;right:16px;display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #444b5d;border-radius:12px;background:#171d29;transition:opacity .2s}
+    #tools[data-hidden="true"]{opacity:0;pointer-events:none}#tools:focus-within{opacity:1;pointer-events:auto}
+    button,a,select{font:inherit;color:inherit;background:#222b3c;border:1px solid #505c75;border-radius:6px;padding:7px 10px}a{text-decoration:none}
+    button{cursor:pointer}:focus-visible{outline:2px solid #abb6ff;outline-offset:3px}
+    #error{position:fixed;inset:25%;padding:24px;background:#171d29;border:1px solid #d58665;z-index:20}#error[hidden]{display:none}
+  </style>
+</head>
+<body>
+  <iframe id="learner" title="Flow control learner in recording view" allow="fullscreen"></iframe>
+  <nav id="tools" aria-label="Recording controls">
+    <select id="chapter" aria-label="Chapter"></select>
+    <button id="previous">← Back</button><button id="next">Next →</button>
+    <button id="clean" title="Hide these controls; press Escape to restore">Clean frame</button>
+    <a id="normal" href="../flow-control-journey.html">Open learner</a>
+  </nav>
+  <p id="error" role="alert" hidden></p>
+  <script src="recording-view.js"></script>
+</body>
+</html>

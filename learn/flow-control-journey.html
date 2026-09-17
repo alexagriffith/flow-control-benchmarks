@@ -52,7 +52,7 @@ button,.pill,.rstep,.sbtn,.seg button,input,select{touch-action:manipulation}
   padding:7px 10px;text-decoration:none;transition:transform .18s var(--ease)}
 .skip:focus-visible{transform:none;outline:2px solid var(--brand);outline-offset:2px}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-#app{height:100vh;display:flex;flex-direction:column;padding:0 18px 12px;max-width:1560px;margin:0 auto}
+#app{height:100dvh;display:flex;flex-direction:column;padding:0 18px 12px;width:100%;margin:0 auto}
 
 /* ---------- topbar ---------- */
 #topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -207,7 +207,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #pgStats strong{font-weight:600;color:var(--txt)}
 
 /* ---------- sidebar ---------- */
-#side{flex:0 0 320px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding:2px}
+#side{flex:0 0 clamp(340px,27vw,440px);display:flex;flex-direction:column;gap:16px;min-height:0;overflow-y:auto;padding:2px}
 #side>*{flex-shrink:0}
 #card{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:18px 19px;
   display:flex;flex-direction:column;gap:10px}
@@ -265,7 +265,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
   #narr{min-height:0;line-height:1.45}
   #stepNav{margin-top:4px}
   #hints{display:none}
-  #evidence{max-width:min(430px,calc(100% - 32px))}
+  #evidence{max-width:none}
 }
 @media (max-width:700px){
   #apToast{top:226px;right:18px;bottom:auto;left:18px;text-align:center}
@@ -279,6 +279,24 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #lessonDetails pre{overflow:auto;font-size:11px} #lessonDetails p{margin:8px 0}
 @media(max-width:1020px){#haltBanner{top:40px;max-width:calc(100% - 24px)}}
 #lessonDetails table{border-collapse:collapse;width:100%;font-size:11px} #lessonDetails td,#lessonDetails th{padding:5px;border-bottom:1px solid var(--b1);text-align:left}
+/* Measured chapters foreground their evidence rather than an illustrative topology. */
+body.evidence-mode:not(.recording-view) #canvasWrap{display:none}
+body.evidence-mode:not(.recording-view) #side{flex:1;display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,27vw,440px);grid-template-rows:auto auto 1fr;align-content:start;gap:16px 24px;overflow-y:auto}
+body.evidence-mode:not(.recording-view) #card{grid-column:2;grid-row:1;align-self:start}
+body.evidence-mode:not(.recording-view) #evidence{grid-column:1;grid-row:1/4;align-self:start;padding:28px;min-width:0}
+body.evidence-mode:not(.recording-view) #evidence .et{font-size:22px;margin-bottom:24px}
+body.evidence-mode:not(.recording-view) #evidence .ebar,body.evidence-mode:not(.recording-view) #evidence .ev{font-size:20px}
+body.evidence-mode:not(.recording-view) #evidence .etrack{height:18px}
+body.evidence-mode:not(.recording-view) #evidence .echip{font-size:13px;padding:8px 12px}
+body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.recording-view) #hints{grid-column:2}
+@media(max-width:1020px){
+ body.evidence-mode:not(.recording-view) #side{display:flex;flex-direction:column;gap:14px}
+ body.evidence-mode:not(.recording-view) #evidence{order:0;padding:20px}
+ body.evidence-mode:not(.recording-view) #card{order:1;flex:none;width:100%;min-height:0}
+ body.evidence-mode:not(.recording-view) #lessonDetails{order:2}
+ body.evidence-mode:not(.recording-view) #evidence .et{font-size:19px}
+ body.evidence-mode:not(.recording-view) #evidence .ebar,body.evidence-mode:not(.recording-view) #evidence .ev{font-size:17px}
+}
 </style>
 </head>
 <body>
@@ -1915,6 +1933,7 @@ function applyStep(){
   const pg=PAGES[state.page],st=pg.steps[state.step];
   resetCanvas();
   document.body.classList.toggle('replay-mode',state.page===14);
+  document.body.classList.toggle('evidence-mode',state.page>=11&&state.page<=13);
   applyLit(st.lit);
   if(st.run)st.run();
   /* sidebar */
