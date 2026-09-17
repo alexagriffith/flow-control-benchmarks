@@ -20,17 +20,38 @@ Initial coverage map, checked against router `bb2113e4`:
 
 Request, token and hybrid are three modes of the concurrency detector. Prefill/decode aggregation is a topology topic shared by both detector lessons. Check each target build before presenting its behavior as available.
 
-### Prepared detector lesson — September 17
+### Next build: Dig deeper
 
-Source review for the next lesson is complete at `bb2113e4`. Implementation stays behind the existing-view formatting fixes.
+After publishing the existing-view composition fixes, add a separate connected learner at `learn/flow-control-plugins.html`. Link it from the introduction's final view and from a compact Overview / Dig deeper navigation. Preserve the existing introduction and decision guide.
 
-- Show two plugins, with Requests / Tokens / Hybrid nested under Concurrency.
-- Keep a connected calculation: inputs → endpoint scores → pool score → selected priority ceiling → dispatch. Show candidate filtering as a separate branch into endpoint selection.
-- Use one worked example per mode. Compare hybrid's average of endpoint maxima with the request-only and token-only averages.
-- Put defaults, accounting lifetime, stale metrics and prefill/decode details behind disclosures.
-- Preserve exact boundaries: dispatch requires a score below the ceiling. Concurrency filter limits are integer-truncated, utilization limits remain floating point, and both filters use strict comparisons. Their all-filtered fallback does not open a blocked dispatch gate.
-- Explain that headroom changes endpoint filtering. It does not reserve GPU capacity or change the pool-score denominator.
-- Label examples as calculations against this source revision, not measurements or production recommendations.
+Start with two definitions: a plugin supplies a configurable decision or measurement. A detector turns request accounting or engine measurements into a pressure score.
+
+Keep one stable request path and highlight the decision being taught. Reuse the current queue, cursor, meter, endpoint and reduced-motion animation helpers. Main views contain the question, the connected diagram and one short answer. Plugin names, configuration, defaults, dependencies and pinned sources belong in expandable details.
+
+| Lesson | Reader's question | Visible relationship |
+|---|---|---|
+| Identity | Which queue does this request join? | Objective → priority; fairness identity × priority → flow queue. Distinguish the objective resource from plugins. |
+| Selection | Which waiting request goes next? | Priority band → fairness selects a flow → ordering selects its request. Show round robin versus global-strict and request ordering with the same waiting work. |
+| Detection | How does the router measure pressure? | Producers/engine signals → endpoint scores → pool score. Switch requests/tokens/hybrid inside Concurrency, or choose Utilization. |
+| Dispatch | Can this priority dispatch, and where? | Pool score versus ceiling → dispatch; separate endpoint filter → picker. Headroom belongs to filtering. |
+| Accounting | What changes after dispatch? | Router dispatch → engine wait/run → first response → completion. Show when request/token accounting is released. |
+| Rejection | Why can a request be rejected? | Separate queue budgets/expiry from optional request-control admitters after flow-control admission unblocks. Show prediction dependencies. |
+| Eviction | Can running work be interrupted? | Blocked higher priority → eligible lower-priority victim → cancellation → eventual engine/accounting response. Retry belongs to the caller. |
+
+Coverage at router `bb2113e4ecd79b049c7322164794ca9ea30b8cbb`:
+
+- **Fairness:** `round-robin-fairness-policy`, `global-strict-fairness-policy`, `program-aware-fairness`.
+- **Ordering:** `fcfs-ordering-policy`, `edf-ordering-policy`, `slo-deadline-ordering-policy`.
+- **Ceilings:** `static-usage-limit-policy`, `priority-holdback-policy`, `soft-reflective-ceiling-policy`.
+- **Detectors:** `concurrency-detector`, `utilization-detector`.
+- **Eviction:** `sheddable-eviction-filter`, `priority-then-time-eviction-order-policy`.
+- **Related pieces:** objective resources; agent identity; tokenization, output-length buckets and in-flight accounting; prefix-cache producers; latency prediction, observation and optional admitters; ordinary scheduling filters/scorers/pickers.
+
+These are all 13 flow-control plugin types plus their relevant companions, not a claim to teach every router plugin. Check registration and implementation against the [pinned source](https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/cmd/epp/runner/runner.go#L637).
+
+Technical acceptance must preserve strict dispatch/filter boundaries, the separate all-filtered fallback, hybrid's average of endpoint maxima, per-stage P/D aggregation, stale-metric policy, accounting lifetimes and current-versus-historical defaults. Optional admitters are after flow-control admission unblocks and data production, before scheduling. Do not infer HTTP status from a plugin's internal error without the Director mapping. Source maturity flags are not deployed-product support claims.
+
+Use calculations and illustrative animation, with measured evidence linked separately. Each lesson needs independent source review and native-size element/group/page inspection in both themes and at narrow/desktop widths before publication.
 
 ## Keep the published decision guide
 

@@ -50,7 +50,7 @@ def main():
                     page.select_option('#'+control,value);capture(f'{control}-{value}')
                     if control=='executionChoice' and value=='evict':
                         assert page.evaluate("!sceneMetrics(currentScene).canDispatch&&$('#g-gw').classList.contains('lit')")
-                        assert page.locator('#fx path').count()==2
+                        assert page.locator('#fx path[stroke-dasharray]').count()==2
                     if control=='policyChoice' and value!='ceilings':
                         assert page.locator('#fld-b100-0 circle[opacity="1"]').count()==0
                     if control=='bandChoice':
