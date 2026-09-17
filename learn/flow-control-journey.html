@@ -71,8 +71,7 @@ select.pill{padding-right:16px}
 #settingsPanel label{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px}
 #settingsPanel .pill{color:var(--txt)}
 .replay-footnote{font-size:11px;line-height:1.5;color:var(--txt2);margin:10px 0 0}
-body.replay-mode #narr{min-height:0}
-body.replay-mode #stepMeta,body.replay-mode #hints,body.replay-mode #pgno{display:none}
+body.replay-mode #pgno{display:none}
 body.replay-mode #sysCanvas > :not(defs):not(#replayView){display:none}
 #replayView{display:none}
 body.replay-mode #replayView{display:block}
@@ -143,6 +142,8 @@ body.replay-mode #haltBanner{display:none}
 .cel.dim .frame{stroke:var(--b2);filter:none}
 .cel.lit{opacity:1}
 .cel .frame{transition:stroke .4s,filter .4s}
+/* Structural routes stay neutral. Moving dots identify request classes. */
+.connector{stroke:var(--txt3);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .cel.lit .frame{stroke:var(--hl,var(--brand));filter:drop-shadow(0 0 7px var(--brand-soft))}
 #cycleSpin{transform-origin:777px 484px;animation:spin 3.2s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -210,14 +211,14 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #side{flex:0 0 clamp(340px,27vw,440px);display:flex;flex-direction:column;gap:16px;min-height:0;overflow-y:auto;padding:2px}
 #side>*{flex-shrink:0}
 #card{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:18px 19px;
-  display:flex;flex-direction:column;gap:10px}
+  height:280px;display:grid;grid-template-rows:44px 6px minmax(0,1fr) 34px;gap:10px}
 #card h2{font-size:19px;font-weight:650;letter-spacing:0;margin:0;line-height:1.15;text-wrap:balance}
 #stepMeta{display:flex;align-items:center;gap:9px}
-#stepLab{font-size:10.5px;color:var(--txt3)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 #stepPips{display:flex;gap:5px}
-.pip{width:16px;height:4px;border-radius:2px;background:var(--b2);transition:background-color .3s var(--ease)}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--b2);transition:background-color .3s var(--ease)}
 .pip.on{background:var(--brand)}
-#narr{font-size:13px;line-height:1.62;color:var(--txt2);min-height:84px;margin:0}
+#narr{font-size:13px;line-height:1.62;color:var(--txt2);min-height:0;margin:0;overflow:auto}
 #narr b,#narr .hl{color:var(--txt);font-weight:600}
 #narr code{font-family:ui-monospace,Menlo,monospace;font-size:.88em;background:var(--raised);
   border:1px solid var(--b1);border-radius:5px;padding:1px 5px;color:var(--txt)}
@@ -228,7 +229,12 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .sbtn:hover{border-color:var(--brand)}
 .sbtn[disabled]{opacity:.35;cursor:default}
 .sbtn.pri{border-color:var(--brand);background:var(--brand-soft)}
-#hints{font-size:10.5px;color:var(--txt3);line-height:1.7;padding:0 4px}
+#hints{font-size:12px;color:var(--txt2);line-height:1.6;padding:0 4px}
+#hints summary{cursor:pointer;width:fit-content}
+#hints dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:10px 0}
+#hints dt,#hints dd{margin:0}
+#hints dd{text-align:right}
+summary:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 #hints kbd{border:1px solid var(--b2);border-radius:4px;padding:0 4px;font-size:9.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--txt2)}
 #pgno{display:none;font-size:10.5px;color:var(--txt3);text-align:right;padding-right:4px}
@@ -260,11 +266,9 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
   #main{flex-direction:column}
   #canvasWrap{flex:none;aspect-ratio:1000/580}
   #side{flex:none;flex-direction:column;align-items:stretch;overflow:visible}
-  #card{flex:1;padding:13px 18px;gap:7px}
+  #card{flex:none;padding:18px 19px}
   #card h2{font-size:18px}
   #narr{min-height:0;line-height:1.45}
-  #stepNav{margin-top:4px}
-  #hints{display:none}
   #evidence{max-width:none}
 }
 @media (max-width:700px){
@@ -281,7 +285,7 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #lessonDetails table{border-collapse:collapse;width:100%;font-size:11px} #lessonDetails td,#lessonDetails th{padding:5px;border-bottom:1px solid var(--b1);text-align:left}
 /* Measured chapters foreground their evidence rather than an illustrative topology. */
 body.evidence-mode:not(.recording-view) #canvasWrap{display:none}
-body.evidence-mode:not(.recording-view) #side{flex:1;display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,27vw,440px);grid-template-rows:auto auto 1fr;align-content:start;gap:16px 24px;overflow-y:auto}
+body.evidence-mode:not(.recording-view) #side{flex:1;display:grid;grid-template-columns:minmax(0,1fr) calc(clamp(340px,27vw,440px) - 4px);grid-template-rows:auto auto 1fr;align-content:start;gap:16px 24px;overflow-y:auto}
 body.evidence-mode:not(.recording-view) #card{grid-column:2;grid-row:1;align-self:start}
 body.evidence-mode:not(.recording-view) #evidence{grid-column:1;grid-row:1/4;align-self:start;padding:28px;min-width:0}
 body.evidence-mode:not(.recording-view) #evidence .et{font-size:22px;margin-bottom:24px}
@@ -291,8 +295,8 @@ body.evidence-mode:not(.recording-view) #evidence .echip{font-size:13px;padding:
 body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.recording-view) #hints{grid-column:2}
 @media(max-width:1020px){
  body.evidence-mode:not(.recording-view) #side{display:flex;flex-direction:column;gap:14px}
- body.evidence-mode:not(.recording-view) #evidence{order:0;padding:20px}
- body.evidence-mode:not(.recording-view) #card{order:1;flex:none;width:100%;min-height:0}
+ body.evidence-mode:not(.recording-view) #evidence{order:1;padding:20px}
+ body.evidence-mode:not(.recording-view) #card{order:0;flex:none;width:100%;min-height:0}
  body.evidence-mode:not(.recording-view) #lessonDetails{order:2}
  body.evidence-mode:not(.recording-view) #evidence .et{font-size:19px}
  body.evidence-mode:not(.recording-view) #evidence .ebar,body.evidence-mode:not(.recording-view) #evidence .ev{font-size:17px}
@@ -325,9 +329,8 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
       <div id="diagramViewport" role="region" aria-label="System diagram; scroll horizontally on narrow screens" tabindex="0">
       <svg id="sysCanvas" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMin meet" aria-label="flow control system diagram">
         <defs>
-          <marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="var(--txt2)"/></marker>
-          <marker id="arrFlow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--brand)"/></marker>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+            <path d="M0 1L9 5L0 9Z" fill="var(--txt3)" stroke="none"/></marker>
           <pattern id="unusedHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="7" height="7" fill="var(--danger)" opacity=".11"/>
             <line x1="0" y1="0" x2="0" y2="7" stroke="var(--danger)" stroke-width="2" opacity=".18"/>
@@ -352,10 +355,10 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         </g>
 
         <!-- Three inputs share one gateway port. -->
-        <g id="a-t1" class="cel"><path id="tenantRouteP" class="frame" d="M148 119 C170 119 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
-        <g id="a-t2" class="cel"><path id="tenantRouteS" class="frame" d="M148 225 C166 225 170 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
-        <g id="a-t3" class="cel"><path id="tenantRouteB" class="frame" d="M148 331 C170 331 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
-        <g id="a-tmerge" class="cel"><circle cx="184" cy="221" r="2.5" fill="var(--txt2)"/><path d="M184 221 H210" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-t1" class="cel"><path id="tenantRouteP" class="connector" d="M148 119 C170 119 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
+        <g id="a-t2" class="cel"><path id="tenantRouteS" class="connector" d="M148 225 C166 225 170 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
+        <g id="a-t3" class="cel"><path id="tenantRouteB" class="connector" d="M148 331 C170 331 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
+        <g id="a-tmerge" class="cel"><circle cx="184" cy="221" r="2.5" fill="var(--txt3)"/><path class="connector" d="M184 221 H210" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
 
         <!-- gateway -->
         <g id="g-gw" class="cel">
@@ -372,7 +375,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
           <rect class="frame" x="187" y="296" width="168" height="20" rx="6" fill="var(--brand-soft)" stroke="var(--b2)"/>
           <text x="195" y="310" font-size="8.5" class="mt" fill="var(--txt)">x-llm-d-inference-fairness-id</text>
         </g>
-        <g id="a-gw" class="cel"><line class="frame" x1="332" y1="221" x2="360" y2="221" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-gw" class="cel"><line class="connector" x1="332" y1="221" x2="360" y2="221" stroke="var(--b3)" stroke-width="1.5" marker-end="url(#arr)"/></g>
 
         <!-- EPP -->
         <g id="g-epp" class="cel">
@@ -387,12 +390,12 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
           <text x="470" y="111" font-size="9" fill="var(--txt3)" text-anchor="middle">InferenceObjective → priority</text>
         </g>
         <g id="g-forkA" class="cel" style="--hl:var(--ok)">
-          <line class="frame" x1="558" y1="88" x2="596" y2="82" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
+          <line class="connector" x1="558" y1="88" x2="596" y2="82" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
           <rect class="frame" x="600" y="68" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
           <text x="610" y="84" font-size="9.5" fill="var(--txt)">objective found → priority <tspan class="mt" font-weight="700">100</tspan></text>
         </g>
         <g id="g-forkB" class="cel" style="--hl:var(--danger)">
-          <line class="frame" x1="558" y1="110" x2="596" y2="116" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
+          <line class="connector" x1="558" y1="110" x2="596" y2="116" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
           <rect class="frame" x="600" y="104" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
           <text x="610" y="120" font-size="9.5" fill="var(--txt2)">missing or unbound → <tspan class="mt" font-weight="700" fill="var(--txt)">0</tspan>, silently</text>
         </g>
@@ -403,8 +406,8 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
           <text x="470" y="167" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Admission</text>
           <text x="470" y="185" font-size="9" class="mt" fill="var(--txt3)" text-anchor="middle">FlowKey = tenant × priority</text>
         </g>
-        <g id="a-adm" class="cel"><line class="frame" x1="470" y1="128" x2="470" y2="144" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
-        <g id="a-band" class="cel"><line class="frame" x1="470" y1="198" x2="470" y2="212" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
+        <g id="a-adm" class="cel"><line class="connector" x1="470" y1="128" x2="470" y2="144" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
+        <g id="a-band" class="cel"><line class="connector" x1="470" y1="198" x2="470" y2="212" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
 
         <!-- bands -->
         <g id="g-b100" class="cel" style="--hl:var(--brand)">
@@ -446,14 +449,14 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
 
         <!-- Every priority joins the same dispatch path before endpoint selection. -->
         <g id="dispatchMerge" class="cel">
-          <path id="bandRoute-b100" d="M798 249 C810 249 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
-          <path id="bandRoute-b0" d="M798 325 C810 325 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
-          <path id="bandRoute-bm10" d="M798 401 C810 401 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
-          <circle cx="820" cy="310" r="2.5" fill="var(--txt2)"/>
-          <path d="M820 310 H830" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
+          <path class="connector" id="bandRoute-b100" d="M798 249 C810 249 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
+          <path class="connector" id="bandRoute-b0" d="M798 325 C810 325 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
+          <path class="connector" id="bandRoute-bm10" d="M798 401 C810 401 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
+          <circle cx="820" cy="310" r="2.5" fill="var(--txt3)"/>
+          <path class="connector" d="M820 310 H830" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
         </g>
-        <g id="a-d1" class="cel"><path id="endpointRouteA" class="frame" d="M830 310 C840 310 836 197 848 197" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
-        <g id="a-d2" class="cel"><path id="endpointRouteB" class="frame" d="M830 310 C840 310 836 361 848 361" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-d1" class="cel"><path id="endpointRouteA" class="connector" d="M830 310 C838 310 832 197 840 197 H848" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-d2" class="cel"><path id="endpointRouteB" class="connector" d="M830 310 C838 310 832 361 840 361 H848" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
         <g id="g-pod1" class="cel" style="--hl:var(--ok)">
           <rect class="frame" x="848" y="152" width="132" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
           <text id="p1name" x="914" y="174" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">vLLM pod A</text>
@@ -562,7 +565,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
     <div id="side">
       <div id="card">
         <h2 id="pTitle"></h2>
-        <div id="stepMeta"><span id="stepLab"></span><span id="stepPips"></span></div>
+        <div id="stepMeta"><span id="stepLab" class="sr-only"></span><span id="stepPips" aria-hidden="true"></span></div>
         <p id="narr" aria-live="polite"></p>
         <div id="stepNav">
           <button class="sbtn" id="backBtn">← Back</button>
@@ -598,11 +601,15 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         <div id="pgStats" aria-label="Replay request counts"></div>
         <p class="replay-footnote">*Illustrative model with arbitrary load and service times, not a recording or latency prediction. Queued requests expire after 60 simulated seconds. Evidence pages show measured results.</p>
       </div>
-      <div id="hints">
-        <kbd>Space</kbd> / <kbd>→</kbd> next step · <kbd>←</kbd> back ·
-        <kbd>↓</kbd> <kbd>PgDn</kbd> next page · <kbd>↑</kbd> <kbd>PgUp</kbd> previous ·
-        scroll to change pages · click a rail step to jump
-      </div>
+      <details id="hints">
+        <summary>Keyboard shortcuts</summary>
+        <dl>
+          <dt>Next step</dt><dd><kbd>→</kbd> or <kbd>Space</kbd></dd>
+          <dt>Previous step</dt><dd><kbd>←</kbd></dd>
+          <dt>Next topic</dt><dd><kbd>↓</kbd> or <kbd>PgDn</kbd></dd>
+          <dt>Previous topic</dt><dd><kbd>↑</kbd> or <kbd>PgUp</kbd></dd>
+        </dl>
+      </details>
       <div id="pgno"></div>
     </div>
   </main>
@@ -706,7 +713,7 @@ function fly(points,color,dur,delay){
   c.setAttribute('r','6');c.setAttribute('fill',color);
   c.setAttribute('stroke','var(--base)');c.setAttribute('stroke-width','1.5');
   c.setAttribute('cx',points[0][0]);c.setAttribute('cy',points[0][1]);c.style.opacity='0';
-  const route=svgEl('polyline',{points:points.map(p=>p.join(',')).join(' '),fill:'none',stroke:color,'stroke-opacity':.5,'stroke-width':1.5,'marker-end':'url(#arr)'});
+  const route=svgEl('polyline',{points:points.map(p=>p.join(',')).join(' '),fill:'none',stroke:color,opacity:.65,'stroke-width':1.5,'marker-end':'url(#arr)'});
   $('#fx').appendChild(route);$('#fx').appendChild(c);
   const kf=points.map((p,i)=>({transform:`translate(${p[0]-points[0][0]}px,${p[1]-points[0][1]}px)`,
     opacity:i===points.length-1?0:1,offset:i/(points.length-1)}));
@@ -752,7 +759,19 @@ function pop(sel,delay){
   CS.anims.push(a);
 }
 function focus(ids,delay){after(delay||0,()=>applyLit(ids));}
+// Explicit paint keeps marker colors consistent in Chromium and WebKit.
+function arrowHead(color){
+  if(color==='var(--txt3)')return 'url(#arr)';
+  const id='arr-'+color.replace(/[^a-zA-Z0-9]/g,'');
+  if(!document.getElementById(id)){
+    const marker=$('#arr').cloneNode(true);marker.id=id;
+    marker.querySelector('path').setAttribute('fill',color);
+    $('#sysCanvas defs').appendChild(marker);
+  }
+  return `url(#${id})`;
+}
 function svgEl(tag,attrs){
+  if(attrs&&attrs['marker-end']&&attrs.stroke)attrs={...attrs,'marker-end':arrowHead(attrs.stroke)};
   const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
   for(const [k,v] of Object.entries(attrs||{}))el.setAttribute(k,String(v));
   return el;
@@ -1197,7 +1216,7 @@ function policyEnsure(){
     fair.appendChild(svgEl('circle',{cx:x,cy:264,r:18,fill:'var(--base)',stroke:'var(--amber)','stroke-opacity':.76}));
     const nt=svgEl('text',{x,y:269,'font-size':12,'font-weight':800,fill:'var(--amber)','text-anchor':'middle'});
     nt.textContent=name;fair.appendChild(nt);
-    if(i<2)fair.appendChild(svgEl('path',{d:`M ${x+23} 264 L ${x+31} 264`,fill:'none',stroke:'var(--amber)','stroke-width':1.4,'marker-end':'url(#arr)','stroke-opacity':.7}));
+    if(i<2)fair.appendChild(svgEl('path',{d:`M ${x+23} 264 L ${x+31} 264`,fill:'none',stroke:'var(--amber)','stroke-width':1.4,'marker-end':'url(#arr)',opacity:.7}));
   });
   fair.appendChild(svgEl('circle',{id:'pol-turn-cursor',cx:424,cy:264,r:24,fill:'none',stroke:'var(--ok)','stroke-width':2,opacity:0}));
   t=svgEl('text',{id:'pol-turn-text',x:473,y:304,'font-size':10.5,'font-weight':740,fill:'var(--ok)','text-anchor':'middle'});
@@ -1404,7 +1423,7 @@ function fairEnsure(){
     viz.appendChild(svgEl('path',{id:`fair-route-${r.id}`,d:`M622 ${r.y} C666 ${r.y} 660 326 700 326`,fill:'none',stroke:'var(--brand)','stroke-width':1.8,'stroke-opacity':.45}));
   });
   viz.appendChild(svgEl('circle',{cx:700,cy:326,r:3,fill:'var(--brand)'}));
-  viz.appendChild(svgEl('path',{id:'fair-dispatch-route',d:'M700 326 H760',fill:'none',stroke:'var(--brand)','stroke-width':1.8,'marker-end':'url(#arrFlow)'}));
+  viz.appendChild(svgEl('path',{id:'fair-dispatch-route',d:'M700 326 H760',fill:'none',stroke:'var(--brand)','stroke-width':1.8,'marker-end':'url(#arr)'}));
   viz.appendChild(svgEl('rect',{id:'fair-lane-cursor',x:128,y:237,width:502,height:50,rx:16,fill:'none',stroke:'var(--ok)','stroke-width':3}));
   viz.appendChild(svgEl('rect',{x:760,y:258,width:86,height:136,rx:18,fill:'var(--base)',stroke:'var(--ok)','stroke-width':2}));
   let label=svgEl('text',{x:803,y:285,'text-anchor':'middle','font-size':12,fill:'var(--txt)','font-weight':650});label.textContent='Dispatch';viz.appendChild(label);
@@ -1593,7 +1612,7 @@ function detectorView(){
  const detector=$('#detectorChoice').value,pd=$('#topologyChoice').checked;
  const endpoints=pd?[{requests:65,tokens:650,waiting:2,kv:.52,role:'prefill'},{requests:90,tokens:900,waiting:3,kv:.72,role:'decode'}]:[{requests:90,tokens:100,waiting:2,kv:.6},{requests:10,tokens:900,waiting:1,kv:.56}];
  const m=renderScene({detector,endpoints,topology:pd?'pd':'combined'}),d=DETECTOR_LESSONS[detector];
- $('#narr').textContent=pd?`Pressure view: the same ${d[0].toLowerCase()} detector evaluates each stage. The larger stage score controls dispatch eligibility.`:`Selected signal: ${d[0].toLowerCase()}. The combined pool averages endpoint scores, then compares the result with the selected ceiling.`;
+ $('#narr').textContent=pd?'The same selected detector evaluates prefill and decode separately. The larger stage score determines dispatch eligibility.':'The selected detector scores each endpoint. This combined pool averages those scores and compares the result with the dispatch ceiling.';
  if(pd){$('#a-d1').style.visibility='hidden';$('#a-d2').style.visibility='hidden';}
  $('#detectorExplanation').innerHTML=`<p>${d[1]}</p><p><code>${d[2]}</code></p><p>Example limits: 100 requests, 1,000 tokens, waiting 4, KV 0.80 per endpoint. Endpoint scores: ${m.scores.map(v=>v.toFixed(3)).join(', ')}. ${pd?'Stage pressures: '+m.stages.map(v=>v.toFixed(3)).join(', ')+' → max':'Combined mean'} = <b>${m.pool.toFixed(3)}</b>.</p>`;
  // Existing backend boxes retain their location; dashed link is a pressure relationship, not request traffic.
@@ -1611,7 +1630,7 @@ function policyView(){
   ceilings:'Static uses a shared ceiling. Priority holdback assigns lower ceilings to lower priorities. Soft-reflective derives ceilings from saturation, rank and shared cycle state, not measured latency misses.'
  };
  $('#policyExplanation').textContent=copy[mode];
- $('#narr').textContent=mode==='fairness'?'Round-robin rotates eligible flows within this priority band. Higher-priority work has drained.':mode==='ceilings'?'Ceilings decide whether a priority may dispatch. This holdback example holds low-priority work at total pool pressure 0.85.':'Compare two flow heads after higher-priority work drains. Global-strict fairness uses the selected ordering policy to choose the next request.';
+ $('#narr').textContent=mode==='fairness'?'Higher-priority work has drained. Round-robin now rotates dispatch turns among eligible flows in this band.':mode==='ceilings'?'At pool pressure 0.85, this example’s low-priority ceiling of 0.8 keeps low-priority requests waiting.':'Higher-priority work has drained. Global-strict fairness compares the two flow heads using the selected ordering policy.';
  setFlow('b0',0,mode==='fairness'?'tenant a':'older · TTL 60 s',2);
  setFlow('b0',1,mode==='fairness'?'tenant b':'later · TTL 5 s',2);
  setFlow('b0',2,mode==='fairness'?'tenant c':'',mode==='fairness'?2:0);
@@ -1683,7 +1702,7 @@ const PAGES=[
 /* ---- 0 · WHY: capacity utilization ---- */
 {title:'Capacity utilization',group:0,rail:'Capacity',steps:[
  {lit:['ov-ded'],
-  n:'Same traffic. A shared pool can improve utilization before the mechanism gets involved.',
+  n:'Sharing a pool lets the same traffic use capacity that would otherwise sit idle.',
   run(){$('#ov-ded').style.display='';
     dedIdleMoney();
     $('#ded-stat').setAttribute('opacity','1');}}
@@ -1691,50 +1710,50 @@ const PAGES=[
 /* ---- 1 · WHY: the burst problem ---- */
 {title:'Burst pressure',group:0,rail:'Bursts',steps:[
  {lit:['ov-burst'],dwell:2.55,
-  n:'The same pool can look fine on average, then one burst peak creates waiting.',
+  n:'A pool can handle average demand and still build a queue when traffic bursts.',
   run(){burstAutoRun();}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
 {title:'Where control starts',group:0,rail:'Threshold',steps:[
  {lit:['ov-knee'],dwell:1.15,
-  n:'This workload’s sweep suggests a candidate operating point.<br><br>A detector measures pressure. A separately configured ceiling decides when a priority waits.',
+  n:'This workload’s measurements suggest a candidate operating point. A detector measures pressure. Each priority’s ceiling determines when dispatch waits.',
   run(){kneeRun();lessonDetails('knee');}}
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
 {title:'Shared traffic needs policy',group:0,rail:'Policy',steps:[
  {lit:['ov-policy'],dwell:2.05,
-  n:'Traffic meets in one pool. Policy decides which waiting work moves next.',
+  n:'Requests share one pool. Policy determines which waiting request dispatches next.',
   run(){policyAutoRun();}}
 ]},
 /* ---- 4 · WHY: fairness within a band ---- */
 {title:'Fairness within a priority band',group:0,rail:'Turns',steps:[
  {lit:['ov-fair'],dwell:1.2,
-  n:'In this selected round-robin example, active flows take dispatch turns within one priority band.',
+  n:'In this round-robin example, eligible, backlogged flows take dispatch turns within the same priority band.',
   run(){fairRun();}}
 ]},
 /* ---- 5 · WHY: business summary ---- */
 {title:'Why flow control',group:0,rail:'Summary',steps:[
  {lit:['ov-promise'],dwell:1.15,
-  n:'Share capacity. Queue bursts before the model servers. Choose which waiting work goes next.',
+  n:'Flow control shares capacity, queues bursts before the model servers, and chooses which waiting work dispatches next.',
   run(){promiseRun();}}
 ]},
 /* ---- 6 · MACHINE: tag and resolve ---- */
 {title:'Tag and resolve',group:1,rail:'Tag',steps:[
  {lit:['g-tprem'],
-  n:'The trusted gateway supplies an objective for priority and a fairness ID for the tenant. The router resolves those labels before queueing.',
+  n:'The trusted gateway supplies an objective and a fairness identity. The router resolves them into a priority and flow before queueing.',
   run(){lessonDetails('setup');routeFly($('#fx'),$('#tenantRouteP').getAttribute('d')+' H210','var(--brand)',1100);
     focus(['g-tprem','a-t1','g-gw'],350);
     focus(['g-tprem','a-t1','g-gw','g-hdr'],900);
     pop('#g-hdr',930);}},
  {lit:['g-gw'],
-  n:'The Endpoint Picker looks up the objective header as an InferenceObjective bound to the pool.<br><br>Found, the request takes that objective’s priority — here <b>100</b>.',
+  n:'The Endpoint Picker finds the pool-bound InferenceObjective named in the header. The request receives its configured priority: <b>100</b>.',
   run(){fly([[332,221],[374,221],[374,99],[382,99]],'var(--brand)',900,0);
     after(950,()=>fly([[558,88],[596,80]],'var(--brand)',450,0));
     focus(['g-gw','a-gw','g-dir'],450);
     focus(['g-dir','g-forkA'],1400);
     pop('#g-forkA',1500);}},
  {lit:['g-dir'],
-  n:'Without a resolved, pool-bound objective, priority falls back to <b>0</b>.<br><br>A missing fairness ID can also merge traffic into a shared default flow.',
+  n:'Without a resolved, pool-bound objective, priority defaults to <b>0</b>. Requests without a fairness identity can share the default flow.',
   run(){lessonDetails('setup');fly([[332,221],[374,221],[374,99],[382,99]],'var(--txt3)',900,0);
     after(950,()=>fly([[558,110],[596,116]],'var(--txt3)',450,0));
     focus(['g-dir','g-forkB'],1400);
@@ -1743,55 +1762,55 @@ const PAGES=[
 /* ---- 3 · MACHINE: FlowKey ---- */
 {title:'The FlowKey and its queue',group:1,rail:'FlowKey',steps:[
  {lit:['g-dir'],
-  n:'Admission builds a <b>FlowKey</b> — tenant × priority — and that key names exactly one queue in the priority band it belongs to.',
+  n:'A <b>FlowKey</b> combines fairness identity and priority to identify one queue.',
   run(){fly([[470,128],[470,146]],'var(--brand)',900,100);
     focus(['g-dir','a-adm','g-adm'],420);
     pop('#g-adm',700);}},
  {lit:['g-adm'],
-  n:'A flow <b>appears on its first request</b>: the moment a new tenant sends work at priority 100, its queue materializes in that band.',
+  n:'The first request for a new FlowKey creates its queue in the matching priority band.',
   run(){setFlow('b100',1,null);
     focus(['g-adm','a-band','g-b100'],450);
     after(500,()=>{setFlow('b100',1,'tenant-new × 100',1);pop('#g-b100',100);});
     fly([[470,198],[470,216]],'var(--brand)',500,0);}},
  {lit:['g-b100'],
-  n:'An empty flow is collected after its last lease is released and the idle timeout expires.<br><br>Leases track active references to the flow.',
+  n:'An empty flow can be collected after its last lease is released and the idle timeout expires. Leases track active references to the flow.',
   run(){setFlow('b100',1,'tenant-new · idle',0);
     after(1600,()=>setFlow('b100',1,null));}}
 ]},
 /* ---- 4 · MACHINE: gradient + ceiling ---- */
 {title:'Pressure, ceiling, destination',group:1,rail:'Ceiling',steps:[
  {lit:['g-pod1','g-pod2','g-meter','g-cycle'],
-  n:'Start with engine waiting and KV-cache use. Each endpoint’s more constrained signal wins. This combined pool averages the two scores.',
+  n:'Each endpoint’s score uses the larger normalized value of engine waiting and KV-cache use. The combined pool averages those scores.',
   run(){renderScene({endpoints:[{waiting:2,kv:.6},{waiting:1,kv:.56}]});lessonDetails('detectors');}},
  {lit:['g-pod1','g-pod2','g-meter','g-cycle','g-b100'],
-  n:'At the selected ceiling of <b>1.0</b>, dispatch waits. The same measurements drive the endpoint labels, meter and gate.',
+  n:'When pool pressure reaches the selected ceiling of <b>1.0</b>, dispatch waits.',
   run(){renderScene({endpoints:[{waiting:4,kv:.8},{waiting:4,kv:.8}]});lessonDetails('detectors');cursorAt('b100',0);}},
  {lit:['g-pod1','g-pod2','g-meter','g-cycle','g-b100','a-d1'],
-  n:'As pressure falls, remaining requests can dispatch. A pause does not discard them. Expiry or cancellation can still end their wait.',
+  n:'When pressure falls below the ceiling, queued requests can dispatch. Expiry or cancellation can still remove them while they wait.',
   run(){renderScene({endpoints:[{waiting:2,kv:.48},{waiting:1,kv:.56}]});lessonDetails('setup');cursorAt('b100',0);after(600,()=>dispatchFly('b100',0,'var(--brand)','a'));}},
  {lit:['g-b100','g-bm10','g-meter','g-cycle','g-pod1','g-pod2','a-d2'],
-  n:'Now count requests: <b>170 ÷ 200 = 0.85</b>. High priority may dispatch below its 1.0 ceiling. Low priority waits at its 0.8 ceiling.',
+  n:'Request pressure is <b>170 ÷ 200 = 0.85</b>. High priority can dispatch below its 1.0 ceiling. Low priority waits at its 0.8 ceiling.',
   run(){twoCheck('high');lessonDetails('twoChecks');}},
  {lit:['g-b100','g-bm10','g-meter','g-cycle','g-pod1','g-pod2','a-d2'],
-  n:'Then choose a destination.<br><br>Endpoint A has <b>110</b> requests and is filtered; B has <b>60</b> and remains. The high-priority request moves to B.',
+  n:'Endpoint A has <b>110</b> requests and reaches the filter limit. B has <b>60</b> and remains eligible, so the high-priority request dispatches to B.',
   run(){twoCheck('high');lessonDetails('twoChecks');after(650,()=>dispatchFly('b100',0,'var(--brand)','b'));}}
 ]},
 /* ---- 5 · MACHINE: dispatch cycle ---- */
 {title:'The dispatch cycle',group:1,rail:'Dispatch',steps:[
  {lit:['g-cycle','g-b100'],
-  n:'Each cycle dispatches <b>at most one request</b> from the highest eligible band with work.<br><br>Dispatch selects a destination. Engine execution follows.',
+  n:'Each cycle dispatches <b>at most one request</b> from the highest eligible band with work. The engine controls execution after dispatch.',
   run(){cursorAt('b100',0);
     focus(['g-cycle','g-b100','a-d1','g-pod1'],650);
     after(700,()=>{setFlow('b100',0,'premium',1);dispatchFly('b100',0,'var(--brand)','a');setPods(.4,.5,.3,.52);});}},
  {lit:['g-cycle','g-b100'],
-  n:'An <b>empty band is skipped</b> in the same pass: the cursor walks down the bands until it finds waiting work.',
+  n:'The dispatch cycle skips empty bands until it finds waiting work.',
   run(){setFlow('b100',0,'premium',0,'empty');cursorAt('b100',0);
     focus(['g-cycle','g-b100','g-b0'],700);
     after(750,()=>{cursorAt('b0',0);});
     focus(['g-cycle','g-b0','a-d1','g-pod1'],1280);
     after(1350,()=>{setFlow('b0',0,'tenant-a',1);dispatchFly('b0',0,'var(--amber)','a');});}},
  {lit:['g-cycle','g-b100','g-b0'],
-  n:'With this shared ceiling, batch gets a turn after higher bands have no dispatchable work.<br><br>Sustained higher-priority demand can keep batch waiting.',
+  n:'With this shared ceiling, batch can dispatch when higher bands have no dispatchable work. Sustained higher-priority demand can keep batch waiting.',
   run(){setFlow('b100',0,'premium',0,'empty');setFlow('b0',0,'tenant-a',0,'empty');
     setFlow('b0',1,'tenant-b',0,'empty');setFlow('b0',2,'tenant-c',0,'empty');
     cursorAt('bm10',0);
@@ -1799,30 +1818,30 @@ const PAGES=[
     after(740,()=>{setFlow('bm10',0,'batch',2);dispatchFly('bm10',0,'var(--teal)','b');});
     after(1500,()=>{setFlow('bm10',0,'batch',1);dispatchFly('bm10',0,'var(--teal)','b');}); }},
  {lit:['g-b100','g-cycle','a-d1','g-pod1'],
-  n:'Follow one request: router waiting → dispatch → engine waiting or processing → completion.<br><br>Priority changes future dispatch order. It does not interrupt work already running.',
+  n:'A request waits in the router, dispatches to an engine, then completes. Priority alone does not interrupt running work.',
   run(){executionStep('queued');lessonDetails('execution');if(!reduceMotion())['dispatch','engine','complete'].forEach((p,i)=>after(800+i*1000,()=>{executionStep(p);$('#executionChoice').value=p;}));}}
 ]},
 /* ---- 6 · MACHINE: fairness as turns ---- */
 {title:'Fairness as turns',group:1,rail:'Turns',steps:[
  {lit:['g-b0','g-cycle','a-d1','g-pod1'],
-  n:'Three tenants share the priority-0 band.<br><br>Round-robin hands each flow <b>one dispatch turn</b> in rotation — a, then b, then c — while all remain backlogged and eligible.',
+  n:'Three tenants share priority 0. Round-robin gives each eligible, backlogged flow one dispatch turn in rotation.',
   run(){setFlow('b100',0,'premium',0,'empty');lessonDetails('policies');setFlow('b0',0,'tenant-a · 0',3);setFlow('b0',1,'tenant-b · 0',2);setFlow('b0',2,'tenant-c · 0',2);
     const seq=[0,1,2];seq.forEach((j,i)=>{
       after(400+i*900,()=>{cursorAt('b0',j);dispatchFly('b0',j,'var(--amber)','a',150);});});}},
  {lit:['g-b0','g-cycle'],
-  n:'Tenant-a <b>bursts</b>. Its own queue grows and grows — but the cursor still grants it one turn per rotation, the same as everyone.',
+  n:'Tenant A’s burst grows its queue. It still receives one dispatch turn per rotation, like the other eligible flows.',
   run(){setFlow('b100',0,'premium',0,'empty');let qa=3;setFlow('b0',0,'tenant a · 1 turn',qa);setFlow('b0',1,'tenant b · 1 turn',2);setFlow('b0',2,'tenant c · 1 turn',2);
     for(let i=0;i<5;i++)after(300+i*420,()=>{qa+=2;setFlow('b0',0,'tenant-a · bursting',Math.min(20,qa));});
     const seq=[1,2,0,1];seq.forEach((j,i)=>after(500+i*820,()=>cursorAt('b0',j)));}},
  {lit:['g-b0','g-cycle'],
-  n:'Dispatch turns stay <b>level</b> for these backlogged, eligible flows. Completions, token throughput and latency need not be equal.',
+  n:'These eligible, backlogged flows receive equal dispatch turns. Their completions, token throughput and latency can differ.',
   run(){setFlow('b100',0,'premium',0,'empty');lessonDetails('policies');setFlow('b0',0,'tenant a · 4 turns',14);setFlow('b0',1,'tenant b · 4 turns',1);setFlow('b0',2,'tenant c · 4 turns',1);
     cursorAt('b0',1);pop('#g-b0',300);}}
 ]},
 /* ---- 7 · EVIDENCE: service tiers ---- */
 {title:'Evidence — service tiers',group:2,rail:'Tiers',steps:[
  {lit:['g-b100','g-b0','g-meter','g-pod1','g-pod2'],
-  n:'In the RHAII 3.4 tier run, premium p95 time to first token (TTFT) was <b>1117 ms</b> — the median across repeats, range 1056–1211.',
+  n:'In the RHAII 3.4 tier experiment, premium’s median per-repeat p95 TTFT was <b>1117 ms</b>. Across repeats, it ranged from <b>1056 to 1211 ms</b>.',
   run(){historicalScene();
     const d=CANON.tiers128,max=Math.max(d.premium.p95,d.standard.p95);
     evidence(`${measuredTitle('p95 time to first token · concurrency 128')}
@@ -1831,7 +1850,7 @@ const PAGES=[
       <div class="echips">${rangeChip('premium',d.premium.range)}</div>
       ${sourceLine(d.source,d.method)}`);}},
  {lit:['g-b100','g-b0','g-meter'],
-  n:'Standard p95 TTFT was <b>1406 ms</b> — about <b>1.26×</b> premium’s value in the same run.<br><br>This observation does not isolate queue ordering as the sole cause.',
+  n:'Standard’s median per-repeat p95 TTFT was <b>1406 ms</b>, about <b>1.26×</b> premium’s. This comparison does not isolate queue ordering as the cause.',
   run(){historicalScene();
     const d=CANON.tiers128,max=Math.max(d.premium.p95,d.standard.p95);
     evidence(`${measuredTitle('p95 time to first token · same saturated pool')}
@@ -1842,13 +1861,13 @@ const PAGES=[
       ${rangeChip('premium',d.premium.range)}${rangeChip('standard',d.standard.range)}</div>
       ${sourceLine(d.source,d.method)}`);}},
  {lit:['g-pod1'],
-  n:'TTFT measures time until the first token reaches the client.<br><br>It includes more than router waiting. These tier percentiles do not locate all delay or establish unchanged decode speed.',
+  n:'TTFT measures time until the client receives its first token. It includes more than router waiting and does not measure decode speed.',
   run(){historicalScene();evidence(`${measuredTitle('Read the metric correctly')}<p>Median of three per-repeat p95 values, not a p95 over pooled requests.</p>${sourceLine(CANON.tiers128.source,CANON.tiers128.method)}`);}}
 ]},
 /* ---- 8 · EVIDENCE: batch isolation ---- */
 {title:'Evidence — batch isolation',group:2,rail:'Batch',steps:[
  {lit:['g-tbatch','a-t3','g-gw','g-pod1','g-pod2'],
-  n:'In the historical batch experiment, the run without flow control produced <b>48,224 rejections</b>.',
+  n:'The historical batch experiment recorded <b>48,224 HTTP 429 rejections</b> without flow control.',
   run(){historicalScene();
     for(let i=0;i<4;i++){
       routeFly($('#fx'),$('#tenantRouteB').getAttribute('d')+' H210','var(--teal)',900,i*240);
@@ -1860,7 +1879,7 @@ const PAGES=[
       ${ebar('flow control off',fmt(d.off.n429),100,'var(--danger)')}
       ${sourceLine(d.source,'event totals from canonical benchmark results')}`);}},
  {lit:['g-tbatch','a-t3','g-bm10','g-meter'],
-  n:'With flow control on, the <b>same closed-loop concurrency schedule</b> produced <b>0 rejections</b>: queueing reduced how many new requests the clients sent.',
+  n:'With flow control, the <b>same closed-loop concurrency schedule</b> produced <b>0 rejections</b>. Queueing reduced the number of requests clients sent.',
   run(){historicalScene();setFlow('bm10',0,'batch',18);
     const d=CANON.batch128,max=d.off.n429;
     evidence(`${measuredTitle('HTTP 429 rejections · same concurrency schedule')}
@@ -1871,19 +1890,19 @@ const PAGES=[
       <span class="echip">closed-loop; different request totals</span></div>
       ${sourceLine(d.source,'event totals across three 120 s repeats; same concurrency schedule, not matched arrival rates')}`);}},
  {lit:['g-bm10'],
-  n:'Queueing changes closed-loop demand.<br><br>Fewer rejections here do not by themselves establish a throughput gain at the same arrival rate. Queue budgets and expiry are separate controls.',
+  n:'Fewer rejections under this closed-loop schedule do not establish a throughput gain at the same arrival rate.',
   run(){historicalScene();setFlow('bm10',0,'batch',18);lessonDetails('setup');evidence(`${measuredTitle('Comparison boundary')}${sourceLine(CANON.batch128.source,'three 120 s repeats; total HTTP 429 responses, different request totals')}`);}}
 ]},
 /* ---- 9 · EVIDENCE: fairness big-burst ---- */
 {title:'Evidence — the big burst',group:2,rail:'Burst',steps:[
  {lit:['g-b100','g-cycle'],
-  n:'The big-burst experiment compares three tenants at priority 100. The published chart reports time to first token, not router queue time.',
+  n:'The big-burst experiment compares three tenants at priority 100. Its chart measures time to first token, not router queue time.',
   run(){historicalScene();fairnessEvidence();}},
  {lit:['g-b100','g-cycle'],
-  n:'Tenant p95 TTFT values were <b>943, 877 and 893 ms</b>.<br><br>This is a modest observed same-band effect. It does not prove a queue-time bound or an SLO guarantee.',
+  n:'Tenant p95 TTFT values were <b>943, 877 and 893 ms</b>. These similar observed values establish neither a queue-time bound nor an SLO guarantee.',
   run(){historicalScene();fairnessEvidence();}},
  {lit:['g-b0','g-bm10'],
-  n:'Other policies answer different questions.<br><br>Explore later holdback, deadline, P/D and eviction experiments separately. The older fairness result does not validate every option.',
+  n:'Later experiments examine holdback, deadline ordering, prefill/decode separation and eviction. This historical fairness result does not validate those options.',
   run(){historicalScene();lessonDetails('later');evidence('<div class="et">Evidence has a scope</div><p>Each linked package records its own image, configuration, workload and limitations.</p>');}}
 ]},
 /* ---- 10 · REPLAY ---- */
@@ -1941,13 +1960,11 @@ function applyStep(){
   const kind=state.page===2?'measured + schematic':state.page>=11&&state.page<=13?'measured':state.page===14?'simulation':'illustration';
   $('#stepLab').textContent=`Step ${state.step+1} of ${pg.steps.length} · ${kind}`;
   $('#stepPips').innerHTML=pg.steps.map((_,i)=>`<span class="pip${i<=state.step?' on':''}"></span>`).join('');
+  $('#stepPips').style.visibility=pg.steps.length>1?'visible':'hidden';
   $('#narr').innerHTML=st.n;
-  const card=$('#card');
-  animate(card,[{opacity:.35,transform:'translateY(7px)'},{opacity:1,transform:'none'}],
-    {duration:480,easing:SPRING});
   $('#backBtn').disabled=state.page===0&&state.step===0;
   $('#nextBtn').disabled=state.page===PAGES.length-1&&state.step===pg.steps.length-1;
-  $('#nextBtn').textContent=state.step===pg.steps.length-1?'Next page →':'Next →';
+  $('#nextBtn').textContent='Next →';
   $('#pgno').textContent=`page ${state.page} of ${PAGES.length-1}`;
   if(pg.title!=='Scenario replay')stopPlay();
 }
@@ -2075,7 +2092,9 @@ function buildReplayView(){
       <path id="rp-done-${i}" d="M975 ${y} H997" fill="none" stroke="var(--ok)" stroke-width="2" marker-end="url(#arr)"/>`;
   }
   h+='<text id="rp-status" x="300" y="530" fill="var(--txt)" font-size="16"/><g id="replayFx"/>';
-  g.innerHTML=h;$('#sysCanvas').appendChild(g);
+  g.innerHTML=h;
+  g.querySelectorAll('[marker-end]').forEach(e=>e.setAttribute('marker-end',arrowHead(e.getAttribute('stroke'))));
+  $('#sysCanvas').appendChild(g);
 }
 function replayFly(tier,kind,pod=0){
   if(reduceMotion())return;

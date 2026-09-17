@@ -185,3 +185,31 @@ Final effective reviewed SHA256: `82574a8c202ce97355f1a31b605dcb9e4dfd7e471bced6
 Twelve fresh normal-motion captures (250,650,1000,1450,2100 and3000ms, both themes) have matching start/end hashes and no page errors. Evidence: `/tmp/learner-adversarial-20260917/batch-delta/report.json`; native crops `light-650-native.png`, `light-1000-native.png`, `dark-1450-native.png` and `dark-2100-native.png` show dots at the gateway ports and EPP boundary, with gateway title/proxy/gRPC text uncovered. Settled captures retain only the underlying route.
 
 **Final disposition remains pass for this bounded review; no unresolved actionable blocker.**
+
+## Reopened arrows and narration — latest review
+
+User feedback on published `603693c`, page 6, supersedes the earlier blanket arrow-formatting pass. Reviewed source: `83f7191fe58963acbc6867dc40254f341f1bcfc506a279566227288b46552847`, based on main `6b23628` with its recording and evidence-layout changes preserved.
+
+### Findings and corrections
+
+- The earlier checks traced routes but did not compare marker paint with line paint. Node highlighting recolored stems while arrowheads kept a gray fill. Marker sizes also scaled with stroke widths. Structural routes now remain neutral, and every arrow uses the same nine-unit geometry with explicit matching paint. Endpoint branches finish with a straight approach to the port.
+- An initial `context-stroke` implementation passed Chromium but painted black in WebKit. It was replaced before delivery by explicitly colored markers sharing one geometry. Native rendering was rechecked in both engines.
+- The narration panel now uses a fixed 280px grid with a stable button row. Evidence columns preserve the same width. On narrow screens, narration precedes evidence so differing chart heights do not move Next within a topic.
+- Visible step/type metadata is replaced by progress dots. Screen-reader metadata remains available. Next keeps a consistent label. Keyboard shortcuts use a native disclosure with labeled rows.
+- All 34 guided narratives and optional detector/policy narratives were reviewed for concise, complete thoughts. The objective explanation now reads: “The Endpoint Picker finds the pool-bound InferenceObjective named in the header. The request receives its configured priority: 100.”
+
+### Verification
+
+- Navigation/marker regression: 324 guided and optional states per engine in Chromium and WebKit, at 1844/1440/375 widths in both themes. Checks cover marker dimensions and computed paint, neutral connectors, panel/button geometry, unclipped prose, within-topic Next position and keyboard disclosure behavior.
+- Full browser regression: 158 scene/detail/option views and 34 normal-motion steps passed on the final source. Local receipt: `/tmp/learner-arrow-review-20260917/delivery-regression/report.json`.
+- Recording adapter: all 34 guided views, replay controls, clean-frame Escape, deep links and normal-view isolation passed on the final source. Its test now reads lesson state instead of relying on the old “Next page” label.
+- Independent review: all 34 guided steps and 20 options inspected in the 228-state candidate pack. An 80-state final delta pass in Chromium/WebKit, both themes and desktop/narrow widths checked marker paint and mobile evidence order. No unresolved actionable blocker. All nine mobile evidence steps held card top 157px / Next top 384px in that review.
+- Independent semantic review found no material change. Canonical evidence, pressure arithmetic and replay calculations are byte-identical to main `6b23628`. No benchmark traffic was run.
+
+The full regression ran after the final source freeze. Earlier captures whose source changed during review are not the delivery receipt. User acceptance and production deployment remain separate from these local checks.
+
+### References used
+
+- [SVG marker units](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/markerUnits): explicit user-space dimensions avoid stroke-dependent head sizes.
+- [WAI disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/): keyboard-accessible show/hide controls for secondary help.
+- [Web Interface Guidelines](https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md): semantic controls, visible focus and overflow checks.

@@ -39,8 +39,7 @@ with sync_playwright() as p:
                 assert frame.locator('#canvasWrap').is_hidden()
                 assert frame.locator('#evidence').inner_text().strip()
             views.append({'chapter':chapter,'step':step,'scene':scene})
-            label = frame.locator('#nextBtn').inner_text()
-            if 'page' in label.lower() or frame.locator('#nextBtn').is_disabled(): break
+            if frame.evaluate('state.step === PAGES[state.page].steps.length - 1'): break
             page.locator('#next').click();page.wait_for_timeout(100);step += 1
     # Real replay controls continue to work.
     frame.locator('#pgPause').click()
