@@ -57,8 +57,10 @@ with sync_playwright() as pw:
       }return true;
     })()"""), "Overflow shown with unused illustrated capacity"
     page.evaluate("go(2,0)")
+    assert page.locator('#kneeThroughput,#kneeLatency,#kneeFlat,#kneeQueue').evaluate_all(
+        "es=>es.every(e=>getComputedStyle(e).strokeDashoffset==='0px')"), "Reduced-motion chart hides delayed lines"
     assert page.evaluate("""(()=>{
-      for(const id of ['kneeValueLabel','kneeLatencyLabel','kneeClimbLabel']){
+      for(const id of ['kneeValueLabel','kneeLatencyLabel','kneeClimbLabel','kneeFlatLabel']){
         const r=document.getElementById(id).getBBox();
         for(const path of $('#kneeViz').querySelectorAll('path')){
           for(let d=0;d<=path.getTotalLength();d+=1){
@@ -68,7 +70,7 @@ with sync_playwright() as pw:
         }
       }return true;
     })()"""), "Chart label intersects a plotted line"
-    assert page.evaluate("(()=>{const r=$('#kneeClimbLabel').getBBox();return r.x>+$('#kneeSchematicThreshold').getAttribute('x1')+4})()"), "Caption touches the threshold marker"
+    assert page.evaluate("(()=>{return ['#kneeClimbLabel','#kneeFlatLabel'].every(id=>$(id).getBBox().x>+$('#kneeSchematicThreshold').getAttribute('x1')+4)})()"), "Caption touches the threshold marker"
     page.evaluate("go(10,0);$('#lessonDetails details').open=true")
     page.select_option("#policyChoice", "ceilings")
     assert page.locator("#g-bm10").evaluate("e=>e.classList.contains('lit')")

@@ -20,6 +20,18 @@ Initial coverage map, checked against router `bb2113e4`:
 
 Request, token and hybrid are three modes of the concurrency detector. Prefill/decode aggregation is a topology topic shared by both detector lessons. Check each target build before presenting its behavior as available.
 
+### Prepared detector lesson — September 17
+
+Source review for the next lesson is complete at `bb2113e4`. Implementation stays behind the existing-view formatting fixes.
+
+- Show two plugins, with Requests / Tokens / Hybrid nested under Concurrency.
+- Keep a connected calculation: inputs → endpoint scores → pool score → selected priority ceiling → dispatch. Show candidate filtering as a separate branch into endpoint selection.
+- Use one worked example per mode. Compare hybrid's average of endpoint maxima with the request-only and token-only averages.
+- Put defaults, accounting lifetime, stale metrics and prefill/decode details behind disclosures.
+- Preserve exact boundaries: dispatch requires a score below the ceiling. Concurrency filter limits are integer-truncated, utilization limits remain floating point, and both filters use strict comparisons. Their all-filtered fallback does not open a blocked dispatch gate.
+- Explain that headroom changes endpoint filtering. It does not reserve GPU capacity or change the pool-score denominator.
+- Label examples as calculations against this source revision, not measurements or production recommendations.
+
 ## Keep the published decision guide
 
 The [decision guide](../benchmark-decision-map/) already covers detector selection, token-accounting prerequisites, priority ceilings, fairness, deadline ordering, rejection, prediction, eviction, prefill/decode and conditional shared accounting. Its router reference is `30f06d9c`.

@@ -131,3 +131,25 @@ Local diagnostic evidence:
 - `/tmp/learner-allviews-independent/final-deltas/375-light-fairness-settled.png` — narrow policy reset without stale banner.
 
 No benchmark metrics were changed or benchmarks run by this reviewer. This receipt records local review; commit, deployment and user approval are separate actions.
+
+## Reopened evidence-card formatting — September 17
+
+The earlier all-view pass missed a component-level collision. On the published learner, the absolutely positioned maximum-value label overlapped the first evidence bar by 7 CSS pixels at both 1844 and 375 viewport widths. The previous full-page and overflow checks did not establish that the children inside each card were readable.
+
+The revision gives the badge, heading, scale, labels and bars separate layout rows. Labels and values sit above full-width tracks. Sources and methods remain accessible in a readable disclosure, with the campaign identity visible when collapsed. A zero-event series now draws a zero-width bar. Recorded values, methods and source links are unchanged.
+
+Final learner SHA-256: `dbc3fd7b5c8728acdbe87bb8e4d74e9bbdb015c57f623f2c8a3bbdfe0442560e`.
+
+Validation:
+
+- 19 scene/replay unit tests passed.
+- `pipeline/validate_learner_evidence.py`: 68 shared-card states across 1844/375 widths and both themes, with sources closed and expanded. Checks sibling geometry, rather than only container overflow.
+- Full learner browser validation: 158 scene/detail/option views and all 34 normal-motion steps passed. The full pass used `09bef1164c8bf2834e01aed30fa191675a1a687e4bdbb525ed17d0b8c1ec1edc`, recorded in `/tmp/website-queue-20260916/overlap-release-final/report.json`. The final delta only moves the green chart caption away from the threshold. Targeted final-source checks cover both chart captions and all shared cards.
+- Settings, counter stability, plot-label clearance, policy state and flow cleanup checks passed.
+- Independent source review confirmed unchanged metrics, methods, claims and source/export links. Visible measured badges and illustrative endpoint labels still distinguish evidence from the diagram.
+
+The original failing layout is retained under `/tmp/learner-evidence-review-20260917/` to verify that the new overlap check rejects it. Independent visual review checks each card at native size, then its containing sidebar, then the whole page.
+
+The chart review also found a delayed line reveal despite reduced-motion settings. All four plotted paths now appear immediately in that mode. The green “throughput flattens” caption had touched the threshold by roughly 1 SVG pixel. It now shares the red caption's padded right alignment. Regression checks cover both captions against the plotted lines and threshold. These are rendering changes only.
+
+Independent rendered review closed the reopened finding on final hash `dbc3fd7b…2560e`. The reviewer inspected native-size cards, containing groups and full pages. All shared-card states passed in light/dark and desktop/narrow views, including expanded sources and keyboard access. Final chart captures confirm immediate reduced-motion paths and more than 26 SVG pixels between the green caption and threshold. No remaining formatting blocker was found in this scope. Independent receipt: `/tmp/learner-evidence-review-20260917/REVIEW.md`.
