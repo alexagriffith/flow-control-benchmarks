@@ -25,7 +25,12 @@ with sync_playwright() as p:
         step = 0
         while True:
             assert frame.locator('#narr').inner_text().strip()
-            assert frame.locator('#pTitle').is_visible()
+            assert frame.locator('#narr').is_hidden()
+            embedded = chapter < 6 or 11 <= chapter <= 13
+            assert frame.locator('#pTitle').is_hidden() == embedded
+            if chapter == 0:
+                assert frame.locator('#ded-head').is_visible()
+                assert frame.locator('#ded-head').text_content() == 'Capacity utilization'
             scene = frame.locator('body').get_attribute('data-recording-scene')
             expected = 'replay' if chapter == 14 else 'evidence' if chapter >= 11 else 'diagram'
             assert scene == expected, (chapter,scene)
@@ -57,7 +62,9 @@ with sync_playwright() as p:
             assert frame.locator('#ov-ded').evaluate("e => getComputedStyle(e).opacity") == '1'
         assert frame.locator('.replay-footnote').is_visible() if chapter==14 else True
         page.screenshot(path=str(out/f'{name}.png'))
-        bounds = frame.locator('#narr').bounding_box()
+        assert frame.locator('#narr').is_hidden()
+        visual = frame.locator('#evidence' if chapter == 11 else '#canvasWrap')
+        bounds = visual.bounding_box()
         assert bounds['y']+bounds['height'] <= 811, (name,bounds)
         frame.locator('body').press('Escape')
         assert page.locator('#tools').get_attribute('data-hidden') == 'false'

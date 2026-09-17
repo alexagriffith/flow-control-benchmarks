@@ -2,6 +2,7 @@
 
 Serve the repository and open `learn/recording-view/?page=8` (zero-based page number). Designed for a 1440 × 810 or 1920 × 1080 recording viewport.
 
+- Recordings contain one scene heading and the visual. Page narration is hidden; diagram labels, measured chart labels/sources and the simulation disclosure remain. Intro diagrams and evidence cards use their embedded heading; architecture scenes use the page heading.
 - **Clean frame** hides the recording toolbar. Escape restores it. Add `&clean=1` to start without it.
 - Use the chapter selector and Back/Next before recording. Existing learner keyboard controls still operate inside the frame.
 - Replay retains its actual controls and simulation disclosure. Evidence chapters enlarge the actual measured chart and retain its source and limitations.

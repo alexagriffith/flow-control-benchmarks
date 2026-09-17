@@ -11,6 +11,7 @@
   const sync = () => {
     const page = pageNumber();
     doc.body.dataset.recordingScene = page === 14 ? 'replay' : page >= 11 && page <= 13 ? 'evidence' : 'diagram';
+    doc.body.dataset.recordingHeading = page < 6 || (page >= 11 && page <= 13) ? 'embedded' : 'external';
     chapter.value = String(page);
     const kind = doc.querySelector('#stepLab').textContent.split(' · ').slice(1).join(' · ');
     doc.querySelector('#topbar .t span').textContent = kind || 'Interactive';
