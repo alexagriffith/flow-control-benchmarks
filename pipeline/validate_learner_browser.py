@@ -28,7 +28,7 @@ def main():
                 page.wait_for_timeout(50)
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),label+' page overflow'
                 assert page.evaluate('document.getAnimations().every(a=>a.playState!=="running")'),label+' reduced motion'
-                assert page.evaluate('''[...document.querySelectorAll('#lessonDetails,#evidence.show,#playCtl.show')].every(e=>e.scrollWidth<=e.clientWidth+1)'''),label+' control clipping'
+                assert page.evaluate('''[...document.querySelectorAll('#lessonDetails,#evidence.show,#playCtl.show')].filter(e=>e.getClientRects().length).every(e=>e.scrollWidth<=e.clientWidth+1)'''),label+' control clipping'
                 # Every scene uses the same computed values for the visible meter and gate.
                 assert page.evaluate('''(()=>{const m=sceneMetrics(currentScene);return $('#meterVal').textContent===m.pool.toFixed(3)&&document.body.classList.contains('halted')===!m.canDispatch})()'''),label+' arithmetic/display mismatch'
                 for link in page.locator('a[href]').evaluate_all('(es)=>es.map(e=>e.href)'):links.add(link)
@@ -43,9 +43,9 @@ def main():
                 for step in range(count):
                     page.evaluate(f'go({chapter},{step})');capture(f'scene-{chapter:02}-{step}')
                     if page.locator('#lessonDetails details').count():
-                        page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)');capture(f'details-{chapter:02}-{step}')
+                        page.evaluate("if(!$('#lessonPanel').matches(':popover-open'))$('#lessonPanel').showPopover()");page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)');capture(f'details-{chapter:02}-{step}')
             for chapter,step,control,values in OPTIONS:
-                page.evaluate(f'go({chapter},{step})');page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)')
+                page.evaluate(f'go({chapter},{step})');page.evaluate("if(!$('#lessonPanel').matches(':popover-open'))$('#lessonPanel').showPopover()");page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)')
                 for value in values:
                     page.select_option('#'+control,value);capture(f'{control}-{value}')
                     if control=='executionChoice' and value=='evict':
@@ -58,7 +58,7 @@ def main():
                     if control=='detectorChoice':
                         page.check('#topologyChoice');capture(f'{control}-{value}-pd');page.uncheck('#topologyChoice')
             # Keyboard summary and selector keep their native semantics.
-            page.evaluate('go(8,0)');summary=page.locator('#lessonDetails summary').first;summary.focus();page.keyboard.press('Space');assert page.evaluate('state.page===8&&state.step===0')
+            page.evaluate("go(8,0);$('#lessonPanel').showPopover()");summary=page.locator('#lessonDetails summary').first;summary.focus();page.keyboard.press('Space');assert page.evaluate('state.page===8&&state.step===0')
             page.locator('#detectorChoice').focus();page.keyboard.press('ArrowDown');assert page.evaluate('state.page===8&&state.step===0')
             page.evaluate('go(14,0)');assert page.evaluate('PG.timer===null');page.locator('#pgStep').click();assert page.evaluate('PG.tick===1')
             page.locator('#pgReset').click();assert page.evaluate('PG.tick===0');page.locator('#pgPause').click();page.wait_for_timeout(550);assert page.evaluate('PG.tick>0');page.locator('#pgPause').click();tick=page.evaluate('PG.tick');page.wait_for_timeout(350);assert page.evaluate('PG.tick')==tick

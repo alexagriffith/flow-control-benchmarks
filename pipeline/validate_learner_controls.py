@@ -71,7 +71,7 @@ with sync_playwright() as pw:
       }return true;
     })()"""), "Chart label intersects a plotted line"
     assert page.evaluate("(()=>{return ['#kneeClimbLabel','#kneeFlatLabel'].every(id=>$(id).getBBox().x>+$('#kneeSchematicThreshold').getAttribute('x1')+4)})()"), "Caption touches the threshold marker"
-    page.evaluate("go(10,0);$('#lessonDetails details').open=true")
+    page.evaluate("go(10,0);$('#lessonPanel').showPopover();$('#lessonDetails details').open=true")
     page.select_option("#policyChoice", "ceilings")
     assert page.locator("#g-bm10").evaluate("e=>e.classList.contains('lit')")
     assert page.locator("#g-meter").evaluate("e=>e.classList.contains('lit')")
@@ -88,3 +88,29 @@ with sync_playwright() as pw:
     assert page.locator("#fl-b100-1").evaluate("e=>e.style.opacity==='0'")
     browser.close()
 print("PASS: burst occupancy, chart-label clearance, policy selection state and empty-flow cleanup")
+
+# Replay cleanup must not repaint a guided lesson with playground queues or metrics.
+with sync_playwright() as pw:
+    browser=pw.chromium.launch()
+    page=browser.new_page(reduced_motion='reduce')
+    page.goto((ROOT/'learn/flow-control-journey.html').as_uri())
+    page.evaluate('setAuto(false,true)')
+    assert page.evaluate("""()=>{
+      go(14,0);PG.load={p:100,s:100,b:100};for(let i=0;i<60;i++)playTick();
+      for(let p=0;p<14;p++)for(let s=0;s<PAGES[p].steps.length;s++){
+        const step=PAGES[p].steps[s],run=step.run;let expected;
+        const snapshot=()=>JSON.stringify({scene:currentScene,queues:CS.q,labels:[...document.querySelectorAll('[id^=fll-]')].map(e=>e.textContent)});
+        step.run=function(){run.call(this);expected=snapshot();};
+        go(p,s);step.run=run;if(expected!==snapshot())throw Error(`Replay repainted ${p}.${s}`);
+      }
+      go(8,3);return Math.abs(sceneMetrics(currentScene).pool-.85)<1e-9;
+    }"""), 'guided scene changed after replay cleanup'
+    # Wheel and keyboard inside supporting details cannot navigate the underlying lesson.
+    page.click('#detailBtn')
+    page.locator('#lessonPanel').evaluate("e=>e.dispatchEvent(new WheelEvent('wheel',{deltaY:100,bubbles:true}))")
+    assert page.evaluate('state.page===8&&state.step===3')
+    page.keyboard.press('Escape')
+    assert not page.locator('#lessonPanel').is_visible()
+    assert page.locator('#detailBtn').evaluate('e=>document.activeElement===e')
+    browser.close()
+print('PASS: replay-to-lesson isolation and detail-panel wheel/Escape/focus behavior')

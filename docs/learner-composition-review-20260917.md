@@ -213,3 +213,37 @@ The full regression ran after the final source freeze. Earlier captures whose so
 - [SVG marker units](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/markerUnits): explicit user-space dimensions avoid stroke-dependent head sizes.
 - [WAI disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/): keyboard-accessible show/hide controls for secondary help.
 - [Web Interface Guidelines](https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md): semantic controls, visible focus and overflow checks.
+
+## Semantic and replay follow-up — September 17
+
+User feedback on published `482b6b7` reopened semantic validation, label value, the full sidebar, request accounting and visible configuration. This pass preserves the approved layout, measured evidence, export links, recording adapter and source pins. It does not rerun benchmarks or claim a new recorded replay implementation.
+
+### Corrections
+
+- Calibration now reads “Find a candidate operating point.” The burst defines contention once; dispatch and engine execution remain distinct. Model-server endpoints and Router queues have explicit labels and ownership.
+- The replay encloses its queues and dispatch routes in one Endpoint Picker boundary. Configuration describes the actual teaching-model constants, formula, ceiling, priorities, queue limit/expiry, service capacity and traffic. Saturation is the detector's normalized load signal; the ceiling is its configured dispatch threshold. Both appear in the waiting status. The unprotected baseline explicitly omits legacy negative-priority shedding.
+- Removed the redundant meter caption and detached dispatch spinner. The aligned meter retains only pool saturation, value and applicable ceiling. Supplementary controls, source evidence and keyboard help use one stable Details popover; measured-result charts retain their main-view presentation. Opening or scrolling details does not navigate or resize narration.
+- Replay produces one event ledger per tick. Completion, arrivals and dispatch commit serially; an in-transit request does not also occupy its source/destination. Counted bundles expose overlapping requests. Queue dots represent all queued requests. The off-mode path passes continuously through the bypassed queue area. Pause/reset/manual stepping cancel or settle pending phases.
+- Review caught and fixed cleanup repainting a guided scene with playground state. A new integration check compares all 33 non-replay guided steps before/after cleanup and explicitly retains the 110/60 pool-saturation example.
+- Companion corrections: equal dispatch turns while flows remain backlogged and eligible; all illustrated participating flows contain work; queue budgets belong to Endpoint Picker memory; the controller checks ceilings; engine waiting is distinct from running; shared-static-ceiling simplification is explicit.
+- Published decision map: registered bands include empty configured bands; intermediate-priority testing starts at three; effective TTL/fairness/ordering and nonbinding queue budgets are conditions for attributing a priority-only comparison. Detector inventories are collapsed while Change / Hold fixed / Observe remain next to the decision.
+
+### Sources and scope
+
+Learner/companion pin: `bb2113e4ecd79b049c7322164794ca9ea30b8cbb`. Checked the saturation/usage-limit interfaces, dispatch priority-loop gate, legacy admission and round-robin semantics. Map pin: `30f06d9c7c086cfa7ced5f801bddde7a4d000d73`; checked registered priority snapshots, gate-before-empty-band ordering, holdback/reflective formulas and per-band configuration. The pins' different endpoint-filter fallbacks are preserved.
+
+[Flight Recorder](https://github.com/alexagriffith/flow-control-visualizer) at `48e1e716` contains recorded outcomes and sampled telemetry, not complete per-request routes. Its current light-only UI, data paths and hardcoded 1.0 gate need work before an honest embedded recorded view. Repository link provided in Configuration; integration remains in `docs/website-v2-plan.md`.
+
+### Final candidate checks
+
+- 20 unit/browser replay and scene tests, including exclusive request conservation through transfers, bundled multiplicity, rejection, expiry, recovery, resets, pause, zero demand and reduced motion.
+- 324 navigation/marker/optional states in Chromium and 324 in WebKit; 68 evidence-card states; composition, counter stability, Details focus/Escape/wheel and replay-to-lesson isolation checks.
+- 160 rendered scene/detail/option views and 34 normal-motion steps; companion at desktop/narrow widths. Receipt: `/tmp/learner-configuration-review/delivery-rendered/report.json`.
+- Recording adapter: all 34 guided views, replay controls and normal-view isolation. Receipt: `/tmp/learner-configuration-review/delivery-recording/report.json`.
+- Full-regression hashes: journey `785629a991df7cc42aead0c4059b2b11a83e670790ab4849fd5a122afab153ca`; companion `930f710df505aee6cecee5d796e77b26cde2c7948d8cf520d16c3dde3a3f4ce8`; map `fc7deee4830ae501361556faaa6b0220c3825b393e82cc901f11382591e3b207`.
+
+The previous evaluation missed semantically redundant labels and counted model totals without inspecting transient visual occupancy. The architecture-review skill now tests label value and phase conservation explicitly. These checks establish the bounded corrections above, not universal configuration validity or user acceptance.
+
+Final color-only delta: Details links now use the same high-contrast text color as implementation-source links. Reviewed delivery learner hash: `ec70a668188825e15c4fd21b0f56495954159d881207d454345294a03130fa4b`. Layout, behavior and other files are unchanged from the full-regression hashes above.
+
+Independent comprehension review closed all four actionable findings (burst setting, engine waiting, an empty illustrated fairness participant, link contrast). No unresolved blocker in this bounded pass. Receipt: `/tmp/learner-ownership-review-20260917/REVIEW.md`. It covers all 34 guided views across both widths/themes, native changed-family inspection, 20 popover interaction cases and 192 motion-ledger samples, with the final contrast-only delta explicitly separated. User approval remains pending.

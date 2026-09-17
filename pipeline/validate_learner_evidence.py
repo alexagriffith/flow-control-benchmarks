@@ -50,7 +50,7 @@ with sync_playwright() as pw:
             for p,s,control,value in states:
                 page.evaluate('x=>go(...x)',[p,s])
                 if control:
-                    page.locator('#lessonDetails details').evaluate_all('es=>es.forEach(e=>e.open=true)')
+                    page.evaluate("if(!$('#lessonPanel').matches(':popover-open'))$('#lessonPanel').showPopover()");page.locator('#lessonDetails details').evaluate_all('es=>es.forEach(e=>e.open=true)')
                     page.select_option('#'+control,value)
                 assert page.locator('#evidence').is_visible(),(p,s,control,value)
                 page.evaluate(CHECK)

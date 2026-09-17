@@ -348,15 +348,15 @@
     <rect x="348" y="226" width="268" height="58" rx="9" fill="var(--soft, #f6f6f6)"/><rect x="348" y="226" width="6" height="58" rx="3" fill="var(--blue, #1c78d8)"/>
     <text x="364" y="246" font-size="12" font-weight="700" fill="var(--ink, #151515)">Band -10 · sheddable · bounded queue</text>
     <rect x="364" y="256" width="110" height="16" rx="8" fill="var(--blue, #1c78d8)" opacity=".8"/><text x="369" y="268" font-size="10" fill="var(--on-accent, #ffffff)" font-weight="700">batch queue</text>
-    <text x="348" y="303" font-size="10.5" fill="var(--muted, #5f6368)">Per-band request and byte limits protect the</text>
-    <text x="348" y="318" font-size="10.5" fill="var(--muted, #5f6368)">gateway's memory. Past a band's limit, arrivals get</text>
+    <text x="348" y="303" font-size="10.5" fill="var(--muted, #5f6368)">Per-band request and byte limits bound</text>
+    <text x="348" y="318" font-size="10.5" fill="var(--muted, #5f6368)">Endpoint Picker queue memory.</text>
     <text x="348" y="333" font-size="10.5" fill="var(--muted, #5f6368)">HTTP mappings depend on the build and pool state.</text>
     <text x="348" y="348" font-size="10.5" fill="var(--muted, #5f6368)">See the versioned outcome table below.</text>
     <line x1="632" y1="188" x2="678" y2="188" stroke="var(--arrow, #9a9a9a)" stroke-width="1.6" marker-end="url(#a)"/>
     <!-- 4 gate -->
     <rect x="680" y="120" width="226" height="136" rx="12" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
     <text x="696" y="144" font-size="11" font-weight="900" fill="var(--red, #ee0000)" letter-spacing="1.4">4 · THE GATE</text>
-    <text x="696" y="166" font-size="13.5" font-weight="700" fill="var(--ink, #151515)">Saturation detector</text>
+    <text x="696" y="166" font-size="13.5" font-weight="700" fill="var(--ink, #151515)">Priority ceiling check</text>
     <text x="696" y="186" font-size="11.5" fill="var(--muted, #5f6368)">Saturation is a gradient, 0 → 1+.</text>
     <text x="696" y="203" font-size="11.5" fill="var(--muted, #5f6368)">Under the ceiling → dispatch.</text>
     <text x="696" y="220" font-size="11.5" fill="var(--muted, #5f6368)">At or over → the cycle halts.</text>
@@ -464,9 +464,10 @@
   <div class="note">Each cycle considers higher priorities first. At a reached ceiling, dispatch pauses for that cycle; when pressure falls, eligible work can advance.<br><br>Use the same band with round-robin fairness when workloads should share dispatch turns. Use separate bands when one requires priority over another.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a> · <a href="https://github.com/llm-d/llm-d-router/tree/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/fairness">plugins/flowcontrol/fairness</a> · <a href="https://github.com/llm-d/llm-d-router/tree/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a></div>
   <h3 style="margin-top:22px">The dispatch cycle</h3>
-  <p>The dispatch loop moves at most one request per pass. A saturation value at or above the applicable ceiling pauses dispatch for the current cycle.</p>
+  <p>The dispatch loop checks each band’s applicable ceiling and moves at most one request per pass. The figure simplifies this to one shared static ceiling.</p>
   <div class="figure">
-  <svg viewBox="0 0 920 286" role="img" aria-label="Dispatch cycle: measure the saturation gradient, check it against the ceiling, walk the bands highest priority first, dispatch one item, then loop; at or over the applicable ceiling the current dispatch cycle halts">
+  <p class="figure-caption"><strong>Shared-static-ceiling example</strong></p>
+  <svg viewBox="0 0 920 286" role="img" aria-label="Shared-static-ceiling example: measure the saturation gradient, check it against the ceiling, walk the bands highest priority first, dispatch one item, then loop; at or over the applicable ceiling the current dispatch cycle halts">
     <defs><marker id="dc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--arrow, #9a9a9a)"/></marker></defs>
     <rect x="18" y="36" width="196" height="72" rx="11" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="34" y="62" font-size="12" font-weight="700" fill="var(--ink, #151515)">measure saturation</text>
@@ -511,26 +512,26 @@
     <rect x="18" y="100" width="270" height="48" rx="10" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="32" y="120" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">tenant-b · steady</text>
     <circle cx="38" cy="134" r="4" fill="var(--arrow, #9a9a9a)"/><circle cx="52" cy="134" r="4" fill="var(--arrow, #9a9a9a)"/>
-    <rect x="18" y="158" width="270" height="40" rx="10" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="32" y="182" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">tenant-c · steady</text>
+    <rect x="18" y="158" width="270" height="48" rx="10" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
+    <text x="32" y="178" font-size="11.5" font-weight="700" fill="var(--ink, #151515)">tenant-c · steady</text><circle cx="38" cy="192" r="4" fill="var(--arrow, #9a9a9a)"/><circle cx="52" cy="192" r="4" fill="var(--arrow, #9a9a9a)"/>
     <path d="M316 66 C360 66 360 122 316 122 M316 128 C360 128 360 180 316 180 M320 180 C382 180 382 66 320 66" fill="none" stroke="var(--red, #ee0000)" stroke-width="1.6" stroke-dasharray="5 4"/>
     <text x="392" y="128" font-size="11" fill="var(--red, #ee0000)">cursor rotates</text>
     <rect x="500" y="52" width="400" height="32" rx="9" fill="var(--soft, #f6f6f6)"/>
     <text x="514" y="72" font-size="11" fill="var(--ink-soft, #4a4a4a)">turns: a · b · c · a · b · c · a · b · c …</text>
-    <rect x="500" y="98" width="400" height="32" rx="9" fill="var(--green-tint, #f2faf6)" stroke="var(--green-tint-line, #9fceb8)"/>
-    <text x="514" y="118" font-size="11" font-weight="700" fill="var(--ink, #151515)">served share: equal per active tenant</text>
+    <rect x="500" y="98" width="400" height="40" rx="9" fill="var(--green-tint, #f2faf6)" stroke="var(--green-tint-line, #9fceb8)"/>
+    <text x="514" y="113" font-size="11" font-weight="700" fill="var(--ink, #151515)">Equal dispatch turns while flows remain</text><text x="514" y="128" font-size="11" fill="var(--muted, #5f6368)">backlogged and eligible.</text>
     <rect x="500" y="144" width="400" height="32" rx="9" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
     <text x="514" y="164" font-size="11" fill="var(--ink, #151515)">a's excess waits in a's own queue</text>
   </svg>
   </div>
   <div class="figure">
-  <svg viewBox="0 0 920 155" role="img" aria-label="Global-strict fairness: the same burst becomes one merged first-come-first-served queue and the bursting tenant takes share proportional to volume">
+  <svg viewBox="0 0 920 155" role="img" aria-label="Global-strict with FCFS compares eligible flow heads by enqueue time; the row shows dispatch order, not a merged physical queue">
     <text x="18" y="26" font-size="13" font-weight="700" fill="var(--ink, #151515)">Global-strict · the default</text>
     <rect x="18" y="40" width="560" height="38" rx="10" fill="var(--soft, #f6f6f6)" stroke="var(--line, #d7d7d7)"/>
     <circle cx="42" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="60" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="78" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="96" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="114" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="132" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="150" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="168" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="186" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="204" cy="59" r="5" fill="var(--red-mid, #e4837f)"/><circle cx="222" cy="59" r="5" fill="var(--arrow, #9a9a9a)"/><circle cx="240" cy="59" r="5" fill="var(--red-mid, #e4837f)"/>
     <text x="596" y="63" font-size="11" fill="var(--muted, #5f6368)">flow heads compared using FCFS</text>
     <rect x="18" y="96" width="560" height="32" rx="9" fill="var(--red-tint, #fff6f6)" stroke="var(--red-tint-line, #e4bcbc)"/>
-    <text x="32" y="116" font-size="11" font-weight="700" fill="var(--ink, #151515)">served share follows request volume; the burster receives more turns</text>
+    <text x="32" y="116" font-size="11" font-weight="700" fill="var(--ink, #151515)">Earlier enqueued requests dispatch first across eligible flow heads.</text>
     <text x="596" y="116" font-size="11" fill="var(--muted, #5f6368)">lowest overhead · no isolation</text>
   </svg>
   </div>
@@ -611,7 +612,7 @@
   <h2>Where the waiting goes</h2>
   <p>Excess requests wait in Endpoint Picker policy queues or inside vLLM. Priority and fairness apply while requests remain in the Endpoint Picker.</p>
   <div class="figure">
-  <svg viewBox="0 0 920 240" role="img" aria-label="Two places a request can wait: the EPP policy queue, governed by priority and fairness, and the GPU batch, governed by physics">
+  <svg viewBox="0 0 920 240" role="img" aria-label="Requests wait in Endpoint Picker queues before dispatch and may wait inside the model server before execution">
     <text x="18" y="26" font-size="14" font-weight="700" fill="var(--ink, #151515)">Where requests wait</text>
     <rect x="18" y="46" width="430" height="150" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
     <text x="34" y="72" font-size="12.5" font-weight="800" fill="var(--green, #1f8a5f)">ENDPOINT PICKER QUEUE</text>
@@ -620,10 +621,10 @@
     <text x="34" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">tenant and priority band.</text>
     <text x="34" y="156" font-size="11" fill="var(--faint, #8a8a8a)">llm_d_epp_flow_control_request_queue_duration_seconds</text>
     <rect x="472" y="46" width="430" height="150" rx="12" fill="var(--raised, #fbfbfb)" stroke="var(--line, #d7d7d7)"/>
-    <text x="488" y="72" font-size="12.5" font-weight="800" fill="var(--blue, #1c78d8)">vLLM RUNNING BATCH</text>
-    <text x="488" y="94" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">Once dispatched, a request computes inside the shared batch.</text>
-    <text x="488" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">A full batch can increase first-token latency for requests that</text>
-    <text x="488" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">arrive later. The Endpoint Picker cannot reorder running work.</text>
+    <text x="488" y="72" font-size="12.5" font-weight="800" fill="var(--blue, #1c78d8)">vLLM WAITING / RUNNING</text>
+    <text x="488" y="94" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">After dispatch, vLLM decides when the request executes.</text>
+    <text x="488" y="111" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">It may wait behind existing work before joining a batch.</text>
+    <text x="488" y="128" font-size="11.5" fill="var(--ink-soft, #4a4a4a)">The Endpoint Picker does not schedule vLLM’s running work.</text>
     <text x="488" y="156" font-size="11" fill="var(--faint, #8a8a8a)">vllm:num_requests_running, vllm:num_requests_waiting</text>
     <text x="18" y="216" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Detector settings define pressure; the applicable priority ceiling determines when dispatch pauses.</text>
     <text x="18" y="234" font-size="12.5" fill="var(--ink-soft, #4a4a4a)">Changing thresholds can move waiting between router and engine. Measure latency and throughput together.</text>
@@ -732,7 +733,7 @@
       <tr class="config-group"><th colspan="4">Priority dispatch ceilings · experimental beyond the v0.9 static policy</th></tr>
       <tr><td><code>flowControl.usageLimitPolicyPluginRef</code></td><td>static policy at 1.0</td><td>static and experimental priority holdback</td><td>Selects the pool-admission policy that decides whether a priority may dispatch.</td></tr>
       <tr><td><code>static-usage-limit-policy.threshold</code></td><td>1.0; full ceiling</td><td>1.0 in v0.9 scenarios</td><td>Sets one pool-saturation ceiling for every priority.</td></tr>
-      <tr><td><code>priority-holdback-policy.minCeiling</code> / <code>maxCeiling</code></td><td>experimental build</td><td>0.50 / 1.0</td><td>Holds lower-priority dispatch at lower total-pool pressure; it does not allocate private GPU memory.</td></tr>
+      <tr><td><code>priority-holdback-policy.minCeiling</code> / <code>maxCeiling</code></td><td>experimental build</td><td>0.50 / 1.0</td><td>Holds lower-priority dispatch at lower total-pool saturation; it does not allocate private GPU memory.</td></tr>
       <tr><td><code>priority-holdback-policy.shape</code> / <code>domain</code></td><td>experimental build</td><td><code>linear</code> / <code>rank</code></td><td>Controls how ceilings are distributed across the configured priorities.</td></tr>
       <tr class="config-group"><th colspan="4">Batch eviction and retry · experimental</th></tr>
       <tr><td><code>flowControl.enableEviction</code></td><td>experimental build</td><td>true in the experimental eviction-and-retry tests</td><td>Lets the Endpoint Picker stop negative-priority work already running in vLLM when higher-priority work is blocked.</td></tr>
@@ -755,7 +756,7 @@
       <tr><td>A 110 + B 60</td><td>170 / 200 = 0.85</td><td>High may advance; low waits</td><td>A excluded; B remains</td></tr>
       <tr><td>A 80 + B 80</td><td>160 / 200 = 0.80</td><td>Low waits at its ceiling</td><td>Both remain</td></tr>
     </tbody></table>
-    <p>A lower-priority ceiling tests total observed pool pressure, not a private queue size or GPU-memory allocation. Headroom leaves the denominator at 200 and creates no physical capacity. The filter uses a strict below-threshold check and returns the original candidates if all would be excluded. Passing these checks permits scheduling; it does not guarantee immediate engine execution.</p>
+    <p>A lower-priority ceiling tests total observed pool saturation, not a private queue size or GPU-memory allocation. Headroom leaves the denominator at 200 and creates no physical capacity. The filter uses a strict below-threshold check and returns the original candidates if all would be excluded. Passing these checks permits scheduling; it does not guarantee immediate engine execution.</p>
     <p>The loader injects the selected detector into scheduling profiles when it implements filtering. Its absence from handwritten profile YAML alone does not establish inactivity.</p>
     <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go#L123-L229">Pool formula and endpoint filtering</a> · <a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/config/loader/defaults.go#L274-L324">Effective filter wiring</a></div>
   </details>
@@ -789,7 +790,7 @@
 
 <section id="capacity-controls">
   <h2>Two checks: priority ceiling and endpoint headroom</h2>
-  <p>The priority ceiling decides whether queued work may advance at the observed pool pressure. Headroom changes the selected detector's endpoint filtering threshold when a destination is chosen. Both utilization and concurrency detectors support headroom; neither creates physical capacity.</p>
+  <p>The priority ceiling decides whether queued work may advance at the observed pool saturation. Headroom changes the selected detector's endpoint filtering threshold when a destination is chosen. Both utilization and concurrency detectors support headroom; neither creates physical capacity.</p>
   <figure class="figure">
     <img src="../benchmark-data/headroom-vs-reserved-capacity.svg" alt="Two flow diagrams showing reserved capacity comparing pool saturation with a priority ceiling and saturation-detector headroom filtering each model replica against its safety boundary. Utilization uses queue and KV-cache pressure; concurrency uses in-flight requests or tokens.">
     <figcaption>Priority holdback sets dispatch ceilings; detector headroom changes endpoint eligibility. The selected filter fails open if it would exclude every candidate.</figcaption>
@@ -852,7 +853,7 @@
         <div class="chip det"><span class="lab">admission</span><span class="val">priority holdback ceilings</span></div>
         <div class="chip cap"><span class="lab">reserve</span><span class="val">lower priorities stop sooner</span></div>
       </div>
-      <p class="buys"><strong>Effect</strong> Lower-priority work stops dispatching at a lower total-pool pressure, allowing higher-priority dispatch below its own ceiling.</p>
+      <p class="buys"><strong>Effect</strong> Lower-priority work stops dispatching at a lower total-pool saturation, allowing higher-priority dispatch below its own ceiling.</p>
       <p class="costs"><strong>Tradeoff</strong> Batch may use less GPU capacity during quiet periods. Calibrate the ceilings for each model and hardware configuration.</p>
     </div>
     <div class="card">
@@ -888,7 +889,7 @@
     </div>
     <div class="card">
       <h3>What to watch</h3>
-      <p><code>pool_saturation</code> reports the detector's pool-wide pressure value. Dispatch pauses when the value reaches the applicable ceiling.</p><p style="margin-top:8px"><code>queue_size</code> reports queued requests per tenant and priority band. Autoscaling systems can use sustained queue growth as a demand signal.</p>
+      <p><code>pool_saturation</code> reports the detector's pool saturation value. Dispatch pauses when the value reaches the applicable ceiling.</p><p style="margin-top:8px"><code>queue_size</code> reports queued requests per tenant and priority band. Autoscaling systems can use sustained queue growth as a demand signal.</p>
     </div>
   </div>
   <h3 style="margin-top:18px">How to verify flow control is active</h3>

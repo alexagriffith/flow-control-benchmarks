@@ -145,9 +145,7 @@ body.replay-mode #haltBanner{display:none}
 /* Structural routes stay neutral. Moving dots identify request classes. */
 .connector{stroke:var(--txt3);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .cel.lit .frame{stroke:var(--hl,var(--brand));filter:drop-shadow(0 0 7px var(--brand-soft))}
-#cycleSpin{transform-origin:777px 484px;animation:spin 3.2s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.halted #cycleSpin{animation-play-state:paused}
 svg text{font-family:inherit;user-select:none}
 svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #meterFill{transition:width 1s var(--ease)}
@@ -211,9 +209,16 @@ svg .mt{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 #side{flex:0 0 clamp(340px,27vw,440px);display:flex;flex-direction:column;gap:16px;min-height:0;overflow-y:auto;padding:2px}
 #side>*{flex-shrink:0}
 #card{background:var(--base);border:1px solid var(--b1);border-radius:14px;padding:18px 19px;
-  height:280px;display:grid;grid-template-rows:44px 6px minmax(0,1fr) 34px;gap:10px}
+  height:280px;display:grid;grid-template-rows:44px 24px minmax(0,1fr) 34px;gap:10px}
 #card h2{font-size:19px;font-weight:650;letter-spacing:0;margin:0;line-height:1.15;text-wrap:balance}
-#stepMeta{display:flex;align-items:center;gap:9px}
+#stepMeta{display:flex;align-items:center;justify-content:space-between;gap:9px}
+#detailBtn{font-size:11px;padding:3px 8px}
+#lessonPanel{inset:110px 20px 20px auto;margin:0;width:440px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 130px);overflow:auto;padding:20px;border:1px solid var(--b2);border-radius:14px;background:var(--base);color:var(--txt);box-shadow:0 12px 40px #0004}
+#lessonPanel header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+#lessonPanel h2{font-size:18px;margin:0}
+#lessonPanel #evidence{position:static;width:100%;max-width:none;margin:0 0 16px;transform:none}
+#lessonPanel #hints{margin-top:16px}
+#lessonDetails .config-note{padding:10px 0;border-bottom:1px solid var(--b1)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 #stepPips{display:flex;gap:5px}
 .pip{width:6px;height:6px;border-radius:50%;background:var(--b2);transition:background-color .3s var(--ease)}
@@ -278,7 +283,7 @@ summary:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 #lessonDetails:empty{display:none} #lessonDetails details{border-top:1px solid var(--b1);padding:10px 0}
 #lessonDetails summary{cursor:pointer;font-weight:650;color:var(--txt)}
 #lessonDetails select,#lessonDetails button{max-width:100%;margin:6px 3px 6px 0}
-#lessonDetails a{color:var(--brand)}
+#lessonDetails a{color:var(--txt)}
 #lessonDetails .esource a,.esource a{color:var(--txt)}
 #lessonDetails pre{overflow:auto;font-size:11px} #lessonDetails p{margin:8px 0}
 @media(max-width:1020px){#haltBanner{top:40px;max-width:calc(100% - 24px)}}
@@ -328,6 +333,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
       <p class="diagram-hint">Scroll horizontally to explore the diagram →</p>
       <div id="diagramViewport" role="region" aria-label="System diagram; scroll horizontally on narrow screens" tabindex="0">
       <svg id="sysCanvas" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMin meet" aria-label="flow control system diagram">
+        <desc>Mechanism examples use illustrative values. Measured results are labeled on the evidence pages.</desc>
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
             <path d="M0 1L9 5L0 9Z" fill="var(--txt3)" stroke="none"/></marker>
@@ -410,6 +416,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         <g id="a-band" class="cel"><line class="connector" x1="470" y1="198" x2="470" y2="212" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
 
         <!-- bands -->
+        <text id="routerQueuesLabel" x="592" y="207" font-size="11" font-weight="600" fill="var(--txt2)">Router queues</text>
         <g id="g-b100" class="cel" style="--hl:var(--brand)">
           <rect class="frame" x="382" y="216" width="416" height="66" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
           <rect x="382" y="216" width="4" height="66" rx="2" fill="var(--brand)"/>
@@ -429,22 +436,14 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
           <g id="qs-bm10"></g>
         </g>
 
-        <!-- saturation meter -->
+        <!-- Saturation and its applicable dispatch ceiling. -->
         <g id="g-meter" class="cel">
-          <text id="meterLabel" x="382" y="468" font-size="9.5" fill="var(--txt3)">pool saturation · max(waiting ÷ 4, KV used ÷ 0.80), averaged</text>
-          <rect x="382" y="476" width="320" height="16" rx="8" fill="var(--inset)" stroke="var(--b1)"/>
-          <rect id="meterFill" x="382" y="476" width="90" height="16" rx="8" fill="var(--ok)"/>
-          <line id="ceilingLine" x1="638" y1="468" x2="638" y2="500" stroke="var(--danger)" stroke-dasharray="4 3" stroke-width="1.4"/>
-          <text id="ceilingLabel" x="638" y="514" font-size="8.5" fill="var(--danger)" text-anchor="middle">ceiling · 1.0</text>
-          <text id="meterVal" x="712" y="489" font-size="11.5" class="mt" fill="var(--txt)">0.35</text>
-        </g>
-
-        <!-- dispatch cycle -->
-        <g id="g-cycle" class="cel">
-          <circle cx="777" cy="484" r="19" fill="none" stroke="var(--b2)" stroke-width="2"/>
-          <path id="cycleSpin" d="M777 465 A19 19 0 0 1 796 484" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round"/>
-          <text x="777" y="518" font-size="9" fill="var(--txt2)" text-anchor="middle">dispatch</text>
-          <text x="777" y="530" font-size="8" fill="var(--txt3)" text-anchor="middle">≤1 per cycle</text>
+          <text id="meterLabel" x="382" y="468" font-size="11" font-weight="600" fill="var(--txt2)">Pool saturation</text>
+          <text id="meterVal" x="790" y="468" font-size="11.5" class="mt" fill="var(--txt)" text-anchor="end">0.35</text>
+          <rect x="382" y="480" width="408" height="16" rx="8" fill="var(--inset)" stroke="var(--b1)"/>
+          <rect id="meterFill" x="382" y="480" width="90" height="16" rx="8" fill="var(--ok)"/>
+          <line id="ceilingLine" x1="714.8" y1="476" x2="714.8" y2="502" stroke="var(--danger)" stroke-dasharray="4 3" stroke-width="1.4"/>
+          <text id="ceilingLabel" x="708.4" y="518" font-size="10" fill="var(--txt2)" text-anchor="middle">Dispatch ceiling · 1.0</text>
         </g>
 
         <!-- Every priority joins the same dispatch path before endpoint selection. -->
@@ -457,9 +456,10 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         </g>
         <g id="a-d1" class="cel"><path id="endpointRouteA" class="connector" d="M830 310 C838 310 832 197 840 197 H848" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
         <g id="a-d2" class="cel"><path id="endpointRouteB" class="connector" d="M830 310 C838 310 832 361 840 361 H848" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <text id="modelEndpointsLabel" x="914" y="125" font-size="11" font-weight="600" fill="var(--txt2)" text-anchor="middle"><tspan x="914">Model-server</tspan><tspan x="914" dy="14">endpoints</tspan></text>
         <g id="g-pod1" class="cel" style="--hl:var(--ok)">
           <rect class="frame" x="848" y="152" width="132" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
-          <text id="p1name" x="914" y="174" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">vLLM pod A</text>
+          <text id="p1name" x="914" y="174" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Endpoint A</text>
           <text id="p1wLabel" x="862" y="196" font-size="8.5" fill="var(--txt3)">waiting</text>
           <rect x="862" y="201" width="104" height="6" rx="3" fill="var(--inset)"/>
           <rect id="p1w" class="pbar" x="862" y="201" width="30" height="6" rx="3" fill="var(--brand)"/>
@@ -469,7 +469,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         </g>
         <g id="g-pod2" class="cel" style="--hl:var(--ok)">
           <rect class="frame" x="848" y="316" width="132" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
-          <text id="p2name" x="914" y="338" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">vLLM pod B</text>
+          <text id="p2name" x="914" y="338" font-size="11.5" font-weight="600" fill="var(--txt)" text-anchor="middle">Endpoint B</text>
           <text id="p2wLabel" x="862" y="360" font-size="8.5" fill="var(--txt3)">waiting</text>
           <rect x="862" y="365" width="104" height="6" rx="3" fill="var(--inset)"/>
           <rect id="p2w" class="pbar" x="862" y="365" width="24" height="6" rx="3" fill="var(--brand)"/>
@@ -523,7 +523,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
         <g id="ov-knee" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
           <g id="kneeScene" transform="translate(-132 -42) scale(1.25)">
-          <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Where control starts</text>
+          <text x="130" y="86" font-size="21" font-weight="750" fill="var(--txt)">Find a candidate operating point</text>
           <text x="130" y="110" font-size="11" fill="var(--txt3)">measure this workload first; configure the detector and ceilings separately</text>
           <g id="kneeViz"></g>
           </g>
@@ -565,20 +565,19 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
     <div id="side">
       <div id="card">
         <h2 id="pTitle"></h2>
-        <div id="stepMeta"><span id="stepLab" class="sr-only"></span><span id="stepPips" aria-hidden="true"></span></div>
+        <div id="stepMeta"><span id="stepLab" class="sr-only"></span><span id="stepPips" aria-hidden="true"></span><button class="pill" id="detailBtn" popovertarget="lessonPanel">Details</button></div>
         <p id="narr" aria-live="polite"></p>
         <div id="stepNav">
           <button class="sbtn" id="backBtn">← Back</button>
           <button class="sbtn pri" id="nextBtn">Next →</button>
         </div>
       </div>
-      <div id="lessonDetails"></div>
       <div id="evidence" aria-live="polite"></div>
       <div id="playCtl">
-        <div class="kk">Flow control</div>
+        <div class="kk">Replay mode</div>
         <div class="seg" id="pgFc" role="group" aria-label="flow control">
-          <button type="button" data-f="1" class="on" aria-pressed="true">on</button>
-          <button type="button" data-f="0" aria-pressed="false">off</button>
+          <button type="button" data-f="1" class="on" aria-pressed="true">Flow control on</button>
+          <button type="button" data-f="0" aria-pressed="false">Unprotected baseline</button>
         </div>
         <div class="kk">Per-tenant load</div>
         <label class="krow"><span class="kd" aria-hidden="true" style="background:var(--brand)"></span><span>premium</span>
@@ -593,13 +592,13 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
           <button type="button" id="pgStep">Step</button>
           <button type="button" id="pgReset">Reset</button>
         </div>
-        <details style="font-size:11px;margin-bottom:8px"><summary>How to compare on/off</summary>
-          Use the same loads and tick for each mode. Switching on/off restarts seed 42.
+        <details style="font-size:11px;margin-bottom:8px"><summary>How to compare modes</summary>
+          Use the same loads and tick for each mode. Switching modes restarts seed 42.
           Repeat any burst or load change at the same tick.
         </details>
         <button class="sbtn" id="pgBurst" style="width:100%;margin-bottom:8px">Send a standard burst</button>
         <div id="pgStats" aria-label="Replay request counts"></div>
-        <p class="replay-footnote">*Illustrative model with arbitrary load and service times, not a recording or latency prediction. Queued requests expire after 60 simulated seconds. Evidence pages show measured results.</p>
+        <p class="replay-footnote">*Illustrative model, not a recording or latency prediction. The unprotected baseline omits legacy shedding of negative-priority requests at saturation. Queued requests expire after 60 simulated seconds.</p>
       </div>
       <details id="hints">
         <summary>Keyboard shortcuts</summary>
@@ -614,6 +613,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
     </div>
   </main>
 </div>
+<div id="lessonPanel" popover aria-labelledby="detailTitle"><header><h2 id="detailTitle">Details</h2><button class="pill" popovertarget="lessonPanel" popovertargetaction="hide" aria-label="Close details">Close</button></header><div id="detailBody"><div id="lessonDetails"></div></div></div>
 
 <script>
 'use strict';
@@ -679,13 +679,13 @@ let currentScene;
 function renderScene(scene){
   currentScene={detector:'utilization',ceiling:1,headroom:0,requestLimit:100,tokenLimit:1000,waitingLimit:4,kvLimit:.8,...scene};
   const m=sceneMetrics(currentScene),s=currentScene;
-  const f=$('#meterFill');f.style.width=Math.max(0,Math.min(320,m.pool/1.25*320))+'px';
+  const f=$('#meterFill');f.style.width=Math.max(0,Math.min(408,m.pool/1.25*408))+'px';
   f.setAttribute('fill',m.canDispatch?'var(--ok)':'var(--danger)');
   $('#meterVal').textContent=m.pool.toFixed(3);
-  const x=382+Math.min(1.25,s.ceiling)/1.25*320;
+  const x=382+Math.min(1.25,s.ceiling)/1.25*408;
   $('#ceilingLine').setAttribute('x1',x);$('#ceilingLine').setAttribute('x2',x);
-  $('#ceilingLabel').setAttribute('x',x);$('#ceilingLabel').textContent=`ceiling · ${s.ceiling}`;
-  $('#meterLabel').textContent=s.topology==='pd'?'illustration · max(prefill stage, decode stage)':`illustration · ${s.detector} pressure · ${s.endpoints.length} endpoints`;
+  $('#ceilingLabel').setAttribute('x',x);$('#ceilingLabel').textContent=`Dispatch ceiling · ${s.ceiling}`;
+  $('#meterLabel').textContent=s.topology==='pd'?'Pool saturation · highest stage':'Pool saturation';
   document.body.classList.toggle('halted',!m.canDispatch);
   $('#haltBanner').textContent=m.canDispatch?'':`priority ${s.priority??'selected'} waits · ${m.pool.toFixed(3)} ≥ ${s.ceiling}`;
   s.endpoints.forEach((e,i)=>{
@@ -1541,7 +1541,9 @@ function applyLit(ids){
   });
 }
 /* =================== evidence overlay =================== */
-function evidence(html){const e=$('#evidence');e.innerHTML=html;e.classList.add('show');
+function evidence(html){const e=$('#evidence');
+  if(state.page>=11&&state.page<=13)$('#side').appendChild(e);else $('#detailBody').prepend(e);
+  e.innerHTML=html;e.classList.add('show');
   requestAnimationFrame(()=>requestAnimationFrame(()=>
     e.querySelectorAll('.efill').forEach(f=>f.style.width=f.dataset.w+'%')));}
 function ebar(label,val,pct,color){
@@ -1600,7 +1602,7 @@ function twoCheck(band){
  for(let j=0;j<3;j++)setFlow('b0',j,null);
  const s={detector:'requests',endpoints:[{requests:110,tokens:0},{requests:60,tokens:0}],requestLimit:100,headroom:.1,priority:band==='low'?-10:100,ceiling:band==='low'?.8:1};
  const m=renderScene(s);cursorAt(band==='low'?'bm10':'b100',0);
- evidence(`<div class="et">Illustration · two separate checks</div><p><b>1 · Pool:</b> (110 + 60) ÷ (2 × 100) = ${m.pool.toFixed(2)}. ${band==='low'?'Low waits at ceiling 0.8.':'High is below ceiling 1.0.'}</p><p><b>2 · Destination:</b> each endpoint must be below 100 × 1.10 = 110. A is filtered; B remains.</p>`);
+ evidence(`<div class="et">Pool gate and endpoint filter</div><p><b>1 · Pool:</b> (110 + 60) ÷ (2 × 100) = ${m.pool.toFixed(2)}. ${band==='low'?'Low waits at ceiling 0.8.':'High is below ceiling 1.0.'}</p><p><b>2 · Destination:</b> each endpoint must be below 100 × 1.10 = 110. A is filtered; B remains.</p>`);
 }
 const DETECTOR_LESSONS={
  requests:['In-flight requests','Count ongoing calls when their costs are similar. A short prompt and a long prompt each count as one.','sum(requests) ÷ (endpoints × maxConcurrency)'],
@@ -1630,23 +1632,23 @@ function policyView(){
   ceilings:'Static uses a shared ceiling. Priority holdback assigns lower ceilings to lower priorities. Soft-reflective derives ceilings from saturation, rank and shared cycle state, not measured latency misses.'
  };
  $('#policyExplanation').textContent=copy[mode];
- $('#narr').textContent=mode==='fairness'?'Higher-priority work has drained. Round-robin now rotates dispatch turns among eligible flows in this band.':mode==='ceilings'?'At pool pressure 0.85, this example’s low-priority ceiling of 0.8 keeps low-priority requests waiting.':'Higher-priority work has drained. Global-strict fairness compares the two flow heads using the selected ordering policy.';
+ $('#narr').textContent=mode==='fairness'?'Higher-priority work has drained. Round-robin now rotates dispatch turns among eligible flows in this band.':mode==='ceilings'?'At pool saturation 0.85, this example’s low-priority ceiling of 0.8 keeps low-priority requests waiting.':'Higher-priority work has drained. Global-strict fairness compares the two flow heads using the selected ordering policy.';
  setFlow('b0',0,mode==='fairness'?'tenant a':'older · TTL 60 s',2);
  setFlow('b0',1,mode==='fairness'?'tenant b':'later · TTL 5 s',2);
  setFlow('b0',2,mode==='fairness'?'tenant c':'',mode==='fairness'?2:0);
  cursorAt('b0',mode==='edf'||mode==='slo'?1:0);
  if(mode==='slo'){setFlow('b0',0,'older · TTFT 5 s',2);setFlow('b0',1,'later · TTFT 1 s',2);}
  if(mode==='ceilings'){
-  applyLit(['g-b100','g-bm10','g-meter','g-cycle','g-pod1','g-pod2']);
+  applyLit(['g-b100','g-bm10','g-meter','g-pod1','g-pod2']);
   twoCheck('low');
  }else{
-  applyLit(['g-b0','g-cycle','a-d1','g-pod1']);
+  applyLit(['g-b0','a-d1','g-pod1']);
   $('#evidence').classList.remove('show');
   renderScene({endpoints:[{waiting:1,kv:.4},{waiting:1,kv:.4}]});
  }
 }
 function executionStep(phase){
- applyLit(['g-b100','g-cycle','a-d1','g-pod1']);
+ applyLit(['g-b100','a-d1','g-pod1']);
  const labels={queued:'1 · router waiting',dispatch:'2 · dispatch to A',engine:'3 · engine wait / process',complete:'4 · completed at client',evict:'optional · cancel & recover'};
  $('#fx').innerHTML='';
  renderScene({endpoints:[{waiting:1,kv:.4},{waiting:1,kv:.4}]});
@@ -1670,20 +1672,21 @@ function executionStep(phase){
   for(const d of ['M914 152 V30 H346 V221 H332','M271 186 V72 H84 V92'])$('#fx').appendChild(svgEl('path',{d,fill:'none',stroke:'var(--brand)','stroke-width':2,'marker-end':'url(#arr)'}));
  }
  if(phase==='evict'){
-  applyLit(['g-gw','g-cycle','g-b100','g-meter','g-pod1','g-pod2']);
+  applyLit(['g-gw','g-b100','g-meter','g-pod1','g-pod2']);
   for(const d of ['M362 236 H332','M332 206 H346 V30 H990 V197 H980'])$('#fx').appendChild(svgEl('path',{d,fill:'none',stroke:'var(--danger)','stroke-dasharray':'5 4','stroke-width':2,'marker-end':'url(#arr)'}));
   const t=svgEl('text',{x:540,y:565,'text-anchor':'middle','font-size':10,fill:'var(--danger)'});t.textContent='cancel signal · Endpoint Picker → Envoy → engine';$('#fx').appendChild(t);
  }
- evidence(`<div class="et">Illustration · ${labels[phase]}</div><p>${phase==='queued'?'This request is still in a router queue.':phase==='dispatch'?'The scheduler selects an eligible endpoint. The request leaves its router queue.':phase==='engine'?'Dispatch has happened. The engine decides when waiting work executes alongside existing work.':phase==='complete'?'Solid return path: endpoint A → gateway → this premium caller. Completion occurs after engine work.':'High-priority work is blocked at 1.0. Dashed control path: EPP → Envoy → engine reset for the eligible in-flight batch call. Stream termination is not proof of instant GPU reclamation. The client owns safe retry.'}</p>`);
+ evidence(`<div class="et">${labels[phase]}</div><p>${phase==='queued'?'This request is still in a router queue.':phase==='dispatch'?'The scheduler selects an eligible endpoint. The request leaves its router queue.':phase==='engine'?'Dispatch has happened. The engine decides when waiting work executes alongside existing work.':phase==='complete'?'Solid return path: endpoint A → gateway → this premium caller. Completion occurs after engine work.':'High-priority work is blocked at 1.0. Dashed control path: EPP → Envoy → engine reset for the eligible in-flight batch call. Stream termination is not proof of instant GPU reclamation. The client owns safe retry.'}</p>`);
 }
 function lessonDetails(kind){
  let html='';
  if(kind==='knee')html=details('Measurement and calibration',`<p>Left: measured pass 1 of the RHAII 3.4 operating-point sweep, 512 input / 128 output tokens, 180 s per point. Throughput is total completed requests / duration; steady p95 TTFT excludes the first 30 s. Right: schematic tradeoff, not measured detector behavior.</p>${sourceLine('benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/pass1/summary.csv','one pass; rounded throughput and p95 TTFT')}<p>128 is a candidate for this workload. Recheck hardware, model, prompt lengths, cache state and topology before transferring it. Detector normalization defines what score 1 means; the priority ceiling can be lower than 1.</p>`);
- if(kind==='setup')html=details('Identity, budgets and request outcomes',`<p><code>InferenceObjective</code> identity is namespace + name. <code>model-a-high</code> and <code>model-b-high</code> may both set priority 100; two objects named <code>high</code> in one namespace cannot coexist by changing pool references. PoolRef stays in the namespace.</p><p>Priority fallback: unresolved objective or nil priority → 0. Fairness fallback: explicit header → available agent identity → default fairness ID. Trusted propagation is a deployment responsibility; these headers do not authenticate a tenant.</p><p>Per-band/global byte and request budgets bound router memory, not GPU capacity. Selected historical TTL: 60 s; it is not a TTFT objective.</p><table><tr><th>Outcome</th><th>Consequence</th></tr><tr><td>Dispatch waits</td><td>Still queued; reconsidered as pressure changes</td></tr><tr><td>Budget exceeded</td><td>New admission rejected</td></tr><tr><td>TTL expires / caller cancels</td><td>Waiting request removed</td></tr><tr><td>In-flight eviction</td><td>Eligible dispatched call cancelled; retry belongs to client</td></tr></table><p>At the source pin: capacity/TTL rejection under contention maps to 429; an empty pool or cancelled context maps to 503. Actual delivery depends on connection/stream state. Historical v0.9 TTL mapping differs.</p>${implSource(codeLink('pkg/epp/requestcontrol/director.go',175,'resolution'),codeLink('apix/v1alpha2/inferenceobjective_types.go',61,'objective'),codeLink('pkg/epp/requestcontrol/admission.go',260,'outcomes'))}`);
+ if(kind==='setup')html=details('Identity, budgets and request outcomes',`<p><code>InferenceObjective</code> identity is namespace + name. <code>model-a-high</code> and <code>model-b-high</code> may both set priority 100; two objects named <code>high</code> in one namespace cannot coexist by changing pool references. PoolRef stays in the namespace.</p><p>Priority fallback: unresolved objective or nil priority → 0. Fairness fallback: explicit header → available agent identity → default fairness ID. Trusted propagation is a deployment responsibility; these headers do not authenticate a tenant.</p><p>Per-band/global byte and request budgets bound Endpoint Picker queue memory, not GPU capacity. Selected historical TTL: 60 s; it is not a TTFT objective.</p><table><tr><th>Outcome</th><th>Consequence</th></tr><tr><td>Dispatch waits</td><td>Still queued; reconsidered as pressure changes</td></tr><tr><td>Budget exceeded</td><td>New admission rejected</td></tr><tr><td>TTL expires / caller cancels</td><td>Waiting request removed</td></tr><tr><td>In-flight eviction</td><td>Eligible dispatched call cancelled; retry belongs to client</td></tr></table><p>At the source pin: capacity/TTL rejection under contention maps to 429; an empty pool or cancelled context maps to 503. Actual delivery depends on connection/stream state. Historical v0.9 TTL mapping differs.</p>${implSource(codeLink('pkg/epp/requestcontrol/director.go',175,'resolution'),codeLink('apix/v1alpha2/inferenceobjective_types.go',61,'objective'),codeLink('pkg/epp/requestcontrol/admission.go',260,'outcomes'))}`);
  if(kind==='detectors')html=details('Try another signal or P/D topology',`<label for="detectorChoice">Signal</label> <select class="pill" id="detectorChoice"><option value="utilization">Engine waiting + KV</option><option value="requests">In-flight requests</option><option value="tokens">Accounted tokens</option><option value="hybrid">Request + token pressure</option></select><p><label><input type="checkbox" id="topologyChoice"> Separate prefill / decode stages</label></p><div id="detectorExplanation"><p>Selected example: max(waiting ÷ 4, KV ÷ 0.80), then average. Limits are configuration, not physical maxima.</p></div><p>P/D uses the same selected detector for each stage, then the maximum stage score. Combined endpoints count in both stage sets. Multiple EPP processes are separate: shared accounting, if configured, does not synchronize flow queues or establish global fairness.</p>${details('Accounting and wiring limits',`<p>Concurrency uses endpoint accounting units, not automatically physical GPUs or DP ranks. The in-flight load producer requires tokenization; prefix-match information is optional. Cache discounts depend on that wiring.</p><p>Output estimation defaults off at the pin. When off, prompt-token accounting is released at the first response chunk while decode can continue. When on, estimates depend on output-size hints and caps; the estimate cap does not limit response length.</p><p>Utilization missing/stale metrics follow a configured saturated/ignore policy. Ignoring all stale endpoints can produce zero pressure. Source defaults are waiting 5, KV 0.8, stale 200 ms; this lesson deliberately uses waiting 4. Configured filter headroom relaxes endpoint thresholds; all-candidates-filtered falls open.</p>`)}${implSource(codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',123,'count formulas'),codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'engine formulas'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',463,'P/D aggregation'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',586,'accounting release'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',747,'dependencies'))}`);
- if(kind==='twoChecks')html=details('Compare priorities and inspect the wiring',`<label for="bandChoice">Waiting request</label> <select class="pill" id="bandChoice"><option value="high">High · ceiling 1.0</option><option value="low">Low · ceiling 0.8</option></select><p>Two equal endpoints; <code>maxConcurrency: 100</code>, <code>headroom: 0.1</code>. Pool denominator stays 200. Endpoint threshold becomes 110. Headroom adds no physical capacity, priority reservation or guarantee of fewer evictions.</p><p>Selected references: <code>concurrency-detector</code> in requests mode and <code>priority-holdback-policy</code>, <code>minCeiling: 0.8</code>, <code>maxCeiling: 1.0</code>, rank domain, two priorities. Each ceiling compares against total pool pressure, not that priority’s own usage.</p><p>The loader injects a selected detector’s filter into scheduling profiles. Missing handwritten filter YAML does not prove filtering is off. If every candidate is filtered, the filter returns the original nonnil candidates; this is not a hard cap.</p>${implSource(codeLink('pkg/epp/config/loader/defaults.go',274,'effective wiring'),codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',184,'strict filter and fallback'),codeLink(PLUGINS+'usagelimits/priorityholdback/priority_holdback.go',98,'ceilings'))}`);
+ if(kind==='twoChecks')html=details('Compare priorities and inspect the wiring',`<label for="bandChoice">Waiting request</label> <select class="pill" id="bandChoice"><option value="high">High · ceiling 1.0</option><option value="low">Low · ceiling 0.8</option></select><p>Two equal endpoints; <code>maxConcurrency: 100</code>, <code>headroom: 0.1</code>. Pool denominator stays 200. Endpoint threshold becomes 110. Headroom adds no physical capacity, priority reservation or guarantee of fewer evictions.</p><p>Selected references: <code>concurrency-detector</code> in requests mode and <code>priority-holdback-policy</code>, <code>minCeiling: 0.8</code>, <code>maxCeiling: 1.0</code>, rank domain, two priorities. Each ceiling compares against total pool saturation, not that priority’s own usage.</p><p>The loader injects a selected detector’s filter into scheduling profiles. Missing handwritten filter YAML does not prove filtering is off. If every candidate is filtered, the filter returns the original nonnil candidates; this is not a hard cap.</p>${implSource(codeLink('pkg/epp/config/loader/defaults.go',274,'effective wiring'),codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',184,'strict filter and fallback'),codeLink(PLUGINS+'usagelimits/priorityholdback/priority_holdback.go',98,'ceilings'))}`);
  if(kind==='execution')html=details('Follow one request',`<label for="executionChoice">Request phase</label> <select class="pill" id="executionChoice"><option value="queued">Router waiting</option><option value="dispatch">Dispatch</option><option value="engine">Engine waiting / processing</option><option value="complete">Completion at client</option><option value="evict">Optional eviction</option></select>${details('Optional eviction: conditions and retry',`<p>Selected sheddable filter: priority below 0; victim must also be strictly below the blocked requesting priority. Eviction is configured separately and paced. It does not instantly preempt the GPU.</p><p>Cancellation must propagate to the engine; clients decide whether and how to retry. A multi-call agent task may recover one inference call, but tool side effects and duplicate results require application-level handling.</p>${implSource(codeLink('pkg/epp/flowcontrol/controller/internal/reclamation.go',278,'trigger'),codeLink(PLUGINS+'eviction/filtering/sheddable.go',41,'eligibility'),codeLink('pkg/epp/flowcontrol/eviction/request_evictor.go',180,'victim priority'),codeLink('pkg/epp/flowcontrol/eviction/evictor.go',56,'cancellation signal'))}`)}`,true);
  if(kind==='policies')html=details('Flow selection, request order, or ceiling?',`<label for="policyChoice">Policy question</label> <select class="pill" id="policyChoice"><option value="fairness">Which flow?</option><option value="fcfs">Which request? FCFS</option><option value="edf">Which request? EDF / TTL</option><option value="slo">Which request? TTFT deadline</option><option value="ceilings">May this priority dispatch?</option></select><p id="policyExplanation">Round-robin is the selected teaching example. Equal turns apply within one eligible, backlogged band; they do not guarantee equal completions, tokens, latency or progress under sustained higher-priority demand.</p><p>The order examples compare two flow heads with global-strict fairness and compatible ordering. Both arrive close together; the later request has the nearer effective deadline.</p>${implSource(codeLink('pkg/epp/flowcontrol/registry/config.go',34,'source defaults'),codeLink(PLUGINS+'fairness/roundrobin/roundrobin.go',77,'round robin'),codeLink(PLUGINS+'fairness/globalstrict/global_strict.go',68,'global strict'),codeLink(PLUGINS+'ordering/edf/edf.go',77,'EDF'),codeLink(PLUGINS+'ordering/slodeadline/slo_deadline.go',83,'TTFT metadata'),codeLink(PLUGINS+'usagelimits/softreflectiveceiling/policy.go',105,'soft-reflective ceiling'))}`);
+ if(kind==='replay')html=replayConfiguration();
  if(kind==='later')html=details('Later evidence and available options',`<p>Separate RHAII 3.5 experiment records:</p><ul>${[['priority-usage-limit-policies','Priority ceilings'],['slo-deadline-ordering','TTFT deadline ordering'],['pd-flow-control','Prefill / decode'],['batch-eviction','Eviction and retry']].map(([p,n])=>`<li><a href="../benchmark-data/rhaii-3.5-flow-control/${p}/README.md">${n}</a> — inspect the package’s measured coverage and limitations.</li>`).join('')}</ul><p>Available implementation options are not automatically tested or recommended. Program-aware fairness and predictive rejection are advanced implementation topics outside these lessons.</p>`,true);
  $('#lessonDetails').innerHTML=html;
  $('#lessonDetails').addEventListener('click',userInput,{once:true});
@@ -1695,7 +1698,7 @@ function lessonDetails(kind){
 
 /* =================== pages =================== */
 const MACHINE=['g-tprem','g-tstd','g-tbatch','a-t1','a-t2','a-t3','a-tmerge','g-gw','a-gw','g-epp',
-  'g-dir','g-adm','a-adm','a-band','g-b100','g-b0','g-bm10','g-meter','g-cycle',
+  'g-dir','g-adm','a-adm','a-band','g-b100','g-b0','g-bm10','g-meter',
   'a-d1','a-d2','dispatchMerge','g-pod1','g-pod2'];
 
 const PAGES=[
@@ -1710,13 +1713,13 @@ const PAGES=[
 /* ---- 1 · WHY: the burst problem ---- */
 {title:'Burst pressure',group:0,rail:'Bursts',steps:[
  {lit:['ov-burst'],dwell:2.55,
-  n:'A pool can handle average demand and still build a queue when traffic bursts.',
+  n:'Contention occurs when overlapping requests compete for shared execution or memory resources. Requests may wait or process more slowly.',
   run(){burstAutoRun();}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
-{title:'Where control starts',group:0,rail:'Threshold',steps:[
+{title:'Find a candidate operating point',group:0,rail:'Threshold',steps:[
  {lit:['ov-knee'],dwell:1.15,
-  n:'This workload’s measurements suggest a candidate operating point. A detector measures pressure. Each priority’s ceiling determines when dispatch waits.',
+  n:'This workload’s measurements suggest a candidate operating point. A detector reports saturation, a normalized load signal. Each priority’s ceiling determines when dispatch waits.',
   run(){kneeRun();lessonDetails('knee');}}
 ]},
 /* ---- 3 · WHY: shared capacity needs policy ---- */
@@ -1740,7 +1743,7 @@ const PAGES=[
 /* ---- 6 · MACHINE: tag and resolve ---- */
 {title:'Tag and resolve',group:1,rail:'Tag',steps:[
  {lit:['g-tprem'],
-  n:'The trusted gateway supplies an objective and a fairness identity. The router resolves them into a priority and flow before queueing.',
+  n:'The trusted gateway supplies an objective and a fairness identity. The Endpoint Picker resolves them into a priority and flow before queueing.',
   run(){lessonDetails('setup');routeFly($('#fx'),$('#tenantRouteP').getAttribute('d')+' H210','var(--brand)',1100);
     focus(['g-tprem','a-t1','g-gw'],350);
     focus(['g-tprem','a-t1','g-gw','g-hdr'],900);
@@ -1762,7 +1765,7 @@ const PAGES=[
 /* ---- 3 · MACHINE: FlowKey ---- */
 {title:'The FlowKey and its queue',group:1,rail:'FlowKey',steps:[
  {lit:['g-dir'],
-  n:'A <b>FlowKey</b> combines fairness identity and priority to identify one queue.',
+  n:'With flow control enabled, admitted requests enter router queues. The applicable priority ceiling can delay dispatch. Dispatch does not guarantee immediate execution at the model server.',
   run(){fly([[470,128],[470,146]],'var(--brand)',900,100);
     focus(['g-dir','a-adm','g-adm'],420);
     pop('#g-adm',700);}},
@@ -1779,61 +1782,61 @@ const PAGES=[
 ]},
 /* ---- 4 · MACHINE: gradient + ceiling ---- */
 {title:'Pressure, ceiling, destination',group:1,rail:'Ceiling',steps:[
- {lit:['g-pod1','g-pod2','g-meter','g-cycle'],
+ {lit:['g-pod1','g-pod2','g-meter'],
   n:'Each endpoint’s score uses the larger normalized value of engine waiting and KV-cache use. The combined pool averages those scores.',
   run(){renderScene({endpoints:[{waiting:2,kv:.6},{waiting:1,kv:.56}]});lessonDetails('detectors');}},
- {lit:['g-pod1','g-pod2','g-meter','g-cycle','g-b100'],
-  n:'When pool pressure reaches the selected ceiling of <b>1.0</b>, dispatch waits.',
+ {lit:['g-pod1','g-pod2','g-meter','g-b100'],
+  n:'When pool saturation reaches the selected ceiling of <b>1.0</b>, dispatch waits.',
   run(){renderScene({endpoints:[{waiting:4,kv:.8},{waiting:4,kv:.8}]});lessonDetails('detectors');cursorAt('b100',0);}},
- {lit:['g-pod1','g-pod2','g-meter','g-cycle','g-b100','a-d1'],
-  n:'When pressure falls below the ceiling, queued requests can dispatch. Expiry or cancellation can still remove them while they wait.',
+ {lit:['g-pod1','g-pod2','g-meter','g-b100','a-d1'],
+  n:'When saturation falls below the ceiling, queued requests can dispatch. Expiry or cancellation can still remove them while they wait.',
   run(){renderScene({endpoints:[{waiting:2,kv:.48},{waiting:1,kv:.56}]});lessonDetails('setup');cursorAt('b100',0);after(600,()=>dispatchFly('b100',0,'var(--brand)','a'));}},
- {lit:['g-b100','g-bm10','g-meter','g-cycle','g-pod1','g-pod2','a-d2'],
-  n:'Request pressure is <b>170 ÷ 200 = 0.85</b>. High priority can dispatch below its 1.0 ceiling. Low priority waits at its 0.8 ceiling.',
+ {lit:['g-b100','g-bm10','g-meter','g-pod1','g-pod2','a-d2'],
+  n:'Request-count saturation is <b>170 ÷ 200 = 0.85</b>. High priority can dispatch below its 1.0 ceiling. Low priority waits at its 0.8 ceiling.',
   run(){twoCheck('high');lessonDetails('twoChecks');}},
- {lit:['g-b100','g-bm10','g-meter','g-cycle','g-pod1','g-pod2','a-d2'],
+ {lit:['g-b100','g-bm10','g-meter','g-pod1','g-pod2','a-d2'],
   n:'Endpoint A has <b>110</b> requests and reaches the filter limit. B has <b>60</b> and remains eligible, so the high-priority request dispatches to B.',
   run(){twoCheck('high');lessonDetails('twoChecks');after(650,()=>dispatchFly('b100',0,'var(--brand)','b'));}}
 ]},
 /* ---- 5 · MACHINE: dispatch cycle ---- */
 {title:'The dispatch cycle',group:1,rail:'Dispatch',steps:[
- {lit:['g-cycle','g-b100'],
+ {lit:['g-b100'],
   n:'Each cycle dispatches <b>at most one request</b> from the highest eligible band with work. The engine controls execution after dispatch.',
   run(){cursorAt('b100',0);
-    focus(['g-cycle','g-b100','a-d1','g-pod1'],650);
+    focus(['g-b100','a-d1','g-pod1'],650);
     after(700,()=>{setFlow('b100',0,'premium',1);dispatchFly('b100',0,'var(--brand)','a');setPods(.4,.5,.3,.52);});}},
- {lit:['g-cycle','g-b100'],
+ {lit:['g-b100'],
   n:'The dispatch cycle skips empty bands until it finds waiting work.',
   run(){setFlow('b100',0,'premium',0,'empty');cursorAt('b100',0);
-    focus(['g-cycle','g-b100','g-b0'],700);
+    focus(['g-b100','g-b0'],700);
     after(750,()=>{cursorAt('b0',0);});
-    focus(['g-cycle','g-b0','a-d1','g-pod1'],1280);
+    focus(['g-b0','a-d1','g-pod1'],1280);
     after(1350,()=>{setFlow('b0',0,'tenant-a',1);dispatchFly('b0',0,'var(--amber)','a');});}},
- {lit:['g-cycle','g-b100','g-b0'],
+ {lit:['g-b100','g-b0'],
   n:'With this shared ceiling, batch can dispatch when higher bands have no dispatchable work. Sustained higher-priority demand can keep batch waiting.',
   run(){setFlow('b100',0,'premium',0,'empty');setFlow('b0',0,'tenant-a',0,'empty');
     setFlow('b0',1,'tenant-b',0,'empty');setFlow('b0',2,'tenant-c',0,'empty');
     cursorAt('bm10',0);
-    focus(['g-cycle','g-bm10','a-d2','g-pod2'],680);
+    focus(['g-bm10','a-d2','g-pod2'],680);
     after(740,()=>{setFlow('bm10',0,'batch',2);dispatchFly('bm10',0,'var(--teal)','b');});
     after(1500,()=>{setFlow('bm10',0,'batch',1);dispatchFly('bm10',0,'var(--teal)','b');}); }},
- {lit:['g-b100','g-cycle','a-d1','g-pod1'],
-  n:'A request waits in the router, dispatches to an engine, then completes. Priority alone does not interrupt running work.',
+ {lit:['g-b100','a-d1','g-pod1'],
+  n:'A request waits in the Endpoint Picker, dispatches to an engine, then completes. Priority alone does not interrupt running work.',
   run(){executionStep('queued');lessonDetails('execution');if(!reduceMotion())['dispatch','engine','complete'].forEach((p,i)=>after(800+i*1000,()=>{executionStep(p);$('#executionChoice').value=p;}));}}
 ]},
 /* ---- 6 · MACHINE: fairness as turns ---- */
 {title:'Fairness as turns',group:1,rail:'Turns',steps:[
- {lit:['g-b0','g-cycle','a-d1','g-pod1'],
+ {lit:['g-b0','a-d1','g-pod1'],
   n:'Three tenants share priority 0. Round-robin gives each eligible, backlogged flow one dispatch turn in rotation.',
   run(){setFlow('b100',0,'premium',0,'empty');lessonDetails('policies');setFlow('b0',0,'tenant-a · 0',3);setFlow('b0',1,'tenant-b · 0',2);setFlow('b0',2,'tenant-c · 0',2);
     const seq=[0,1,2];seq.forEach((j,i)=>{
       after(400+i*900,()=>{cursorAt('b0',j);dispatchFly('b0',j,'var(--amber)','a',150);});});}},
- {lit:['g-b0','g-cycle'],
+ {lit:['g-b0'],
   n:'Tenant A’s burst grows its queue. It still receives one dispatch turn per rotation, like the other eligible flows.',
   run(){setFlow('b100',0,'premium',0,'empty');let qa=3;setFlow('b0',0,'tenant a · 1 turn',qa);setFlow('b0',1,'tenant b · 1 turn',2);setFlow('b0',2,'tenant c · 1 turn',2);
     for(let i=0;i<5;i++)after(300+i*420,()=>{qa+=2;setFlow('b0',0,'tenant-a · bursting',Math.min(20,qa));});
     const seq=[1,2,0,1];seq.forEach((j,i)=>after(500+i*820,()=>cursorAt('b0',j)));}},
- {lit:['g-b0','g-cycle'],
+ {lit:['g-b0'],
   n:'These eligible, backlogged flows receive equal dispatch turns. Their completions, token throughput and latency can differ.',
   run(){setFlow('b100',0,'premium',0,'empty');lessonDetails('policies');setFlow('b0',0,'tenant a · 4 turns',14);setFlow('b0',1,'tenant b · 4 turns',1);setFlow('b0',2,'tenant c · 4 turns',1);
     cursorAt('b0',1);pop('#g-b0',300);}}
@@ -1895,10 +1898,10 @@ const PAGES=[
 ]},
 /* ---- 9 · EVIDENCE: fairness big-burst ---- */
 {title:'Evidence — the big burst',group:2,rail:'Burst',steps:[
- {lit:['g-b100','g-cycle'],
+ {lit:['g-b100'],
   n:'The big-burst experiment compares three tenants at priority 100. Its chart measures time to first token, not router queue time.',
   run(){historicalScene();fairnessEvidence();}},
- {lit:['g-b100','g-cycle'],
+ {lit:['g-b100'],
   n:'Tenant p95 TTFT values were <b>943, 877 and 893 ms</b>. These similar observed values establish neither a queue-time bound nor an SLO guarantee.',
   run(){historicalScene();fairnessEvidence();}},
  {lit:['g-b0','g-bm10'],
@@ -1908,8 +1911,8 @@ const PAGES=[
 /* ---- 10 · REPLAY ---- */
 {title:'Scenario replay',group:3,rail:'Replay',steps:[
  {lit:MACHINE,
-  n:'Change the load. Watch where requests wait.*',
-  run(){$('#playCtl').classList.add('show');startPlay();}}
+  n:'Adjust the model’s load. Watch where requests wait.*',
+  run(){lessonDetails('replay');$('#playCtl').classList.add('show');startPlay();}}
 ]}
 ];
 
@@ -1950,6 +1953,7 @@ const state={page:-1,step:0};
 let hashLock=false;
 function applyStep(){
   const pg=PAGES[state.page],st=pg.steps[state.step];
+  if($('#lessonPanel').matches(':popover-open'))$('#lessonPanel').hidePopover();
   resetCanvas();
   document.body.classList.toggle('replay-mode',state.page===14);
   document.body.classList.toggle('evidence-mode',state.page>=11&&state.page<=13);
@@ -1957,6 +1961,8 @@ function applyStep(){
   if(st.run)st.run();
   /* sidebar */
   $('#pTitle').textContent=pg.title;
+  $('#detailTitle').textContent=state.page===14?'Replay configuration':pg.title;
+  $('#detailBtn').textContent=state.page===14?'Configuration':'Details';
   const kind=state.page===2?'measured + schematic':state.page>=11&&state.page<=13?'measured':state.page===14?'simulation':'illustration';
   $('#stepLab').textContent=`Step ${state.step+1} of ${pg.steps.length} · ${kind}`;
   $('#stepPips').innerHTML=pg.steps.map((_,i)=>`<span class="pip${i<=state.step?' on':''}"></span>`).join('');
@@ -1991,7 +1997,7 @@ $('#canvasWrap').addEventListener('click',e=>{
   if(e.target.closest('#playCtl,#evidence,a,button,input,select'))return;
   userInput();nextStep();});
 document.addEventListener('keydown',e=>{
-  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('a,button,input,select,textarea,summary,[contenteditable]'))return;
+  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('#lessonPanel,a,button,input,select,textarea,summary,[contenteditable]'))return;
   const k=e.key;
   if(k===' '||k==='ArrowRight'){e.preventDefault();userInput();nextStep();}
   else if(k==='ArrowLeft'){e.preventDefault();userInput();prevStep();}
@@ -2000,7 +2006,7 @@ document.addEventListener('keydown',e=>{
 });
 let wheelT=0;
 window.addEventListener('wheel',e=>{
-  if(innerWidth<=1020||e.target.closest('#rail,#side,#evidence,#playCtl'))return;
+  if(innerWidth<=1020||e.target.closest('#rail,#side,#evidence,#playCtl,#lessonPanel,#settingsPanel'))return;
   const now=performance.now();if(now-wheelT<650)return;
   if(Math.abs(e.deltaY)<12)return;
   wheelT=now;userInput();
@@ -2042,6 +2048,9 @@ setInterval(()=>{
   }
 },120);
 function userInput(){if(auto)setAuto(false);autoT0=performance.now();}
+$('#detailBody').appendChild($('#hints'));
+$('#detailBtn').addEventListener('click',userInput);
+$('#lessonPanel').addEventListener('click',userInput);
 
 /* =================== theme =================== */
 const themes=['auto','dark','light'];
@@ -2067,70 +2076,179 @@ $('#fsBtn').onclick=e=>{e.stopPropagation();
 /* Replay keeps the request path visible and leaves configuration detail in the lessons. */
 const replayY={p:145,s:290,b:435};
 const replayColor={p:'var(--brand)',s:'var(--amber)',b:'var(--teal)'};
+function replayConfiguration(){
+ const scene=replayScene();
+ return `<p class="config-note"><strong>Teaching model.</strong> These are this page’s settings, not a captured Endpoint Picker configuration.</p>
+ <table><tbody><tr><th scope="row">Saturation detector</th><td>Utilization: max(engine waiting ÷ ${scene.waitingLimit}, KV-cache usage ÷ ${scene.kvLimit.toFixed(2)}) per endpoint; average across the two endpoints.</td></tr>
+ <tr><th scope="row">Usage limit</th><td>Static dispatch ceiling: ${scene.ceiling.toFixed(1)} for every band. Dispatch waits when saturation ≥ ceiling.</td></tr>
+ <tr><th scope="row">Priority bands</th><td>Premium 100 → standard 0 → batch −10. One flow per band, FIFO within each flow.</td></tr>
+ <tr><th scope="row">Router queues</th><td>${REPLAY.queueLimit} requests per band; expiry after ${REPLAY.ttlTicks} ticks (about 60 seconds). No byte-budget model.</td></tr>
+ <tr><th scope="row">Dispatch</th><td>At most one request per tick; choose the less occupied endpoint. This simplifies the real scheduling profiles and endpoint filters.</td></tr>
+ <tr><th scope="row">Model-server endpoints</th><td>${PG.pods.length} endpoints, each with ${REPLAY.runningPerPod} execution slots and ${REPLAY.waitingPerPod} waiting slots; ${REPLAY.serviceTicks} ticks of service.</td></tr>
+ <tr><th scope="row">Traffic</th><td>Each load unit offers 1/${REPLAY.loadDivisor} request per tick on average. A standard burst adds ${REPLAY.burstPerTick} requests per tick for ${REPLAY.burstTicks} ticks. Seed ${PG.seed}; one tick = ${REPLAY.tickMs} ms.</td></tr></tbody></table>
+ <p>Pool saturation is the detector’s normalized load signal, not a percentage of physical GPU capacity. The ceiling is the configured comparison threshold.</p>
+ ${details('Model limits and recorded data',`<p>KV-cache usage is approximated from occupied execution slots. There is no measured latency, token accounting, eviction, or cross-flow fairness experiment here. The unprotected baseline also omits the pinned router’s legacy negative-priority shedding.</p><p><a href="https://github.com/alexagriffith/flow-control-visualizer" target="_blank" rel="noopener">Explore the Flow Control Flight Recorder ↗</a> for recorded experiment telemetry. Aggregate samples cannot establish individual request routes.</p>`)}
+ ${implSource(codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'utilization detector'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',496,'dispatch check'),codeLink('pkg/epp/requestcontrol/admission.go',57,'legacy admission'))}`;
+}
 function buildReplayView(){
   const g=svgEl('g',{id:'replayView'});
-  let h='<text x="30" y="55" fill="var(--txt2)" font-size="16">Requests</text><text x="300" y="55" fill="var(--txt2)" font-size="16">Endpoint Picker queues</text><text x="800" y="55" fill="var(--txt2)" font-size="16">Model-server pods</text>';
+  let h='<rect id="replayPicker" x="280" y="15" width="478" height="550" rx="16" fill="var(--base)" stroke="var(--b2)"/><text x="519" y="46" text-anchor="middle" fill="var(--txt)" font-size="18" font-weight="600">Endpoint Picker</text><text x="102" y="82" text-anchor="middle" fill="var(--txt2)" font-size="15">Requests</text><text x="465" y="82" text-anchor="middle" fill="var(--txt2)" font-size="15">Router queues</text><text x="887" y="64" text-anchor="middle" fill="var(--txt2)" font-size="15"><tspan x="887">Model-server</tspan><tspan x="887" dy="18">endpoints</tspan></text>';
   for(const [i,t] of ['p','s','b'].entries()){
     const y=replayY[t],color=replayColor[t],name=['premium','standard','batch'][i];
     h+=`<path id="rp-in-${t}" d="M175 ${y} H300" fill="none" stroke="${color}" stroke-width="2" marker-end="url(#arr)"/>
-      <path id="rp-out-${t}" d="M630 ${y} C666 ${y} 656 290 690 290" fill="none" stroke="var(--b3)" stroke-width="2"/>
+      <path id="rp-out-${t}" d="M630 ${y} C666 ${y} 656 290 690 290" fill="none" stroke="var(--txt3)" stroke-width="2"/>
       <rect x="30" y="${y-32}" width="145" height="64" rx="10" fill="var(--raised)" stroke="${color}"/>
       <text x="102" y="${y+5}" text-anchor="middle" fill="var(--txt)" font-size="16">${name}</text>
       <rect x="300" y="${y-48}" width="330" height="96" rx="10" fill="var(--inset)" stroke="${color}"/>
       <text x="316" y="${y-24}" fill="${color}" font-size="13">priority ${[100,0,-10][i]}</text>
       <text id="rp-count-${t}" x="614" y="${y-24}" text-anchor="end" fill="var(--txt2)" font-size="13"/>
-      <g id="rp-queue-${t}"/>`;
+      <g id="rp-queue-${t}"/><path id="rp-bypass-${t}" d="M300 ${y} H630" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-dasharray="5 4" visibility="hidden"/>`;
   }
-  h+='<circle cx="690" cy="290" r="4" fill="var(--txt2)"/><path id="rp-trunk" d="M690 290 H745" fill="none" stroke="var(--txt2)" stroke-width="2" marker-end="url(#arr)"/>';
+  h+='<circle cx="690" cy="290" r="4" fill="var(--txt3)"/><path id="rp-trunk" d="M690 290 H745" fill="none" stroke="var(--txt3)" stroke-width="2"/>';
   for(let i=0;i<2;i++){
     const y=i?385:195;
-    h+=`<path id="rp-pod-${i}" d="M745 290 C773 290 772 ${y} 800 ${y}" fill="none" stroke="var(--b3)" stroke-width="2" marker-end="url(#arr)"/>
+    h+=`<path id="rp-pod-${i}" d="M745 290 C773 290 772 ${y} 790 ${y} H800" fill="none" stroke="var(--txt3)" stroke-width="2" marker-end="url(#arr)"/>
       <rect x="800" y="${y-60}" width="175" height="120" rx="12" fill="var(--raised)" stroke="var(--b3)"/>
-      <text x="816" y="${y-34}" fill="var(--txt)" font-size="16">Pod ${i?'B':'A'}</text>
+      <text x="816" y="${y-34}" fill="var(--txt)" font-size="16">Endpoint ${i?'B':'A'}</text>
       <g id="rp-jobs-${i}"/>
       <text id="rp-pod-count-${i}" x="816" y="${y+42}" fill="var(--txt2)" font-size="12"/>
       <path id="rp-done-${i}" d="M975 ${y} H997" fill="none" stroke="var(--ok)" stroke-width="2" marker-end="url(#arr)"/>`;
   }
-  h+='<text id="rp-status" x="300" y="530" fill="var(--txt)" font-size="16"/><g id="replayFx"/>';
+  h+='<text id="rp-status" x="519" y="525" text-anchor="middle" fill="var(--txt)" font-size="15"/><text id="rp-gate" x="519" y="550" text-anchor="middle" fill="var(--txt2)" font-size="12"/><g id="replayFx"/>';
   g.innerHTML=h;
   g.querySelectorAll('[marker-end]').forEach(e=>e.setAttribute('marker-end',arrowHead(e.getAttribute('stroke'))));
   $('#sysCanvas').appendChild(g);
 }
-function replayFly(tier,kind,pod=0){
-  if(reduceMotion())return;
-  const ids=kind==='arrival'?[`rp-in-${tier}`]:kind==='complete'?[`rp-done-${pod}`]:[`rp-out-${tier}`,'rp-trunk',`rp-pod-${pod}`];
+function replayFly(events,kind,duration){
+  if(reduceMotion()||!events.length)return;
+  const first=events[0],tier=first.tier,pod=first.pod||0;
+  const ids=kind==='arrival'?[`rp-in-${tier}`]:kind==='complete'?[`rp-done-${pod}`]:[
+    ...(first.direct?[`rp-bypass-${tier}`]:[]),`rp-out-${tier}`,'rp-trunk',`rp-pod-${pod}`];
   const paths=ids.map(id=>document.getElementById(id));
-  if(paths.some(p=>!p))return;
+  if(paths.some(p=>!p))throw new Error('Replay route is missing: '+ids.join(' '));
   const lengths=paths.map(p=>p.getTotalLength()),total=lengths.reduce((a,b)=>a+b,0);
   const frames=Array.from({length:61},(_,i)=>{
     let d=total*i/60,j=0;while(j<paths.length-1&&d>lengths[j]){d-=lengths[j];j++;}
-    const p=paths[j].getPointAtLength(d);return {transform:`translate(${p.x}px,${p.y}px)`,opacity:i===60?0:1};
+    const p=paths[j].getPointAtLength(d);return {transform:`translate(${p.x}px,${p.y}px)`,opacity:1};
   });
-  const dot=svgEl('circle',{r:6,fill:replayColor[tier],stroke:'var(--base)','stroke-width':1.5});
-  dot.classList.add('request-dot');dot.dataset.route=ids.join(' ');$('#replayFx').appendChild(dot);
-  const a=dot.animate(frames,{duration:kind==='complete'?260:440,easing:'linear'});a.onfinish=()=>dot.remove();
+  const rejected=events.filter(e=>e.result==='reject').length;
+  const tiers=[...new Set(events.map(e=>e.tier))];
+  const color=rejected===events.length?'var(--danger)':tiers.length===1?replayColor[tier]:'var(--txt2)';
+  const dot=svgEl('g',{});dot.classList.add('request-dot');
+  dot.dataset.count=String(events.length);dot.dataset.rejected=String(rejected);
+  dot.dataset.route=ids.join(' ');dot.dataset.kind=kind;dot.dataset.tier=tiers.join(',');
+  const label=`${events.length} request${events.length===1?'':'s'} in transit${rejected?`; ${rejected} rejected on arrival`:''}`;
+  dot.setAttribute('aria-label',label);
+  const title=svgEl('title',{});title.textContent=label;dot.appendChild(title);
+  dot.appendChild(svgEl('circle',{r:6,fill:color,stroke:'var(--base)','stroke-width':1.5}));
+  // A mixed arrival bundle retains a red segment for its rejected requests.
+  if(rejected&&rejected<events.length)dot.appendChild(svgEl('circle',{r:6,fill:'none',stroke:'var(--danger)','stroke-width':3,
+    'stroke-dasharray':`${37.7*rejected/events.length} 37.7`,transform:'rotate(-90)'}));
+  if(events.length>1){
+    const text=svgEl('text',{x:kind==='complete'?-12:11,y:-10,'text-anchor':kind==='complete'?'end':'start',
+      fill:color,'font-size':13,'font-weight':800,stroke:'var(--base)','stroke-width':3,'paint-order':'stroke','stroke-linejoin':'round'});
+    text.textContent=`×${events.length}`;dot.appendChild(text);
+  }
+  $('#replayFx').appendChild(dot);
+  dot.animate(frames,{duration,easing:'linear',fill:'forwards'});
+  // The phase commit removes this bundle and transfers its exact request count.
+}
+function replayFlights(events,kind,duration){
+  const groups=new Map();
+  for(const event of events){
+    const key=kind==='complete'?String(event.pod):kind==='arrival'?event.tier:`${event.tier}:${event.pod}:${!!event.direct}`;
+    if(!groups.has(key))groups.set(key,[]);groups.get(key).push(event);
+  }
+  for(const group of groups.values())replayFly(group,kind,duration);
 }
 function updateReplayView(){
+  const view=replayVisualState||PG;
   for(const t of ['p','s','b']){
-    const y=replayY[t],n=PG.q[t];
+    const y=replayY[t],n=view.q[t];
+    $(`#rp-bypass-${t}`).setAttribute('visibility',PG.fc?'hidden':'visible');
     $(`#rp-count-${t}`).textContent=PG.fc?`${n} waiting`:'bypassed';
-    $(`#rp-queue-${t}`).innerHTML=Array.from({length:Math.min(n,12)},(_,i)=>`<circle cx="${320+i*23}" cy="${y+10}" r="6" fill="${replayColor[t]}"/>`).join('');
+    $(`#rp-queue-${t}`).innerHTML=Array.from({length:n},(_,i)=>`<circle cx="${319+(i%20)*15}" cy="${y+4+Math.floor(i/20)*20}" r="4.5" fill="${replayColor[t]}"/>`).join('');
   }
-  PG.pods.forEach((jobs,i)=>{
+  view.pods.forEach((jobs,i)=>{
     const y=i?385:195,running=Math.min(jobs.length,REPLAY.runningPerPod),waiting=Math.max(0,jobs.length-running);
     $(`#rp-jobs-${i}`).innerHTML=jobs.map((job,j)=>`<circle cx="${820+(j%4)*32}" cy="${y-8+Math.floor(j/4)*22}" r="7" fill="${replayColor[job.tier]}" ${j>=4?'fill-opacity=".35"':''}/>`).join('');
     $(`#rp-pod-count-${i}`).textContent=`${running} running · ${waiting} waiting`;
   });
-  const blocked=PG.fc&&!sceneMetrics(replayScene()).canDispatch;
-  $('#rp-status').textContent=!PG.fc?'Flow control off · requests go to the pods':blocked?'At the ceiling · new dispatches wait':'Below the ceiling · next eligible request can leave';
+  const metrics=sceneMetrics(replayScene(view.pods)),blocked=PG.fc&&!metrics.canDispatch;
+  $('#rp-status').textContent=!PG.fc?'Router queues bypassed':blocked?'Router queues wait':'Dispatch permitted';
+  $('#rp-gate').textContent=PG.fc?`Saturation ${metrics.pool.toFixed(2)} ${blocked?'≥':'<'} ceiling ${REPLAY.ceiling.toFixed(2)}`:'Unprotected illustrative baseline';
   $('#rp-status').setAttribute('fill',blocked?'var(--danger)':'var(--txt2)');
 }
-
 /* =================== playground =================== */
 const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},queued:{p:[],s:[],b:[]},
   arrivals:{p:0,s:0,b:0},fraction:{p:0,s:0,b:0},pods:[[],[]],served:{p:0,s:0,b:0},
   rej:0,ttl:0,timer:null,burst:0,burstLane:1,tick:0,seed:42,lanes:['p','s','b'],lastOffered:[]};
-const REPLAY={tickMs:520,serviceTicks:8,runningPerPod:4,waitingPerPod:4,queueLimit:40,ttlTicks:Math.ceil(60000/520)};
+const REPLAY={tickMs:520,serviceTicks:8,runningPerPod:4,waitingPerPod:4,queueLimit:40,ttlTicks:Math.ceil(60000/520),ceiling:1,waitingLimit:4,kvLimit:.8,loadDivisor:34,burstPerTick:3,burstTicks:24};
+/* A discrete model tick produces events; the view commits each transfer once.
+ * Moving requests are excluded from both source and destination occupancy.
+ * The three phases total 480 ms, shorter than the 520 ms model tick. */
+let replayVisualState=null,replayVisualTimers=[];
+const REPLAY_PHASE={complete:120,arrival:150,dispatch:210};
+function replayCaptureModel(){
+  return {q:{...PG.q},pods:PG.pods.map(p=>p.map(j=>({...j}))),arrivals:{...PG.arrivals},
+    served:{...PG.served},rej:PG.rej,ttl:PG.ttl,tick:PG.tick,transit:[]};
+}
+function replayVisualSnapshot(){
+  const v=replayVisualState||PG,sum=o=>Object.values(o).reduce((a,b)=>a+b,0);
+  const engineRunning=v.pods.reduce((n,p)=>n+Math.min(p.length,REPLAY.runningPerPod),0);
+  return {offered:sum(v.arrivals),completed:sum(v.served),rejected:v.rej,expired:v.ttl,
+    routerWaiting:sum(v.q),engineRunning,engineWaiting:v.pods.reduce((n,p)=>n+Math.max(0,p.length-REPLAY.runningPerPod),0),
+    inTransit:v.transit?.length||0,phase:v.phase||'settled'};
+}
+function replayCancelVisual(){
+  replayVisualTimers.forEach(clearTimeout);replayVisualTimers=[];
+  if(typeof document.getElementById!=='function')return;
+  const fx=document.getElementById('replayFx');
+  if(fx){fx.querySelectorAll('.request-dot').forEach(d=>{d.getAnimations().forEach(a=>a.cancel());d.remove();});}
+}
+function settleReplayVisual(){
+  replayCancelVisual();
+  replayVisualState=typeof document.getElementById==='function'&&document.getElementById('replayFx')?replayCaptureModel():null;
+  renderReplay();
+}
+function replayPhaseWait(ms,fn){replayVisualTimers.push(setTimeout(fn,ms));}
+function beginReplayVisual(before,events){
+  const hasView=typeof document.getElementById==='function'&&document.getElementById('replayFx');
+  if(!hasView||reduceMotion()){replayVisualState=hasView?replayCaptureModel():null;renderReplay();return;}
+  const v=replayVisualState=before;v.tick=PG.tick;
+  const completed=events.filter(e=>e.kind==='complete'),expired=events.filter(e=>e.kind==='expire');
+  const arrivals=events.filter(e=>e.kind==='arrival'),dispatches=events.filter(e=>e.kind==='dispatch');
+  const clearFlights=()=>{const fx=document.getElementById('replayFx');fx.querySelectorAll('.request-dot').forEach(d=>{d.getAnimations().forEach(a=>a.cancel());d.remove();});};
+  const finish=()=>{clearFlights();replayVisualState=replayCaptureModel();renderReplay();};
+  const dispatchPhase=()=>{
+    if(!dispatches.length){finish();return;}
+    v.phase='dispatch';
+    dispatches.forEach(e=>{
+      if(e.direct){const i=v.transit.findIndex(t=>t.kind==='handoff'&&t.tier===e.tier);if(i>=0)v.transit.splice(i,1);}
+      else v.q[e.tier]--;
+      v.transit.push(e);
+    });replayFlights(dispatches,'dispatch',REPLAY_PHASE.dispatch);renderReplay();
+    replayPhaseWait(REPLAY_PHASE.dispatch,()=>{clearFlights();dispatches.forEach(e=>{v.transit.splice(v.transit.indexOf(e),1);v.pods[e.pod].push({tier:e.tier,remaining:REPLAY.serviceTicks});});renderReplay();finish();});
+  };
+  const arrivalPhase=()=>{
+    if(!arrivals.length){dispatchPhase();return;}
+    v.phase='arrival';arrivals.forEach(e=>{v.arrivals[e.tier]++;v.transit.push(e);});replayFlights(arrivals,'arrival',REPLAY_PHASE.arrival);renderReplay();
+    replayPhaseWait(REPLAY_PHASE.arrival,()=>{clearFlights();arrivals.forEach(e=>{
+      v.transit.splice(v.transit.indexOf(e),1);
+      if(e.result==='queue')v.q[e.tier]++;
+      else if(e.result==='reject')v.rej++;
+      else v.transit.push({kind:'handoff',tier:e.tier});
+    });dispatchPhase();});
+  };
+  expired.forEach(e=>{v.q[e.tier]--;v.ttl++;});
+  if(!completed.length){arrivalPhase();return;}
+  v.phase='complete';completed.forEach(e=>{
+    const i=v.pods[e.pod].findIndex(j=>j.tier===e.tier);v.pods[e.pod].splice(i,1);
+    v.transit.push(e);
+  });replayFlights(completed,'complete',REPLAY_PHASE.complete);renderReplay();
+  replayPhaseWait(REPLAY_PHASE.complete,()=>{clearFlights();completed.forEach(e=>{v.transit.splice(v.transit.indexOf(e),1);v.served[e.tier]++;});renderReplay();arrivalPhase();});
+}
+
 $$('#playCtl input[type=range]').forEach(r=>{
   r.addEventListener('input',()=>{PG.load[r.dataset.k]=+r.value;$('#kv_'+r.dataset.k).textContent=r.value;});
   r.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -2152,7 +2270,7 @@ function setReplayMode(enabled){
 $('#pgPause').addEventListener('click',e=>{e.stopPropagation();setReplayRunning(PG.timer===null);});
 $('#pgStep').addEventListener('click',e=>{e.stopPropagation();if(PG.timer===null)playTick();});
 $('#pgReset').addEventListener('click',e=>{e.stopPropagation();resetPlay(PG.timer!==null);});
-$('#pgBurst').addEventListener('click',e=>{e.stopPropagation();PG.burstLane=PG.lanes.indexOf('s');PG.burst=24;});
+$('#pgBurst').addEventListener('click',e=>{e.stopPropagation();PG.burstLane=PG.lanes.indexOf('s');PG.burst=REPLAY.burstTicks;});
 function startPlay(){resetPlay(!reduceMotion());}
 function resetPlay(running=false){
   stopPlay();
@@ -2160,10 +2278,15 @@ function resetPlay(running=false){
   PG.q={p:0,s:0,b:0};PG.queued={p:[],s:[],b:[]};PG.arrivals={p:0,s:0,b:0};PG.fraction={p:0,s:0,b:0};
   PG.pods=[[],[]];PG.served={p:0,s:0,b:0};PG.rej=0;PG.ttl=0;PG.burst=0;PG.tick=0;
   PG.lastOffered=[];
-  renderReplay();
+  replayVisualState=null;
+  settleReplayVisual();
   setReplayRunning(running);
 }
 function setReplayRunning(running){
+  if(!running){
+    if(typeof state==='undefined'||state.page===14)settleReplayVisual();
+    else replayCancelVisual();
+  }
   if(PG.timer!==null){clearInterval(PG.timer);PG.timer=null;}
   if(running)PG.timer=setInterval(playTick,REPLAY.tickMs);
   $('#pgPause').textContent=running?'Pause':'Resume';
@@ -2176,11 +2299,11 @@ function stopPlay(){setReplayRunning(false);}
 function replayOffers(){
   const incoming=[];
   PG.lanes.forEach(tier=>{
-    PG.fraction[tier]+=PG.load[tier]/34;
+    PG.fraction[tier]+=PG.load[tier]/REPLAY.loadDivisor;
     const count=Math.floor(PG.fraction[tier]);PG.fraction[tier]-=count;
     for(let n=0;n<count;n++)incoming.push(tier);
   });
-  if(PG.burst>0){const tier=PG.lanes[PG.burstLane];incoming.push(tier,tier,tier);PG.burst--;}
+  if(PG.burst>0){const tier=PG.lanes[PG.burstLane];for(let i=0;i<REPLAY.burstPerTick;i++)incoming.push(tier);PG.burst--;}
   let rng=(PG.seed^Math.imul(PG.tick,0x9e3779b1))>>>0;
   const random=()=>{
     rng=(rng+0x6d2b79f5)>>>0;
@@ -2192,65 +2315,69 @@ function replayOffers(){
   }
   return incoming;
 }
-function replayEndpoints(){return PG.pods.map(jobs=>({
+function replayEndpoints(pods=PG.pods){return pods.map(jobs=>({
   waiting:Math.max(0,jobs.length-REPLAY.runningPerPod),
   kv:Math.min(jobs.length,REPLAY.runningPerPod)/REPLAY.runningPerPod
 }));}
-function replayScene(){return {detector:'utilization',endpoints:replayEndpoints(),ceiling:1,headroom:0,gatingEnabled:PG.fc};}
+function replayScene(pods=PG.pods){return {detector:'utilization',endpoints:replayEndpoints(pods),ceiling:REPLAY.ceiling,waitingLimit:REPLAY.waitingLimit,kvLimit:REPLAY.kvLimit,headroom:0,gatingEnabled:PG.fc};}
 function playTick(){
+  settleReplayVisual();
+  const before=replayCaptureModel(),events=[];
   PG.tick++;
   const tiers=['p','s','b'];
   /* Backend completion continues even while admission is paused. */
   PG.pods=PG.pods.map(jobs=>jobs.filter((job,i)=>{
     if(i<REPLAY.runningPerPod)job.remaining--;
     if(job.remaining>0)return true;
-    PG.served[job.tier]++;replayFly(job.tier,'complete',PG.pods.indexOf(jobs));return false;
+    PG.served[job.tier]++;events.push({kind:'complete',tier:job.tier,pod:PG.pods.indexOf(jobs)});return false;
   }));
-  const admit=(tier,animate=false)=>{
+  const admit=(tier,direct=false)=>{
     const pod=PG.pods[0].length<=PG.pods[1].length?0:1;
     if(PG.pods[pod].length>=REPLAY.runningPerPod+REPLAY.waitingPerPod)return false;
     PG.pods[pod].push({tier,remaining:REPLAY.serviceTicks});
-    replayFly(tier,'dispatch',pod);
+    events.push({kind:'dispatch',tier,pod,direct});
     return true;
   };
   tiers.forEach(tier=>{
-    while(PG.queued[tier].length&&PG.tick-PG.queued[tier][0]>=REPLAY.ttlTicks){PG.queued[tier].shift();PG.ttl++;}
+    while(PG.queued[tier].length&&PG.tick-PG.queued[tier][0]>=REPLAY.ttlTicks){PG.queued[tier].shift();PG.ttl++;events.push({kind:'expire',tier});}
   });
   const incoming=replayOffers();PG.lastOffered=incoming.slice();
   incoming.forEach(tier=>{
-    PG.arrivals[tier]++;replayFly(tier,'arrival');
+    PG.arrivals[tier]++;
+    const event={kind:'arrival',tier,result:'reject'};events.push(event);
     if(PG.fc){
-      if(PG.queued[tier].length<REPLAY.queueLimit)PG.queued[tier].push(PG.tick);
+      if(PG.queued[tier].length<REPLAY.queueLimit){PG.queued[tier].push(PG.tick);event.result='queue';}
       else PG.rej++;
-    }else if(!admit(tier))PG.rej++;
+    }else if(admit(tier,true))event.result='direct';else PG.rej++;
   });
   if(PG.fc){
     if(sceneMetrics(replayScene()).canDispatch){
       const tier=tiers.find(t=>PG.queued[t].length);
-      if(tier&&admit(tier,true))PG.queued[tier].shift();
+      if(tier&&admit(tier))PG.queued[tier].shift();
     }
   }else{
     /* A mode switch keeps accepted queued work; release it as backend space opens. */
     let tier;
     while((tier=tiers.filter(t=>PG.queued[t].length).sort((a,b)=>PG.queued[a][0]-PG.queued[b][0])[0])){
-      if(!admit(tier,true))break;
+      if(!admit(tier))break;
       PG.queued[tier].shift();
     }
   }
   tiers.forEach(tier=>PG.q[tier]=PG.queued[tier].length);
-  renderReplay();
+  beginReplayVisual(before,events);
 }
 function renderReplay(){
-  renderScene(replayScene());
-  setFlow('b100',0,'premium',PG.q.p);
-  setFlow('b0',0,'standard',PG.q.s);
+  const view=replayVisualState||PG;
+  renderScene(replayScene(view.pods));
+  setFlow('b100',0,'premium',view.q.p);
+  setFlow('b0',0,'standard',view.q.s);
   setFlow('b0',1,null);setFlow('b0',2,null);
-  setFlow('bm10',0,'batch',PG.q.b);
+  setFlow('bm10',0,'batch',view.q.b);
   updateReplayView();
   $('#pgStats').innerHTML=`<table><thead><tr><th>Requests</th><th>Premium</th><th>Standard</th><th>Batch</th></tr></thead><tbody>
-    <tr><th>Offered</th>${['p','s','b'].map(t=>`<td>${PG.arrivals[t]}</td>`).join('')}</tr>
-    <tr><th>Completed</th>${['p','s','b'].map(t=>`<td>${PG.served[t]}</td>`).join('')}</tr></tbody></table>
-    <div class="totals"><span>Tick<strong>${PG.tick}</strong></span><span>Rejected<strong>${PG.rej}</strong></span><span>Expired<strong>${PG.ttl}</strong></span></div>`;
+    <tr><th>Offered</th>${['p','s','b'].map(t=>`<td>${view.arrivals[t]}</td>`).join('')}</tr>
+    <tr><th>Completed</th>${['p','s','b'].map(t=>`<td>${view.served[t]}</td>`).join('')}</tr></tbody></table>
+    <div class="totals"><span>Tick<strong>${view.tick}</strong></span><span>Rejected<strong>${view.rej}</strong></span><span>Expired<strong>${view.ttl}</strong></span></div>`;
 }
 
 /* =================== boot =================== */

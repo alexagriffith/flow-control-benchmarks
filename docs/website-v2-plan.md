@@ -24,7 +24,7 @@ Request, token and hybrid are three modes of the concurrency detector. Prefill/d
 
 After publishing the existing-view composition fixes, add a separate connected learner at `learn/flow-control-plugins.html`. Link it from the introduction's final view and from a compact Overview / Dig deeper navigation. Preserve the existing introduction and decision guide.
 
-Start with two definitions: a plugin supplies a configurable decision or measurement. A detector turns request accounting or engine measurements into a pressure score.
+Start with two definitions: a plugin supplies a configurable decision or measurement. A saturation detector turns request accounting or engine measurements into a normalized saturation score; the applicable priority ceiling is its dispatch comparison threshold.
 
 Keep one stable request path and highlight the decision being taught. Reuse the current queue, cursor, meter, endpoint and reduced-motion animation helpers. Main views contain the question, the connected diagram and one short answer. Plugin names, configuration, defaults, dependencies and pinned sources belong in expandable details.
 
@@ -89,3 +89,9 @@ Before linking recorded playback, remove missing-field-to-zero fallbacks and der
 - **Batch-isolation results SVG:** keep. Its package README embeds the directional results and repeat-stability caveat.
 
 No benchmark reruns, metrics changes or evidence deletion are part of this plan.
+
+### September 17 integration check
+
+The Flight Recorder source at `48e1e716015f2a4c01855053144dd67cd6ee54ed` synchronizes recorded client results and sampled Endpoint Picker/vLLM telemetry; it does not include a complete enqueue/dispatch/selected-endpoint event stream. Its `requestCorrelation` flag does not establish request trajectories. Existing MP4/poster exports can be embedded as recordings. Interactive embedding still needs a dark theme, deployable data paths (currently absolute `/data/run.json` and a localhost catalog), a base-path/embed contract, and replacement of the fixed `saturation >= 1` gate with recorded per-band ceilings. Do not embed its illustrative scheduler movement as actual recorded request paths.
+
+The introductory learner now links to the repository from Configuration and exposes its own teaching-model settings. Build recorded playback separately after validating the selected package's populated fields and configuration. This stays queued with the deeper plugin lessons.

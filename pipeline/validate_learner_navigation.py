@@ -57,14 +57,14 @@ with sync_playwright() as pw:
                 assert max(positions)-min(positions)<1,(width,theme,chapter,positions,"Next moved within topic")
             for chapter,step,control,values in OPTIONS:
                 page.evaluate('([p,s])=>go(p,s)',[chapter,step])
-                page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)')
+                page.evaluate("if(!$('#lessonPanel').matches(':popover-open'))$('#lessonPanel').showPopover()");page.locator('#lessonDetails details').evaluate_all('(es)=>es.forEach(e=>e.open=true)')
                 for value in values:
                     page.select_option('#'+control,value)
                     assert check(control+'-'+value)==baseline
                     if control=='detectorChoice':
                         page.check('#topologyChoice');assert check(control+'-'+value+'-pd')==baseline;page.uncheck('#topologyChoice')
             # The help stays out of the reading path until explicitly opened.
-            page.evaluate('go(6,1)')
+            page.evaluate("go(6,1);$('#lessonPanel').showPopover()")
             assert not page.locator('#hints').evaluate('e=>e.open')
             page.locator('#hints summary').focus();page.keyboard.press('Enter')
             assert page.locator('#hints').evaluate('e=>e.open')

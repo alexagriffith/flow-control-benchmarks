@@ -21,10 +21,10 @@ with sync_playwright() as pw:
             }'''),'fairness branches do not join the shared stem'
             page.evaluate('go(10,0)')
             assert page.evaluate("""()=>{
-              const value=document.querySelector('#meterVal').getBBox(),circle=document.querySelector('#g-cycle circle');
-              const boundary=document.querySelector('#g-epp rect').getBBox();
-              return value.x+value.width+6<=+circle.getAttribute('cx')-+circle.getAttribute('r') && [...document.querySelectorAll('#g-cycle text')].every(e=>{const r=e.getBBox();return r.x+r.width<=boundary.x+boundary.width-8});
-            }"""),'pressure value/cycle caption lacks inset'
+              const value=document.querySelector('#meterVal').getBBox(),label=document.querySelector('#meterLabel').getBBox();
+              const boundary=document.querySelector('#g-epp rect').getBBox(),bar=document.querySelector('#g-meter rect').getBBox();
+              return label.x+label.width+12<value.x && value.x+value.width<=boundary.x+boundary.width-16 && label.y+label.height<bar.y && value.y+value.height<bar.y;
+            }"""),'saturation label/value overlaps its bar or owning boundary'
             assert page.evaluate("""()=>{
               const texts=[...document.querySelectorAll('#g-hdr text')],rects=[...document.querySelectorAll('#g-hdr rect')];
               return texts.every((e,i)=>{const t=e.getBBox(),r=rects[i].getBBox();return t.x>=r.x+6&&t.x+t.width<=r.x+r.width-6&&r.x+r.width<=354+1});
@@ -42,7 +42,7 @@ with sync_playwright() as pw:
               const ends=['b100','b0','bm10'].map(id=>{const p=document.querySelector('#bandRoute-'+id);return p.getPointAtLength(p.getTotalLength())});
               return ends.every(p=>p.x===ends[0].x&&p.y===ends[0].y);
             }'''),'bands do not share dispatch junction'
-            page.evaluate('go(9,3)');page.select_option('#executionChoice','evict')
+            page.evaluate("go(9,3);$('#lessonPanel').showPopover()");page.select_option('#executionChoice','evict')
             assert page.evaluate('''()=>{
               const actor=document.querySelector('#fx circle').getBBox();
               return [...document.querySelectorAll('#g-pod1 text')].every(e=>{const t=e.getBBox();return actor.x+actor.width<t.x||actor.x>t.x+t.width||actor.y+actor.height<t.y||actor.y>t.y+t.height});
