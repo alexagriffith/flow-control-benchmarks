@@ -61,7 +61,7 @@ def main():
             page.evaluate("go(8,0);$('#lessonPanel').showPopover()");summary=page.locator('#lessonDetails summary').first;summary.focus();page.keyboard.press('Space');assert page.evaluate('state.page===8&&state.step===0')
             page.locator('#detectorChoice').focus();page.keyboard.press('ArrowDown');assert page.evaluate('state.page===8&&state.step===0')
             page.evaluate('go(14,0)');assert page.evaluate('PG.timer===null');page.locator('#pgStep').click();assert page.evaluate('PG.tick===1')
-            page.locator('#pgReset').click();assert page.evaluate('PG.tick===0');page.locator('#pgPause').click();page.wait_for_timeout(550);assert page.evaluate('PG.tick>0');page.locator('#pgPause').click();tick=page.evaluate('PG.tick');page.wait_for_timeout(350);assert page.evaluate('PG.tick')==tick
+            page.locator('#pgReset').click();assert page.evaluate('PG.tick===0');page.locator('#pgPause').click();page.wait_for_timeout(page.evaluate('replayWallTime(REPLAY.tickMs)+50'));assert page.evaluate('PG.tick>0');page.locator('#pgPause').click();tick=page.evaluate('PG.tick');page.wait_for_timeout(350);assert page.evaluate('PG.tick')==tick
             page.locator('#pgFc [data-f="0"]').click();assert page.evaluate('PG.tick===0&&!PG.fc');page.evaluate('stopPlay()')
             assert not errors,errors
             page.goto((ROOT/names[1]).as_uri());page.locator('#current-reference details').evaluate_all('(es)=>es.forEach(e=>e.open=true)')

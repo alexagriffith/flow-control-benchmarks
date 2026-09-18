@@ -22,7 +22,7 @@ with sync_playwright() as pw:
             page.evaluate('go(10,0)')
             assert page.evaluate("""()=>{
               const value=document.querySelector('#meterVal').getBBox(),label=document.querySelector('#meterLabel').getBBox();
-              const boundary=document.querySelector('#g-epp rect').getBBox(),bar=document.querySelector('#g-meter rect').getBBox();
+              const boundary=document.querySelector('#g-epp rect').getBBox(),bar=document.querySelector('#meterTrack').getBBox();
               return label.x+label.width+12<value.x && value.x+value.width<=boundary.x+boundary.width-16 && label.y+label.height<bar.y && value.y+value.height<bar.y;
             }"""),'saturation label/value overlaps its bar or owning boundary'
             assert page.evaluate("""()=>{

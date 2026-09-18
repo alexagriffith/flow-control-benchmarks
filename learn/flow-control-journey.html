@@ -315,13 +315,16 @@ body.replay-mode #card{grid-template-rows:24px 96px minmax(0,1fr) 34px}
 body.replay-mode #stepMeta{display:grid;grid-template-columns:1fr;gap:8px}
 body.replay-mode #stepPips{display:none}
 body.replay-mode #replayConfigKeys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;padding:7px 12px}
+body.replay-mode #detailBtn{justify-self:stretch;width:100%;border-radius:8px;background:var(--raised);color:var(--txt);font-size:12px;min-height:36px;padding:7px 12px}
 #configTip{inset:auto 20px 24px auto;margin:0;max-width:min(380px,calc(100vw - 32px));padding:16px;border:1px solid var(--b2);border-radius:12px;background:var(--raised);color:var(--txt);box-shadow:0 8px 30px #0004;font-size:14px;line-height:1.5}
 #configTip p{margin:0}
 .model-fields{display:grid;gap:16px;margin:18px 0}
 .model-fields label{display:grid;gap:6px;font-size:14px;color:var(--txt)}
 .model-fields select{width:100%;min-height:44px;font-size:16px;color:var(--txt);background:var(--raised);border:1px solid var(--b2);border-radius:8px;padding:8px}
 .model-fields small{font-size:12px;color:var(--txt2);line-height:1.5}
+#pgPace{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;font-size:12px;color:var(--txt2)}
+#pgSpeed{background:var(--base);color:var(--txt);border:1px solid var(--b2);border-radius:6px;padding:5px 8px}
+#savedExperiment{width:100%;min-height:44px;font-size:14px;margin:8px 0}
 #configChange{font-size:12px;color:var(--txt2);min-height:36px}
 @media(max-width:700px){
  html{scroll-padding-top:12px}
@@ -369,7 +372,7 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
  #lessonPanel header{position:sticky;top:-16px;padding:12px 0;background:var(--base);z-index:1}
  #lessonPanel header button,#settingsPanel button{min-height:44px;font-size:14px}
  #lessonDetails{font-size:14px}
- #lessonDetails select,#settingsPanel select{font-size:16px;min-height:44px}
+ #lessonDetails select,#settingsPanel select,#pgSpeed{font-size:16px;min-height:44px}
  #lessonDetails summary,#hints summary{padding:10px 0;min-height:44px}
  #settingsPanel{inset:80px 10px auto;margin:0;width:auto;max-width:none}
  #configTip{inset:auto 10px max(10px,env(safe-area-inset-bottom));max-width:none;width:auto}
@@ -437,7 +440,7 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
         <g id="a-t1" class="cel"><path id="tenantRouteP" class="connector" d="M148 119 C170 119 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
         <g id="a-t2" class="cel"><path id="tenantRouteS" class="connector" d="M148 225 C166 225 170 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
         <g id="a-t3" class="cel"><path id="tenantRouteB" class="connector" d="M148 331 C170 331 160 221 184 221" fill="none" stroke="var(--txt2)" stroke-width="1.5"/></g>
-        <g id="a-tmerge" class="cel"><circle cx="184" cy="221" r="2.5" fill="var(--txt3)"/><path class="connector" d="M184 221 H210" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
+        <g id="a-tmerge" class="cel"><path class="connector" d="M184 221 H210" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
 
         <!-- gateway -->
         <g id="g-gw" class="cel">
@@ -473,10 +476,10 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
           <rect class="frame" x="600" y="68" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
           <text x="610" y="84" font-size="9.5" fill="var(--txt)">objective found → priority <tspan class="mt" font-weight="700">100</tspan></text>
         </g>
-        <g id="g-forkB" class="cel" style="--hl:var(--danger)">
+        <g id="g-forkB" class="cel" style="--hl:var(--amber)">
           <line class="connector" x1="558" y1="110" x2="596" y2="116" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/>
           <rect class="frame" x="600" y="104" width="198" height="24" rx="7" fill="var(--raised)" stroke="var(--b2)"/>
-          <text x="610" y="120" font-size="9.5" fill="var(--txt2)">missing or unbound → <tspan class="mt" font-weight="700" fill="var(--txt)">0</tspan>, silently</text>
+          <text x="610" y="120" font-size="9.5" fill="var(--txt2)">missing or unbound → default <tspan class="mt" font-weight="700" fill="var(--txt)">0</tspan></text>
         </g>
 
         <!-- Admission -->
@@ -489,7 +492,11 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
         <g id="a-band" class="cel"><line class="connector" x1="470" y1="198" x2="470" y2="212" stroke="var(--b3)" stroke-width="1.4" marker-end="url(#arr)"/></g>
 
         <!-- bands -->
-        <text id="routerQueuesLabel" x="592" y="207" font-size="11" font-weight="600" fill="var(--txt2)">Router queues</text>
+        <g id="routerQueuesFrame">
+          <rect x="374" y="204" width="432" height="238" rx="10" fill="none" stroke="var(--b2)" stroke-width="1"/>
+          <rect x="544" y="199" width="92" height="15" fill="var(--base)"/>
+          <text id="routerQueuesLabel" x="590" y="211" text-anchor="middle" font-size="11" font-weight="600" fill="var(--txt2)">Router queues</text>
+        </g>
         <g id="g-b100" class="cel" style="--hl:var(--brand)">
           <rect class="frame" x="382" y="216" width="416" height="66" rx="9" fill="var(--inset)" stroke="var(--b2)"/>
           <rect x="382" y="216" width="4" height="66" rx="2" fill="var(--brand)"/>
@@ -511,9 +518,10 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
 
         <!-- Saturation and its applicable dispatch ceiling. -->
         <g id="g-meter" class="cel">
+          <rect x="374" y="448" width="432" height="86" rx="10" fill="none" stroke="var(--b2)" stroke-width="1"/>
           <text id="meterLabel" x="382" y="468" font-size="11" font-weight="600" fill="var(--txt2)">Pool saturation</text>
           <text id="meterVal" x="790" y="468" font-size="11.5" class="mt" fill="var(--txt)" text-anchor="end">0.35</text>
-          <rect x="382" y="480" width="408" height="16" rx="8" fill="var(--inset)" stroke="var(--b1)"/>
+          <rect id="meterTrack" x="382" y="480" width="408" height="16" rx="8" fill="var(--inset)" stroke="var(--b1)"/>
           <rect id="meterFill" x="382" y="480" width="90" height="16" rx="8" fill="var(--ok)"/>
           <line id="ceilingLine" x1="714.8" y1="476" x2="714.8" y2="502" stroke="var(--danger)" stroke-dasharray="4 3" stroke-width="1.4"/>
           <text id="ceilingLabel" x="708.4" y="518" font-size="10" fill="var(--txt2)" text-anchor="middle">Dispatch ceiling · 1.0</text>
@@ -524,7 +532,6 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
           <path class="connector" id="bandRoute-b100" d="M798 249 C810 249 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
           <path class="connector" id="bandRoute-b0" d="M798 325 C810 325 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
           <path class="connector" id="bandRoute-bm10" d="M798 401 C810 401 808 310 820 310" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
-          <circle cx="820" cy="310" r="2.5" fill="var(--txt3)"/>
           <path class="connector" d="M820 310 H830" fill="none" stroke="var(--txt2)" stroke-width="1.5"/>
         </g>
         <g id="a-d1" class="cel"><path id="endpointRouteA" class="connector" d="M830 310 C838 310 832 197 840 197 H848" fill="none" stroke="var(--txt2)" stroke-width="1.5" marker-end="url(#arr)"/></g>
@@ -567,7 +574,7 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
         <!-- page-1 overlay: burst pressure -->
         <g id="ov-burst" class="cel" style="display:none">
           <rect x="0" y="0" width="1000" height="580" fill="var(--base)"/>
-          <g id="burstScene" transform="translate(-392 -70) scale(1.5)">
+          <g id="burstScene" transform="translate(-240 -40) scale(1.25)">
           <text id="burstHead" x="352" y="84" font-size="21" font-weight="750" fill="var(--txt)">Shared capacity meets burst traffic</text>
           <text id="burstSub" x="352" y="108" font-size="11" fill="var(--txt3)">the average fits; the peak decides the wait</text>
           <line x1="404" y1="262" x2="790" y2="262" stroke="var(--b2)"/>
@@ -579,16 +586,17 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
           <text id="burstNeedleTxt" font-size="9.5" fill="var(--danger)" text-anchor="middle" opacity="0">burst</text>
           <text x="404" y="286" font-size="9.5" fill="var(--txt3)">time</text>
 
-          <text id="burstSlotLabel" x="398" y="322" font-size="11" font-weight="740" fill="var(--txt)">Shared pool capacity</text>
-          <text id="burstPoolTxt" x="524" y="322" font-size="9.5" fill="var(--txt3)">available capacity</text>
+          <rect x="398" y="304" width="394" height="90" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+          <text id="burstSlotLabel" x="412" y="325" font-size="12" font-weight="650" fill="var(--txt)">Shared pool</text>
+          <text id="burstPoolTxt" x="778" y="325" text-anchor="end" font-size="11" fill="var(--txt2)">Capacity available</text>
           <g id="burstSlots"></g>
+          <path id="burstQueueArrow" d="M595 414 V398" fill="none" stroke="var(--txt3)" stroke-width="1.5" marker-end="url(#arr)"/>
           <g id="burstOverflow">
-            <text id="burstWaitLabel" x="398" y="401" font-size="10" font-weight="720" fill="var(--txt3)">waiting outside pool</text>
-            <rect id="burstWaitRail" x="398" y="408" width="264" height="14" rx="7" fill="var(--inset)" stroke="var(--b1)"/>
+            <rect id="burstWaitRail" x="398" y="414" width="394" height="64" rx="10" fill="var(--raised)" stroke="var(--b2)"/>
+            <text id="burstWaitLabel" x="412" y="436" font-size="12" font-weight="650" fill="var(--txt)">Router queue</text>
+            <text id="burstWaitCount" x="778" y="436" text-anchor="end" font-size="11" fill="var(--txt2)">No waiting requests</text>
             <g id="burstWaitCells"></g>
           </g>
-          <rect id="burstMsgBox" x="678" y="394" width="156" height="28" rx="9" fill="var(--raised)" stroke="var(--b2)"/>
-          <text id="burstMsg" x="756" y="413" font-size="11" font-weight="720" fill="var(--txt)" text-anchor="middle">inside capacity</text>
           </g>
         </g>
 
@@ -647,7 +655,7 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
       </div>
       <div id="evidence" aria-live="polite"></div>
       <div id="playCtl">
-        <div class="kk">Replay mode</div>
+        <div class="kk">Flow control</div>
         <div class="seg" id="pgFc" role="group" aria-label="flow control">
           <button type="button" data-f="1" class="on" aria-pressed="true">Flow control on</button>
           <button type="button" data-f="0" aria-pressed="false">Unprotected baseline</button>
@@ -659,8 +667,9 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
           <input type="range" min="0" max="100" value="30" data-k="s" name="standard-load" aria-label="standard load"><span class="kv" id="kv_s">30</span></label>
         <label class="krow"><span class="kd" aria-hidden="true" style="background:var(--teal)"></span><span>batch</span>
           <input type="range" min="0" max="100" value="20" data-k="b" name="batch-load" aria-label="batch load"><span class="kv" id="kv_b">20</span></label>
+        <label id="pgPace">Animation pace<select id="pgSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
         <div class="kk" id="pgSeed">Seed 42 · reset to compare</div>
-        <div class="seg" role="group" aria-label="replay controls">
+        <div class="seg" role="group" aria-label="simulation controls">
           <button type="button" id="pgPause">Pause</button>
           <button type="button" id="pgStep">Step</button>
           <button type="button" id="pgReset">Reset</button>
@@ -670,7 +679,7 @@ body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;pa
           Repeat any burst or load change at the same tick.
         </details>
         <button class="sbtn" id="pgBurst" style="width:100%;margin-bottom:8px">Send a standard burst</button>
-        <div id="pgStats" aria-label="Replay request counts"></div>
+        <div id="pgStats" aria-label="Simulation request counts"></div>
         <p class="replay-footnote">*Illustrative model, not a recording or latency prediction. The unprotected baseline omits legacy shedding of negative-priority requests at saturation. Queued requests expire after 60 simulated seconds.</p>
       </div>
       <details id="hints">
@@ -702,7 +711,7 @@ function animate(el,frames,options){
 
 /* =================== canvas state + helpers =================== */
 const BANDS={b100:{y:216,c:'var(--brand)'},b0:{y:292,c:'var(--amber)'},bm10:{y:368,c:'var(--teal)'}};
-const FLOWX=[470,585,700];
+const FLOWX=[470,580,690];
 const CS={q:{},labels:{},anims:[],raf:null};
 
 function buildQueues(){
@@ -710,19 +719,20 @@ function buildQueues(){
     const g=$('#qs-'+b),y=BANDS[b].y;let s='';
     for(let j=0;j<3;j++){
       s+=`<g id="fl-${b}-${j}" style="opacity:0;transition:opacity .5s var(--ease)">
+        <rect class="flow-boundary" x="${FLOWX[j]-7}" y="${y+7}" width="105" height="47" rx="5" fill="var(--base)" stroke="var(--b2)" stroke-width="1"/>
         <text id="fll-${b}-${j}" x="${FLOWX[j]}" y="${y+24}" font-size="8.5" fill="var(--txt3)"></text>
         <g id="fld-${b}-${j}">`;
       for(let k=0;k<7;k++)
         s+=`<circle cx="${FLOWX[j]+6+k*14}" cy="${y+42}" r="5" fill="${BANDS[b].c}" opacity="0"/>`;
       s+=`</g><text id="flx-${b}-${j}" x="${FLOWX[j]+64}" y="${y+46}" font-size="8.5" class="mt" fill="${BANDS[b].c}"></text>
-        <path id="flc-${b}-${j}" d="M${FLOWX[j]+18} ${y+8} l5 9 l5 -9 z" fill="var(--txt)" opacity="0"/></g>`;
+        <rect id="flc-${b}-${j}" x="${FLOWX[j]-7}" y="${y+7}" width="105" height="47" rx="5" fill="none" stroke="var(--txt)" stroke-width="1.5" opacity="0"/></g>`;
     }
     g.innerHTML=s;
   }
 }
 function setFlow(b,j,label,count,extra){
   const fl=$(`#fl-${b}-${j}`),lab=$(`#fll-${b}-${j}`),xt=$(`#flx-${b}-${j}`);
-  if(label===null){fl.style.opacity='0';return;}
+  if(label===null||(label===''&&count===0)){fl.style.opacity='0';return;}
   fl.style.opacity='1';lab.textContent=label;
   const dots=$(`#fld-${b}-${j}`).children;
   for(let k=0;k<7;k++)dots[k].setAttribute('opacity',k<Math.min(4,count)?(k===0?'1':'.6'):'0');
@@ -767,8 +777,8 @@ function renderScene(scene){
     $(`#p${n}name`).setAttribute('font-size','11.5');
     $(`#p${n}name`).textContent=s.topology==='pd'?`${e.role} endpoint`:`endpoint ${i?'B':'A'}`;
     const one=util?e.waiting:e.requests,two=util?e.kv:e.tokens;
-    $(`#p${n}wLabel`).textContent=util?`waiting ${Number(one.toFixed(2))}`:s.detector==='tokens'?`tokens ${two}`:`requests ${one}`;
-    $(`#p${n}kLabel`).textContent=util?`KV ${(two*100).toFixed(0)}% · score ${m.scores[i].toFixed(2)}`:s.detector==='hybrid'?`tokens ${two} · ${m.scores[i].toFixed(2)}`:`score ${m.scores[i].toFixed(2)} · ${m.eligible[i]?'candidate':m.failOpen?'fail open':'filtered'}`;
+    $(`#p${n}wLabel`).textContent=util?`Waiting ÷ ${s.waitingLimit} = ${(one/s.waitingLimit).toFixed(2)}`:s.detector==='tokens'?`tokens ${two}`:`requests ${one}`;
+    $(`#p${n}kLabel`).textContent=util?`KV ${(two*100).toFixed(0)}% · saturation ${m.scores[i].toFixed(2)}`:s.detector==='hybrid'?`tokens ${two} · saturation ${m.scores[i].toFixed(2)}`:`saturation ${m.scores[i].toFixed(2)} · ${m.eligible[i]?'candidate':m.failOpen?'fail open':'filtered'}`;
     const r1=util?one/s.waitingLimit:s.detector==='tokens'?two/s.tokenLimit:one/s.requestLimit;
     const r2=util?two/s.kvLimit:s.detector==='hybrid'?two/s.tokenLimit:m.scores[i];
     $(`#p${n}w`).style.width=Math.min(104,Math.max(0,r1*104))+'px';
@@ -1009,11 +1019,11 @@ function burstEnsure(){
   const slots=$('#burstSlots'),wait=$('#burstWaitCells');
   if(!slots.children.length){
     for(let r=0;r<3;r++)for(let c=0;c<16;c++){
-      slots.appendChild(svgEl('rect',{x:398+c*24,y:334+r*16,width:17,height:11,rx:3,fill:'var(--base)',stroke:'var(--b1)'}));
+      slots.appendChild(svgEl('rect',{x:412+c*23,y:339+r*16,width:17,height:11,rx:3,fill:'var(--base)',stroke:'var(--b1)'}));
     }
   }
   if(!wait.children.length){
-    for(let i=0;i<12;i++)wait.appendChild(svgEl('rect',{x:405+i*20,y:411,width:13,height:8,rx:4,fill:'var(--danger)',opacity:0}));
+    for(let i=0;i<12;i++)wait.appendChild(svgEl('rect',{x:412+i*30,y:451,width:23,height:12,rx:3,fill:'var(--amber)',opacity:0}));
   }
 }
 function clamp01(v){return Math.max(0,Math.min(1,v));}
@@ -1034,14 +1044,11 @@ function burstSet(level,waitOverride,labelMode){
     c.style.transformOrigin='center';
     c.style.transformBox='fill-box';
   });
-  const burstMode=labelMode==='burst-capacity';
-  $('#burstSlotLabel').textContent=burstMode?'Burst capacity':'Shared pool capacity';
-  $('#burstWaitLabel').setAttribute('fill',over?'var(--danger)':'var(--txt3)');
-  $('#burstWaitRail').setAttribute('stroke',over?'var(--danger)':'var(--b1)');
-  $('#burstPoolTxt').textContent=over?(burstMode?'full at burst peak':'pool full at peak'):'available capacity';
-  $('#burstMsg').textContent=over?(burstMode?'overflow waits':'excess waits'):'inside capacity';
-  $('#burstMsg').setAttribute('fill',over?'var(--danger)':'var(--txt)');
-  $('#burstMsgBox').setAttribute('stroke',over?'var(--danger)':'var(--b2)');
+  $('#burstSlotLabel').textContent='Shared pool';
+  $('#burstWaitRail').setAttribute('stroke',over?'var(--amber)':'var(--b2)');
+  $('#burstPoolTxt').textContent=over?'Full':'Capacity available';
+  $('#burstWaitCount').textContent=over?'Excess requests wait':'No waiting requests';
+
 }
 function burstWave(progress,hot,labelMode){
   const w=386,cap=178,base=246;
@@ -1089,42 +1096,23 @@ function burstCross(){
 }
 let burstSeq=0;
 function burstRun(hot,opts={}){
-  $('#ov-burst').style.display='';
-  burstEnsure();
-  const seq=++burstSeq;
-  if(CS.raf)cancelAnimationFrame(CS.raf);
-  CS.raf=null;
-  $('#burstHead').textContent=hot?'Peak load creates waiting':'Shared pool under load';
-  $('#burstSub').textContent=hot?'average load fits; the burst peak does not':'the average fits inside the pool';
-  const start=performance.now(),dur=opts.dur||(hot?3000:2200);
-  const labelMode=opts.labelMode;
-  if(reduceMotion()){burstWave(.62,hot,labelMode);return;}
-  let crossed=false,lastCycle=-1;
+  $('#ov-burst').style.display='';burstEnsure();const seq=++burstSeq;
+  if(CS.raf)cancelAnimationFrame(CS.raf);CS.raf=null;
+  $('#burstHead').textContent='When demand exceeds capacity';
+  $('#burstSub').textContent='Buffering holds excess requests before dispatch';
+  if(reduceMotion()){burstWave(.48,true);return;}
+  const start=performance.now(),dur=4200;let crossed=false;
   const frame=now=>{
-    if(seq!==burstSeq)return;
-    if($('#ov-burst').style.display==='none')return;
-    const elapsed=now-start;
-    const cycle=Math.floor(elapsed/dur);
-    const p=(elapsed%dur)/dur;
-    if(cycle!==lastCycle){crossed=false;lastCycle=cycle;}
-    const over=burstWave(p,hot,labelMode);
-    if(hot&&over&&!crossed){crossed=true;burstCross();}
-    CS.raf=requestAnimationFrame(frame);
+    if(seq!==burstSeq||$('#ov-burst').style.display==='none')return;
+    const progress=Math.min(1,(now-start)/dur);
+    const over=burstWave(progress*.48,true);
+    if(over&&!crossed){crossed=true;burstCross();}
+    // One build-up, then keep the saturated pool and overflow visible.
+    CS.raf=progress<1?requestAnimationFrame(frame):null;
   };
-  burstWave(0,hot,labelMode);
-  CS.raf=requestAnimationFrame(frame);
+  burstWave(0,true);CS.raf=requestAnimationFrame(frame);
 }
-function burstAutoRun(){
-  burstRun(false,{dur:2400});
-  after(2300,()=>burstRun(true,{dur:3300}));
-  after(5600,()=>{
-    burstRun(true,{dur:6200,labelMode:'burst-capacity'});
-    after(1600,()=>{
-      $('#burstHead').textContent='Shared traffic needs policy';
-      $('#burstSub').textContent='policy chooses what moves next';
-    });
-  });
-}
+function burstAutoRun(){burstRun(true);}
 const KNEE_DATA=[
   {c:32,r:24.1,ttft:261},{c:64,r:37.1,ttft:744},{c:96,r:45.5,ttft:948},
   {c:128,r:52.0,ttft:967},{c:160,r:47.1,ttft:1455},{c:200,r:50.6,ttft:1814}
@@ -1240,7 +1228,6 @@ function policyEnsure(){
     viz.appendChild(stream);
   });
   const merge=svgEl('g',{id:'pol-merge'});
-  merge.appendChild(svgEl('circle',{cx:542,cy:246,r:3,fill:'var(--txt2)'}));
   merge.appendChild(svgEl('path',{d:'M542 246 H604',fill:'none',stroke:'var(--txt2)','stroke-width':1.5,'marker-end':'url(#arr)'}));viz.appendChild(merge);
   const pool=svgEl('g',{id:'pol-pool'});
   pool.appendChild(svgEl('rect',{x:604,y:138,width:166,height:216,rx:16,fill:'var(--raised)',stroke:'var(--ok)','stroke-width':2}));
@@ -1496,7 +1483,6 @@ function fairEnsure(){
     for(let i=0;i<6;i++)viz.appendChild(svgEl('circle',{cx:270+i*34,cy:r.y,r:9,fill:'var(--brand)',opacity:i<r.count?'.95':'.18'}));
     viz.appendChild(svgEl('path',{id:`fair-route-${r.id}`,d:`M622 ${r.y} C666 ${r.y} 660 326 700 326`,fill:'none',stroke:'var(--brand)','stroke-width':1.8,'stroke-opacity':.45}));
   });
-  viz.appendChild(svgEl('circle',{cx:700,cy:326,r:3,fill:'var(--brand)'}));
   viz.appendChild(svgEl('path',{id:'fair-dispatch-route',d:'M700 326 H760',fill:'none',stroke:'var(--brand)','stroke-width':1.8,'marker-end':'url(#arr)'}));
   viz.appendChild(svgEl('rect',{id:'fair-lane-cursor',x:128,y:237,width:502,height:50,rx:16,fill:'none',stroke:'var(--ok)','stroke-width':3}));
   viz.appendChild(svgEl('rect',{x:760,y:258,width:86,height:136,rx:18,fill:'var(--base)',stroke:'var(--ok)','stroke-width':2}));
@@ -1688,9 +1674,9 @@ function detectorView(){
  const detector=$('#detectorChoice').value,pd=$('#topologyChoice').checked;
  const endpoints=pd?[{requests:65,tokens:650,waiting:2,kv:.52,role:'prefill'},{requests:90,tokens:900,waiting:3,kv:.72,role:'decode'}]:[{requests:90,tokens:100,waiting:2,kv:.6},{requests:10,tokens:900,waiting:1,kv:.56}];
  const m=renderScene({detector,endpoints,topology:pd?'pd':'combined'}),d=DETECTOR_LESSONS[detector];
- $('#narr').textContent=pd?'The same selected detector evaluates prefill and decode separately. The larger stage score determines dispatch eligibility.':'The selected detector scores each endpoint. This combined pool averages those scores and compares the result with the dispatch ceiling.';
+ $('#narr').textContent=pd?'The same selected detector evaluates prefill and decode separately. The larger stage saturation determines whether dispatch may proceed.':'The selected detector measures endpoint saturation. This pool averages those values and compares the result with the dispatch ceiling.';
  if(pd){$('#a-d1').style.visibility='hidden';$('#a-d2').style.visibility='hidden';}
- $('#detectorExplanation').innerHTML=`<p>${d[1]}</p><p><code>${d[2]}</code></p><p>Example limits: 100 requests, 1,000 tokens, waiting 4, KV 0.80 per endpoint. Endpoint scores: ${m.scores.map(v=>v.toFixed(3)).join(', ')}. ${pd?'Stage pressures: '+m.stages.map(v=>v.toFixed(3)).join(', ')+' → max':'Combined mean'} = <b>${m.pool.toFixed(3)}</b>.</p>`;
+ $('#detectorExplanation').innerHTML=`<p>${d[1]}</p><p><code>${d[2]}</code></p><p>Example limits: 100 requests, 1,000 tokens, waiting 4, KV 0.80 per endpoint. Endpoint saturation: ${m.scores.map(v=>v.toFixed(3)).join(', ')}. ${pd?'Stage pressures: '+m.stages.map(v=>v.toFixed(3)).join(', ')+' → max':'Combined mean'} = <b>${m.pool.toFixed(3)}</b>.</p>`;
  // Existing backend boxes retain their location; dashed link is a pressure relationship, not request traffic.
  $('#fx').innerHTML='';
  if(pd){const t=svgEl('text',{x:914,y:278,'text-anchor':'middle','font-size':10,fill:'var(--teal)'});t.textContent='same detector · max';$('#fx').appendChild(t);}
@@ -1754,16 +1740,16 @@ function executionStep(phase){
 }
 function lessonDetails(kind){
  let html='';
- if(kind==='knee')html=details('Measurement and calibration',`<p>Left: measured pass 1 of the RHAII 3.4 operating-point sweep, 512 input / 128 output tokens, 180 s per point. Throughput is total completed requests / duration; steady p95 TTFT excludes the first 30 s. Right: schematic tradeoff, not measured detector behavior.</p>${sourceLine('benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/pass1/summary.csv','one pass; rounded throughput and p95 TTFT')}<p>128 is a candidate for this workload. Recheck hardware, model, prompt lengths, cache state and topology before transferring it. Detector normalization defines what score 1 means; the priority ceiling can be lower than 1.</p>`);
+ if(kind==='knee')html=details('Measurement and calibration',`<p>Left: measured pass 1 of the RHAII 3.4 operating-point sweep, 512 input / 128 output tokens, 180 s per point. Throughput is total completed requests / duration; steady p95 TTFT excludes the first 30 s. Right: schematic tradeoff, not measured detector behavior.</p>${sourceLine('benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/pass1/summary.csv','one pass; rounded throughput and p95 TTFT')}<p>128 is a candidate for this workload. Recheck hardware, model, prompt lengths, cache state and topology before transferring it. Detector normalization defines what saturation 1 means; the priority ceiling can be lower than 1.</p>`);
  if(kind==='setup')html=details('Identity, budgets and request outcomes',`<p><code>InferenceObjective</code> identity is namespace + name. <code>model-a-high</code> and <code>model-b-high</code> may both set priority 100; two objects named <code>high</code> in one namespace cannot coexist by changing pool references. PoolRef stays in the namespace.</p><p>Priority fallback: unresolved objective or nil priority → 0. Fairness fallback: explicit header → available agent identity → default fairness ID. Trusted propagation is a deployment responsibility; these headers do not authenticate a tenant.</p><p>Per-band/global byte and request budgets bound Endpoint Picker queue memory, not GPU capacity. Selected historical TTL: 60 s; it is not a TTFT objective.</p><table><tr><th>Outcome</th><th>Consequence</th></tr><tr><td>Dispatch waits</td><td>Still queued; reconsidered as pressure changes</td></tr><tr><td>Budget exceeded</td><td>New admission rejected</td></tr><tr><td>TTL expires / caller cancels</td><td>Waiting request removed</td></tr><tr><td>In-flight eviction</td><td>Eligible dispatched call cancelled; retry belongs to client</td></tr></table><p>At the source pin: capacity/TTL rejection under contention maps to 429; an empty pool or cancelled context maps to 503. Actual delivery depends on connection/stream state. Historical v0.9 TTL mapping differs.</p>${implSource(codeLink('pkg/epp/requestcontrol/director.go',175,'resolution'),codeLink('apix/v1alpha2/inferenceobjective_types.go',61,'objective'),codeLink('pkg/epp/requestcontrol/admission.go',260,'outcomes'))}`);
- if(kind==='detectors')html=details('Try another signal or P/D topology',`<label for="detectorChoice">Signal</label> <select class="pill" id="detectorChoice"><option value="utilization">Engine waiting + KV</option><option value="requests">In-flight requests</option><option value="tokens">Accounted tokens</option><option value="hybrid">Request + token pressure</option></select><p><label><input type="checkbox" id="topologyChoice"> Separate prefill / decode stages</label></p><div id="detectorExplanation"><p>Selected example: max(waiting ÷ 4, KV ÷ 0.80), then average. Limits are configuration, not physical maxima.</p></div><p>P/D uses the same selected detector for each stage, then the maximum stage score. Combined endpoints count in both stage sets. Multiple EPP processes are separate: shared accounting, if configured, does not synchronize flow queues or establish global fairness.</p>${details('Accounting and wiring limits',`<p>Concurrency uses endpoint accounting units, not automatically physical GPUs or DP ranks. The in-flight load producer requires tokenization; prefix-match information is optional. Cache discounts depend on that wiring.</p><p>Output estimation defaults off at the pin. When off, prompt-token accounting is released at the first response chunk while decode can continue. When on, estimates depend on output-size hints and caps; the estimate cap does not limit response length.</p><p>Utilization missing/stale metrics follow a configured saturated/ignore policy. Ignoring all stale endpoints can produce zero pressure. Source defaults are waiting 5, KV 0.8, stale 200 ms; this lesson deliberately uses waiting 4. Configured filter headroom relaxes endpoint thresholds; all-candidates-filtered falls open.</p>`)}${implSource(codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',123,'count formulas'),codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'engine formulas'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',463,'P/D aggregation'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',586,'accounting release'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',747,'dependencies'))}`);
+ if(kind==='detectors')html=details('Try another signal or P/D topology',`<label for="detectorChoice">Signal</label> <select class="pill" id="detectorChoice"><option value="utilization">Engine waiting + KV</option><option value="requests">In-flight requests</option><option value="tokens">Accounted tokens</option><option value="hybrid">Request + token pressure</option></select><p><label><input type="checkbox" id="topologyChoice"> Separate prefill / decode stages</label></p><div id="detectorExplanation"><p>Selected example: max(waiting ÷ 4, KV ÷ 0.80), then average. Limits are configuration, not physical maxima.</p></div><p>P/D uses the same selected detector for each stage, then the maximum stage saturation. Combined endpoints count in both stage sets. Multiple EPP processes are separate: shared accounting, if configured, does not synchronize flow queues or establish global fairness.</p>${details('Accounting and wiring limits',`<p>Concurrency uses endpoint accounting units, not automatically physical GPUs or DP ranks. The in-flight load producer requires tokenization; prefix-match information is optional. Cache discounts depend on that wiring.</p><p>Output estimation defaults off at the pin. When off, prompt-token accounting is released at the first response chunk while decode can continue. When on, estimates depend on output-size hints and caps; the estimate cap does not limit response length.</p><p>Utilization missing/stale metrics follow a configured saturated/ignore policy. Ignoring all stale endpoints can produce zero pressure. Source defaults are waiting 5, KV 0.8, stale 200 ms; this lesson deliberately uses waiting 4. Configured filter headroom relaxes endpoint thresholds; all-candidates-filtered falls open.</p>`)}${implSource(codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',123,'count formulas'),codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'engine formulas'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',463,'P/D aggregation'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',586,'accounting release'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',747,'dependencies'))}`);
  if(kind==='twoChecks')html=details('Compare priorities and inspect the wiring',`<label for="bandChoice">Waiting request</label> <select class="pill" id="bandChoice"><option value="high">High · ceiling 1.0</option><option value="low">Low · ceiling 0.8</option></select><p>Two equal endpoints; <code>maxConcurrency: 100</code>, <code>headroom: 0.1</code>. Pool denominator stays 200. Endpoint threshold becomes 110. Headroom adds no physical capacity, priority reservation or guarantee of fewer evictions.</p><p>Selected references: <code>concurrency-detector</code> in requests mode and <code>priority-holdback-policy</code>, <code>minCeiling: 0.8</code>, <code>maxCeiling: 1.0</code>, rank domain, two priorities. Each ceiling compares against total pool saturation, not that priority’s own usage.</p><p>The loader injects a selected detector’s filter into scheduling profiles. Missing handwritten filter YAML does not prove filtering is off. If every candidate is filtered, the filter returns the original nonnil candidates; this is not a hard cap.</p>${implSource(codeLink('pkg/epp/config/loader/defaults.go',274,'effective wiring'),codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',184,'strict filter and fallback'),codeLink(PLUGINS+'usagelimits/priorityholdback/priority_holdback.go',98,'ceilings'))}`);
  if(kind==='execution')html=details('Follow one request',`<label for="executionChoice">Request phase</label> <select class="pill" id="executionChoice"><option value="queued">Router waiting</option><option value="dispatch">Dispatch</option><option value="engine">Engine waiting / processing</option><option value="complete">Completion at client</option><option value="evict">Optional eviction</option></select>${details('Optional eviction: conditions and retry',`<p>Selected sheddable filter: priority below 0; victim must also be strictly below the blocked requesting priority. Eviction is configured separately and paced. It does not instantly preempt the GPU.</p><p>Cancellation must propagate to the engine; clients decide whether and how to retry. A multi-call agent task may recover one inference call, but tool side effects and duplicate results require application-level handling.</p>${implSource(codeLink('pkg/epp/flowcontrol/controller/internal/reclamation.go',278,'trigger'),codeLink(PLUGINS+'eviction/filtering/sheddable.go',41,'eligibility'),codeLink('pkg/epp/flowcontrol/eviction/request_evictor.go',180,'victim priority'),codeLink('pkg/epp/flowcontrol/eviction/evictor.go',56,'cancellation signal'))}`)}`,true);
  if(kind==='policies')html=details('Flow selection, request order, or ceiling?',`<label for="policyChoice">Policy question</label> <select class="pill" id="policyChoice"><option value="fairness">Which flow?</option><option value="fcfs">Which request? FCFS</option><option value="edf">Which request? EDF / TTL</option><option value="slo">Which request? TTFT deadline</option><option value="ceilings">May this priority dispatch?</option></select><p id="policyExplanation">Round-robin is the selected teaching example. Equal turns apply within one eligible, backlogged band; they do not guarantee equal completions, tokens, latency or progress under sustained higher-priority demand.</p><p>The order examples compare two flow heads with global-strict fairness and compatible ordering. Both arrive close together; the later request has the nearer effective deadline.</p>${implSource(codeLink('pkg/epp/flowcontrol/registry/config.go',34,'source defaults'),codeLink(PLUGINS+'fairness/roundrobin/roundrobin.go',77,'round robin'),codeLink(PLUGINS+'fairness/globalstrict/global_strict.go',68,'global strict'),codeLink(PLUGINS+'ordering/edf/edf.go',77,'EDF'),codeLink(PLUGINS+'ordering/slodeadline/slo_deadline.go',83,'TTFT metadata'),codeLink(PLUGINS+'usagelimits/softreflectiveceiling/policy.go',105,'soft-reflective ceiling'))}`);
  if(kind==='replay')html=replayConfiguration();
  if(kind==='later')html=details('Later evidence and available options',`<p>Separate RHAII 3.5 experiment records:</p><ul>${[['priority-usage-limit-policies','Priority ceilings'],['slo-deadline-ordering','TTFT deadline ordering'],['pd-flow-control','Prefill / decode'],['batch-eviction','Eviction and retry']].map(([p,n])=>`<li><a href="../benchmark-data/rhaii-3.5-flow-control/${p}/README.md">${n}</a> — inspect the package’s measured coverage and limitations.</li>`).join('')}</ul><p>Available implementation options are not automatically tested or recommended. Program-aware fairness and predictive rejection are advanced implementation topics outside these lessons.</p>`,true);
  $('#lessonDetails').innerHTML=html;
- if(kind==='replay')bindReplaySettings();
+ if(kind==='replay'){bindReplaySettings();bindSavedExperiment();}
  $('#lessonDetails').addEventListener('click',userInput,{once:true});
  const bind=(id,fn)=>{const el=$(id);if(el)el.onchange=()=>{userInput();stepTimers.forEach(clearTimeout);stepTimers=[];CS.anims.forEach(a=>a.cancel());CS.anims=[];$('#fx').innerHTML='';fn();};};
  bind('#detectorChoice',detectorView);bind('#topologyChoice',detectorView);
@@ -1788,7 +1774,7 @@ const PAGES=[
 /* ---- 1 · WHY: the burst problem ---- */
 {title:'Burst pressure',group:0,rail:'Bursts',steps:[
  {lit:['ov-burst'],dwell:2.55,
-  n:'Contention occurs when overlapping requests compete for shared execution or memory resources. Requests may wait or process more slowly.',
+  n:'Contention occurs when requests compete for shared execution or memory resources. With buffering enabled, excess requests wait. A full queue or expired request can still be rejected.',
   run(){burstAutoRun();}}
 ]},
 /* ---- 2 · WHY: the operating point ---- */
@@ -1858,7 +1844,7 @@ const PAGES=[
 /* ---- 4 · MACHINE: gradient + ceiling ---- */
 {title:'Pressure, ceiling, destination',group:1,rail:'Ceiling',steps:[
  {lit:['g-pod1','g-pod2','g-meter'],
-  n:'Each endpoint’s score uses the larger normalized value of engine waiting and KV-cache use. The combined pool averages those scores.',
+  n:'In this example, saturation is the larger of waiting ÷ 4 or KV use ÷ 80%. The pool averages the two endpoint values.',
   run(){renderScene({endpoints:[{waiting:2,kv:.6},{waiting:1,kv:.56}]});lessonDetails('detectors');}},
  {lit:['g-pod1','g-pod2','g-meter','g-b100'],
   n:'When pool saturation reaches the selected ceiling of <b>1.0</b>, dispatch waits.',
@@ -1881,7 +1867,7 @@ const PAGES=[
     focus(['g-b100','a-d1','g-pod1'],650);
     after(700,()=>{setFlow('b100',0,'premium',1);dispatchFly('b100',0,'var(--brand)','a');setPods(.4,.5,.3,.52);});}},
  {lit:['g-b100'],
-  n:'The dispatch cycle skips empty bands until it finds waiting work.',
+  n:'Below the shared ceiling, the cycle skips empty bands until it finds waiting work.',
   run(){setFlow('b100',0,'premium',0,'empty');cursorAt('b100',0);
     focus(['g-b100','g-b0'],700);
     after(750,()=>{cursorAt('b0',0);});
@@ -1984,9 +1970,9 @@ const PAGES=[
   run(){historicalScene();lessonDetails('later');evidence('<div class="et">Evidence has a scope</div><p>Each linked package records its own image, configuration, workload and limitations.</p>');}}
 ]},
 /* ---- 10 · REPLAY ---- */
-{title:'Scenario replay',group:3,rail:'Replay',steps:[
+{title:'Interactive simulation',group:3,rail:'Try it',steps:[
  {lit:MACHINE,
-  n:'Adjust the model’s load. Watch where requests wait.*',
+  n:'Change the load and watch dispatch decisions. This simplified model does not predict latency or guarantee service.*',
   run(){lessonDetails('replay');$('#playCtl').classList.add('show');startPlay();}}
 ]}
 ];
@@ -1996,7 +1982,7 @@ const GROUPS=[
   {name:'The why',color:'var(--amber)',pages:[0,1,2,3,4,5]},
   {name:'Mechanism',color:'var(--brand)',pages:[6,7,8,9,10]},
   {name:'Results',color:'var(--teal)',pages:[11,12,13]},
-  {name:'Replay',color:'var(--ok)',pages:[14]}
+  {name:'Try it',color:'var(--ok)',pages:[14]}
 ];
 function buildRail(){
   $('#chapterSelect').innerHTML=GROUPS.map(g=>`<optgroup label="${g.name}">${g.pages.map(p=>`<option value="${p}">${p+1}. ${PAGES[p].title}</option>`).join('')}</optgroup>`).join('');
@@ -2039,8 +2025,8 @@ function applyStep(){
   if(st.run)st.run();
   /* sidebar */
   $('#pTitle').textContent=pg.title;
-  $('#detailTitle').textContent=state.page===14?'Replay configuration':pg.title;
-  $('#detailBtn').textContent=state.page===14?'Edit model settings':'Details';
+  $('#detailTitle').textContent=state.page===14?'Simulation settings':pg.title;
+  $('#detailBtn').textContent=state.page===14?'Simulation settings':'Details';
   $('#chapterSelect').value=String(state.page);
   $('#sysCanvas').setAttribute('viewBox',state.page===14&&phoneLayout.matches?'0 0 360 746':'0 0 1000 580');
   const kind=state.page===2?'measured + schematic':state.page>=11&&state.page<=13?'measured':state.page===14?'simulation':'illustration';
@@ -2052,7 +2038,7 @@ function applyStep(){
   $('#nextBtn').disabled=state.page===PAGES.length-1&&state.step===pg.steps.length-1;
   $('#nextBtn').textContent='Next →';
   $('#pgno').textContent=`page ${state.page} of ${PAGES.length-1}`;
-  if(pg.title!=='Scenario replay')stopPlay();
+  if(state.page!==14)stopPlay();
 }
 function go(page,step){
   page=Math.max(0,Math.min(PAGES.length-1,page));
@@ -2171,11 +2157,24 @@ function replayConfiguration(){
  <tr><th scope="row">Router queues</th><td>${REPLAY.queueLimit} requests per band; expiry after ${REPLAY.ttlTicks} ticks (about 60 seconds). No byte-budget model.</td></tr>
  <tr><th scope="row">Dispatch</th><td>At most one request per tick; choose the less occupied endpoint. This simplifies the real scheduling profiles and endpoint filters.</td></tr>
  <tr><th scope="row">Model-server endpoints</th><td>${PG.pods.length} endpoints, each with ${REPLAY.runningPerPod} execution slots and ${REPLAY.waitingPerPod} waiting slots; ${REPLAY.serviceTicks} ticks of service.</td></tr>
- <tr><th scope="row">Traffic</th><td>Each load unit offers 1/${REPLAY.loadDivisor} request per tick on average. A standard burst adds ${REPLAY.burstPerTick} requests per tick for ${REPLAY.burstTicks} ticks. Seed ${PG.seed}; one tick = ${REPLAY.tickMs} ms.</td></tr></tbody></table>`)}
+ <tr><th scope="row">Traffic</th><td>Each load unit offers 1/${REPLAY.loadDivisor} request per tick on average. A standard burst adds ${REPLAY.burstPerTick} requests per tick for ${REPLAY.burstTicks} ticks. Seed ${PG.seed}; one tick = ${REPLAY.tickMs} simulated ms. Animation pace changes only playback speed.</td></tr></tbody></table>`)}
  <p>Pool saturation is the detector’s normalized load signal, not a percentage of physical GPU capacity. The ceiling is the configured comparison threshold.</p>
+ ${details('What this demonstrates',`<p>Priority selects the next eligible band; it guarantees neither completion order nor lower-band progress under sustained higher-priority demand. A ceiling gates dispatch; it does not reserve physical capacity or guarantee immediate engine execution.</p><p>This model has one flow per band, so it does not demonstrate fairness between flows. The separate round-robin lesson shows dispatch turns, not equal tokens, throughput or latency. Queue limits and expiry bound waiting, not successful completion.</p>`)}
+ ${savedExperiments()}
  ${details('Model limits and recorded data',`<p>KV-cache usage is approximated from occupied execution slots. There is no measured latency, token accounting, eviction, or cross-flow fairness experiment here. The unprotected baseline also omits the pinned router’s legacy negative-priority shedding.</p><p><a href="https://github.com/alexagriffith/flow-control-visualizer" target="_blank" rel="noopener">Explore the Flow Control Flight Recorder ↗</a> for recorded experiment telemetry. Aggregate samples cannot establish individual request routes.</p>`)}
  ${implSource(codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'utilization detector'),codeLink(PLUGINS+'saturationdetector/utilization/config.go',189,'detector settings'),codeLink(PLUGINS+'usagelimits/usagelimitpolicy.go',62,'static ceiling'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',496,'dispatch check'),codeLink('pkg/epp/requestcontrol/admission.go',57,'legacy admission'))}`;
 }
+const SAVED_EXPERIMENTS={
+ tiers:{name:'Priority tiers',path:'priority-tiers',summary:'One model endpoint; request-count detector 128; headroom 0.1; four priority bands. The saved configuration and results belong to that experiment.'},
+ fairness:{name:'Same-priority burst',path:'same-priority-fairness',summary:'Three tenants in one priority band with round-robin. Compares request-count 128 / headroom 0.1 against utilization / waiting reference 2 / headroom 0.'}
+};
+let savedExperiment='tiers';
+function savedExperimentLinks(){
+ const p=SAVED_EXPERIMENTS[savedExperiment],base='../benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/'+p.path+'/';
+ return `<p>${p.summary}</p><p><a href="${base}run-config.json" target="_blank" rel="noopener">Saved configuration ↗</a> · <a href="${base}scenario.json" target="_blank" rel="noopener">Workload ↗</a> · <a href="${base}README.md" target="_blank" rel="noopener">Results and limits ↗</a></p>`;
+}
+function savedExperiments(){return details('Saved experiments',`<label for="savedExperiment">Choose an experiment</label><select id="savedExperiment">${Object.entries(SAVED_EXPERIMENTS).map(([id,p])=>`<option value="${id}" ${savedExperiment===id?'selected':''}>${p.name}</option>`).join('')}</select><div id="savedExperimentInfo">${savedExperimentLinks()}</div><p>These are real test configurations, not runnable presets for this simplified model. Opening them leaves the simulation unchanged; reproducing them requires the recorded software, workload and deployment.</p>`);}
+function bindSavedExperiment(){$('#savedExperiment').onchange=e=>{if(!SAVED_EXPERIMENTS[e.target.value])return;savedExperiment=e.target.value;$('#savedExperimentInfo').innerHTML=savedExperimentLinks();};}
 function bindReplaySettings(){
  const fields={modelCeiling:'ceiling',modelKV:'kvLimit'};
  for(const [id,key] of Object.entries(fields))$('#'+id).onchange=e=>{
@@ -2186,7 +2185,7 @@ function bindReplaySettings(){
  };
  $('#configCeilingValue').textContent=REPLAY.ceiling.toFixed(2);
 }
-const configHelp={detector:'The utilization detector takes the larger normalized engine-waiting or KV-cache value for each endpoint, then averages across endpoints. This page approximates those inputs; it does not read a live model server.',ceiling:'Dispatch pauses when pool saturation reaches this ceiling. The model uses one static ceiling for all priority bands. Edit model settings to change it; priority-specific ceiling policies are outside this replay.'};
+const configHelp={detector:'The utilization detector takes the larger normalized engine-waiting or KV-cache value for each endpoint, then averages across endpoints. This page approximates those inputs; it does not read a live model server.',ceiling:'Dispatch pauses when pool saturation reaches this ceiling. The model uses one static ceiling for all priority bands. Open Simulation settings to change it; priority-specific ceiling policies are outside this simulation.'};
 let configTipTimer;
 function showConfigTip(button){
  clearTimeout(configTipTimer);
@@ -2294,7 +2293,7 @@ function replayFly(events,kind,duration){
     text.textContent=`×${events.length}`;dot.appendChild(text);
   }
   $('#replayFx').appendChild(dot);
-  dot.animate(frames,{duration,easing:'linear',fill:'forwards'});
+  dot.animate(frames,{duration:replayWallTime(duration),easing:'linear',fill:'forwards'});
   // The phase commit removes this bundle and transfers its exact request count.
 }
 function replayFlights(events,kind,duration){
@@ -2336,11 +2335,12 @@ $('#diagramZoom').onclick=()=>{const fit=document.body.classList.toggle('diagram
 /* =================== playground =================== */
 const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},queued:{p:[],s:[],b:[]},
   arrivals:{p:0,s:0,b:0},fraction:{p:0,s:0,b:0},pods:[[],[]],served:{p:0,s:0,b:0},
-  rej:0,ttl:0,timer:null,burst:0,burstLane:1,tick:0,seed:42,lanes:['p','s','b'],lastOffered:[]};
+  rej:0,ttl:0,timer:null,burst:0,burstLane:1,tick:0,speed:1,seed:42,lanes:['p','s','b'],lastOffered:[]};
 const REPLAY={tickMs:520,serviceTicks:8,runningPerPod:4,waitingPerPod:4,queueLimit:40,ttlTicks:Math.ceil(60000/520),ceiling:1,waitingLimit:4,kvLimit:.8,loadDivisor:34,burstPerTick:3,burstTicks:24};
 /* A discrete model tick produces events; the view commits each transfer once.
  * Moving requests are excluded from both source and destination occupancy.
- * The three phases total 480 ms, shorter than the 520 ms model tick. */
+ * Presentation time is scaled separately from model time: 1x is 3x slower
+ * than the original animation. All phases fit before the next displayed tick. */
 let replayVisualState=null,replayVisualTimers=[];
 const REPLAY_PHASE={complete:120,arrival:150,dispatch:210};
 function replayCaptureModel(){
@@ -2365,7 +2365,8 @@ function settleReplayVisual(){
   replayVisualState=typeof document.getElementById==='function'&&document.getElementById('replayFx')?replayCaptureModel():null;
   renderReplay();
 }
-function replayPhaseWait(ms,fn){replayVisualTimers.push(setTimeout(fn,ms));}
+function replayWallTime(ms){return ms*3/PG.speed;}
+function replayPhaseWait(ms,fn){replayVisualTimers.push(setTimeout(fn,replayWallTime(ms)));}
 function beginReplayVisual(before,events){
   const hasView=typeof document.getElementById==='function'&&document.getElementById('replayFx');
   if(!hasView||reduceMotion()){replayVisualState=hasView?replayCaptureModel():null;renderReplay();return;}
@@ -2421,6 +2422,7 @@ function setReplayMode(enabled){
   });
   resetPlay(PG.timer!==null);
 }
+$('#pgSpeed').addEventListener('change',e=>{const speed=+e.target.value;if(![.5,1,2].includes(speed))return;const running=PG.timer!==null;setReplayRunning(false);PG.speed=speed;setReplayRunning(running);});
 $('#pgPause').addEventListener('click',e=>{e.stopPropagation();setReplayRunning(PG.timer===null);});
 $('#pgStep').addEventListener('click',e=>{e.stopPropagation();if(PG.timer===null)playTick();});
 $('#pgReset').addEventListener('click',e=>{e.stopPropagation();resetPlay(PG.timer!==null);});
@@ -2442,9 +2444,9 @@ function setReplayRunning(running){
     else replayCancelVisual();
   }
   if(PG.timer!==null){clearInterval(PG.timer);PG.timer=null;}
-  if(running)PG.timer=setInterval(playTick,REPLAY.tickMs);
+  if(running)PG.timer=setInterval(playTick,replayWallTime(REPLAY.tickMs));
   $('#pgPause').textContent=running?'Pause':'Resume';
-  $('#pgPause').setAttribute('aria-label',running?'Pause replay':'Resume replay');
+  $('#pgPause').setAttribute('aria-label',running?'Pause simulation':'Resume simulation');
   $('#pgStep').disabled=running;
 }
 function stopPlay(){setReplayRunning(false);}

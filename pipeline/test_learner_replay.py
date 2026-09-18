@@ -55,6 +55,19 @@ function idle() { PG.load={p:0,s:0,b:0};PG.burst=0; }
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_animation_pace_changes_wall_time_only(self):
+        self.check_replay("""
+const outcomes=[];
+for(const speed of [.5,1,2]){
+  PG.speed=speed;PG.fc=true;PG.load={p:20,s:30,b:20};resetPlay(false);
+  assert.equal(replayWallTime(REPLAY.tickMs),REPLAY.tickMs*3/speed);
+  const phases=Object.values(REPLAY_PHASE).reduce((a,b)=>a+b,0);
+  assert(replayWallTime(phases)<replayWallTime(REPLAY.tickMs));
+  ticks(200);outcomes.push(JSON.stringify({arrivals:PG.arrivals,served:PG.served,q:PG.q,rej:PG.rej,ttl:PG.ttl,pods:PG.pods}));
+}
+assert.equal(outcomes[0],outcomes[1]);assert.equal(outcomes[1],outcomes[2]);
+""")
+
     def test_zero_load_has_no_phantom_arrivals(self):
         self.check_replay("""
 idle();startPlay();ticks(300);

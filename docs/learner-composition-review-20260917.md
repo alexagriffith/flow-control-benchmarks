@@ -266,3 +266,21 @@ Final learner SHA-256: `26f3b5299962fb383240264319f61d4ea07fb2284ab051e1e644e207
 - Safari's long native lesson title initially created6px page overflow. Explicit select styling and ellipsis corrected it. View checks wait for two animation frames after navigation so WebKit's prior-frame text measurements are not mistaken for current clipping.
 
 These checks establish this bounded mobile/configuration change. Real recorded replay integration and the deeper plugin section remain separately queued; user acceptance follows publication.
+
+
+## Motion, guarantees and bounded sections — September 17
+
+Source: Alexa’s follow-up feedback on burst repetition, editable replay semantics, saved configurations, fallback priority, shared tenant boundaries, stationary junction dots, and unclear numeric labels. Standing authorization is to push main.
+
+- Renamed the editable view Interactive simulation. Default animation is three times slower; pace choices change wall-clock presentation only. Simulated tick duration, service, TTL, admission and dispatch arithmetic are unchanged. The burst lesson runs once and holds its peak; separate Shared pool and Router queue boxes replace redundant overflow captions.
+- Unified Simulation settings with the existing controls. Saved experiments links expose two real test configurations, workloads and results; they do not pretend to run those experiments in the simplified model. Details distinguish dispatch ordering from completion/latency guarantees and preserve the unprotected-baseline limitation.
+- Shared guided queues have fixed thin tenant boundaries and a named outer section. Pool saturation has a section boundary. Removed stationary merge dots from shared, policy and fairness views. Selection uses a flow outline rather than a triangle overlapping the label. Objective fallback uses default 0 and amber.
+- Replaced ambiguous score with saturation and displayed the waiting normalization. The pressure lesson names both denominators: waiting / 4 and KV use / 80 percent, followed by the pool average. Companion engine-busy wording no longer implies an established queue-capacity limit.
+
+### Validation and limits
+
+Final learner SHA-256: `2ad5e2f88cf6df25180db7eccc93611d42c0869ed825f5e4db7643bc78a5f1f2`. Final source passes 20 scene/model unit tests, including pace-invariant outcomes, JavaScript syntax checks and diff whitespace checks. No benchmark runs or measured-result changes.
+
+Earlier in this candidate pass, the browser conservation test, controls validator and Chromium mobile validator passed (408 states and 18 configuration/mode combinations). These preceded the final shared-SVG and copy deltas and are not claimed as final-source full-view coverage. The shared-SVG author checked 21 guided states. Independent review of two supplied 1440x1000 captures found the missing 80-percent denominator, now added to narration; receipt `/tmp/learner-shared-queue-review-20260917/REVIEW.md`. That receipt does not bind screenshots to the final source hash or establish all-view/mobile/motion coverage.
+
+The in-app browser blocked the temporary local preview; no alternative access path was used. Final normal-motion visual review remains limited. Published-byte verification will follow the user-requested push; user visual acceptance remains separate. Recorded playback and the deeper plugin section remain queued.

@@ -52,12 +52,12 @@ const {chromium}=require(require.resolve('playwright',{paths:[process.cwd(),requ
  // One fresh request must arrive, then dispatch, then occupy one engine slot.
  for(const fc of [true,false]){
   await page.evaluate(fc=>{PG.fc=fc;PG.load={p:34,s:0,b:0};resetPlay(false);playTick();},fc);
-  await page.waitForTimeout(490);
+  await page.waitForTimeout(await page.evaluate(()=>replayWallTime(490)));
   const state=await page.evaluate(()=>replayVisualSnapshot());
   assert.equal(state.offered,1);assert.equal(state.inTransit,0);assert.equal(state.engineRunning,1);
   // Warm the deterministic model into overload, then let actual visual phases run.
   await page.evaluate(()=>{PG.load={p:100,s:100,b:100};for(let i=0;i<160;i++){playTick();settleReplayVisual();}playTick();});
-  await page.waitForTimeout(490);
+  await page.waitForTimeout(await page.evaluate(()=>replayWallTime(490)));
   const overloaded=await page.evaluate(()=>replayVisualSnapshot());
   assert(overloaded.rejected>0);if(fc)assert(overloaded.expired>0);
   await page.evaluate(()=>{PG.load={p:0,s:0,b:0};PG.burst=0;for(let i=0;i<300;i++){playTick();settleReplayVisual();}});
@@ -69,23 +69,23 @@ const {chromium}=require(require.resolve('playwright',{paths:[process.cwd(),requ
  await page.evaluate(()=>{PG.fc=false;PG.load={p:100,s:0,b:0};resetPlay(false);playTick();});
  const bundle=await page.locator('#replayFx .request-dot').evaluateAll(es=>es.map(e=>({count:Number(e.dataset.count),label:e.querySelector('text')?.textContent})));
  assert.deepEqual(bundle,[{count:2,label:'×2'}]);
- await page.waitForTimeout(175);
+ await page.waitForTimeout(await page.evaluate(()=>replayWallTime(175)));
  const routes=await page.locator('#replayFx .request-dot').evaluateAll(es=>es.map(e=>e.dataset.route));
  assert(routes.length>0);assert(routes.every(r=>r.startsWith('rp-bypass-p ')));
- await page.waitForTimeout(320);
+ await page.waitForTimeout(await page.evaluate(()=>replayWallTime(320)));
  // No phantom route markers at zero demand.
  await page.evaluate(()=>{PG.load={p:0,s:0,b:0};resetPlay(false);playTick();});
- await page.waitForTimeout(490);assert.equal((await page.evaluate(()=>replayVisualSnapshot())).offered,0);
+ await page.waitForTimeout(await page.evaluate(()=>replayWallTime(490)));assert.equal((await page.evaluate(()=>replayVisualSnapshot())).offered,0);
  // Cancel while arrival movement is active. No stale callback can repopulate reset state.
  await page.evaluate(()=>{PG.fc=true;PG.load={p:34,s:0,b:0};resetPlay(false);playTick();});
  await page.waitForTimeout(40);
  await page.evaluate(()=>{PG.load={p:0,s:0,b:0};resetPlay(false);});
- await page.waitForTimeout(600);
+ await page.waitForTimeout(await page.evaluate(()=>replayWallTime(600)));
  const reset=await page.evaluate(()=>replayVisualSnapshot());assert.equal(reset.offered,0);assert.equal(reset.inTransit,0);
  assert.equal(await page.locator('#replayFx .request-dot').count(),0);
  // Manual steps settle the prior batch; pause also leaves a conserved stable frame.
  await page.evaluate(()=>{PG.load={p:34,s:0,b:0};playTick();playTick();setReplayRunning(false);});
- const paused=await page.evaluate(()=>replayVisualSnapshot());await page.waitForTimeout(600);
+ const paused=await page.evaluate(()=>replayVisualSnapshot());await page.waitForTimeout(await page.evaluate(()=>replayWallTime(600)));
  assert.deepEqual(await page.evaluate(()=>replayVisualSnapshot()),paused);
  // Reduced motion has the same accounting, with no animated token replicas.
  await page.emulateMedia({reducedMotion:'reduce'});
