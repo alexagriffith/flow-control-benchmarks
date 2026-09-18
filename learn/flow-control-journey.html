@@ -306,6 +306,79 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
  body.evidence-mode:not(.recording-view) #evidence .et{font-size:19px}
  body.evidence-mode:not(.recording-view) #evidence .ebar,body.evidence-mode:not(.recording-view) #evidence .ev{font-size:17px}
 }
+
+/* Phone navigation and touch controls share the desktop lesson state. */
+#mobileChapter,#diagramTools,#replayConfigKeys{display:none}
+#replayConfigKeys button{padding:9px;text-align:left;border:1px solid var(--b2);border-radius:8px;background:var(--raised);color:var(--txt);font-size:12px;cursor:pointer}
+#replayConfigKeys button span{color:var(--txt2)}
+body.replay-mode #card{grid-template-rows:24px 96px minmax(0,1fr) 34px}
+body.replay-mode #stepMeta{display:grid;grid-template-columns:1fr;gap:8px}
+body.replay-mode #stepPips{display:none}
+body.replay-mode #replayConfigKeys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body.replay-mode #detailBtn{justify-self:start;font-size:12px;min-height:36px;padding:7px 12px}
+#configTip{inset:auto 20px 24px auto;margin:0;max-width:min(380px,calc(100vw - 32px));padding:16px;border:1px solid var(--b2);border-radius:12px;background:var(--raised);color:var(--txt);box-shadow:0 8px 30px #0004;font-size:14px;line-height:1.5}
+#configTip p{margin:0}
+.model-fields{display:grid;gap:16px;margin:18px 0}
+.model-fields label{display:grid;gap:6px;font-size:14px;color:var(--txt)}
+.model-fields select{width:100%;min-height:44px;font-size:16px;color:var(--txt);background:var(--raised);border:1px solid var(--b2);border-radius:8px;padding:8px}
+.model-fields small{font-size:12px;color:var(--txt2);line-height:1.5}
+#configChange{font-size:12px;color:var(--txt2);min-height:36px}
+@media(max-width:700px){
+ html{scroll-padding-top:12px}
+ #app{padding:0 10px max(16px,env(safe-area-inset-bottom));height:auto;min-height:100dvh}
+ #topbar{gap:8px;padding:10px 0;flex-wrap:wrap}
+ #topbar .t{font-size:16px;width:auto}
+ #topbar .t span{display:none}
+ .ctl{width:100%;display:flex;gap:8px}
+ .ctl>.pill{flex:1;text-align:center;display:grid;place-items:center;min-height:44px;font-size:13px}
+ #rail{display:none}
+ #mobileChapter{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:10px 0}
+ #mobileChapter label{font-size:13px;color:var(--txt2)}
+ #chapterSelect,#lessonDetails select,#settingsPanel select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23777' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px 8px;padding-right:30px}
+ #chapterSelect{overflow:hidden;text-overflow:ellipsis;min-width:0;width:100%;min-height:44px;border:1px solid var(--b2);border-radius:8px;background-color:var(--base);color:var(--txt);padding:8px 30px 8px 8px;font-size:16px}
+ #main{display:flex;flex-direction:column;padding-top:0;gap:12px}
+ #side,body.evidence-mode:not(.recording-view) #side{display:contents}
+ #card,body.evidence-mode:not(.recording-view) #card{order:0;height:320px;min-height:320px;width:100%;padding:14px;gap:8px;grid-template-rows:44px 44px minmax(0,1fr) 44px}
+ #stepMeta{align-items:center}
+ #narr{font-size:14px;line-height:1.5}
+ #card .sbtn,#detailBtn{min-height:44px;font-size:14px}
+ body.replay-mode #card{grid-template-rows:24px 104px minmax(0,1fr) 44px}
+ body.replay-mode #detailBtn{min-height:44px;font-size:14px}
+ #replayConfigKeys button{min-height:44px;font-size:12px}
+ #canvasWrap{order:1;padding:10px 0;gap:8px;overflow:hidden;min-width:0}
+ .diagram-hint{display:none}
+ #diagramTools{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;width:100%}
+ #diagramTools span{font-size:12px;color:var(--txt2)}
+ #diagramTools button{min-height:44px;font-size:13px}
+ #diagramViewport{overscroll-behavior-x:contain;touch-action:pan-x pan-y;width:100%;max-width:100%}
+ #sysCanvas{min-width:1000px;max-width:none;display:block}
+ body.diagram-fit #sysCanvas{min-width:0}
+ body.replay-mode #diagramTools{display:none}
+ body.replay-mode #canvasWrap{padding:8px}
+ body.replay-mode #sysCanvas{min-width:0;aspect-ratio:360/746}
+ #playCtl,body.evidence-mode:not(.recording-view) #evidence{order:2;margin-top:0}
+ #playCtl{padding:14px}
+ #playCtl .seg button,#playCtl .sbtn{min-height:44px;font-size:13px}
+ #playCtl .kk{font-size:11px}
+ .krow{font-size:14px;min-height:44px;margin-bottom:0}
+ .krow input[type=range]{height:36px}
+ #pgStats{font-size:13px}
+ #pgStats th{font-size:12px}
+ #pgStats th,#pgStats td{padding:9px 3px}
+ #lessonPanel{inset:8px;margin:0;width:auto;max-width:none;max-height:calc(100dvh - 16px);padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+ #lessonPanel header{position:sticky;top:-16px;padding:12px 0;background:var(--base);z-index:1}
+ #lessonPanel header button,#settingsPanel button{min-height:44px;font-size:14px}
+ #lessonDetails{font-size:14px}
+ #lessonDetails select,#settingsPanel select{font-size:16px;min-height:44px}
+ #lessonDetails summary,#hints summary{padding:10px 0;min-height:44px}
+ #settingsPanel{inset:80px 10px auto;margin:0;width:auto;max-width:none}
+ #configTip{inset:auto 10px max(10px,env(safe-area-inset-bottom));max-width:none;width:auto}
+ #diagramViewport{order:2}
+ #haltBanner,.halted #haltBanner{position:relative;order:1;top:auto;left:auto;transform:none;align-self:center;min-height:30px;display:flex;align-items:center;justify-content:center;margin:0 12px;font-size:12px;white-space:normal;text-align:center}
+ body.replay-mode #pgno{display:none}
+ #apToast{top:auto;bottom:16px}
+}
+
 </style>
 </head>
 <body>
@@ -327,10 +400,10 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
       </div>
     </div>
   </div>
-  <div id="rail"></div>
+  <div id="rail"></div><div id="mobileChapter"><label for="chapterSelect">Lesson</label><select id="chapterSelect" aria-label="Choose lesson"></select></div>
   <main id="main" tabindex="-1">
     <div id="canvasWrap">
-      <p class="diagram-hint">Scroll horizontally to explore the diagram →</p>
+      <p class="diagram-hint">Scroll horizontally to explore the diagram →</p><div id="diagramTools"><span id="diagramHelp">Swipe to explore</span><button class="pill" id="diagramZoom" aria-pressed="false">Fit diagram</button></div>
       <div id="diagramViewport" role="region" aria-label="System diagram; scroll horizontally on narrow screens" tabindex="0">
       <svg id="sysCanvas" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMin meet" aria-label="flow control system diagram">
         <desc>Mechanism examples use illustrative values. Measured results are labeled on the evidence pages.</desc>
@@ -565,7 +638,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
     <div id="side">
       <div id="card">
         <h2 id="pTitle"></h2>
-        <div id="stepMeta"><span id="stepLab" class="sr-only"></span><span id="stepPips" aria-hidden="true"></span><button class="pill" id="detailBtn" popovertarget="lessonPanel">Details</button></div>
+        <div id="stepMeta"><span id="stepLab" class="sr-only"></span><span id="stepPips" aria-hidden="true"></span><div id="replayConfigKeys"><button type="button" data-config-tip="detector" aria-describedby="configTip"><span>detector:</span> utilization ⓘ</button><button type="button" data-config-tip="ceiling" aria-describedby="configTip"><span>ceiling:</span> <b id="configCeilingValue">1.00</b> ⓘ</button></div><button class="pill" id="detailBtn" popovertarget="lessonPanel">Details</button></div>
         <p id="narr" aria-live="polite"></p>
         <div id="stepNav">
           <button class="sbtn" id="backBtn">← Back</button>
@@ -613,6 +686,7 @@ body.evidence-mode:not(.recording-view) #lessonDetails,body.evidence-mode:not(.r
     </div>
   </main>
 </div>
+<div id="configTip" popover role="tooltip" aria-label="Model setting explanation"><p id="configTipText"></p></div>
 <div id="lessonPanel" popover aria-labelledby="detailTitle"><header><h2 id="detailTitle">Details</h2><button class="pill" popovertarget="lessonPanel" popovertargetaction="hide" aria-label="Close details">Close</button></header><div id="detailBody"><div id="lessonDetails"></div></div></div>
 
 <script>
@@ -1689,6 +1763,7 @@ function lessonDetails(kind){
  if(kind==='replay')html=replayConfiguration();
  if(kind==='later')html=details('Later evidence and available options',`<p>Separate RHAII 3.5 experiment records:</p><ul>${[['priority-usage-limit-policies','Priority ceilings'],['slo-deadline-ordering','TTFT deadline ordering'],['pd-flow-control','Prefill / decode'],['batch-eviction','Eviction and retry']].map(([p,n])=>`<li><a href="../benchmark-data/rhaii-3.5-flow-control/${p}/README.md">${n}</a> — inspect the package’s measured coverage and limitations.</li>`).join('')}</ul><p>Available implementation options are not automatically tested or recommended. Program-aware fairness and predictive rejection are advanced implementation topics outside these lessons.</p>`,true);
  $('#lessonDetails').innerHTML=html;
+ if(kind==='replay')bindReplaySettings();
  $('#lessonDetails').addEventListener('click',userInput,{once:true});
  const bind=(id,fn)=>{const el=$(id);if(el)el.onchange=()=>{userInput();stepTimers.forEach(clearTimeout);stepTimers=[];CS.anims.forEach(a=>a.cancel());CS.anims=[];$('#fx').innerHTML='';fn();};};
  bind('#detectorChoice',detectorView);bind('#topologyChoice',detectorView);
@@ -1924,6 +1999,8 @@ const GROUPS=[
   {name:'Replay',color:'var(--ok)',pages:[14]}
 ];
 function buildRail(){
+  $('#chapterSelect').innerHTML=GROUPS.map(g=>`<optgroup label="${g.name}">${g.pages.map(p=>`<option value="${p}">${p+1}. ${PAGES[p].title}</option>`).join('')}</optgroup>`).join('');
+  $('#chapterSelect').value=String(state.page);
   const r=$('#rail');r.innerHTML='';
   GROUPS.forEach((g,gi)=>{
     const grp=document.createElement('div');grp.className='rgroup';
@@ -1954,6 +2031,7 @@ let hashLock=false;
 function applyStep(){
   const pg=PAGES[state.page],st=pg.steps[state.step];
   if($('#lessonPanel').matches(':popover-open'))$('#lessonPanel').hidePopover();
+  if($('#configTip').matches(':popover-open'))$('#configTip').hidePopover();
   resetCanvas();
   document.body.classList.toggle('replay-mode',state.page===14);
   document.body.classList.toggle('evidence-mode',state.page>=11&&state.page<=13);
@@ -1962,7 +2040,9 @@ function applyStep(){
   /* sidebar */
   $('#pTitle').textContent=pg.title;
   $('#detailTitle').textContent=state.page===14?'Replay configuration':pg.title;
-  $('#detailBtn').textContent=state.page===14?'Configuration':'Details';
+  $('#detailBtn').textContent=state.page===14?'Edit model settings':'Details';
+  $('#chapterSelect').value=String(state.page);
+  $('#sysCanvas').setAttribute('viewBox',state.page===14&&phoneLayout.matches?'0 0 360 746':'0 0 1000 580');
   const kind=state.page===2?'measured + schematic':state.page>=11&&state.page<=13?'measured':state.page===14?'simulation':'illustration';
   $('#stepLab').textContent=`Step ${state.step+1} of ${pg.steps.length} · ${kind}`;
   $('#stepPips').innerHTML=pg.steps.map((_,i)=>`<span class="pip${i<=state.step?' on':''}"></span>`).join('');
@@ -1997,7 +2077,7 @@ $('#canvasWrap').addEventListener('click',e=>{
   if(e.target.closest('#playCtl,#evidence,a,button,input,select'))return;
   userInput();nextStep();});
 document.addEventListener('keydown',e=>{
-  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('#lessonPanel,a,button,input,select,textarea,summary,[contenteditable]'))return;
+  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('#lessonPanel,#configTip,a,button,input,select,textarea,summary,[contenteditable]'))return;
   const k=e.key;
   if(k===' '||k==='ArrowRight'){e.preventDefault();userInput();nextStep();}
   else if(k==='ArrowLeft'){e.preventDefault();userInput();prevStep();}
@@ -2006,7 +2086,7 @@ document.addEventListener('keydown',e=>{
 });
 let wheelT=0;
 window.addEventListener('wheel',e=>{
-  if(innerWidth<=1020||e.target.closest('#rail,#side,#evidence,#playCtl,#lessonPanel,#settingsPanel'))return;
+  if(innerWidth<=1020||e.target.closest('#rail,#side,#evidence,#playCtl,#lessonPanel,#settingsPanel,#configTip'))return;
   const now=performance.now();if(now-wheelT<650)return;
   if(Math.abs(e.deltaY)<12)return;
   wheelT=now;userInput();
@@ -2074,23 +2154,68 @@ $('#fsBtn').onclick=e=>{e.stopPropagation();
 
 
 /* Replay keeps the request path visible and leaves configuration detail in the lessons. */
+const phoneLayout=matchMedia('(max-width:700px)');
 const replayY={p:145,s:290,b:435};
 const replayColor={p:'var(--brand)',s:'var(--amber)',b:'var(--teal)'};
 function replayConfiguration(){
  const scene=replayScene();
- return `<p class="config-note"><strong>Teaching model.</strong> These are this page’s settings, not a captured Endpoint Picker configuration.</p>
- <table><tbody><tr><th scope="row">Saturation detector</th><td>Utilization: max(engine waiting ÷ ${scene.waitingLimit}, KV-cache usage ÷ ${scene.kvLimit.toFixed(2)}) per endpoint; average across the two endpoints.</td></tr>
+ const select=(id,value,choices)=>`<select id="${id}">${choices.map(([v,label])=>`<option value="${v}" ${v===value?'selected':''}>${label}</option>`).join('')}</select>`;
+ return `<p class="config-note"><strong>Teaching model.</strong> These are this page’s settings, not a captured Endpoint Picker configuration or a deployment recommendation.</p>
+ <div class="model-fields">
+ <label>Dispatch ceiling ${select('modelCeiling',REPLAY.ceiling,[[.8,'0.80'],[1,'1.00'],[1.2,'1.20']])}<small>One static ceiling for all bands. Dispatch waits at or above this value. Ignored in the unprotected baseline.</small></label>
+ <label>KV-cache reference ${select('modelKV',REPLAY.kvLimit,[[.6,'60%'],[.8,'80%'],[1,'100%']])}<small>Utilization detector’s kvCacheUtilThreshold. The model approximates cache usage from occupied execution slots.</small></label>
+ </div><p id="configChange" role="status">Changing a setting resets the same traffic seed. These choices explore the mechanism; they are not measured operating points.</p>
+ ${details('Fixed model settings and calculation',`<table><tbody><tr><th scope="row">Saturation detector</th><td>Utilization: max(engine waiting ÷ ${scene.waitingLimit}, KV-cache usage ÷ ${scene.kvLimit.toFixed(2)}) per endpoint; average across the two endpoints.</td></tr>
  <tr><th scope="row">Usage limit</th><td>Static dispatch ceiling: ${scene.ceiling.toFixed(1)} for every band. Dispatch waits when saturation ≥ ceiling.</td></tr>
  <tr><th scope="row">Priority bands</th><td>Premium 100 → standard 0 → batch −10. One flow per band, FIFO within each flow.</td></tr>
  <tr><th scope="row">Router queues</th><td>${REPLAY.queueLimit} requests per band; expiry after ${REPLAY.ttlTicks} ticks (about 60 seconds). No byte-budget model.</td></tr>
  <tr><th scope="row">Dispatch</th><td>At most one request per tick; choose the less occupied endpoint. This simplifies the real scheduling profiles and endpoint filters.</td></tr>
  <tr><th scope="row">Model-server endpoints</th><td>${PG.pods.length} endpoints, each with ${REPLAY.runningPerPod} execution slots and ${REPLAY.waitingPerPod} waiting slots; ${REPLAY.serviceTicks} ticks of service.</td></tr>
- <tr><th scope="row">Traffic</th><td>Each load unit offers 1/${REPLAY.loadDivisor} request per tick on average. A standard burst adds ${REPLAY.burstPerTick} requests per tick for ${REPLAY.burstTicks} ticks. Seed ${PG.seed}; one tick = ${REPLAY.tickMs} ms.</td></tr></tbody></table>
+ <tr><th scope="row">Traffic</th><td>Each load unit offers 1/${REPLAY.loadDivisor} request per tick on average. A standard burst adds ${REPLAY.burstPerTick} requests per tick for ${REPLAY.burstTicks} ticks. Seed ${PG.seed}; one tick = ${REPLAY.tickMs} ms.</td></tr></tbody></table>`)}
  <p>Pool saturation is the detector’s normalized load signal, not a percentage of physical GPU capacity. The ceiling is the configured comparison threshold.</p>
  ${details('Model limits and recorded data',`<p>KV-cache usage is approximated from occupied execution slots. There is no measured latency, token accounting, eviction, or cross-flow fairness experiment here. The unprotected baseline also omits the pinned router’s legacy negative-priority shedding.</p><p><a href="https://github.com/alexagriffith/flow-control-visualizer" target="_blank" rel="noopener">Explore the Flow Control Flight Recorder ↗</a> for recorded experiment telemetry. Aggregate samples cannot establish individual request routes.</p>`)}
- ${implSource(codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'utilization detector'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',496,'dispatch check'),codeLink('pkg/epp/requestcontrol/admission.go',57,'legacy admission'))}`;
+ ${implSource(codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'utilization detector'),codeLink(PLUGINS+'saturationdetector/utilization/config.go',189,'detector settings'),codeLink(PLUGINS+'usagelimits/usagelimitpolicy.go',62,'static ceiling'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',496,'dispatch check'),codeLink('pkg/epp/requestcontrol/admission.go',57,'legacy admission'))}`;
 }
+function bindReplaySettings(){
+ const fields={modelCeiling:'ceiling',modelKV:'kvLimit'};
+ for(const [id,key] of Object.entries(fields))$('#'+id).onchange=e=>{
+  const value=+e.target.value,allowed={ceiling:[.8,1,1.2],kvLimit:[.6,.8,1]};
+  if(!allowed[key].includes(value))return;
+  userInput();const running=PG.timer!==null;REPLAY[key]=value;resetPlay(running);
+  lessonDetails('replay');$('#'+id).focus();$('#configChange').textContent='Applied. Traffic restarted at tick 0 with the same seed and loads.';
+ };
+ $('#configCeilingValue').textContent=REPLAY.ceiling.toFixed(2);
+}
+const configHelp={detector:'The utilization detector takes the larger normalized engine-waiting or KV-cache value for each endpoint, then averages across endpoints. This page approximates those inputs; it does not read a live model server.',ceiling:'Dispatch pauses when pool saturation reaches this ceiling. The model uses one static ceiling for all priority bands. Edit model settings to change it; priority-specific ceiling policies are outside this replay.'};
+let configTipTimer;
+function showConfigTip(button){
+ clearTimeout(configTipTimer);
+ const tip=$('#configTip'),r=button.getBoundingClientRect();
+ $('#configTipText').textContent=configHelp[button.dataset.configTip];
+ tip.style.inset='auto';tip.style.width=Math.min(380,innerWidth-32)+'px';
+ tip.style.left=Math.max(8,Math.min(r.left,innerWidth-Math.min(380,innerWidth-32)-16))+'px';
+ tip.style.top=Math.max(8,Math.min(r.bottom+8,innerHeight-220))+'px';
+ if(!tip.matches(':popover-open'))tip.showPopover();
+}
+function dismissConfigTip(){
+ clearTimeout(configTipTimer);
+ configTipTimer=setTimeout(()=>{
+  if(!document.querySelector('[data-config-tip]:focus-visible')&&$('#configTip').matches(':popover-open'))$('#configTip').hidePopover();
+ },150);
+}
+$$('[data-config-tip]').forEach(button=>{
+ button.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showConfigTip(button);});
+ button.addEventListener('pointerleave',dismissConfigTip);
+ button.addEventListener('focus',()=>{if(button.matches(':focus-visible'))showConfigTip(button);});
+ button.addEventListener('blur',dismissConfigTip);
+ button.addEventListener('click',()=>{userInput();showConfigTip(button);});
+});
+$('#configTip').addEventListener('pointerenter',()=>clearTimeout(configTipTimer));
+$('#configTip').addEventListener('pointerleave',dismissConfigTip);
+
 function buildReplayView(){
+  document.getElementById('replayView')?.remove();
+  if(phoneLayout.matches){buildPhoneReplay();return;}
   const g=svgEl('g',{id:'replayView'});
   let h='<rect id="replayPicker" x="280" y="15" width="478" height="550" rx="16" fill="var(--base)" stroke="var(--b2)"/><text x="519" y="46" text-anchor="middle" fill="var(--txt)" font-size="18" font-weight="600">Endpoint Picker</text><text x="102" y="82" text-anchor="middle" fill="var(--txt2)" font-size="15">Requests</text><text x="465" y="82" text-anchor="middle" fill="var(--txt2)" font-size="15">Router queues</text><text x="887" y="64" text-anchor="middle" fill="var(--txt2)" font-size="15"><tspan x="887">Model-server</tspan><tspan x="887" dy="18">endpoints</tspan></text>';
   for(const [i,t] of ['p','s','b'].entries()){
@@ -2104,7 +2229,7 @@ function buildReplayView(){
       <text id="rp-count-${t}" x="614" y="${y-24}" text-anchor="end" fill="var(--txt2)" font-size="13"/>
       <g id="rp-queue-${t}"/><path id="rp-bypass-${t}" d="M300 ${y} H630" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-dasharray="5 4" visibility="hidden"/>`;
   }
-  h+='<circle cx="690" cy="290" r="4" fill="var(--txt3)"/><path id="rp-trunk" d="M690 290 H745" fill="none" stroke="var(--txt3)" stroke-width="2"/>';
+  h+='<path id="rp-trunk" d="M690 290 H745" fill="none" stroke="var(--txt3)" stroke-width="2"/>';
   for(let i=0;i<2;i++){
     const y=i?385:195;
     h+=`<path id="rp-pod-${i}" d="M745 290 C773 290 772 ${y} 790 ${y} H800" fill="none" stroke="var(--txt3)" stroke-width="2" marker-end="url(#arr)"/>
@@ -2118,6 +2243,25 @@ function buildReplayView(){
   g.innerHTML=h;
   g.querySelectorAll('[marker-end]').forEach(e=>e.setAttribute('marker-end',arrowHead(e.getAttribute('stroke'))));
   $('#sysCanvas').appendChild(g);
+}
+function buildPhoneReplay(){
+ const g=svgEl('g',{id:'replayView'});
+ let h='<rect id="replayPicker" x="126" y="18" width="230" height="482" rx="14" fill="var(--base)" stroke="var(--b2)"/><text x="241" y="48" text-anchor="middle" font-size="17" font-weight="600" fill="var(--txt)">Endpoint Picker</text><text id="rp-status" x="241" y="74" text-anchor="middle" font-size="16"/><text id="rp-gate" x="241" y="98" text-anchor="middle" font-size="16" fill="var(--txt2)"/><text x="58" y="142" text-anchor="middle" font-size="16" fill="var(--txt2)">Requests</text><text x="237" y="142" text-anchor="middle" font-size="16" fill="var(--txt2)">Router queues</text>';
+ for(const [i,t] of ['p','s','b'].entries()){
+  const y=202+i*104,color=replayColor[t];
+  h+=`<rect x="6" y="${y-22}" width="104" height="44" rx="8" fill="var(--raised)" stroke="${color}"/><text x="58" y="${y+5}" text-anchor="middle" fill="var(--txt)" font-size="16">${['premium','standard','batch'][i]}</text>
+   <path id="rp-in-${t}" d="M110 ${y} H140" fill="none" stroke="${color}" stroke-width="2" marker-end="url(#arr)"/>
+   <rect x="140" y="${y-40}" width="194" height="80" rx="8" fill="var(--inset)" stroke="${color}"/>
+   <text x="150" y="${y-18}" fill="${color}" font-size="16">priority ${[100,0,-10][i]}</text><text id="rp-count-${t}" x="324" y="${y-18}" text-anchor="end" fill="var(--txt2)" font-size="16"/><g id="rp-queue-${t}"/>
+   <path id="rp-out-${t}" d="M334 ${y} C348 ${y} 346 470 346 480" fill="none" stroke="var(--txt3)" stroke-width="2"/><path id="rp-bypass-${t}" d="M140 ${y} H334" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-dasharray="5 4" visibility="hidden"/>`;
+ }
+ h+='<path id="rp-trunk" d="M346 480 V510" fill="none" stroke="var(--txt3)" stroke-width="2"/><text x="180" y="535" text-anchor="middle" font-size="16" fill="var(--txt2)">Model-server endpoints</text>';
+ for(let i=0;i<2;i++){
+  const x=16+i*180,c=x+74;
+  h+=`<path id="rp-pod-${i}" d="M346 510 C346 552 ${c} 544 ${c} 555 V565" fill="none" stroke="var(--txt3)" stroke-width="2" marker-end="url(#arr)"/><rect x="${x}" y="565" width="148" height="124" rx="10" fill="var(--raised)" stroke="var(--b3)"/><text x="${c}" y="589" text-anchor="middle" fill="var(--txt)" font-size="16">Endpoint ${i?'B':'A'}</text><g id="rp-jobs-${i}"/><text id="rp-pod-count-${i}" x="${c}" y="675" text-anchor="middle" fill="var(--txt2)" font-size="16"/><path id="rp-done-${i}" d="M${c} 689 V713" fill="none" stroke="var(--ok)" stroke-width="2" marker-end="url(#arr)"/>`;
+ }
+ h+='<text x="180" y="735" text-anchor="middle" font-size="16" fill="var(--txt2)">Completed requests</text><g id="replayFx"/>';
+ g.innerHTML=h;g.querySelectorAll('[marker-end]').forEach(e=>e.setAttribute('marker-end',arrowHead(e.getAttribute('stroke'))));$('#sysCanvas').appendChild(g);
 }
 function replayFly(events,kind,duration){
   if(reduceMotion()||!events.length)return;
@@ -2164,21 +2308,31 @@ function replayFlights(events,kind,duration){
 function updateReplayView(){
   const view=replayVisualState||PG;
   for(const t of ['p','s','b']){
-    const y=replayY[t],n=view.q[t];
+    const y=replayY[t],n=view.q[t],i=['p','s','b'].indexOf(t),mobile=phoneLayout.matches;
     $(`#rp-bypass-${t}`).setAttribute('visibility',PG.fc?'hidden':'visible');
     $(`#rp-count-${t}`).textContent=PG.fc?`${n} waiting`:'bypassed';
-    $(`#rp-queue-${t}`).innerHTML=Array.from({length:n},(_,i)=>`<circle cx="${319+(i%20)*15}" cy="${y+4+Math.floor(i/20)*20}" r="4.5" fill="${replayColor[t]}"/>`).join('');
+    $(`#rp-queue-${t}`).innerHTML=Array.from({length:n},(_,i)=>`<circle cx="${mobile?153+(i%20)*8.6:319+(i%20)*15}" cy="${mobile?208+['p','s','b'].indexOf(t)*104+Math.floor(i/20)*17:y+4+Math.floor(i/20)*20}" r="${mobile?3:4.5}" fill="${replayColor[t]}"/>`).join('');
   }
   view.pods.forEach((jobs,i)=>{
     const y=i?385:195,running=Math.min(jobs.length,REPLAY.runningPerPod),waiting=Math.max(0,jobs.length-running);
-    $(`#rp-jobs-${i}`).innerHTML=jobs.map((job,j)=>`<circle cx="${820+(j%4)*32}" cy="${y-8+Math.floor(j/4)*22}" r="7" fill="${replayColor[job.tier]}" ${j>=4?'fill-opacity=".35"':''}/>`).join('');
-    $(`#rp-pod-count-${i}`).textContent=`${running} running · ${waiting} waiting`;
+    $(`#rp-jobs-${i}`).innerHTML=jobs.map((job,j)=>`<circle cx="${phoneLayout.matches?40+i*180+(j%4)*32:820+(j%4)*32}" cy="${phoneLayout.matches?614+Math.floor(j/4)*24:y-8+Math.floor(j/4)*22}" r="7" fill="${replayColor[job.tier]}" ${j>=4?'fill-opacity=".35"':''}/>`).join('');
+    $(`#rp-pod-count-${i}`).innerHTML=phoneLayout.matches?`<tspan x="${90+i*180}" y="662">${running} running</tspan><tspan x="${90+i*180}" y="681">${waiting} waiting</tspan>`:`${running} running · ${waiting} waiting`;
   });
   const metrics=sceneMetrics(replayScene(view.pods)),blocked=PG.fc&&!metrics.canDispatch;
   $('#rp-status').textContent=!PG.fc?'Router queues bypassed':blocked?'Router queues wait':'Dispatch permitted';
-  $('#rp-gate').textContent=PG.fc?`Saturation ${metrics.pool.toFixed(2)} ${blocked?'≥':'<'} ceiling ${REPLAY.ceiling.toFixed(2)}`:'Unprotected illustrative baseline';
+  $('#rp-gate').innerHTML=phoneLayout.matches?(PG.fc?`<tspan x="241" y="98">Saturation ${metrics.pool.toFixed(2)}</tspan><tspan x="241" y="119">${blocked?'≥':'<'} ceiling ${REPLAY.ceiling.toFixed(2)}</tspan>`:'<tspan x="241" y="98">Unprotected baseline</tspan>'):(PG.fc?`Saturation ${metrics.pool.toFixed(2)} ${blocked?'≥':'<'} ceiling ${REPLAY.ceiling.toFixed(2)}`:'Unprotected illustrative baseline');
   $('#rp-status').setAttribute('fill',blocked?'var(--danger)':'var(--txt2)');
 }
+
+function syncPhoneLayout(){
+ const snapshot=replayCaptureModel();replayCancelVisual();buildReplayView();replayVisualState=snapshot;
+ $('#sysCanvas').setAttribute('viewBox',state.page===14&&phoneLayout.matches?'0 0 360 746':'0 0 1000 580');
+ if(state.page===14)renderReplay();
+}
+phoneLayout.addEventListener('change',syncPhoneLayout);
+$('#chapterSelect').addEventListener('change',e=>{userInput();go(+e.target.value,0);});
+$('#diagramZoom').onclick=()=>{const fit=document.body.classList.toggle('diagram-fit');$('#diagramZoom').textContent=fit?'Zoom diagram':'Fit diagram';$('#diagramZoom').setAttribute('aria-pressed',String(fit));$('#diagramHelp').textContent=fit?'Whole diagram':'Swipe to explore';};
+
 /* =================== playground =================== */
 const PG={load:{p:20,s:30,b:20},fc:true,q:{p:0,s:0,b:0},queued:{p:[],s:[],b:[]},
   arrivals:{p:0,s:0,b:0},fraction:{p:0,s:0,b:0},pods:[[],[]],served:{p:0,s:0,b:0},
@@ -2379,13 +2533,12 @@ function renderReplay(){
     <tr><th>Completed</th>${['p','s','b'].map(t=>`<td>${view.served[t]}</td>`).join('')}</tr></tbody></table>
     <div class="totals"><span>Tick<strong>${view.tick}</strong></span><span>Rejected<strong>${view.rej}</strong></span><span>Expired<strong>${view.ttl}</strong></span></div>`;
 }
-
 /* =================== boot =================== */
 buildQueues();
 buildReplayView();
 const m=location.hash.match(/page-(\d+)/);
 go(m?Math.min(PAGES.length-1,+m[1]):0,0);
-setAuto(!reduceMotion(),true);
+setAuto(!reduceMotion()&&!phoneLayout.matches,true);
 motionPreference.addEventListener('change',()=>{if(reduceMotion())setAuto(false,true);applyStep();});
 autoT0=performance.now()-(+autoSel.value-1100)*(PAGES[state.page].steps[state.step].dwell||1);
 </script>

@@ -247,3 +247,22 @@ The previous evaluation missed semantically redundant labels and counted model t
 Final color-only delta: Details links now use the same high-contrast text color as implementation-source links. Reviewed delivery learner hash: `ec70a668188825e15c4fd21b0f56495954159d881207d454345294a03130fa4b`. Layout, behavior and other files are unchanged from the full-regression hashes above.
 
 Independent comprehension review closed all four actionable findings (burst setting, engine waiting, an empty illustrated fairness participant, link contrast). No unresolved blocker in this bounded pass. Receipt: `/tmp/learner-ownership-review-20260917/REVIEW.md`. It covers all 34 guided views across both widths/themes, native changed-family inspection, 20 popover interaction cases and 192 motion-ledger samples, with the final contrast-only delta explicitly separated. User approval remains pending.
+
+## Mobile navigation and visible model settings — September 17
+
+Alexa requested phone support, removal of the stationary replay junction dot, a coherent configuration control, and visible `key: value` entries with tooltip explanations. The previously published `b04260e` exposed a read-only Configuration link; this candidate separates reading current values from editing supported teaching-model settings.
+
+- Phones use a native lesson picker, 44px navigation targets, a stable narration card before the visual, full-height scrollable details, and autoplay off on entry. Detailed guided diagrams retain readable size with explicit pan/fit controls. Replay has a portrait layout with the same Endpoint Picker ownership, request paths and event ledger. Counts/status use larger labels; the stationary junction dot is removed on desktop too.
+- Replay shows `detector: utilization` and the current `ceiling` directly. Help works on hover, keyboard focus, or tap, with Escape/light dismissal. Editing changes the model's static ceiling or KV-cache reference and resets the same seed/loads. Other settings remain available in a collapsed inventory. An ineffective engine-waiting control was removed after behavior tests showed it would not change this model's protected-mode queueing.
+- Source validation remains pinned to router `bb2113e4ecd79b049c7322164794ca9ea30b8cbb`: utilization `config.go` validates positive queue reference and KV-cache reference in (0,1]; `detector.go` computes each endpoint's maximum normalized pressure then averages endpoints; `usagelimitpolicy.go` returns the same configured static threshold for each band. The replay still approximates KV usage with occupied execution slots and simplifies endpoint selection. These controls are teaching choices, not captured deployment configuration, calibrated recommendations, or recorded request playback.
+
+### Validation receipt
+
+Final learner SHA-256: `26f3b5299962fb383240264319f61d4ea07fb2284ab051e1e644e20724f876e4`.
+
+- New focused mobile validator: 408 views in Chromium and 408 in WebKit, spanning 320–1844px, portrait/landscape, light/dark, all 34 guided states. Checks navigation, prose containment, page overflow, tips, fit/pan controls, all 18 supported configuration/mode combinations, observable setting effects, conserved requests and resize continuity, including normal motion.
+- Existing regression: 20 replay/scene tests; stable navigation/marker checks in both engines; composition, controls and 68 evidence states. Full render captured 160 scene/detail/option views plus 34 normal-motion steps. Recording adapter passed 34 guided views and controls. No benchmark traffic or measurement changes.
+- Independent comprehension review found one small-label issue at320px; the final larger labels passed populated and baseline views without collisions. Final six viewport/theme combinations and a WebKit phone check found no unresolved blocker. Receipt: `/tmp/learner-mobile-review-20260917/REVIEW.md`; broader render and recording reports are in that directory.
+- Safari's long native lesson title initially created6px page overflow. Explicit select styling and ellipsis corrected it. View checks wait for two animation frames after navigation so WebKit's prior-frame text measurements are not mistaken for current clipping.
+
+These checks establish this bounded mobile/configuration change. Real recorded replay integration and the deeper plugin section remain separately queued; user acceptance follows publication.
