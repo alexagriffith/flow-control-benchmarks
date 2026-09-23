@@ -12,7 +12,7 @@
     "batch_eviction_router_image": "sha256:12552e243168ebc9ccd6905acda939adc7cf55ccc9214097e91ab569cc648c01"
   },
   "files": {
-    "README.md": "b046b1fa7ab5c9a0194cb97bae9cc9756d2d1bb7c030682ed809170acc1b102f",
+    "README.md": "693393caaa55857f88019d5c26fdf6be464895544e7e946a77fdee0fbdb2cff6",
     "assets/capacity-slo-envelope.svg": "3eb1696a228827b58b66e1b319691c73d90a958d58ad58f18211f0a0b4266b65",
     "assets/slo-deadline-ordering.svg": "4dc7e9f6bfc39b8b737568644d21d51087728ec220570c2a3bfad20cd91d6ca7",
     "batch-dispatch/README.md": "e9fcabab45e7317654c22fc81f65f5373fa9137dd83b34fcca8e19a53b9a912f",
@@ -25,7 +25,7 @@
     "batch-dispatch/summary.csv": "74517dbc1843b2c45474fbe842365c9d5e47d90076d366bf10091ecc8a083acd",
     "batch-dispatch/system-metrics.csv": "95a6a4ca9cd20856175636e6a5e480b7451f27f9e5d6be8aecc89ce89fee48c3",
     "batch-dispatch/traffic-samples.csv": "8a05905ee7402dcb0c939e3f5b49ca9142c51abb83502c614ef471efc0d37251",
-    "batch-eviction/README.md": "b23bd576257022138bf49a88daba66e4e98c240ba710188dbd46082629216aa6",
+    "batch-eviction/README.md": "753d960dfc8188580aa85c1a9717118130afd69e99117a84c7bc605d594411d3",
     "batch-eviction/analysis.json": "9da16a2b4e4eeedfe424083504668fea0b05ce07c9f6336ff39572f5dbbc5432",
     "batch-eviction/paired-effects.csv": "830774ff8be8732f7607346721ebe2c3722856fe8e4f155c9bc96ce587b6536d",
     "batch-eviction/run-config.json": "6776eb7b5f16c6429fa719a7bea2bb017c39f2df1a6ba8e37ee81b78089cddbd",

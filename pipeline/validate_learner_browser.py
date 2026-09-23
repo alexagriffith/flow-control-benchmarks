@@ -16,7 +16,7 @@ OPTIONS=[(8,0,'detectorChoice',['utilization','requests','tokens','hybrid']),
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,default=Path('/tmp/learner-revision-20260916/rendered'));args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-    records=[];errors=[];links=set();names=['learn/flow-control-journey.html','learn/flow-control.html']
+    records=[];errors=[];links=set();names=['learn/flow-control-interactive.html','learn/flow-control-written.html']
     hashes={n:hashlib.sha256((ROOT/n).read_bytes()).hexdigest() for n in names}
     with sync_playwright() as pw:
         browser=pw.chromium.launch()

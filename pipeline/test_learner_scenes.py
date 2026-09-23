@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'learn/flow-control-journey.html'
+PAGE = ROOT / 'learn/flow-control-interactive.html'
 
 
 def js_value(expression):

@@ -1,6 +1,6 @@
-# Batch eviction benchmark data
+# Hold back and batch eviction benchmark data
 
-[Read the Batch Eviction Benchmark](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/batch-eviction/results.html)
+[Read the hold back and batch eviction benchmark](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/batch-eviction/results.html)
 
 These packages test whether lower-priority batch work can share model capacity
 without compromising higher-priority realtime traffic. They cover two deployment
@@ -11,7 +11,7 @@ topologies and keep each claim tied to the evidence that supports it.
 Can reserved capacity and eviction protect realtime traffic after batch work
 has entered vLLM?
 
-**Answer.** Reserved capacity protected realtime p95 TTFT, and eviction safely
+**Answer.** Priority holdback protected realtime p95 TTFT, and eviction safely
 released and retried eligible batch work in the tested one- and two-model-replica
 topologies.
 

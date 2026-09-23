@@ -1,6 +1,6 @@
 # Original RHAII 3.4 flow-control campaign
 
-This historical overview retains the original tables and figures for provenance. The corrected 300-second service-tier result below uses per-repeat percentiles. The older batch, consolidation, fairness, output-length, and multi-replica percentile figures are historical and are not current validated latency headlines; see the [restated walkthrough](../../walkthrough.html) and [RHAII 3.5 takeaways](../../benchmark.html) for their respective scopes.
+This historical overview retains the original tables and figures for provenance. The corrected 300-second service-tier result below uses per-repeat percentiles. The older batch, consolidation, fairness, output-length, and multi-replica percentile figures are historical and are not current validated latency headlines; see the [restated walkthrough](../../benchmark-walkthrough.html) and [RHAII 3.5 takeaways](../../benchmark.html) for their respective scopes.
 
 Flow control is the Endpoint Picker's policy layer for multi-tenant inference. Priority is resolved before admission, independently of pool pressure. With room and no backlog, dispatch can be prompt. Under congestion, work waits in policy-aware queues, and the saturation gate determines when the selected request can dispatch.
 
@@ -168,13 +168,13 @@ A verification gap earlier in this campaign sent tenants to pools without priori
 
 ## The benchmark
 
-**[How we got the numbers, one pass at a time](../../walkthrough.html)** is the longer story behind the results above: what was tested in what order, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.
+**[How we got the numbers, one pass at a time](../../benchmark-walkthrough.html)** is the longer story behind the results above: what was tested in what order, where a measurement turned out to be measuring the wrong thing, and how the campaign landed on numbers that survive scrutiny.
 
 ## Learn flow control
 
-**[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-journey.html)**
+**[Open the interactive explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-interactive.html)**
 
-Explore the dispatch path, admission gates, and policy behavior under pressure, then change the load in the playground. It supports guided playback and light or dark themes. Source is at [`learn/flow-control-journey.html`](../../learn/flow-control-journey.html). [The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control.html) is the same material as a page to read.
+Explore the dispatch path, admission gates, and policy behavior under pressure, then change the load in the playground. It supports guided playback and light or dark themes. Source is at [`learn/flow-control-interactive.html`](../../learn/flow-control-interactive.html). [The written explainer](https://alexagriffith.github.io/flow-control-benchmarks/learn/flow-control-written.html) is the same material as a page to read.
 
 
 ## Pipeline

@@ -20,7 +20,7 @@ higher-priority work.
 Each result section states its aggregation, repeat count, units, and evidence
 source.
 
-<sub>Evidence [claim matrix](docs/readme-claim-matrix.md) · [RHAII 3.5 campaign](benchmark-data/rhaii-3.5-flow-control/) · [priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [batch eviction](benchmark-data/batch-eviction/)</sub>
+<sub>Evidence [claim matrix](docs/readme-claim-matrix.md) · [RHAII 3.5 campaign](benchmark-data/rhaii-3.5-flow-control/) · [priority tiers](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/priority-tiers/) · [hold back and batch eviction](benchmark-data/batch-eviction/)</sub>
 
 ## Architecture
 
@@ -100,7 +100,7 @@ must keep waiting in EPP.
 | Stage-aware admission, fairness, and priority reserve protected prefill/decode (P/D) serving under the tested request shapes. | [RHAII 3.5 P/D flow control](benchmark-data/rhaii-3.5-flow-control/pd-flow-control/) |
 | Running batch exposes the boundary of admission control. | [Batch interference](benchmark-data/upstream-flow-control-v0.9.0/batch-interference/) |
 | Metrics-gated dispatch keeps queued Batch work outside serving until capacity is available. | [RHAII 3.5 Batch dispatch](benchmark-data/rhaii-3.5-flow-control/batch-dispatch/) |
-| Reserved capacity protected realtime latency after dispatch. | [Batch eviction](benchmark-data/batch-eviction/) |
+| Reserved capacity protected realtime latency after dispatch. | [Hold back and batch eviction](benchmark-data/batch-eviction/) |
 
 ## RHAII 3.5: From Latency Objectives to Configuration
 
@@ -169,7 +169,7 @@ Start with the [sanitized P/D recipe](benchmark-data/rhaii-3.5-flow-control/pd-f
 | [RHAII 3.5 flow control](benchmark-data/rhaii-3.5-flow-control/) | Capacity from latency objectives, deadline ordering, P/D anti-starvation, Batch dispatch, and eviction recovery. | Open Data Hub build from the llm-d v0.10 development line. Each package records its tested image, workload, configuration, repeats, and evidence boundary. |
 | [RHAII 3.4 flow control](benchmark-data/rhaii-3.4-flow-control/) | Saturation detector behavior under priority tiers, batch isolation, consolidation, and fairness tests. | Utilization detector with queue-depth saturation. Scheduler image is pinned in the package evidence. |
 | [Upstream request-count admission](benchmark-data/upstream-flow-control-v0.9.0/) | Request-count and token-aware admission tests, including `maxConcurrency` tuning and production-shaped scenarios. | Upstream v0.9 was used because request-count admission was not available in the RHAII 3.4 scheduler image. |
-| [Batch eviction](benchmark-data/batch-eviction/) | Reserved capacity for realtime latency, plus eviction and retry after lower-priority batch work has entered vLLM. | Experimental PR build with request-count admission, `maxConcurrency=48`, vLLM `max-num-seqs=96`, and batch eviction enabled. |
+| [Hold back and batch eviction](benchmark-data/batch-eviction/) | Reserved capacity for realtime latency, plus eviction and retry after lower-priority batch work has entered vLLM. | Experimental PR build with request-count admission, `maxConcurrency=48`, vLLM `max-num-seqs=96`, and batch eviction enabled. |
 
 Each suite covers one test purpose in the larger story.
 
@@ -512,12 +512,11 @@ that comparison separately.
 | RHAII 3.5 campaign | Current | The published campaign contains 12 evidence groups, sanitized configurations, replay runners, and package validation. | [benchmark-data/rhaii-3.5-flow-control/](benchmark-data/rhaii-3.5-flow-control/) |
 | RHAII 3.4 saturation detector | Historical reference | The accepted saturation-detector package records the earlier runtime and test conditions. | [benchmark-data/rhaii-3.4-flow-control/](benchmark-data/rhaii-3.4-flow-control/) |
 | Upstream v0.9 tuning and scenarios | Published | The visual report links measured results, tested configurations, and evidence boundaries for the v0.9 campaign. | [HTML report](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/upstream-flow-control-v0.9.0/results.html) |
-| Batch eviction | Current | The published single-model, two-model, and RHAII 3.5 rerun packages document reserve, eviction, retry, and their evidence boundaries. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
+| Hold back and batch eviction | Current | The published single-model, two-model, and RHAII 3.5 rerun packages document reserve, eviction, retry, and their evidence boundaries. | [benchmark-data/batch-eviction/](benchmark-data/batch-eviction/) |
 | Claim matrix | Current | The matrix maps each front-page claim to its evidence, configuration, and boundary. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
 | Runner and reproduction | Current | The published feature runners cover the RHAII 3.5 SLO and P/D replay paths. | [pipeline/README.md](pipeline/README.md) |
 | SLO proof protocol | Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
-| Benchmark walkthrough | Historical reference | The original RHAII 3.4 story explains the operating-point sweep, configuration, and measured scenarios. | [walkthrough.html](walkthrough.html) |
-| Benchmark takeaways | Published | The RHAII 3.5 overview connects capacity, deadline ordering, P/D, and Batch results to configurations and replay instructions. | [HTML overview](https://alexagriffith.github.io/flow-control-benchmarks/benchmark.html) |
-| Flow-control guide | Mechanism reference | The guide explains the mechanism; the campaign packages remain the source for measured results and configuration values. | [learn/flow-control.html](learn/flow-control.html) |
-| Interactive journey | Mechanism reference | The interactive walkthrough explains request flow and policy behavior; campaign packages contain the measured evidence. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
+| Benchmark-Walkthrough | Historical reference | The original RHAII 3.4 story explains the operating-point sweep, configuration, and measured scenarios. | [benchmark-walkthrough.html](benchmark-walkthrough.html) |
+| Flow Control Written | Mechanism reference | The guide explains the mechanism; the campaign packages remain the source for measured results and configuration values. | [learn/flow-control-written.html](learn/flow-control-written.html) |
+| Flow Control Interactive | Mechanism reference | The interactive walkthrough explains request flow and policy behavior; campaign packages contain the measured evidence. | [learn/flow-control-interactive.html](learn/flow-control-interactive.html) |
 | Flow Control Flight Recorder | Current | The linked repository is active and supports the published benchmark-package format. | [flow-control-visualizer](https://github.com/alexagriffith/flow-control-visualizer) |

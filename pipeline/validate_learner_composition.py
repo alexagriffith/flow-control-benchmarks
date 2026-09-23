@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     for width in (1844,375):
         page=browser.new_page(viewport={'width':width,'height':1265},reduced_motion='reduce')
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto((ROOT/'learn/flow-control-journey.html').as_uri());page.evaluate('setAuto(false,true)')
+        page.goto((ROOT/'learn/flow-control-interactive.html').as_uri());page.evaluate('setAuto(false,true)')
         for theme in ('light','dark'):
             page.evaluate('t=>document.documentElement.dataset.theme=t',theme)
             page.evaluate('go(4,0)')

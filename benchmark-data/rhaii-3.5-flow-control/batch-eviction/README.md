@@ -16,7 +16,7 @@ eviction-off/on pairs, and 25% and 50% reserved capacity.
 | 50% | 11 / 0 | +9.4% |
 
 - [Normalized analysis](analysis.json)
-- [Complete public Batch eviction package](../../batch-eviction/)
+- [Complete public hold back and batch eviction package](../../batch-eviction/)
 
 ## Evidence
 

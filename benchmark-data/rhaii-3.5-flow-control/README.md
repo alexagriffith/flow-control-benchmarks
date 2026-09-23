@@ -51,7 +51,7 @@ graph used by the accepted recipe.
 | New | First-come, first-served (FCFS) versus SLO deadline ordering | [`slo-deadline-ordering/`](slo-deadline-ordering/) | [`04-slo-deadline-ordering.yaml`](examples/benchmark-reproduction/04-slo-deadline-ordering.yaml) |
 | New | Fixed priority holdback versus soft-reflective ceilings | [`priority-usage-limit-policies/`](priority-usage-limit-policies/) | [`05-fixed-priority-holdback.yaml`](examples/benchmark-reproduction/05-fixed-priority-holdback.yaml) and [`06-soft-reflective-ceilings.yaml`](examples/benchmark-reproduction/06-soft-reflective-ceilings.yaml) |
 | New | Direct fixed-concurrency, direct 429-responsive, and metrics-gated queued Batch dispatch | [`batch-dispatch/`](batch-dispatch/) | [Shared-pool starting configuration](examples/getting-started/04-priority-standard-batch.yaml) |
-| New | Eviction off versus on at 25% and 50% reserve | [`batch-eviction/`](batch-eviction/) | [Complete Batch eviction package](../batch-eviction/) |
+| New | Eviction off versus on at 25% and 50% reserve | [`batch-eviction/`](batch-eviction/) | [Complete hold back and batch eviction package](../batch-eviction/) |
 | New | Request-cost response metadata | [`request-cost-metadata/`](request-cost-metadata/) | [`07-request-cost-metadata.yaml`](examples/benchmark-reproduction/07-request-cost-metadata.yaml) |
 | New | No quota, classifying quota, and blocking quota | [`soft-pt/`](soft-pt/) | [`09-soft-pt-serving-policy.yaml`](examples/benchmark-reproduction/09-soft-pt-serving-policy.yaml) |
 | New | Stage-aware P/D admission, fairness, priority reserve, and eviction | [`pd-flow-control/`](pd-flow-control/) | [`selected-recipe.yaml`](pd-flow-control/configuration/selected-recipe.yaml) |
@@ -298,7 +298,7 @@ Processor ownership, and startup reconciliation.
 
 ## Recover capacity with Batch eviction and retry
 
-The earlier Batch eviction benchmark showed that lower-priority work could be
+The earlier hold back and batch eviction benchmark showed that lower-priority work could be
 interrupted and retried. This campaign retested the mechanism with longer
 20,000-token Batch jobs, heavier overlap, matched eviction-off/on pairs, and
 both 25% and 50% reserved capacity. The larger design separates the benefit of

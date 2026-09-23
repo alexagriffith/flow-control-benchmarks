@@ -1,4 +1,4 @@
-# Batch eviction and retry
+# Hold back and batch eviction with one model replica
 
 This benchmark tests whether flow control protects higher-priority realtime p95
 TTFT while lower-priority batch workloads share the same GPU. When realtime
@@ -85,7 +85,7 @@ The complete configuration is in [`run-config.json`](run-config.json).
 - [`batch-completion-index.csv`](batch-completion-index.csv) contains one
   sanitized row for each of the 5,376 batch jobs in the eviction-and-retry
   runs.
-- [Batch Eviction Benchmark](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/batch-eviction/results.html)
+- [Hold back and batch eviction benchmark](https://alexagriffith.github.io/flow-control-benchmarks/benchmark-data/batch-eviction/results.html)
   contains the report, diagrams, configuration, and results.
 - [`run-config.json`](run-config.json) records the fixed traffic, vLLM,
   Endpoint Picker, and Async Processor settings.

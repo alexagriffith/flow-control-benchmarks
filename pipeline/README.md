@@ -132,7 +132,7 @@ check requires Python Playwright with Chromium installed. After GitHub Pages
 finishes deploying, repeat the browser check with
 `--base-url https://alexagriffith.github.io/flow-control-benchmarks`.
 The website index is `sections.html`; `benchmark.html` contains the RHAII 3.5
-takeaways. The homepage links to the chart-by-chart `walkthrough.html`. The Batch
+takeaways. The homepage links to the chart-by-chart `benchmark-walkthrough.html`. The Batch
 report lives at `benchmark-data/batch-eviction/results.html`, with report-specific
 figures in `assets/` beside it. Campaign data remains in its existing subfolders.
 

@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 
-PAGE = pathlib.Path(__file__).resolve().parents[1] / "learn" / "flow-control-journey.html"
+PAGE = pathlib.Path(__file__).resolve().parents[1] / "learn" / "flow-control-interactive.html"
 
 
 @unittest.skipUnless(shutil.which("node"), "Node.js is required for replay checks")

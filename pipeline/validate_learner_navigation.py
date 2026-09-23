@@ -13,7 +13,7 @@ with sync_playwright() as pw:
     browser=getattr(pw,args.engine).launch()
     for width in (1844,1440,375):
         page=browser.new_page(viewport={'width':width,'height':1265},reduced_motion='reduce')
-        page.goto((ROOT/'learn/flow-control-journey.html').as_uri())
+        page.goto((ROOT/'learn/flow-control-interactive.html').as_uri())
         page.evaluate('setAuto(false,true)')
         for theme in ('light','dark'):
             page.evaluate('t=>document.documentElement.dataset.theme=t',theme)

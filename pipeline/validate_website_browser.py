@@ -44,10 +44,10 @@ def main() -> int:
                 if name == "index.html":
                     assert page.locator('a[href="benchmark.html"]').count() == 0
                     assert page.locator('a[href="sections.html"]').count() == 1
-                    assert page.locator('a[href="walkthrough.html"]').count() == 1
+                    assert page.locator('a[href="benchmark-walkthrough.html"]').count() == 1
                 if name == "sections.html":
                     assert page.get_by_text("All 12 test groups and data", exact=True).count() == 1
-                    assert page.locator("a.card").count() == 5
+                    assert page.locator("a.card").count() == 4
                     assert page.locator(".resources a").count() == 7
                     assert page.locator(".resources a").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)") < page.locator(".card .t").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)")
                 if name.startswith("benchmark-data/batch-eviction/"):
@@ -55,12 +55,12 @@ def main() -> int:
                     assert page.locator("#realtime-result").count() == 1
                     if args.base_url:
                         assert page.url.endswith("/batch-eviction/results.html")
-                if name == "walkthrough.html":
+                if name == "benchmark-walkthrough.html":
                     assert page.locator("#operating-point").count() == 1
                     assert page.locator("#themeBtn").count() == 1
                 if name == "benchmark.html":
-                    assert page.locator("#prefill-decode").count() == 1
-                    assert page.locator("#deadlines h2").inner_text() == "Prioritize requests with earlier latency deadlines"
+                    assert page.url.endswith("sections.html#rhaii35")
+                    assert page.locator('a[href="benchmark.html"]').count() == 0
                 if args.screenshots:
                     page.screenshot(path=str(args.screenshots / f"{name.replace('/', '-')}-{width}.png"), full_page=True)
                 reports.append({"page": name, "width": width, **result, "errors": errors})

@@ -17,7 +17,7 @@
     doc.querySelector('#topbar .t span').textContent = kind || 'Interactive';
     document.querySelector('#previous').disabled = doc.querySelector('#backBtn').disabled;
     document.querySelector('#next').disabled = doc.querySelector('#nextBtn').disabled;
-    document.querySelector('#normal').href = '../flow-control-journey.html#page-' + page;
+    document.querySelector('#normal').href = '../flow-control-interactive.html#page-' + page;
     history.replaceState(null, '', '?page=' + page + (tools.dataset.hidden === 'true' ? '&clean=1' : ''));
   };
   const hideTools = () => {
@@ -46,6 +46,9 @@
       });
       doc.documentElement.dataset.theme = 'dark';
       doc.body.classList.add('recording-view');
+      // Recording metadata belongs to the adapter, not the learner heading.
+      const subtitle = doc.createElement('span');
+      doc.querySelector('#topbar .t').append(subtitle);
       if (doc.querySelector('#autoBtn').getAttribute('aria-pressed') === 'true') doc.querySelector('#autoBtn').click();
       chapter.replaceChildren();
       doc.querySelectorAll('#rail button[aria-label]').forEach(button => {
@@ -69,5 +72,5 @@
   });
   const requested = Number(params.get('page') || 0);
   const page = Number.isInteger(requested) ? Math.max(0, Math.min(14, requested)) : 0;
-  frame.src = '../flow-control-journey.html#page-' + page;
+  frame.src = '../flow-control-interactive.html#page-' + page;
 })();

@@ -13,8 +13,11 @@ PAGES = (
     "sections.html",
     "benchmark.html",
     "walkthrough.html",
-    "learn/flow-control.html",
     "learn/flow-control-journey.html",
+    "learn/flow-control.html",
+    "benchmark-walkthrough.html",
+    "learn/flow-control-written.html",
+    "learn/flow-control-interactive.html",
     "benchmark-data/upstream-flow-control-v0.9.0/results.html",
     "benchmark-data/batch-eviction/results.html",
     "benchmark-data/batch-eviction/single-model-replica/results.html",
@@ -72,20 +75,20 @@ def validate() -> list[str]:
     index = (ROOT / "index.html").read_text()
     if 'href="benchmark.html"' in index or 'href="sections.html"' not in index:
         errors.append("Landing page must route campaign reports through the evidence index")
-    if 'href="walkthrough.html"' not in index:
+    if 'href="benchmark-walkthrough.html"' not in index:
         errors.append("Landing page must retain the benchmark walkthrough")
     if 'href="exports/' in index:
         errors.append("Landing page offers outdated downloadable snapshots")
     if index.count('class="card"') != 3 or 'href="benchmark-decision-map/"' in index:
         errors.append("Homepage must have three learning entries; planning belongs in resources")
     sections = (ROOT / "sections.html").read_text()
-    if sections.count('class="card"') != 5:
-        errors.append("Resource index must contain four report cards and one decision map")
+    if sections.count('class="card"') != 4:
+        errors.append("Resource index must contain three report cards and one decision map")
     if "Earlier campaigns" in sections or 'class="resources"' not in sections:
         errors.append("Evidence index must use version headers and subordinate resource links")
     if 'href="benchmark-data/batch-eviction/results.html"' not in sections:
         errors.append("Evidence index must use the parent Batch report")
-    reports = {ROOT / "benchmark.html", ROOT / "walkthrough.html"}
+    reports = {ROOT / "benchmark-walkthrough.html"}
     reports.update(
         file for file in (ROOT / "benchmark-data").rglob("*.html")
         if 'http-equiv="refresh"' not in file.read_text()
@@ -102,13 +105,17 @@ def validate() -> list[str]:
                      "upstream-flow-control-v0.9.0", "batch-eviction"):
         if campaign not in sections:
             errors.append(f"Evidence index is missing {campaign}")
-    overview = (ROOT / "benchmark.html").read_text()
-    for anchor in ("capacity", "deadlines", "prefill-decode", "batch-dispatch", "batch-eviction", "reproduce"):
-        if anchor not in Page(overview).ids:
-            errors.append(f"Overview is missing {anchor}")
-    pd = overview.split('id="prefill-decode"', 1)[-1].split('id="batch-dispatch"', 1)[0]
-    if "headroom" in pd:
-        errors.append("P/D overview contains an untested headroom setting")
+    if 'href="benchmark.html"' in sections:
+        errors.append("Retired 3.5 overview must not appear in navigation")
+    for name, target in {
+        "benchmark.html": "sections.html#rhaii35",
+        "walkthrough.html": "benchmark-walkthrough.html",
+        "learn/flow-control-journey.html": "flow-control-interactive.html",
+        "learn/flow-control.html": "flow-control-written.html",
+    }.items():
+        redirect = (ROOT / name).read_text()
+        if 'http-equiv="refresh"' not in redirect or f"url={target}" not in redirect:
+            errors.append(f"Missing compatibility redirect: {name}")
     batch = (ROOT / "benchmark-data/batch-eviction/results.html").read_text()
     if "local review" in batch or ".local-review/" in batch or "review draft" in batch:
         errors.append("Published Batch report contains review-only navigation")

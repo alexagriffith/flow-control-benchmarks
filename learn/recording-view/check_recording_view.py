@@ -8,7 +8,7 @@ parser.add_argument('--base', default='http://127.0.0.1:8879')
 parser.add_argument('--out', required=True)
 args = parser.parse_args()
 out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
-source = Path(__file__).resolve().parents[1] / 'flow-control-journey.html'
+source = Path(__file__).resolve().parents[1] / 'flow-control-interactive.html'
 before = hashlib.sha256(source.read_bytes()).hexdigest()
 errors = []; views = []
 with sync_playwright() as p:
@@ -69,7 +69,7 @@ with sync_playwright() as p:
         assert page.locator('#tools').get_attribute('data-hidden') == 'false'
     # A separate ordinary page must not receive presentation styles or state.
     normal = browser.new_page(viewport={'width':1440,'height':810})
-    normal.goto(args.base+'/learn/flow-control-journey.html',wait_until='networkidle')
+    normal.goto(args.base+'/learn/flow-control-interactive.html',wait_until='networkidle')
     assert normal.locator('#rail').is_visible()
     assert 'recording-view' not in (normal.locator('body').get_attribute('class') or '')
     page.goto(args.base+'/learn/recording-view/?page=14&clean=1',wait_until='networkidle')

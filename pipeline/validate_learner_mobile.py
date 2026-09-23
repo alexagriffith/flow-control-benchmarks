@@ -14,7 +14,7 @@ with sync_playwright() as pw:
     page = browser.new_page(viewport={'width': 390, 'height': 844}, reduced_motion='reduce')
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
-    page.goto((ROOT / 'learn/flow-control-journey.html').as_uri())
+    page.goto((ROOT / 'learn/flow-control-interactive.html').as_uri())
     assert page.evaluate('!auto'), 'Phone should open without advancing lessons'
     for width, height in ((320, 740), (375, 812), (430, 932), (700, 900), (844, 390), (1844, 1265)):
         page.set_viewport_size({'width': width, 'height': height})

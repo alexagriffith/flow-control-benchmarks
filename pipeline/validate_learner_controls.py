@@ -10,7 +10,7 @@ with sync_playwright() as pw:
         page = browser.new_page(viewport={"width": width, "height": 1265}, reduced_motion="reduce")
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
-        page.goto((ROOT / "learn/flow-control-journey.html").as_uri() + "#page-14")
+        page.goto((ROOT / "learn/flow-control-interactive.html").as_uri() + "#page-14")
         page.evaluate("setAuto(false,true)")
         for theme in ("light", "dark"):
             page.evaluate("t=>document.documentElement.dataset.theme=t", theme)
@@ -46,7 +46,7 @@ print("PASS: Settings keyboard/focus, legacy replay layers, saturation colors, f
 with sync_playwright() as pw:
     browser = pw.chromium.launch()
     page = browser.new_page(viewport={"width": 1844, "height": 1265}, reduced_motion="reduce")
-    page.goto((ROOT / "learn/flow-control-journey.html").as_uri())
+    page.goto((ROOT / "learn/flow-control-interactive.html").as_uri())
     page.evaluate("setAuto(false,true);go(1,0)")
     assert page.evaluate("""(()=>{
       for(let i=0;i<=100;i++){
@@ -93,7 +93,7 @@ print("PASS: burst occupancy, chart-label clearance, policy selection state and 
 with sync_playwright() as pw:
     browser=pw.chromium.launch()
     page=browser.new_page(reduced_motion='reduce')
-    page.goto((ROOT/'learn/flow-control-journey.html').as_uri())
+    page.goto((ROOT/'learn/flow-control-interactive.html').as_uri())
     page.evaluate('setAuto(false,true)')
     assert page.evaluate("""()=>{
       go(14,0);PG.load={p:100,s:100,b:100};for(let i=0;i<60;i++)playTick();
