@@ -47,11 +47,11 @@ def main() -> int:
                     assert page.locator('a[href="walkthrough.html"]').count() == 1
                 if name == "sections.html":
                     assert page.get_by_text("All 12 test groups and data", exact=True).count() == 1
-                    assert page.locator("a.card").count() == 4
-                    assert page.locator(".resources a").count() == 6
+                    assert page.locator("a.card").count() == 5
+                    assert page.locator(".resources a").count() == 7
                     assert page.locator(".resources a").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)") < page.locator(".card .t").first.evaluate("(e) => parseFloat(getComputedStyle(e).fontSize)")
                 if name.startswith("benchmark-data/batch-eviction/"):
-                    assert page.locator("h1").inner_text() == "Batch Eviction Benchmark"
+                    assert page.locator("h1").inner_text() == "Hold back and batch eviction benchmark"
                     assert page.locator("#realtime-result").count() == 1
                     if args.base_url:
                         assert page.url.endswith("/batch-eviction/results.html")

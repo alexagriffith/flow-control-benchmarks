@@ -76,9 +76,11 @@ def validate() -> list[str]:
         errors.append("Landing page must retain the benchmark walkthrough")
     if 'href="exports/' in index:
         errors.append("Landing page offers outdated downloadable snapshots")
+    if index.count('class="card"') != 3 or 'href="benchmark-decision-map/"' in index:
+        errors.append("Homepage must have three learning entries; planning belongs in resources")
     sections = (ROOT / "sections.html").read_text()
-    if sections.count('class="card"') != 4:
-        errors.append("Evidence index must contain four primary report cards")
+    if sections.count('class="card"') != 5:
+        errors.append("Resource index must contain four report cards and one decision map")
     if "Earlier campaigns" in sections or 'class="resources"' not in sections:
         errors.append("Evidence index must use version headers and subordinate resource links")
     if 'href="benchmark-data/batch-eviction/results.html"' not in sections:

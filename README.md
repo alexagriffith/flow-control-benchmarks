@@ -221,11 +221,32 @@ reached 13,077 ms p95 TTFT.
 
 <sub>Evidence [analysis.json](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/analysis.json) · [source folder](benchmark-data/upstream-flow-control-v0.9.0/production-scenarios/batch-isolation/)</sub>
 
+## Find the Operating Point Before Tuning Admission
+
+The capacity sweep shows where more concurrent requests stop adding useful
+throughput and start adding latency—the knee. In the original RHAII 3.4
+campaign, throughput flattened near 128 concurrent clients while p95 time to
+first token continued to rise.
+
+<img src="assets/operating-point-sweep.svg" width="100%" alt="The original RHAII 3.4 client-concurrency sweep shows throughput flattening near 128 concurrent clients while p95 time to first token rises at higher concurrency.">
+
+<sub>Original RHAII 3.4 campaign: median of two single-tenant passes on one H100. The engine's maximum sequence count remained 128, with flow control enabled and queue-depth threshold 4. The knee is a candidate operating point for this configuration and workload; select the operating load against the service's latency objective.</sub>
+
+<sub>Evidence [operating-point sweep](benchmark-data/rhaii-3.4-flow-control/operating-point-sweep/) · [RHAII 3.5 latency-objective sweep](#select-operating-load-from-the-latency-objective)</sub>
+
+Engine limits need their own comparison. The separate upstream v0.9 sweeps
+selected `max-num-seqs=128` and `max-num-batched-tokens=8192` for the tested
+workload. Increasing the sequence limit from 128 to 192 added little throughput
+and raised p95 time per output token from 19.6 to 28.9 ms/token.
+
+<sub>Evidence [engine configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/) · [tested configuration](benchmark-data/upstream-flow-control-v0.9.0/engine-configuration/tested-config.yaml). Sequence-limit comparison: three matched runs per setting. Client concurrency, engine limits, and router admission limits are separate controls.</sub>
+
 ## Admission Tuning Changes the Latency Tradeoff
 
 Request-count admission lowered realtime latency in the matched consolidation
-comparison. The calibration sweeps show why admission settings must match the
-workload and pressure signal.
+comparison. With the engine limits selected, the next question is how much
+work the router should admit. These separate sweeps compare request-count
+limits with queue-depth thresholds for their tested workloads.
 
 <img src="assets/readme/admission-policy.svg" width="100%" alt="A matched production comparison shows surge-window p95 TTFT for Realtime and low-priority traffic under request-count 128, queue-depth 2, and queue-depth 5 admission settings. A pale-green vertical band highlights request-count 128.">
 
@@ -244,6 +265,12 @@ workload and pressure signal.
 <sub>Request-count calibration: cap 160 served 3% more steady throughput than cap 128, while median p95 TTFT increased by 363 ms (17%). Cap 128 was selected for later production tests. n=3 at caps 128 and 160; intermediate caps are single calibration points.</sub>
 
 <sub>Evidence [analysis.json](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/analysis.json) · [summary.csv](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/summary.csv) · [source folder](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/)</sub>
+
+Request shape also changes the choice. In the upstream v0.9 mixed-size
+calibration, input-token admission lowered short- and medium-request p95 TTFT
+but raised it for long requests. The [request-size comparison](benchmark-data/upstream-flow-control-v0.9.0/request-and-token-admission-calibration/#mixed-size-result)
+records that tradeoff. Each evidence package includes the tested configuration;
+these settings apply to its model, hardware, workload, and runtime version.
 
 | Policy signal | Appropriate when | Tested observation |
 |---|---|---|
@@ -489,6 +516,7 @@ that comparison separately.
 | Claim matrix | Current | The matrix maps each front-page claim to its evidence, configuration, and boundary. | [docs/readme-claim-matrix.md](docs/readme-claim-matrix.md) |
 | Runner and reproduction | Current | The published feature runners cover the RHAII 3.5 SLO and P/D replay paths. | [pipeline/README.md](pipeline/README.md) |
 | SLO proof protocol | Reference | This defines the evidence required for a future production SLO claim; it is not a completed benchmark result. | [docs/slo-proof-test.md](docs/slo-proof-test.md) |
+| Benchmark walkthrough | Historical reference | The original RHAII 3.4 story explains the operating-point sweep, configuration, and measured scenarios. | [walkthrough.html](walkthrough.html) |
 | Benchmark takeaways | Published | The RHAII 3.5 overview connects capacity, deadline ordering, P/D, and Batch results to configurations and replay instructions. | [HTML overview](https://alexagriffith.github.io/flow-control-benchmarks/benchmark.html) |
 | Flow-control guide | Mechanism reference | The guide explains the mechanism; the campaign packages remain the source for measured results and configuration values. | [learn/flow-control.html](learn/flow-control.html) |
 | Interactive journey | Mechanism reference | The interactive walkthrough explains request flow and policy behavior; campaign packages contain the measured evidence. | [learn/flow-control-journey.html](learn/flow-control-journey.html) |
