@@ -463,7 +463,7 @@
       <tr><td style="white-space:nowrap"><strong>3 · Ordering</strong></td><td>Which request from that tenant?</td><td>Ordering policy plugin</td><td>First-come first-served, earliest deadline first, or a deadline from a service-level-objective (SLO) header</td></tr>
     </tbody>
   </table>
-  <div class="note">Each cycle considers higher priorities first. At a reached ceiling, dispatch pauses for that cycle; when pressure falls, eligible work can advance.<br><br>Use the same band with round-robin fairness when workloads should share dispatch turns. Use separate bands when one requires priority over another.</div>
+  <div class="note">The selected strict-band policy considers higher priorities first. A band at its ceiling is skipped; the cycle can still consider other eligible bands.<br><br>Use the same band with round-robin fairness when workloads should share dispatch turns. Use separate bands when one requires priority over another.</div>
   <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/flowcontrol/registry/managedqueue.go">flowcontrol/registry/managedqueue.go</a> · <a href="https://github.com/llm-d/llm-d-router/tree/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/fairness">plugins/flowcontrol/fairness</a> · <a href="https://github.com/llm-d/llm-d-router/tree/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/ordering">plugins/flowcontrol/ordering</a></div>
   <h3 style="margin-top:22px">The dispatch cycle</h3>
   <p>The dispatch loop checks each band’s applicable ceiling and moves at most one request per pass. The figure simplifies this to one shared static ceiling.</p>
@@ -748,7 +748,15 @@
 </section>
 
 <section id="current-reference">
-  <h2>Optional: current-build reference</h2>
+  <h2>Optional: source-version reference</h2>
+  <details id="october-source-notes">
+    <summary>October 6 updates: band selection and endpoint filtering</summary>
+    <p>These notes were checked against <a href="https://github.com/llm-d/llm-d-router/tree/a6c9065b01ba7d9e516cf4be87180990568a400d">router <code>a6c9065b</code></a>. The examples below retain their September source snapshot and the benchmarks retain their tested versions.</p>
+    <p><strong>Band selection:</strong> <code>flowControl.bandSelectionPolicyPluginRef</code> selects the plugin that ranks priority bands for dispatch. The supplied <code>strict-band-selection-policy</code> checks higher priorities first. The extension point allows another implemented and registered plugin to rank bands differently and track successful dispatches. It does not bypass a band’s ceiling or replace fairness across queues and ordering within each queue. A weighted policy would need its own implementation; it is not another built-in option at this source snapshot.</p>
+    <p><strong>Endpoint filtering:</strong> the concurrency detector defaults to <code>failOpen: true</code>, returning the original candidates when all would be filtered out. With <code>failOpen: false</code>, it returns no candidates; that can reject a request already released by flow control, rather than putting it back in the queue.</p>
+    <p>In token and hybrid modes, the filter also counts the incoming request’s uncached tokens for each endpoint. An endpoint with no in-flight tokens can accept a request larger than its token limit; hybrid mode still checks request count. The engine’s own limits still apply. The learner’s September examples do not model these incoming-token checks.</p>
+    <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/a6c9065b01ba7d9e516cf4be87180990568a400d/pkg/epp/framework/plugins/flowcontrol/bandselection/bandselectionpolicy.go">Default band policy</a> · <a href="https://github.com/llm-d/llm-d-router/blob/a6c9065b01ba7d9e516cf4be87180990568a400d/pkg/epp/flowcontrol/controller/internal/processor.go">Dispatch and ceilings</a> · <a href="https://github.com/llm-d/llm-d-router/blob/a6c9065b01ba7d9e516cf4be87180990568a400d/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go">Incoming-token checks and fallback</a></div>
+  </details>
   <p>Source checked September 16, 2026 at router <a href="https://github.com/llm-d/llm-d-router/tree/bb2113e4ecd79b049c7322164794ca9ea30b8cbb"><code>bb2113e4ecd79b049c7322164794ca9ea30b8cbb</code></a>. These controls describe that source snapshot. Availability does not mean an older benchmark exercised them, and a deployment must be checked against its own image and effective configuration.</p>
   <details>
     <summary>Two endpoints: which priority may dispatch, and where?</summary>
@@ -758,7 +766,7 @@
       <tr><td>A 110 + B 60</td><td>170 / 200 = 0.85</td><td>High may advance; low waits</td><td>A excluded; B remains</td></tr>
       <tr><td>A 80 + B 80</td><td>160 / 200 = 0.80</td><td>Low waits at its ceiling</td><td>Both remain</td></tr>
     </tbody></table>
-    <p>A lower-priority ceiling tests total observed pool saturation, not a private queue size or GPU-memory allocation. Headroom leaves the denominator at 200 and creates no physical capacity. The filter uses a strict below-threshold check and returns the original candidates if all would be excluded. Passing these checks permits scheduling; it does not guarantee immediate engine execution.</p>
+    <p>A lower-priority ceiling tests total observed pool saturation, not a private queue size or GPU-memory allocation. Headroom leaves the denominator at 200 and creates no physical capacity. In this September source snapshot, the filter uses a strict below-threshold check and returns the original candidates if all would be excluded. See the October notes above for configurable fallback and incoming-token checks. Passing these checks permits scheduling; it does not guarantee immediate engine execution.</p>
     <p>The loader injects the selected detector into scheduling profiles when it implements filtering. Its absence from handwritten profile YAML alone does not establish inactivity.</p>
     <div class="src"><a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/framework/plugins/flowcontrol/saturationdetector/concurrency/detector.go#L123-L229">Pool formula and endpoint filtering</a> · <a href="https://github.com/llm-d/llm-d-router/blob/bb2113e4ecd79b049c7322164794ca9ea30b8cbb/pkg/epp/config/loader/defaults.go#L274-L324">Effective filter wiring</a></div>
   </details>
