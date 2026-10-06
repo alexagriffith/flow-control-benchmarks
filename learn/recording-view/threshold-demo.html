@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 3 · recording preview</title>
+<style>body{margin:0;background:#08090b;color:#e8eaf0;font:15px system-ui}main{max-width:1440px;margin:auto}canvas{display:block;width:100%;height:auto}nav{display:flex;gap:12px;padding:16px;align-items:center}button,a{font:inherit;color:inherit;background:#14171d;border:1px solid #4b5263;border-radius:8px;padding:9px 14px}button{cursor:pointer}iframe{position:absolute;left:-2000px;top:0;width:1440px;height:810px;visibility:hidden}#seek{flex:1}</style></head>
+<body><main><canvas id="stage" width="1440" height="810" aria-label="Measured concurrency sweep followed by the schematic throughput and latency tradeoff"></canvas>
+<nav><button id="play" disabled>Play</button><button id="export" disabled>Export frames</button><input id="seek" type="range" min="0" max="8000" value="0" aria-label="Preview time"><span id="status">Loading learner…</span><a id="download" hidden>Download frames</a></nav></main>
+<iframe id="source" title="Source learner" src="../flow-control-interactive.html#page-2"></iframe>
+<script src="threshold-demo.js"></script></body></html>

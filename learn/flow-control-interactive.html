@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#08090b">
 <title>Flow Control Interactive</title>
 <style>
+body.policy-comparison #canvasWrap{min-height:580px}
+@media(max-width:700px){body.policy-comparison #canvasWrap{min-height:460px}}
 /* ============ tokens: dark default, light via media query, data-theme wins ============ */
 :root{
   --canvas:#08090b;--base:#0e1014;--raised:#14171d;--inset:#05060a;
@@ -1491,26 +1493,15 @@ function fairEnsure(){
   label=svgEl('text',{id:'fair-turn-label',x:803,y:371,'text-anchor':'middle','font-size':12,fill:'var(--txt2)'});label.textContent='A’s turn';viz.appendChild(label);
 }
 function fairRun(){
-  $('#ov-fair').style.display='';fairEnsure();
-  const turns=[['A',262,237],['B',326,301],['C',390,365]];
-  const select=i=>{
-    const [id,y,cursor]=turns[i%3];
-    $('#fair-lane-cursor').setAttribute('y',cursor);
-    turns.forEach(([name])=>$('#fair-route-'+name).setAttribute('stroke-opacity',name===id?'1':'.35'));
-    $('#fair-turn-label').textContent=id+'’s turn';
-    return [id,y];
-  };
-  select(0);$('#fair-request').setAttribute('opacity',reduceMotion()?'.95':'0');
-  if(reduceMotion())return;
-  const tick=i=>{
-    if($('#ov-fair').style.display==='none')return;
-    const [id,y]=select(i);$('#fair-request').setAttribute('opacity','0');
-    const d=`M420 ${y} H622`+$('#fair-route-'+id).getAttribute('d').replace(/^M622 [0-9]+/,'')+' H803';
-    routeFly($('#fairViz'),d,'var(--brand)',920);
-    after(920,()=>$('#fair-request').setAttribute('opacity','.95'));
-    after(1400,()=>tick(i+1));
-  };tick(0);
+  queueMicrotask(()=>setAuto(false));
+  document.body.classList.add('policy-comparison');
+  const panel=document.createElement('div');panel.id='policyPlayback';
+  panel.style.cssText='position:absolute;inset:0;z-index:12;background:var(--base)';
+  const frame=document.createElement('iframe');frame.title='Compare fairness and ordering policies';
+  frame.src='policy-lab/?embed=1';frame.style.cssText='border:0;width:100%;height:100%';panel.append(frame);
+  $('#canvasWrap').append(panel);
 }
+
 function promiseEnsure(){
   const viz=$('#promiseViz');
   if(viz.children.length)return;
@@ -1559,6 +1550,7 @@ function promiseRun(){
 let stepTimers=[];
 function after(ms,fn){stepTimers.push(setTimeout(fn,ms));}
 function resetCanvas(){
+  document.getElementById('policyPlayback')?.remove();document.body.classList.remove('policy-comparison');
   stepTimers.forEach(clearTimeout);stepTimers=[];
   burstSeq++;
   policyMode='';
@@ -1745,7 +1737,7 @@ function lessonDetails(kind){
  if(kind==='detectors')html=details('Try another signal or P/D topology',`<label for="detectorChoice">Signal</label> <select class="pill" id="detectorChoice"><option value="utilization">Engine waiting + KV</option><option value="requests">In-flight requests</option><option value="tokens">Accounted tokens</option><option value="hybrid">Request + token pressure</option></select><p><label><input type="checkbox" id="topologyChoice"> Separate prefill / decode stages</label></p><div id="detectorExplanation"><p>Selected example: max(waiting ÷ 4, KV ÷ 0.80), then average. Limits are configuration, not physical maxima.</p></div><p>P/D uses the same selected detector for each stage, then the maximum stage saturation. Combined endpoints count in both stage sets. Multiple EPP processes are separate: shared accounting, if configured, does not synchronize flow queues or establish global fairness.</p>${details('Accounting and wiring limits',`<p>Concurrency uses endpoint accounting units, not automatically physical GPUs or DP ranks. The in-flight load producer requires tokenization; prefix-match information is optional. Cache discounts depend on that wiring.</p><p>Output estimation defaults off at the pin. When off, prompt-token accounting is released at the first response chunk while decode can continue. When on, estimates depend on output-size hints and caps; the estimate cap does not limit response length.</p><p>Utilization missing/stale metrics follow a configured saturated/ignore policy. Ignoring all stale endpoints can produce zero pressure. Source defaults are waiting 5, KV 0.8, stale 200 ms; this lesson deliberately uses waiting 4. Configured filter headroom relaxes endpoint thresholds; all-candidates-filtered falls open.</p>`)}${implSource(codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',123,'count formulas'),codeLink(PLUGINS+'saturationdetector/utilization/detector.go',121,'engine formulas'),codeLink('pkg/epp/flowcontrol/controller/internal/processor.go',463,'P/D aggregation'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',586,'accounting release'),codeLink('pkg/epp/framework/plugins/requestcontrol/dataproducer/inflightload/producer.go',747,'dependencies'))}`);
  if(kind==='twoChecks')html=details('Compare priorities and inspect the wiring',`<label for="bandChoice">Waiting request</label> <select class="pill" id="bandChoice"><option value="high">High · ceiling 1.0</option><option value="low">Low · ceiling 0.8</option></select><p>Two equal endpoints; <code>maxConcurrency: 100</code>, <code>headroom: 0.1</code>. Pool denominator stays 200. Endpoint threshold becomes 110. Headroom adds no physical capacity, priority reservation or guarantee of fewer evictions.</p><p>Selected references: <code>concurrency-detector</code> in requests mode and <code>priority-holdback-policy</code>, <code>minCeiling: 0.8</code>, <code>maxCeiling: 1.0</code>, rank domain, two priorities. Each ceiling compares against total pool saturation, not that priority’s own usage.</p><p>The loader injects a selected detector’s filter into scheduling profiles. Missing handwritten filter YAML does not prove filtering is off. If every candidate is filtered, the filter returns the original nonnil candidates; this is not a hard cap.</p>${implSource(codeLink('pkg/epp/config/loader/defaults.go',274,'effective wiring'),codeLink(PLUGINS+'saturationdetector/concurrency/detector.go',184,'strict filter and fallback'),codeLink(PLUGINS+'usagelimits/priorityholdback/priority_holdback.go',98,'ceilings'))}`);
  if(kind==='execution')html=details('Follow one request',`<label for="executionChoice">Request phase</label> <select class="pill" id="executionChoice"><option value="queued">Router waiting</option><option value="dispatch">Dispatch</option><option value="engine">Engine waiting / processing</option><option value="complete">Completion at client</option><option value="evict">Optional eviction</option></select>${details('Optional eviction: conditions and retry',`<p>Selected sheddable filter: priority below 0; victim must also be strictly below the blocked requesting priority. Eviction is configured separately and paced. It does not instantly preempt the GPU.</p><p>Cancellation must propagate to the engine; clients decide whether and how to retry. A multi-call agent task may recover one inference call, but tool side effects and duplicate results require application-level handling.</p>${implSource(codeLink('pkg/epp/flowcontrol/controller/internal/reclamation.go',278,'trigger'),codeLink(PLUGINS+'eviction/filtering/sheddable.go',41,'eligibility'),codeLink('pkg/epp/flowcontrol/eviction/request_evictor.go',180,'victim priority'),codeLink('pkg/epp/flowcontrol/eviction/evictor.go',56,'cancellation signal'))}`)}`,true);
- if(kind==='policies')html=details('Flow selection, request order, or ceiling?',`<label for="policyChoice">Policy question</label> <select class="pill" id="policyChoice"><option value="fairness">Which flow?</option><option value="fcfs">Which request? FCFS</option><option value="edf">Which request? EDF / TTL</option><option value="slo">Which request? TTFT deadline</option><option value="ceilings">May this priority dispatch?</option></select><p id="policyExplanation">Round-robin is the selected teaching example. Equal turns apply within one eligible, backlogged band; they do not guarantee equal completions, tokens, latency or progress under sustained higher-priority demand.</p><p>The order examples compare two flow heads with global-strict fairness and compatible ordering. Both arrive close together; the later request has the nearer effective deadline.</p>${implSource(codeLink('pkg/epp/flowcontrol/registry/config.go',34,'source defaults'),codeLink(PLUGINS+'fairness/roundrobin/roundrobin.go',77,'round robin'),codeLink(PLUGINS+'fairness/globalstrict/global_strict.go',68,'global strict'),codeLink(PLUGINS+'ordering/edf/edf.go',77,'EDF'),codeLink(PLUGINS+'ordering/slodeadline/slo_deadline.go',83,'TTFT metadata'),codeLink(PLUGINS+'usagelimits/softreflectiveceiling/policy.go',105,'soft-reflective ceiling'))}`);
+ if(kind==='policies')html=details('Flow selection, request order, or ceiling?',`<p><a href="policy-lab/" target="_blank" rel="noopener">Compare all nine fairness / ordering combinations →</a></p><label for="policyChoice">Policy question</label> <select class="pill" id="policyChoice"><option value="fairness">Which flow?</option><option value="fcfs">Which request? FCFS</option><option value="edf">Which request? EDF / TTL</option><option value="slo">Which request? TTFT deadline</option><option value="ceilings">May this priority dispatch?</option></select><p id="policyExplanation">Round-robin is the selected teaching example. Equal turns apply within one eligible, backlogged band; they do not guarantee equal completions, tokens, latency or progress under sustained higher-priority demand.</p><p>The order examples compare two flow heads with global-strict fairness and compatible ordering. Both arrive close together; the later request has the nearer effective deadline.</p>${implSource(codeLink('pkg/epp/flowcontrol/registry/config.go',34,'source defaults'),codeLink(PLUGINS+'fairness/roundrobin/roundrobin.go',77,'round robin'),codeLink(PLUGINS+'fairness/globalstrict/global_strict.go',68,'global strict'),codeLink(PLUGINS+'ordering/edf/edf.go',77,'EDF'),codeLink(PLUGINS+'ordering/slodeadline/slo_deadline.go',83,'TTFT metadata'),codeLink(PLUGINS+'usagelimits/softreflectiveceiling/policy.go',105,'soft-reflective ceiling'))}`);
  if(kind==='replay')html=replayConfiguration();
  if(kind==='later')html=details('Later evidence and available options',`<p>Separate RHAII 3.5 experiment records:</p><ul>${[['priority-usage-limit-policies','Priority ceilings'],['slo-deadline-ordering','TTFT deadline ordering'],['pd-flow-control','Prefill / decode'],['batch-eviction','Eviction and retry']].map(([p,n])=>`<li><a href="../benchmark-data/rhaii-3.5-flow-control/${p}/README.md">${n}</a> — inspect the package’s measured coverage and limitations.</li>`).join('')}</ul><p>Available implementation options are not automatically tested or recommended. Program-aware fairness and predictive rejection are advanced implementation topics outside these lessons.</p>`,true);
  $('#lessonDetails').innerHTML=html;
@@ -1792,7 +1784,7 @@ const PAGES=[
 /* ---- 4 · WHY: fairness within a band ---- */
 {title:'Fairness within a priority band',group:0,rail:'Turns',steps:[
  {lit:['ov-fair'],dwell:1.2,
-  n:'In this round-robin example, eligible, backlogged flows take dispatch turns within the same priority band.',
+  n:'Ordering (within each queue) ranks requests. Fairness (across queues in the same priority band) chooses the next flow. Change either policy and replay the same queued requests.',
   run(){fairRun();}}
 ]},
 /* ---- 5 · WHY: business summary ---- */
@@ -1891,7 +1883,7 @@ const PAGES=[
   n:'Three tenants share priority 0. Round-robin gives each eligible, backlogged flow one dispatch turn in rotation.',
   run(){setFlow('b100',0,'premium',0,'empty');lessonDetails('policies');setFlow('b0',0,'tenant-a · 0',3);setFlow('b0',1,'tenant-b · 0',2);setFlow('b0',2,'tenant-c · 0',2);
     const seq=[0,1,2];seq.forEach((j,i)=>{
-      after(400+i*900,()=>{cursorAt('b0',j);dispatchFly('b0',j,'var(--amber)','a',150);});});}},
+      after(400+i*900,()=>{cursorAt('b0',j);setFlow('b0',j,['tenant-a · 0','tenant-b · 0','tenant-c · 0'][j],[2,1,1][j]);dispatchFly('b0',j,'var(--amber)','a',150);});});}},
  {lit:['g-b0'],
   n:'Tenant A’s burst grows its queue. It still receives one dispatch turn per rotation, like the other eligible flows.',
   run(){setFlow('b100',0,'premium',0,'empty');let qa=3;setFlow('b0',0,'tenant a · 1 turn',qa);setFlow('b0',1,'tenant b · 1 turn',2);setFlow('b0',2,'tenant c · 1 turn',2);
@@ -2060,7 +2052,7 @@ function prevStep(){
 $('#nextBtn').onclick=()=>{userInput();nextStep();};
 $('#backBtn').onclick=()=>{userInput();prevStep();};
 $('#canvasWrap').addEventListener('click',e=>{
-  if(e.target.closest('#playCtl,#evidence,a,button,input,select'))return;
+  if(e.target.closest('#policyPlayback,#playCtl,#evidence,a,button,input,select'))return;
   userInput();nextStep();});
 document.addEventListener('keydown',e=>{
   if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('#lessonPanel,#configTip,a,button,input,select,textarea,summary,[contenteditable]'))return;
